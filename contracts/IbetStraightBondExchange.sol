@@ -15,7 +15,7 @@ contract IbetStraightBondExchange {
         bool isBuy; // 売買区分（買い：True）
         address agent; // 決済業者のアドレス
     }
-
+    
     // 約定情報
     struct Agreement {
         address counterpart; // 約定相手
@@ -48,6 +48,25 @@ contract IbetStraightBondExchange {
     // orderId => latestAgreementId
     mapping(uint256 => uint256) public latestAgreementIds;
 
+    // 現在値
+    // token => latest_price
+    mapping(address => uint256) public lastPrice;
+
+    // イベント：注文
+    event NewOrder(address indexed tokenAddress, uint256 orderId, address indexed accountAddress, bool indexed isBuy, uint256 price, uint256 amount, address agentAddress);
+
+    // イベント：注文取消
+    event CancelOrder(address indexed tokenAddress, uint256 orderId, address indexed accountAddress, bool indexed isBuy, uint256 price, uint256 amount, address agentAddress);
+
+    // イベント：約定
+    event Agree(address indexed tokenAddress, uint256 orderId, uint256 agreementId, address indexed buyAddress, address indexed sellAddress, uint256 price, uint256 amount, address agentAddress);
+
+    // イベント：決済OK
+    event SettlementOK(address indexed tokenAddress, uint256 orderId, uint256 agreementId, address indexed buyAddress, address indexed sellAddress, uint256 price, uint256 amount, address agentAddress);
+
+    // イベント：決済NG
+    event SettlementNG(address indexed tokenAddress, uint256 orderId, uint256 agreementId, address indexed buyAddress, address indexed sellAddress, uint256 price, uint256 amount, address agentAddress);
+
     // コンストラクタ
     function IbetStraightBondExchange() public {
     }
@@ -69,6 +88,8 @@ contract IbetStraightBondExchange {
             commitments[msg.sender][_token] = balances[msg.sender][_token].add(_amount);
         }
 
+        NewOrder(_token, orderId, msg.sender, _isBuy, _price, _amount, _agent);
+
         return true;
     }
 
@@ -85,6 +106,9 @@ contract IbetStraightBondExchange {
             balances[msg.sender][order.token] = balances[msg.sender][order.token].add(order.amount);
             commitments[msg.sender][order.token] = commitments[msg.sender][order.token].sub(order.amount);
         }
+
+        CancelOrder(order.token, _orderId, msg.sender, order.isBuy, order.price, order.amount, order.agent);
+
         return true;
     }
 
@@ -104,16 +128,25 @@ contract IbetStraightBondExchange {
         // 元注文と、発注する注文が同一の売買区分の場合、エラーを返す
         if (order.isBuy == _isBuy) { revert(); }
 
-        // 約定情報を挿入する
-        agreements[_orderId][latestAgreementIds[_orderId]++] = Agreement(msg.sender, _amount, order.price, false, false);
+        // 約定IDをカウントアップ => 約定情報を挿入する
+        uint256 latestAgreementId = latestAgreementIds[_orderId]++;
+        agreements[_orderId][latestAgreementId] = Agreement(msg.sender, _amount, order.price, false, false);
         // 元注文の数量を減らす
         order.amount = order.amount.sub(_amount);
 
-        // 買い注文に対して売り注文で応じた場合、売りの預かりを拘束
         if (order.isBuy) {
+            // 買い注文に対して売り注文で応じた場合、売りの預かりを拘束
             balances[msg.sender][order.token] = balances[msg.sender][order.token].sub(_amount);
             commitments[msg.sender][order.token] = commitments[msg.sender][order.token].add(_amount);
+            // イベント登録：約定
+            Agree(order.token, _orderId, latestAgreementId, order.owner, msg.sender, order.price, _amount, order.agent);
+        } else {
+            // イベント登録：約定
+            Agree(order.token, _orderId, latestAgreementId, msg.sender, order.owner, order.price, _amount, order.agent);
         }
+
+        // 現在値を更新する
+        lastPrice[order.token] = order.price;
 
         return true;
     }
@@ -140,10 +173,12 @@ contract IbetStraightBondExchange {
             // 買注文の場合、突合相手（売り手）から注文者（買い手）へと資産移転を行う
             commitments[agreement.counterpart][order.token] = commitments[agreement.counterpart][order.token].sub(agreement.amount);
             IbetStraightBond(order.token).transfer(order.owner,agreement.amount);
+            SettlementOK(order.token, _orderId, _agreementId, order.owner, agreement.counterpart, order.price, agreement.amount, order.agent);
         } else {
             // 売注文の場合、注文者（売り手）から突合相手（買い手）へと資産移転を行う
             commitments[order.owner][order.token] = commitments[order.owner][order.token].sub(agreement.amount);
             IbetStraightBond(order.token).transfer(agreement.counterpart,agreement.amount);
+            SettlementOK(order.token, _orderId, _agreementId, agreement.counterpart, order.owner, order.price, agreement.amount, order.agent);
         }
 
         return true;
@@ -167,11 +202,14 @@ contract IbetStraightBondExchange {
         // キャンセル済みフラグをキャンセル（True）に更新する
         agreements[_orderId][_agreementId].canceled = true;
 
-        // 売り注文の場合、預かりを解放 -> 預かりの引き出し
-        // 取り消した注文は無効化する（注文中状態に戻さない）
-        if (!order.isBuy) {
+        if (order.isBuy) {
+            SettlementNG(order.token, _orderId, _agreementId, order.owner, agreement.counterpart, order.price, agreement.amount, order.agent);
+        } else {
+            // 売り注文の場合、預かりを解放 -> 預かりの引き出し
+            // 取り消した注文は無効化する（注文中状態に戻さない）
             commitments[order.owner][order.token] = commitments[order.owner][order.token].sub(order.amount);
             IbetStraightBond(order.token).transfer(order.owner,order.amount);
+            SettlementNG(order.token, _orderId, _agreementId, agreement.counterpart, order.owner, order.price, agreement.amount, order.agent);
         }
 
         return true;
