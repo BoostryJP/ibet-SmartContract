@@ -10,40 +10,55 @@ contract ContractReceiver {
 contract IbetStraightBond is Ownable {
     using SafeMath for uint256;
 
+    // 属性情報
     address public owner;
     string public name;
     string public symbol;
     uint256 public constant decimals = 0;
-    uint256 public totalSupply; //総発行量
-    uint256 public faceValue; //額面
-    uint256 public interestRate; //金利
-    string public interestPaymentDate1; //利払日１
-    string public interestPaymentDate2; //利払日２
-    string public redemptionDate; //償還日
-    uint256 public redemptionAmount; //償還金額
-    string public returnAmount; //リターン内容
-    string public returnDate; //リターン実施日
-    string public purpose; //発行目的
+    uint256 public totalSupply; // 総発行量
+    uint256 public faceValue; // 額面
+    uint256 public interestRate; // 金利
+    string public interestPaymentDate1; // 利払日１
+    string public interestPaymentDate2; // 利払日２
+    string public redemptionDate; // 償還日
+    uint256 public redemptionAmount; // 償還金額
+    string public returnAmount; // リターン内容
+    string public returnDate; // リターン実施日
+    string public purpose; // 発行目的
 
-    bool public isRedeemed; //償還状況
+    // 償還状況
+    bool public isRedeemed;
 
+    // 残高情報
     struct balance {
         uint256 balance;
         bool isValue;
     }
 
-    event Transfer(address indexed from, address indexed to, uint256 value);
-    event Approval(address indexed owner, address indexed spender, uint256 value);
-    event Sign(address signer);
-    event Unsign(address signer);
-    event Redeem();
-
-    uint256 public num_holders;
-    mapping (uint256 => address) public holders;
+    // 残高数量
     mapping (address => balance) public balances;
+
+    // 第三者認定情報
+    // signer => status
     mapping (address => uint8) public signatures;
+
+    // 商品画像
+    // image class => url
     mapping (uint8 => string) public image_urls;
 
+    // イベント：振替
+    event Transfer(address indexed from, address indexed to, uint256 value);
+
+    // イベント：認定
+    event Sign(address indexed signer);
+
+    // イベント：認定取消
+    event Unsign(address indexed signer);
+
+    // イベント：償還
+    event Redeem();
+
+    // コンストラクタ
     function IbetStraightBond(string _name, string _symbol, uint256 _totalSupply, uint256 _faceValue,
         uint256 _interestRate, string _interestPaymentDate1, string _interestPaymentDate2,
         string _redemptionDate, uint256 _redemptionAmount,
@@ -62,16 +77,11 @@ contract IbetStraightBond is Ownable {
         returnAmount = _returnAmount;
         purpose = _purpose;
         balances[owner].balance = totalSupply;
-        num_holders = 1;
         isRedeemed = false;
     }
 
-    // Standard function transfer similar to ERC20 transfer with no _data .
-    // Added due to backwards compatibility reasons .
+    // ファンクション：トークンを振替する
     function transfer(address _to, uint _value) public returns (bool success) {
-
-        //standard function transfer similar to ERC20 transfer with no _data
-        //added due to backwards compatibility reasons
         bytes memory empty;
         if(isContract(_to)) {
             return transferToContract(_to, _value, empty);
@@ -81,27 +91,37 @@ contract IbetStraightBond is Ownable {
         }
     }
 
-    //assemble the given address bytecode. If bytecode exists then the _addr is a contract.
+    // ファンクション：アドレスフォーマットがコントラクトのものかを判断する
     function isContract(address _addr) private view returns (bool is_contract) {
         uint length;
         assembly {
-            //retrieve the size of the code on target address, this needs assembly
             length := extcodesize(_addr)
         }
         return (length>0);
     }
 
-    //function that is called when transaction target is an address
+    // ファンクション：アドレスへの振替
     function transferToAddress(address _to, uint _value, bytes /*_data*/) private returns (bool success) {
+        // 振替しようとしている数量が残高を超えている場合、エラーを返す
         if (balanceOf(msg.sender) < _value) revert();
+        // 償還済みの場合、エラーを返す
+        if (isRedeemed == true) revert();
+
         balances[msg.sender].balance = balanceOf(msg.sender).sub(_value);
         balances[_to].balance = balanceOf(_to).add(_value);
+
+        Transfer(msg.sender, _to, _value);
+
         return true;
     }
 
-    //function that is called when transaction target is a contract
+    // ファンクション：コントラクトへの振替
     function transferToContract(address _to, uint _value, bytes _data) private returns (bool success) {
+        // 振替しようとしている数量が残高を超えている場合、エラーを返す
         if (balanceOf(msg.sender) < _value) revert();
+        // 償還済みの場合、エラーを返す
+        if (isRedeemed == true) revert();
+
         balances[msg.sender].balance = balanceOf(msg.sender).sub(_value);
         balances[_to].balance = balanceOf(_to).add(_value);
         ContractReceiver receiver = ContractReceiver(_to);
@@ -109,15 +129,18 @@ contract IbetStraightBond is Ownable {
         return true;
     }
 
+    // ファンクション：残高確認
     function balanceOf(address _owner) public view returns (uint256) {
         return balances[_owner].balance;
     }
 
+    // ファンクション：商品の認定をリクエストする
     function requestSignature(address _signer) public returns (bool) {
         signatures[_signer] = 1;
         return true;
     }
 
+    // ファンクション：商品を認定する
     function sign() public returns (bool) {
         require(signatures[msg.sender] == 1);
         signatures[msg.sender] = 2;
@@ -125,6 +148,7 @@ contract IbetStraightBond is Ownable {
         return true;
     }
 
+    // ファンクション：商品の認定を取り消す
     function unsign() public returns (bool)  {
         require(signatures[msg.sender] == 2);
         signatures[msg.sender] = 0;
@@ -132,23 +156,18 @@ contract IbetStraightBond is Ownable {
         return true;
     }
 
+    // ファンクション：償還する
     function redeem() public onlyOwner() {
         isRedeemed = true;
         Redeem();
     }
 
-    function isSigned(address _signer) public constant returns (uint8) {
-        return signatures[_signer];
-    }
-
-    function holderAt(uint256 _index) public constant returns (address) {
-        return holders[_index];
-    }
-
+    // ファンクション：商品の画像を設定する
     function setImageURL(uint8 _class, string _image_url) public onlyOwner() {
         image_urls[_class] = _image_url;
     }
 
+    // ファンクション：商品の画像を取得する
     function getImageURL(uint8 _class) public view returns (string) {
         return image_urls[_class];
     }
