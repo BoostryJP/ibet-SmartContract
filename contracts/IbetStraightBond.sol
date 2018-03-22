@@ -110,7 +110,7 @@ contract IbetStraightBond is Ownable {
         balances[msg.sender].balance = balanceOf(msg.sender).sub(_value);
         balances[_to].balance = balanceOf(_to).add(_value);
 
-        Transfer(msg.sender, _to, _value);
+        emit Transfer(msg.sender, _to, _value);
 
         return true;
     }
@@ -144,7 +144,7 @@ contract IbetStraightBond is Ownable {
     function sign() public returns (bool) {
         require(signatures[msg.sender] == 1);
         signatures[msg.sender] = 2;
-        Sign(msg.sender);
+        emit Sign(msg.sender);
         return true;
     }
 
@@ -152,14 +152,14 @@ contract IbetStraightBond is Ownable {
     function unsign() public returns (bool)  {
         require(signatures[msg.sender] == 2);
         signatures[msg.sender] = 0;
-        Unsign(msg.sender);
+        emit Unsign(msg.sender);
         return true;
     }
 
     // ファンクション：償還する
     function redeem() public onlyOwner() {
         isRedeemed = true;
-        Redeem();
+        emit Redeem();
     }
 
     // ファンクション：商品の画像を設定する

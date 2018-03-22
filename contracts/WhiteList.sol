@@ -7,7 +7,7 @@ contract WhiteList {
         address account_address; // アカウントアドレス
         address agent_address; // アカウントアドレス（決済業者）
         string encrypted_info; // 銀行口座情報（暗号化済）
-        string approval_status; // 承認状態（OK/NG/WARN）
+        uint8 approval_status; // 承認状態（NONE(0)/NG(1)/OK(2)/WARN(3)）
     }
 
     // 支払用口座情報
@@ -33,7 +33,7 @@ contract WhiteList {
     function WhiteList() public {
     }
 
-    // 投資家：支払情報を登録する
+    // ファンクション：（投資家）支払情報を登録する
     function register(address _agent_address, string _encrypted_info) public returns (bool) {
         PaymentAccount storage payment_account = payment_accounts[msg.sender][_agent_address];
         require(payment_account.account_address == 0);
@@ -41,60 +41,71 @@ contract WhiteList {
         payment_account.account_address = msg.sender;
         payment_account.agent_address = _agent_address;
         payment_account.encrypted_info = _encrypted_info;
-        payment_account.approval_status = 'NG';
+        payment_account.approval_status = 1;
 
-        Register(msg.sender, _agent_address);
+        emit Register(msg.sender, _agent_address);
 
         return true;
     }
 
-    // 投資家：支払情報の更新
+    // ファンクション：（投資家）支払情報の更新
     function changeInfo(address _agent_address, string _encrypted_info) public returns (bool) {
         PaymentAccount storage payment_account = payment_accounts[msg.sender][_agent_address];
         require(payment_account.account_address != 0);
 
         payment_account.encrypted_info = _encrypted_info;
-        payment_account.approval_status = 'NG';
+        payment_account.approval_status = 1;
 
-        ChangeInfo(msg.sender, _agent_address);
+        emit ChangeInfo(msg.sender, _agent_address);
 
         return true;
     }
 
-    // 決済業者：支払情報を承認する
+    // ファンクション：（決済業者）支払情報を承認する
     function approve(address _account_address) public returns (bool) {
         PaymentAccount storage payment_account = payment_accounts[_account_address][msg.sender];
         require(payment_account.account_address != 0);
 
-        payment_account.approval_status = 'OK';
+        payment_account.approval_status = 2;
 
-        Approve(_account_address, msg.sender);
+        emit Approve(_account_address, msg.sender);
 
         return true;
     }
 
-    // 決済業者：支払情報を警告状態にする
+    // ファンクション：（決済業者）支払情報を警告状態にする
     function warn(address _account_address) public returns (bool) {
         PaymentAccount storage payment_account = payment_accounts[_account_address][msg.sender];
         require(payment_account.account_address != 0);
 
-        payment_account.approval_status = 'WARN';
+        payment_account.approval_status = 3;
 
-        Warn(_account_address, msg.sender);
+        emit Warn(_account_address, msg.sender);
 
         return true;
     }
 
-    // 決済業者：支払情報を非承認にする
+    // ファンクション：（決済業者）支払情報を非承認にする
     function unapprove(address _account_address) public returns (bool) {
         PaymentAccount storage payment_account = payment_accounts[_account_address][msg.sender];
         require(payment_account.account_address != 0);
 
-        payment_account.approval_status = 'NG';
+        payment_account.approval_status = 1;
 
-        Unapprove(_account_address, msg.sender);
+        emit Unapprove(_account_address, msg.sender);
 
         return true;
+    }
+
+    // ファンクション：登録状況を確認する
+    function isRegistered(address _account_address, address _agent_address) public view returns (bool) {
+        PaymentAccount storage payment_account = payment_accounts[_account_address][_agent_address];
+        // アカウントが登録済み、かつ承認済みである場合、trueを返す
+        if (payment_account.account_address != 0 && payment_account.approval_status == 2) {
+            return true;
+        } else {
+            return false;
+        }
     }
 
 }

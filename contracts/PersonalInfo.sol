@@ -20,7 +20,7 @@ contract PersonalInfo {
     function PersonalInfo() public {
     }
 
-    // 情報を登録する
+    // ファンクション：情報を登録する
     function register(address _issuer_address, string _encrypted_info) public returns (bool) {
         Info storage info = personal_info[msg.sender][_issuer_address];
 
@@ -28,9 +28,19 @@ contract PersonalInfo {
         info.issuer_address = _issuer_address;
         info.encrypted_info = _encrypted_info;
 
-        Register(msg.sender, _issuer_address);
+        emit Register(msg.sender, _issuer_address);
 
         return true;
+    }
+
+    // ファンクション：登録状況を確認する
+    function isRegistered(address _account_address, address _issuer_address) public view returns (bool) {
+        Info storage info = personal_info[_account_address][_issuer_address];
+        if (info.account_address == 0) {
+            return false;
+        } else {
+            return true;
+        }
     }
 
 }
