@@ -18,28 +18,22 @@ contract IbetStraightBond is Ownable {
     uint256 public totalSupply; // 総発行量
     uint256 public faceValue; // 額面
     uint256 public interestRate; // 金利
-    string public interestPaymentDate1; // 利払日１
-    string public interestPaymentDate2; // 利払日２
+    string public interestPaymentDate; // 利払日（JSON）
     string public redemptionDate; // 償還日
     uint256 public redemptionAmount; // 償還金額
-    string public returnAmount; // リターン内容
     string public returnDate; // リターン実施日
+    string public returnAmount; // リターン内容
     string public purpose; // 発行目的
 
     // 償還状況
     bool public isRedeemed;
 
-    // 残高情報
-    struct balance {
-        uint256 balance;
-        bool isValue;
-    }
-
     // 残高数量
-    mapping (address => balance) public balances;
+    // account_address => balance
+    mapping (address => uint256) public balances;
 
     // 第三者認定情報
-    // signer => status
+    // signer_address => status
     mapping (address => uint8) public signatures;
 
     // 商品画像
@@ -59,8 +53,8 @@ contract IbetStraightBond is Ownable {
     event Redeem();
 
     // コンストラクタ
-    function IbetStraightBond(string _name, string _symbol, uint256 _totalSupply, uint256 _faceValue,
-        uint256 _interestRate, string _interestPaymentDate1, string _interestPaymentDate2,
+    function IbetStraightBond(string _name, string _symbol, uint256 _totalSupply,
+        uint256 _faceValue, uint256 _interestRate, string _interestPaymentDate,
         string _redemptionDate, uint256 _redemptionAmount,
         string _returnDate, string _returnAmount, string _purpose) public {
         owner = msg.sender;
@@ -69,14 +63,13 @@ contract IbetStraightBond is Ownable {
         totalSupply = _totalSupply;
         faceValue = _faceValue;
         interestRate = _interestRate;
-        interestPaymentDate1 = _interestPaymentDate1;
-        interestPaymentDate2 = _interestPaymentDate2;
+        interestPaymentDate = _interestPaymentDate;
         redemptionDate = _redemptionDate;
         redemptionAmount = _redemptionAmount;
         returnDate = _returnDate;
         returnAmount = _returnAmount;
         purpose = _purpose;
-        balances[owner].balance = totalSupply;
+        balances[owner] = totalSupply;
         isRedeemed = false;
     }
 
@@ -107,8 +100,8 @@ contract IbetStraightBond is Ownable {
         // 償還済みの場合、エラーを返す
         if (isRedeemed == true) revert();
 
-        balances[msg.sender].balance = balanceOf(msg.sender).sub(_value);
-        balances[_to].balance = balanceOf(_to).add(_value);
+        balances[msg.sender] = balanceOf(msg.sender).sub(_value);
+        balances[_to] = balanceOf(_to).add(_value);
 
         emit Transfer(msg.sender, _to, _value);
 
@@ -122,8 +115,8 @@ contract IbetStraightBond is Ownable {
         // 償還済みの場合、エラーを返す
         if (isRedeemed == true) revert();
 
-        balances[msg.sender].balance = balanceOf(msg.sender).sub(_value);
-        balances[_to].balance = balanceOf(_to).add(_value);
+        balances[msg.sender] = balanceOf(msg.sender).sub(_value);
+        balances[_to] = balanceOf(_to).add(_value);
         ContractReceiver receiver = ContractReceiver(_to);
         receiver.tokenFallback(msg.sender, _value, _data);
         return true;
@@ -131,7 +124,7 @@ contract IbetStraightBond is Ownable {
 
     // ファンクション：残高確認
     function balanceOf(address _owner) public view returns (uint256) {
-        return balances[_owner].balance;
+        return balances[_owner];
     }
 
     // ファンクション：商品の認定をリクエストする
