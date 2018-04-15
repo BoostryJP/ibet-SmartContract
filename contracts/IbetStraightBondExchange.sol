@@ -83,16 +83,6 @@ contract IbetStraightBondExchange is Ownable {
         personalInfoAddress = _personalInfoAddress;
     }
 
-    // ファンクション：認可コントラクトのアドレスを更新する
-    function updateWhiteListAddress(address _newAddress) public onlyOwner() {
-        whiteListAddress = _newAddress;
-    }
-
-    // ファンクション：認可コントラクトのアドレスを更新する
-    function updatePersonalInfoAddress(address _newAddress) public onlyOwner() {
-        personalInfoAddress = _newAddress;
-    }
-
     // ファンクション：（投資家）新規注文を作成する
     function createOrder(address _token, uint256 _amount, uint256 _price, bool _isBuy, address _agent) public returns (bool) {
         // <CHK> 買注文の場合
@@ -132,7 +122,7 @@ contract IbetStraightBondExchange is Ownable {
         // 更新処理：売り注文の場合、預かりを拘束
         if (!_isBuy) {
             balances[msg.sender][_token] = balances[msg.sender][_token].sub(_amount);
-            commitments[msg.sender][_token] = balances[msg.sender][_token].add(_amount);
+            commitments[msg.sender][_token] = commitments[msg.sender][_token].add(_amount);
         }
 
         // イベント登録：新規注文
