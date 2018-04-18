@@ -1,6 +1,5 @@
 import pytest
 from ethereum.tester import TransactionFailed
-from populus.config import Web3Config
 
 encrypted_message = 'encrypted_message'
 encrypted_message_after = 'encrypted_message_after'
