@@ -81,3 +81,9 @@ $ populus compile
 ```
 $ py.test tests/
 ```
+
+* Warningの出力をさせたくない場合は、以下のオプションをつける。
+
+```
+$ py.test tests/ --disable-pytest-warnings
+```
