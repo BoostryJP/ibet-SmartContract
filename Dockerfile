@@ -65,8 +65,7 @@ RUN git clone https://github.com/jpmorganchase/quorum.git && \
 
 # pyenv
 RUN git clone https://github.com/pyenv/pyenv.git
-RUN mkdir -p /home/apl \
-    mv /pyenv /home/apl/.pyenv/ \
+RUN mv /pyenv /home/apl/.pyenv/ \
 　　chown -R apl:apl /home/apl
 
 # install pyenv
