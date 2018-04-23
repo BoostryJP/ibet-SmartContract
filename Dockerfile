@@ -65,11 +65,13 @@ RUN git clone https://github.com/jpmorganchase/quorum.git && \
 
 # pyenv
 RUN git clone https://github.com/pyenv/pyenv.git
-RUN chown -R apl:apl /pyenv
+RUN mkdir -p /home/apl \
+    mv /pyenv /home/apl/.pyenv/ \
+　　chown -R apl:apl /home/apl
 
 # install pyenv
 USER apl
-RUN echo 'export PYENV_ROOT="/pyenv"' >> ~apl/.bash_profile \
+RUN echo 'export PYENV_ROOT="$HOME/.pyenv"' >> ~apl/.bash_profile \
  && echo 'export PATH="$PYENV_ROOT/bin:$PATH"' >> ~apl/.bash_profile \
  && echo 'eval "$(pyenv init -)"' >> ~apl/.bash_profile \
  && echo 'export LANG=ja_JP.utf8' >> ~apl/.bash_profile
