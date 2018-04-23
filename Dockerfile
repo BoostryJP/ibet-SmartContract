@@ -89,8 +89,7 @@ RUN . ~/.bash_profile \
 
 # app
 USER root
-COPY contracts /app/tmr-sc/contracts
-COPY tests /app/tmr-sc/tests
+COPY . /app/tmr-sc/
 RUN chown -R apl:apl /app/tmr-sc && \
     chmod 755 /app/tmr-sc
 USER apl
