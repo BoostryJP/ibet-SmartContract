@@ -29,6 +29,9 @@ contract WhiteList {
     // イベント：非承認
     event Unapprove(address indexed account_address, address indexed agent_address);
 
+    // イベント：アカウント停止（BAN）
+    event Ban(address indexed account_address, address indexed agent_address);
+
     // コンストラクタ
     function WhiteList() public {
     }
@@ -52,6 +55,7 @@ contract WhiteList {
     function changeInfo(address _agent_address, string _encrypted_info) public returns (bool) {
         PaymentAccount storage payment_account = payment_accounts[msg.sender][_agent_address];
         require(payment_account.account_address != 0);
+        require(payment_account.approval_status != 4);
 
         payment_account.encrypted_info = _encrypted_info;
         payment_account.approval_status = 1;
@@ -93,6 +97,18 @@ contract WhiteList {
         payment_account.approval_status = 1;
 
         emit Unapprove(_account_address, msg.sender);
+
+        return true;
+    }
+
+    // ファンクション：（決済業者）支払情報をアカウント停止（BAN）する。
+    function ban(address _account_address) public returns (bool) {
+        PaymentAccount storage payment_account = payment_accounts[_account_address][msg.sender];
+        require(payment_account.account_address != 0);
+
+        payment_account.approval_status = 4;
+
+        emit Ban(_account_address, msg.sender);
 
         return true;
     }
