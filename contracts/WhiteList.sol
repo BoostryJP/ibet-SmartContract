@@ -29,7 +29,7 @@ contract WhiteList {
     // イベント：非承認
     event Unapprove(address indexed account_address, address indexed agent_address);
 
-    // イベント：警告
+    // イベント：アカウント停止（BAN）
     event Ban(address indexed account_address, address indexed agent_address);
 
     // コンストラクタ
