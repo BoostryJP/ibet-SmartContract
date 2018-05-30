@@ -296,13 +296,17 @@ contract IbetStraightBondExchange is Ownable {
         agreements[_orderId][_agreementId].canceled = true;
 
         if (order.isBuy) {
+            // 更新処理：買い注文の場合、突合相手（売り手）の預かりを解放 -> 預かりの引き出し
+            // 取り消した注文は無効化する（注文中状態に戻さない）
+            commitments[agreement.counterpart][order.token] = commitments[agreement.counterpart][order.token].sub(agreement.amount);
+            IbetStraightBond(order.token).transfer(agreement.counterpart,agreement.amount);
             // イベント登録：決済NG
             emit SettlementNG(order.token, _orderId, _agreementId, order.owner, agreement.counterpart, order.price, agreement.amount, order.agent);
         } else {
-            // 更新処理：売り注文の場合、預かりを解放 -> 預かりの引き出し
+            // 更新処理：売り注文の場合、突合相手（買い手）の注文数量だけ注文者（売り手）の預かりを解放 -> 預かりの引き出し。
             // 取り消した注文は無効化する（注文中状態に戻さない）
-            commitments[order.owner][order.token] = commitments[order.owner][order.token].sub(order.amount);
-            IbetStraightBond(order.token).transfer(order.owner,order.amount);
+            commitments[order.owner][order.token] = commitments[order.owner][order.token].sub(agreement.amount);
+            IbetStraightBond(order.token).transfer(order.owner,agreement.amount);
             // イベント登録：決済NG
             emit SettlementNG(order.token, _orderId, _agreementId, agreement.counterpart, order.owner, order.price, agreement.amount, order.agent);
         }
