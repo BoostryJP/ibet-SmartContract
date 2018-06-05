@@ -217,7 +217,7 @@ def test_transfer_normal_2(web3,chain):
 
     exchange_contract, _ = chain.provider.get_or_deploy_contract(
         'IbetStraightBondExchange',
-        deploy_transaction = {'gas':6000000},
+        deploy_transaction = {'gas':5500000},
         deploy_args = [
             whitelist_contract.address,
             personalinfo_contract.address,
