@@ -24,6 +24,7 @@ contract IbetStraightBond is Ownable {
     string public returnDate; // リターン実施日
     string public returnAmount; // リターン内容
     string public purpose; // 発行目的
+    string public memo; //メモ欄
 
     // 償還状況
     bool public isRedeemed;
@@ -56,7 +57,8 @@ contract IbetStraightBond is Ownable {
     function IbetStraightBond(string _name, string _symbol, uint256 _totalSupply,
         uint256 _faceValue, uint256 _interestRate, string _interestPaymentDate,
         string _redemptionDate, uint256 _redemptionAmount,
-        string _returnDate, string _returnAmount, string _purpose) public {
+        string _returnDate, string _returnAmount,
+        string _purpose, string _memo) public {
         owner = msg.sender;
         name = _name;
         symbol = _symbol;
@@ -69,6 +71,7 @@ contract IbetStraightBond is Ownable {
         returnDate = _returnDate;
         returnAmount = _returnAmount;
         purpose = _purpose;
+        memo = _memo;
         balances[owner] = totalSupply;
         isRedeemed = false;
     }
@@ -163,6 +166,11 @@ contract IbetStraightBond is Ownable {
     // ファンクション：商品の画像を取得する
     function getImageURL(uint8 _class) public view returns (string) {
         return image_urls[_class];
+    }
+
+    // メモ欄を更新する
+    function updateMemo(string _memo) public onlyOwner() {
+        memo = _memo;
     }
 
 }

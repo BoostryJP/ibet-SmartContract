@@ -13,11 +13,13 @@ def init_args():
     return_date = '20191231'
     return_amount = 'some_return'
     purpose = 'some_purpose'
+    memo = 'some_memo'
 
     deploy_args = [
         name, symbol, total_supply, face_value,
         interest_rate, interest_payment_date, redemption_date,
-        redemption_amount, return_date, return_amount, purpose
+        redemption_amount, return_date, return_amount,
+        purpose, memo
     ]
     return deploy_args
 
@@ -48,6 +50,7 @@ def test_deploy_normal_1(web3,chain):
     return_date = bond_contract.call().returnDate()
     return_amount = bond_contract.call().returnAmount()
     purpose = bond_contract.call().purpose()
+    memo = bond_contract.call().memo()
 
     assert owner_address == account_address
     assert name == deploy_args[0]
@@ -61,6 +64,7 @@ def test_deploy_normal_1(web3,chain):
     assert return_date == deploy_args[8]
     assert return_amount == deploy_args[9]
     assert purpose == deploy_args[10]
+    assert memo == deploy_args[11]
 
 
 # エラー系1: 入力値の型誤り（name）
@@ -162,6 +166,15 @@ def test_deploy_error_11(chain):
         chain.provider.get_or_deploy_contract('IbetStraightBond', deploy_args = deploy_args)
 
 
+# エラー系12: 入力値の型誤り（memo）
+def test_deploy_error_12(chain):
+    deploy_args = init_args()
+    deploy_args[11] = 1234
+
+    with pytest.raises(TypeError):
+        chain.provider.get_or_deploy_contract('IbetStraightBond', deploy_args = deploy_args)
+
+
 '''
 TEST2_トークンの振替（transfer）
 '''
@@ -204,7 +217,7 @@ def test_transfer_normal_2(web3,chain):
 
     exchange_contract, _ = chain.provider.get_or_deploy_contract(
         'IbetStraightBondExchange',
-        deploy_transaction = {'gas':5000000},
+        deploy_transaction = {'gas':6000000},
         deploy_args = [
             whitelist_contract.address,
             personalinfo_contract.address,
@@ -712,3 +725,26 @@ def test_setImageURL_error_3(web3,chain):
     web3.eth.defaultAccount = other_address
     with pytest.raises(TransactionFailed):
         bond_contract.transact().setImageURL(0, image_url)
+
+
+'''
+TEST9_メモの更新（updateMemo）
+'''
+
+# 正常系1: 発行（デプロイ） -> 商品画像の設定
+def test_updateMemo_normal_1(web3,chain):
+    owner_address = web3.eth.accounts[0]
+
+    deploy_args = init_args()
+    bond_contract, _ = chain.provider.get_or_deploy_contract(
+        'IbetStraightBond',
+        deploy_args = deploy_args
+    )
+
+    # 商品画像の設定 -> Success
+    web3.eth.defaultAccount = owner_address
+    txn_hash = bond_contract.transact().updateMemo('updated memo')
+    chain.wait.for_receipt(txn_hash)
+
+    memo = bond_contract.call().memo()
+    assert memo == 'updated memo'
