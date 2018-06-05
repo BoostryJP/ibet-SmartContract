@@ -721,7 +721,7 @@ def test_setImageURL_error_3(web3,chain):
         deploy_args = deploy_args
     )
 
-    # Owner以外のアドレスから償還を実施 -> Failure
+    # Owner以外のアドレスから画像設定を実施 -> Failure
     web3.eth.defaultAccount = other_address
     with pytest.raises(TransactionFailed):
         bond_contract.transact().setImageURL(0, image_url)
@@ -731,7 +731,7 @@ def test_setImageURL_error_3(web3,chain):
 TEST9_メモの更新（updateMemo）
 '''
 
-# 正常系1: 発行（デプロイ） -> 商品画像の設定
+# 正常系1: 発行（デプロイ） -> メモ欄の修正
 def test_updateMemo_normal_1(web3,chain):
     owner_address = web3.eth.accounts[0]
 
@@ -741,10 +741,43 @@ def test_updateMemo_normal_1(web3,chain):
         deploy_args = deploy_args
     )
 
-    # 商品画像の設定 -> Success
+    # メモ欄の修正 -> Success
     web3.eth.defaultAccount = owner_address
     txn_hash = bond_contract.transact().updateMemo('updated memo')
     chain.wait.for_receipt(txn_hash)
 
     memo = bond_contract.call().memo()
     assert memo == 'updated memo'
+
+
+# エラー系1: 入力値の型誤り
+def test_updateMemo_error_1(web3,chain):
+    owner_address = web3.eth.accounts[0]
+
+    deploy_args = init_args()
+    bond_contract, _ = chain.provider.get_or_deploy_contract(
+        'IbetStraightBond',
+        deploy_args = deploy_args
+    )
+
+    # メモ欄の修正 -> Success
+    web3.eth.defaultAccount = owner_address
+    with pytest.raises(TypeError):
+        bond_contract.transact().updateMemo(1234)
+
+
+# エラー系2: Owner以外のアドレスからメモ欄の修正を実施した場合
+def test_updateMemo_error_2(web3,chain):
+    owner_address = web3.eth.accounts[0]
+    other_address = web3.eth.accounts[1]
+
+    deploy_args = init_args()
+    bond_contract, _ = chain.provider.get_or_deploy_contract(
+        'IbetStraightBond',
+        deploy_args = deploy_args
+    )
+
+    # Owner以外のアドレスからメモ欄の修正を実施 -> Failure
+    web3.eth.defaultAccount = other_address
+    with pytest.raises(TransactionFailed):
+        bond_contract.transact().updateMemo('updated memo')
