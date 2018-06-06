@@ -1,5 +1,9 @@
-pragma solidity ^0.4.21;
-contract TokenList {
+pragma solidity ^0.4.24;
+
+import "./IbetStraightBond.sol";
+import "./Ownable.sol";
+
+contract TokenList is Ownable {
 
     struct Token {
         address token_address;
@@ -12,6 +16,20 @@ contract TokenList {
 
     function register(address _token_address, string _token_template) public {
         require(tokens[_token_address].token_address == 0);
+        require(IbetStraightBond(_token_address).owner() == msg.sender);
+        tokens[_token_address].token_address = _token_address;
+        tokens[_token_address].token_template = _token_template;
+        tokens[_token_address].owner_address = msg.sender;
+        token_list.push(Token({
+            token_address: _token_address,
+            token_template: _token_template,
+            owner_address: msg.sender
+        }));
+    }
+
+    function test_register(address _token_address, string _token_template) public onlyOwner() {
+        require(tokens[_token_address].token_address == 0);
+        //require(IbetStraightBond(_token_address).owner() == msg.sender);
         tokens[_token_address].token_address = _token_address;
         tokens[_token_address].token_template = _token_template;
         tokens[_token_address].owner_address = msg.sender;
