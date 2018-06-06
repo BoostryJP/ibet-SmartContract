@@ -1,4 +1,4 @@
-pragma solidity ^0.4.21;
+pragma solidity ^0.4.24;
 
 contract PersonalInfo {
 
@@ -17,7 +17,7 @@ contract PersonalInfo {
     event Register(address indexed account_address, address indexed issuer_address);
 
     // コンストラクタ
-    function PersonalInfo() public {
+    constructor() public {
     }
 
     // ファンクション：情報を登録する

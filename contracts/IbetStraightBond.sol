@@ -1,4 +1,4 @@
-pragma solidity ^0.4.21;
+pragma solidity ^0.4.24;
 
 import "./SafeMath.sol";
 import "./Ownable.sol";
@@ -54,7 +54,7 @@ contract IbetStraightBond is Ownable {
     event Redeem();
 
     // コンストラクタ
-    function IbetStraightBond(string _name, string _symbol, uint256 _totalSupply,
+    constructor(string _name, string _symbol, uint256 _totalSupply,
         uint256 _faceValue, uint256 _interestRate, string _interestPaymentDate,
         string _redemptionDate, uint256 _redemptionAmount,
         string _returnDate, string _returnAmount,

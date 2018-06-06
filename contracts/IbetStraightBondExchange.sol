@@ -1,4 +1,4 @@
-pragma solidity ^0.4.21;
+pragma solidity ^0.4.24;
 
 import "./SafeMath.sol";
 import "./Ownable.sol";
@@ -78,7 +78,7 @@ contract IbetStraightBondExchange is Ownable {
     event Withdrawal(address indexed tokenAddress, address indexed accountAddress);
 
     // コンストラクタ
-    function IbetStraightBondExchange(address _whiteListAddress, address _personalInfoAddress) public {
+    constructor(address _whiteListAddress, address _personalInfoAddress) public {
         whiteListAddress = _whiteListAddress;
         personalInfoAddress = _personalInfoAddress;
     }

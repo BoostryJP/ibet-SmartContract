@@ -1,4 +1,4 @@
-pragma solidity ^0.4.21;
+pragma solidity ^0.4.24;
 
 contract WhiteList {
 
@@ -33,7 +33,7 @@ contract WhiteList {
     event Ban(address indexed account_address, address indexed agent_address);
 
     // コンストラクタ
-    function WhiteList() public {
+    constructor() public {
     }
 
     // ファンクション：（投資家）支払情報を登録する
