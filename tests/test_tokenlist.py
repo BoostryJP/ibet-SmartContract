@@ -4,17 +4,21 @@ from eth_utils import to_checksum_address
 
 token_template = 'some_template'
 token_address = to_checksum_address('0xd950a0ba53af3f4f295500eee692598e31166ad9')
+token_address_2 = to_checksum_address('0xd950a0ba53af3f4f295500eee692598e31166ad8')
 
 '''
 TEST1_トークン情報を登録（register）
+　※本来は"register"ファンクションに対するテストが正しいが、populusでのテストが実行できないため、
+　一部機能を削った"test_register"ファンクションに対してテストを実施している。
 '''
 
 # 正常系1: 新規登録
 def test_register_normal_1(web3,chain):
     account_address = web3.eth.accounts[0]
+    web3.eth.defaultAccount = account_address
 
     tokenlist_contract, _ = chain.provider.get_or_deploy_contract('TokenList')
-    txn_hash = tokenlist_contract.transact().register(token_address, token_template)
+    txn_hash = tokenlist_contract.transact().test_register(token_address, token_template)
     chain.wait.for_receipt(txn_hash)
 
     # Owner Address が正しいことを確認
@@ -41,16 +45,16 @@ def test_register_normal_1(web3,chain):
 # 正常系2: 新規登録（複数トークンの登録）
 def test_register_normal_2(web3,chain):
     account_address = web3.eth.accounts[0]
+    web3.eth.defaultAccount = account_address
 
     tokenlist_contract, _ = chain.provider.get_or_deploy_contract('TokenList')
 
     # 新規登録（1回目）
-    txn_hash_1 = tokenlist_contract.transact().register(token_address, token_template)
+    txn_hash_1 = tokenlist_contract.transact().test_register(token_address, token_template)
     chain.wait.for_receipt(txn_hash_1)
 
     # 新規登録（2回目）
-    token_address_2 = to_checksum_address('0xd950a0ba53af3f4f295500eee692598e31166ad8')
-    txn_hash_2 = tokenlist_contract.transact().register(token_address_2, token_template)
+    txn_hash_2 = tokenlist_contract.transact().test_register(token_address_2, token_template)
     chain.wait.for_receipt(txn_hash_2)
 
     # Owner Address が正しいことを確認
@@ -81,7 +85,7 @@ def test_register_error_1(web3,chain):
 
     # 新規登録 -> Failure
     with pytest.raises(TypeError):
-        tokenlist_contract.transact().register(token_address, token_template)
+        tokenlist_contract.transact().test_register(token_address, token_template)
 
 
 # エラー系2: トークンテンプレートの型（string）が正しくない場合
@@ -91,7 +95,7 @@ def test_register_error_2(web3,chain):
 
     # 新規登録 -> Failure
     with pytest.raises(TypeError):
-        tokenlist_contract.transact().register(token_address, token_template)
+        tokenlist_contract.transact().test_register(token_address, token_template)
 
 
 # エラー系3: 同一トークンを複数回登録
@@ -99,12 +103,12 @@ def test_register_error_3(web3,chain):
     tokenlist_contract, _ = chain.provider.get_or_deploy_contract('TokenList')
 
     # 新規登録（1回目） -> Success
-    txn_hash = tokenlist_contract.transact().register(token_address, token_template)
+    txn_hash = tokenlist_contract.transact().test_register(token_address, token_template)
     chain.wait.for_receipt(txn_hash)
 
     # 新規登録（2回目） -> Failure
     with pytest.raises(TransactionFailed):
-        tokenlist_contract.transact().register(token_address, token_template)
+        tokenlist_contract.transact().test_register(token_address, token_template)
 
 
 # エラー系4: 異なるアドレスから同一トークンを登録
@@ -116,13 +120,31 @@ def test_register_error_4(web3,chain):
 
     # 新規登録（account_1） -> Success
     web3.eth.defaultAccount = account_address_1
-    txn_hash = tokenlist_contract.transact().register(token_address, token_template)
+    txn_hash = tokenlist_contract.transact().test_register(token_address, token_template)
     chain.wait.for_receipt(txn_hash)
 
     # 新規登録（account_2） -> Failure
     web3.eth.defaultAccount = account_address_2
     with pytest.raises(TransactionFailed):
-        tokenlist_contract.transact().register(token_address, token_template)
+        tokenlist_contract.transact().test_register(token_address, token_template)
+
+
+'''
+TEST1（補足）_テスト用ファンクション（test_register）
+'''
+# エラー系1: TokenListの管理者以外で実行
+def test_testregister_error_1(web3,chain):
+    account_address_1 = web3.eth.accounts[0]
+    account_address_2 = web3.eth.accounts[1]
+
+    # TokenListのデプロイ（account_1）
+    web3.eth.defaultAccount = account_address_1
+    tokenlist_contract, _ = chain.provider.get_or_deploy_contract('TokenList')
+
+    # 新規登録（account_2） -> Failure
+    web3.eth.defaultAccount = account_address_2
+    with pytest.raises(TransactionFailed):
+        tokenlist_contract.transact().test_register(token_address, token_template)
 
 
 '''
@@ -137,7 +159,7 @@ def test_changeOwner_normal_1(web3,chain):
     tokenlist_contract, _ = chain.provider.get_or_deploy_contract('TokenList')
 
     # 新規登録 -> Success
-    txn_hash_1 = tokenlist_contract.transact().register(token_address, token_template)
+    txn_hash_1 = tokenlist_contract.transact().test_register(token_address, token_template)
     chain.wait.for_receipt(txn_hash_1)
 
     # オーナー変更 -> Success
@@ -207,7 +229,7 @@ def test_changeOwner_error_4(web3,chain):
 
     # 新規登録 -> Success
     web3.eth.defaultAccount = account_address
-    txn_hash_1 = tokenlist_contract.transact().register(token_address, token_template)
+    txn_hash_1 = tokenlist_contract.transact().test_register(token_address, token_template)
     chain.wait.for_receipt(txn_hash_1)
 
     # オーナー変更 -> Failure
