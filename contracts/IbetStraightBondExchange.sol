@@ -78,7 +78,7 @@ contract IbetStraightBondExchange is Ownable {
     event Withdrawal(address indexed tokenAddress, address indexed accountAddress);
 
     // イベント：送信
-    event Transfer(address indexed from, address indexed to, uint256 value);
+    event Transfer(address indexed from, address indexed to, address indexed tokenAddress, uint256 value);
     
     // コンストラクタ
     constructor(address _whiteListAddress, address _personalInfoAddress) public {
@@ -346,8 +346,8 @@ contract IbetStraightBondExchange is Ownable {
         balances[msg.sender][_token] = balances[msg.sender][_token].sub(_value);
         IbetStraightBond(_token).transfer(_to,_value);
         // イベント登録
-        emit Transfer(msg.sender, _to, _value);
-        
+        emit Transfer(msg.sender, _to, _token, _value);
+
         return true;
     }
 
