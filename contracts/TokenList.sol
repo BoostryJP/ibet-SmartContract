@@ -27,19 +27,6 @@ contract TokenList is Ownable {
         }));
     }
 
-    function test_register(address _token_address, string _token_template) public onlyOwner() {
-        require(tokens[_token_address].token_address == 0);
-        //require(IbetStraightBond(_token_address).owner() == msg.sender);
-        tokens[_token_address].token_address = _token_address;
-        tokens[_token_address].token_template = _token_template;
-        tokens[_token_address].owner_address = msg.sender;
-        token_list.push(Token({
-            token_address: _token_address,
-            token_template: _token_template,
-            owner_address: msg.sender
-        }));
-    }
-
     function changeOwner(address _token_address, address _new_owner_address) public {
         require(tokens[_token_address].token_address != 0);
         require(tokens[_token_address].owner_address == msg.sender);
