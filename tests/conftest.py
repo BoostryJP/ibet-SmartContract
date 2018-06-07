@@ -2,34 +2,45 @@ import pytest
 
 @pytest.yield_fixture()
 def chain(project):
-    with project.get_chain('tester') as chain:
+    with project.get_chain('local_chain') as chain:
         yield chain
 
 @pytest.yield_fixture()
-def bond_token(web3,chain,accounts):
-    name = 'test_bond'
-    symbol = 'BND'
-    total_supply = 10000
-    face_value = 10000
-    interest_rate = 1000
-    interest_payment_date = '{"interestPaymentDate1":"0331","interestPaymentDate2":"0930"}'
-    redemption_date = '20191231'
-    redemption_amount = 100
-    return_date = '20191231'
-    return_amount = 'some_return'
-    purpose = 'some_purpose'
-    memo = 'some_memo'
+def users(web3, accounts):
+    admin = accounts[0]
+    trader = accounts[1]
+    issuer = accounts[2]
+    agent = accounts[3]
+    web3.personal.unlockAccount(accounts[0],"password",0)
+    web3.personal.unlockAccount(accounts[1],"password",0)
+    web3.personal.unlockAccount(accounts[2],"password",0)
+    web3.personal.unlockAccount(accounts[3],"password",0)
+    users = {
+        'admin': admin,
+        'trader': trader,
+        'issuer': issuer,
+        'agent': agent
+    }
+    return users
 
-    deploy_args = [
-        name, symbol, total_supply, face_value,
-        interest_rate, interest_payment_date, redemption_date,
-        redemption_amount, return_date, return_amount,
-        purpose, memo
-    ]
+@pytest.yield_fixture()
+def personal_info(web3, chain, users):
+    web3.eth.defaultAccount = users['admin']
+    personal_info, _ = chain.provider.get_or_deploy_contract('PersonalInfo')
+    return personal_info
 
-    web3.eth.defaultAccount = accounts[0]
-    bond_token, _ = chain.provider.get_or_deploy_contract(
-        'IbetStraightBond',
+@pytest.yield_fixture()
+def white_list(web3, chain, users):
+    web3.eth.defaultAccount = users['admin']
+    white_list, _ = chain.provider.get_or_deploy_contract('WhiteList')
+    return white_list
+
+@pytest.yield_fixture()
+def bond_exchange(web3, chain, users, personal_info, white_list):
+    web3.eth.defaultAccount = users['admin']
+    deploy_args = [white_list.address, personal_info.address]
+    bond_exchange, _ = chain.provider.get_or_deploy_contract(
+        'IbetStraightBondExchange',
         deploy_args = deploy_args
     )
-    return bond_token
+    return bond_exchange

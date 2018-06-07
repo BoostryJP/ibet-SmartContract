@@ -1,5 +1,6 @@
 import pytest
 from ethereum.tester import TransactionFailed
+import utils
 
 def init_args():
     name = 'test_bond'
@@ -28,11 +29,11 @@ TEST1_デプロイ
 '''
 
 # 正常系1: deploy
-def test_deploy_normal_1(web3,chain):
-    account_address = web3.eth.accounts[0]
-
+def test_deploy_normal_1(web3, chain, users):
+    account_address = users['issuer']
     deploy_args = init_args()
 
+    web3.eth.defaultAccount = account_address
     bond_contract, _ = chain.provider.get_or_deploy_contract(
         'IbetStraightBond',
         deploy_args = deploy_args
@@ -180,16 +181,18 @@ TEST2_トークンの振替（transfer）
 '''
 
 # 正常系1: アカウントアドレスへの振替
-def test_transfer_normal_1(web3,chain):
-    from_address = web3.eth.accounts[0]
-    to_address = web3.eth.accounts[1]
+def test_transfer_normal_1(web3, chain, users):
+    from_address = users['issuer']
+    to_address = users['trader']
     transfer_amount = 100
 
     deploy_args = init_args()
+    web3.eth.defaultAccount = from_address
     bond_contract, _ = chain.provider.get_or_deploy_contract(
         'IbetStraightBond',
         deploy_args = deploy_args
     )
+    print(bond_contract.call().owner())
 
     txn_hash = bond_contract.transact().transfer(to_address, transfer_amount)
     chain.wait.for_receipt(txn_hash)
@@ -202,11 +205,13 @@ def test_transfer_normal_1(web3,chain):
 
 
 # 正常系2: 債券取引コントラクトへの振替
-def test_transfer_normal_2(web3,chain):
-    from_address = web3.eth.accounts[0]
+def test_transfer_normal_2(web3,chain, users):
+    from_address = users['issuer']
     transfer_amount = 100
 
     deploy_args = init_args()
+    web3.eth.defaultAccount = from_address
+
     bond_contract, _ = chain.provider.get_or_deploy_contract(
         'IbetStraightBond',
         deploy_args = deploy_args
@@ -236,9 +241,12 @@ def test_transfer_normal_2(web3,chain):
 
 
 # エラー系1: 入力値の型誤り（To）
-def test_transfer_error_1(chain):
+def test_transfer_error_1(web3, chain, users):
+    from_address = users['issuer']
     to_address = 1234
     transfer_amount = 100
+
+    web3.eth.defaultAccount = from_address
 
     deploy_args = init_args()
     bond_contract, _ = chain.provider.get_or_deploy_contract(
@@ -251,9 +259,12 @@ def test_transfer_error_1(chain):
 
 
 # エラー系2: 入力値の型誤り（Value）
-def test_transfer_error_2(web3,chain):
-    to_address = web3.eth.accounts[1]
+def test_transfer_error_2(web3, chain, users):
+    from_address = users['issuer']
+    to_address = users['trader']
     transfer_amount = '100'
+
+    web3.eth.defaultAccount = from_address
 
     deploy_args = init_args()
     bond_contract, _ = chain.provider.get_or_deploy_contract(
@@ -266,19 +277,22 @@ def test_transfer_error_2(web3,chain):
 
 
 # エラー系3: 残高不足
-def test_transfer_error_3(web3,chain):
-    from_address = web3.eth.accounts[0]
-    to_address = web3.eth.accounts[1]
+def test_transfer_error_3(web3, chain, users):
+    from_address = users['issuer']
+    to_address = users['trader']
     transfer_amount = 10000000000
 
-    deploy_args = init_args()
-    bond_contract, _ = chain.provider.get_or_deploy_contract(
-        'IbetStraightBond',
-        deploy_args = deploy_args
-    )
+    web3.eth.defaultAccount = from_address
 
-    with pytest.raises(TransactionFailed):
-        bond_contract.transact().transfer(to_address, transfer_amount)
+    #deploy_args = init_args()
+    #bond_contract, _ = chain.provider.get_or_deploy_contract(
+    #    'IbetStraightBond',
+    #    deploy_args = deploy_args
+    #)
+    bond_contract = utils.issue_bond_token(web3, chain, users)
+
+    print(bond_contract.call().balanceOf(from_address))
+    bond_contract.transact().transfer(to_address, transfer_amount)
 
 
 # エラー系4: private functionにアクセスできない

@@ -8,11 +8,15 @@ TEST1_個人情報を登録（register）
 '''
 
 # 正常系1: 新規登録
-def test_register_normal_1(web3,chain):
-    account_address = web3.eth.accounts[0]
-    issuer_address = web3.eth.accounts[1]
+def test_register_normal_1(web3, chain, users):
+    admin_address = users['admin']
+    account_address = users['trader']
+    issuer_address = users['issuer']
 
+    web3.eth.defaultAccount = admin_address
     personalinfo_contract, _ = chain.provider.get_or_deploy_contract('PersonalInfo')
+
+    web3.eth.defaultAccount = account_address
     txn_hash = personalinfo_contract.transact().register(issuer_address, encrypted_message)
     chain.wait.for_receipt(txn_hash)
 
@@ -29,13 +33,16 @@ def test_register_normal_1(web3,chain):
 
 
 # 正常系2: 上書き登録
-def test_register_normal_2(web3,chain):
-    account_address = web3.eth.accounts[0]
-    issuer_address = web3.eth.accounts[1]
+def test_register_normal_2(web3, chain, users):
+    admin_address = users['admin']
+    account_address = users['trader']
+    issuer_address = users['issuer']
 
+    web3.eth.defaultAccount = account_address
     personalinfo_contract, _ = chain.provider.get_or_deploy_contract('PersonalInfo')
 
     # 登録（1回目） -> Success
+    web3.eth.defaultAccount = account_address
     txn_hash_1 = personalinfo_contract.transact().register(issuer_address, encrypted_message)
     chain.wait.for_receipt(txn_hash_1)
 
@@ -56,10 +63,12 @@ def test_register_normal_2(web3,chain):
 
 
 # 正常系3: 未登録のアドレスの情報参照
-def test_register_normal_3(web3,chain):
-    account_address = web3.eth.accounts[0]
-    issuer_address = web3.eth.accounts[1]
+def test_register_normal_3(web3, chain, users):
+    admin_address = users['admin']
+    account_address = users['trader']
+    issuer_address = users['issuer']
 
+    web3.eth.defaultAccount = admin_address
     personalinfo_contract, _ = chain.provider.get_or_deploy_contract('PersonalInfo')
 
     personal_info = personalinfo_contract.call().personal_info(account_address, issuer_address)
@@ -75,25 +84,32 @@ def test_register_normal_3(web3,chain):
 
 
 # エラー系1: 入力値の型誤り（発行体アドレス）
-def test_register_error_1(web3,chain):
-    account_address = web3.eth.accounts[0]
+def test_register_error_1(web3, chain, users):
+    admin_address = users['admin']
+    account_address = users['trader']
     issuer_address = 'aaaa'
 
+    web3.eth.defaultAccount = admin_address
     personalinfo_contract, _ = chain.provider.get_or_deploy_contract('PersonalInfo')
 
     # 登録 -> Failure
+    web3.eth.defaultAccount = account_address
     with pytest.raises(TypeError):
         personalinfo_contract.transact().register(issuer_address,encrypted_message)
 
 
 # エラー系2: 入力値の型誤り（暗号化情報）
-def test_register_error_2(web3,chain):
-    account_address = web3.eth.accounts[0]
-    issuer_address = web3.eth.accounts[1]
+def test_register_error_2(web3, chain, users):
+    admin_address = users['admin']
+    account_address = users['trader']
+    issuer_address = users['issuer']
+
     encrypted_message = 1234
 
+    web3.eth.defaultAccount = admin_address
     personalinfo_contract, _ = chain.provider.get_or_deploy_contract('PersonalInfo')
 
     # 登録 -> Failure
+    web3.eth.defaultAccount = account_address
     with pytest.raises(TypeError):
         personalinfo_contract.transact().register(issuer_address,encrypted_message)
