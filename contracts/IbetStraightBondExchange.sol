@@ -77,6 +77,9 @@ contract IbetStraightBondExchange is Ownable {
     // イベント：全引き出し
     event Withdrawal(address indexed tokenAddress, address indexed accountAddress);
 
+    // イベント：送信
+    event Transfer(address indexed from, address indexed to, uint256 value);
+    
     // コンストラクタ
     constructor(address _whiteListAddress, address _personalInfoAddress) public {
         whiteListAddress = _whiteListAddress;
@@ -326,6 +329,28 @@ contract IbetStraightBondExchange is Ownable {
 
         return true;
     }
+
+    // ファンクション：トークンを送信する
+    function transfer(address _token, address _to, uint256 _value) public returns (bool) {
+        // <CHK> 
+        // 1) 送信数量が0の場合
+        // 2) 残高数量が送信数量に満たない場合
+        // -> 更新処理：全ての残高をsenderのアカウントに戻し、falseを返す
+        if (_value == 0 ||
+            balances[msg.sender][_token] < _value) {
+            IbetStraightBond(_token).transfer(msg.sender,balances[msg.sender][_token]);
+            balances[msg.sender][_token] = 0;
+            return false;
+        }
+        // 送信
+        balances[msg.sender][_token] = balances[msg.sender][_token].sub(_value);
+        IbetStraightBond(_token).transfer(_to,_value);
+        // イベント登録
+        emit Transfer(msg.sender, _to, _value);
+        
+        return true;
+    }
+
 
     // ERC223 token deposit handler
     function tokenFallback(address _from, uint _value, bytes /*_data*/) public{
