@@ -192,7 +192,6 @@ def test_transfer_normal_1(web3, chain, users):
         'IbetStraightBond',
         deploy_args = deploy_args
     )
-    print(bond_contract.call().owner())
 
     txn_hash = bond_contract.transact().transfer(to_address, transfer_amount)
     chain.wait.for_receipt(txn_hash)
@@ -278,21 +277,21 @@ def test_transfer_error_2(web3, chain, users):
 
 # エラー系3: 残高不足
 def test_transfer_error_3(web3, chain, users):
-    from_address = users['issuer']
+    issuer = users['issuer']
+    from_address = issuer
     to_address = users['trader']
+
+    # 債券トークン新規発行
+    web3.eth.defaultAccount = issuer
+    bond_token = utils.issue_bond_token(web3, chain, users)
+
+    # 債券トークン振替（残高超）
+    web3.eth.defaultAccount = issuer
     transfer_amount = 10000000000
+    bond_token.transact().transfer(to_address, transfer_amount)
 
-    web3.eth.defaultAccount = from_address
-
-    #deploy_args = init_args()
-    #bond_contract, _ = chain.provider.get_or_deploy_contract(
-    #    'IbetStraightBond',
-    #    deploy_args = deploy_args
-    #)
-    bond_contract = utils.issue_bond_token(web3, chain, users)
-
-    print(bond_contract.call().balanceOf(from_address))
-    bond_contract.transact().transfer(to_address, transfer_amount)
+    assert bond_token.call().balanceOf(issuer) == 10000
+    assert bond_token.call().balanceOf(to_address) == 0
 
 
 # エラー系4: private functionにアクセスできない
