@@ -7,4 +7,4 @@ cd /app/tmr-sc
 populus compile
 
 # test実施
-py.test tests/ --disable-pytest-warnings
+py.test tests/ --disable-pytest-warnings -v
