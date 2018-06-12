@@ -334,17 +334,17 @@ def test_balanceOf_normal_1(web3, chain, users):
 
 
 # エラー系1: 入力値の型誤り（Owner）
-def test_balanceOf_error_1(chain):
+def test_balanceOf_error_1(web3, chain, users):
+    issuer = users['issuer']
+
+    # 債券新規発行
+    web3.eth.defaultAccount = issuer
+    bond_token = utils.issue_bond_token(web3, chain, users)
+
     account_address = 1234
 
-    deploy_args = init_args()
-    bond_contract, _ = chain.provider.get_or_deploy_contract(
-        'IbetStraightBond',
-        deploy_args = deploy_args
-    )
-
     with pytest.raises(TypeError):
-        bond_contract.call().balanceOf(account_address)
+        bond_token.call().balanceOf(account_address)
 
 
 '''
@@ -352,48 +352,45 @@ TEST4_認定リクエスト（requestSignature）
 '''
 
 # 正常系1: 初期値が0
-def test_requestSignature_normal_1(web3,chain):
-    signer_address = web3.eth.accounts[1]
+def test_requestSignature_normal_1(web3, chain, users):
+    issuer = users['issuer']
+    signer = users['admin']
 
-    deploy_args = init_args()
-    bond_contract, _ = chain.provider.get_or_deploy_contract(
-        'IbetStraightBond',
-        deploy_args = deploy_args
-    )
+    # 債券新規発行
+    web3.eth.defaultAccount = issuer
+    bond_token = utils.issue_bond_token(web3, chain, users)
 
-    signature = bond_contract.call().signatures(signer_address)
+    signature = bond_token.call().signatures(signer)
     assert signature == 0
 
 
 # 正常系2: 認定リクエスト
-def test_requestSignature_normal_2(web3,chain):
-    signer_address = web3.eth.accounts[1]
+def test_requestSignature_normal_2(web3, chain, users):
+    issuer = users['issuer']
+    signer = users['admin']
 
-    deploy_args = init_args()
-    bond_contract, _ = chain.provider.get_or_deploy_contract(
-        'IbetStraightBond',
-        deploy_args = deploy_args
-    )
+    # 債券新規発行
+    web3.eth.defaultAccount = issuer
+    bond_token = utils.issue_bond_token(web3, chain, users)
 
-    txn_hash = bond_contract.transact().requestSignature(signer_address)
+    txn_hash = bond_token.transact().requestSignature(signer)
     chain.wait.for_receipt(txn_hash)
 
-    signature = bond_contract.call().signatures(signer_address)
+    signature = bond_token.call().signatures(signer)
     assert signature == 1
 
 
 # エラー系1: 入力値の型誤り（Signer）
-def test_requestSignature_error_1(chain):
-    signer_address = 1234
+def test_requestSignature_error_1(web3, chain, users):
+    issuer = users['issuer']
+    signer = 1234
 
-    deploy_args = init_args()
-    bond_contract, _ = chain.provider.get_or_deploy_contract(
-        'IbetStraightBond',
-        deploy_args = deploy_args
-    )
+    # 債券新規発行
+    web3.eth.defaultAccount = issuer
+    bond_token = utils.issue_bond_token(web3, chain, users)
 
     with pytest.raises(TypeError):
-        bond_contract.transact().requestSignature(signer_address)
+        bond_token.transact().requestSignature(signer)
 
 
 '''
@@ -401,67 +398,67 @@ TEST5_認定（sign）
 '''
 
 # 正常系1: 認定リクエスト -> 認定
-def test_sign_normal_1(web3,chain):
-    account_address = web3.eth.accounts[0]
-    signer_address = web3.eth.accounts[1]
+def test_sign_normal_1(web3, chain, users):
+    issuer = users['issuer']
+    signer = users['admin']
 
-    deploy_args = init_args()
-    bond_contract, _ = chain.provider.get_or_deploy_contract(
-        'IbetStraightBond',
-        deploy_args = deploy_args
-    )
+    # 債券新規発行
+    web3.eth.defaultAccount = issuer
+    bond_token = utils.issue_bond_token(web3, chain, users)
 
     # 認定リクエスト -> Success
-    web3.eth.defaultAccount = account_address
-    txn_hash_1 = bond_contract.transact().requestSignature(signer_address)
+    web3.eth.defaultAccount = issuer
+    txn_hash_1 = bond_token.transact().requestSignature(signer)
     chain.wait.for_receipt(txn_hash_1)
 
     # 認定 -> Success
-    web3.eth.defaultAccount = signer_address
-    txn_hash_2 = bond_contract.transact().sign()
+    web3.eth.defaultAccount = signer
+    txn_hash_2 = bond_token.transact().sign()
     chain.wait.for_receipt(txn_hash_2)
 
-    signature = bond_contract.call().signatures(signer_address)
+    signature = bond_token.call().signatures(signer)
     assert signature == 2
 
 
 # エラー系1: 認定リクエスト未実施 -> 認定
-def test_sign_error_1(web3,chain):
-    signer_address = web3.eth.accounts[0]
+def test_sign_error_1(web3, chain, users):
+    issuer = users['issuer']
+    signer = users['admin']
 
-    deploy_args = init_args()
-    bond_contract, _ = chain.provider.get_or_deploy_contract(
-        'IbetStraightBond',
-        deploy_args = deploy_args
-    )
+    # 債券新規発行
+    web3.eth.defaultAccount = issuer
+    bond_token = utils.issue_bond_token(web3, chain, users)
 
     # 認定 -> Failure
-    web3.eth.defaultAccount = signer_address
-    with pytest.raises(TransactionFailed):
-        bond_contract.transact().sign()
+    web3.eth.defaultAccount = signer
+    txn_hash = bond_token.transact().sign()
+
+    signature = bond_token.call().signatures(signer)
+    assert signature == 0
 
 
 # エラー系2: 認定リクエスト-> 異なるSinerから認定をした場合
-def test_sign_error_2(web3,chain):
-    account_address = web3.eth.accounts[0]
-    signer_address = web3.eth.accounts[1]
-    signer_address_other = web3.eth.accounts[2]
+def test_sign_error_2(web3, chain, users):
+    issuer = users['issuer']
+    signer = users['admin']
+    signer_other = users['trader']
 
-    deploy_args = init_args()
-    bond_contract, _ = chain.provider.get_or_deploy_contract(
-        'IbetStraightBond',
-        deploy_args = deploy_args
-    )
+    # 債券新規発行
+    web3.eth.defaultAccount = issuer
+    bond_token = utils.issue_bond_token(web3, chain, users)
 
     # 認定リクエスト -> Success
-    web3.eth.defaultAccount = account_address
-    txn_hash_1 = bond_contract.transact().requestSignature(signer_address)
+    web3.eth.defaultAccount = issuer
+    txn_hash_1 = bond_token.transact().requestSignature(signer)
     chain.wait.for_receipt(txn_hash_1)
 
     # 異なるSignerが認定 -> Failure
-    web3.eth.defaultAccount = signer_address_other
-    with pytest.raises(TransactionFailed):
-        bond_contract.transact().sign()
+    web3.eth.defaultAccount = signer_other
+    txn_hash_2 = bond_token.transact().sign()
+    chain.wait.for_receipt(txn_hash_2)
+
+    signature = bond_token.call().signatures(signer)
+    assert signature == 1
 
 
 '''
@@ -469,99 +466,101 @@ TEST6_認定取消（unsign）
 '''
 
 # 正常系1: 認定リクエスト -> 認定 -> 認定取消
-def test_unsign_normal_1(web3,chain):
-    account_address = web3.eth.accounts[0]
-    signer_address = web3.eth.accounts[1]
+def test_unsign_normal_1(web3, chain, users):
+    issuer = users['issuer']
+    signer = users['admin']
 
-    deploy_args = init_args()
-    bond_contract, _ = chain.provider.get_or_deploy_contract(
-        'IbetStraightBond',
-        deploy_args = deploy_args
-    )
+    # 債券新規発行
+    web3.eth.defaultAccount = issuer
+    bond_token = utils.issue_bond_token(web3, chain, users)
 
     # 認定リクエスト -> Success
-    web3.eth.defaultAccount = account_address
-    txn_hash_1 = bond_contract.transact().requestSignature(signer_address)
+    web3.eth.defaultAccount = issuer
+    txn_hash_1 = bond_token.transact().requestSignature(signer)
     chain.wait.for_receipt(txn_hash_1)
 
     # 認定 -> Success
-    web3.eth.defaultAccount = signer_address
-    txn_hash_2 = bond_contract.transact().sign()
+    web3.eth.defaultAccount = signer
+    txn_hash_2 = bond_token.transact().sign()
     chain.wait.for_receipt(txn_hash_2)
 
     # 認定取消 -> Success
-    web3.eth.defaultAccount = signer_address
-    txn_hash_3 = bond_contract.transact().unsign()
+    web3.eth.defaultAccount = signer
+    txn_hash_3 = bond_token.transact().unsign()
     chain.wait.for_receipt(txn_hash_3)
 
-    signature = bond_contract.call().signatures(signer_address)
+    signature = bond_token.call().signatures(signer)
     assert signature == 0
 
 
 # エラー系1: 認定リクエスト未実施 -> 認定取消
-def test_unsign_error_1(web3,chain):
-    signer_address = web3.eth.accounts[0]
+def test_unsign_error_1(web3, chain, users):
+    issuer = users['issuer']
+    signer = users['admin']
 
-    deploy_args = init_args()
-    bond_contract, _ = chain.provider.get_or_deploy_contract(
-        'IbetStraightBond',
-        deploy_args = deploy_args
-    )
+    # 債券新規発行
+    web3.eth.defaultAccount = issuer
+    bond_token = utils.issue_bond_token(web3, chain, users)
 
     # 認定取消 -> Failure
-    web3.eth.defaultAccount = signer_address
-    with pytest.raises(TransactionFailed):
-        bond_contract.transact().unsign()
+    web3.eth.defaultAccount = signer
+    txn_hash = bond_token.transact().unsign()
+    chain.wait.for_receipt(txn_hash)
+
+    signature = bond_token.call().signatures(signer)
+    assert signature == 0
 
 
 # エラー系2: 認定リクエスト -> （認定未実施） -> 認定取消
-def test_unsign_error_2(web3,chain):
-    account_address = web3.eth.accounts[0]
-    signer_address = web3.eth.accounts[1]
+def test_unsign_error_2(web3, chain, users):
+    issuer = users['issuer']
+    signer = users['admin']
 
-    deploy_args = init_args()
-    bond_contract, _ = chain.provider.get_or_deploy_contract(
-        'IbetStraightBond',
-        deploy_args = deploy_args
-    )
+    # 債券新規発行
+    web3.eth.defaultAccount = issuer
+    bond_token = utils.issue_bond_token(web3, chain, users)
 
     # 認定リクエスト -> Success
-    web3.eth.defaultAccount = account_address
-    txn_hash_1 = bond_contract.transact().requestSignature(signer_address)
+    web3.eth.defaultAccount = issuer
+    txn_hash_1 = bond_token.transact().requestSignature(signer)
     chain.wait.for_receipt(txn_hash_1)
 
     # 認定取消 -> Failure
-    web3.eth.defaultAccount = signer_address
-    with pytest.raises(TransactionFailed):
-        bond_contract.transact().unsign()
+    web3.eth.defaultAccount = signer
+    txn_hash_2 = bond_token.transact().unsign()
+    chain.wait.for_receipt(txn_hash_2)
+
+    signature = bond_token.call().signatures(signer)
+    assert signature == 1
 
 
 # エラー系3: 認定リクエスト-> 認定 -> 異なるSinerから認定取消を実施した場合
-def test_sign_error_3(web3,chain):
-    account_address = web3.eth.accounts[0]
-    signer_address = web3.eth.accounts[1]
-    signer_address_other = web3.eth.accounts[2]
+def test_unsign_error_3(web3, chain, users):
+    issuer = users['issuer']
+    signer = users['admin']
+    signer_other = users['trader']
 
-    deploy_args = init_args()
-    bond_contract, _ = chain.provider.get_or_deploy_contract(
-        'IbetStraightBond',
-        deploy_args = deploy_args
-    )
+    # 債券新規発行
+    web3.eth.defaultAccount = issuer
+    bond_token = utils.issue_bond_token(web3, chain, users)
 
     # 認定リクエスト -> Success
-    web3.eth.defaultAccount = account_address
-    txn_hash_1 = bond_contract.transact().requestSignature(signer_address)
+    web3.eth.defaultAccount = issuer
+    txn_hash_1 = bond_token.transact().requestSignature(signer)
     chain.wait.for_receipt(txn_hash_1)
 
     # 認定 -> Success
-    web3.eth.defaultAccount = signer_address
-    txn_hash_2 = bond_contract.transact().sign()
+    web3.eth.defaultAccount = signer
+    txn_hash_2 = bond_token.transact().sign()
     chain.wait.for_receipt(txn_hash_2)
 
     # 異なるSignerが認定取消を実施 -> Failure
-    web3.eth.defaultAccount = signer_address_other
-    with pytest.raises(TransactionFailed):
-        bond_contract.transact().unsign()
+    web3.eth.defaultAccount = signer_other
+    txn_hash_3 = bond_token.transact().unsign()
+    chain.wait.for_receipt(txn_hash_3)
+
+    signature = bond_token.call().signatures(signer)
+    assert signature == 2
 
 
 '''
@@ -569,39 +568,38 @@ TEST7_償還（redeem）
 '''
 
 # 正常系1: 発行（デプロイ） -> 償還
-def test_redeem_normal_1(web3,chain):
-    owner_address = web3.eth.accounts[0]
+def test_redeem_normal_1(web3, chain, users):
+    issuer = users['issuer']
 
-    deploy_args = init_args()
-    bond_contract, _ = chain.provider.get_or_deploy_contract(
-        'IbetStraightBond',
-        deploy_args = deploy_args
-    )
+    # 債券新規発行
+    web3.eth.defaultAccount = issuer
+    bond_token = utils.issue_bond_token(web3, chain, users)
 
     # 償還 -> Success
-    web3.eth.defaultAccount = owner_address
-    txn_hash = bond_contract.transact().redeem()
+    web3.eth.defaultAccount = issuer
+    txn_hash = bond_token.transact().redeem()
     chain.wait.for_receipt(txn_hash)
 
-    is_redeemed = bond_contract.call().isRedeemed()
+    is_redeemed = bond_token.call().isRedeemed()
     assert is_redeemed == True
 
 
-# エラー系1: Owner以外のアドレスから償還を実施した場合
-def test_redeem_error_1(web3,chain):
-    owner_address = web3.eth.accounts[0]
-    other_address = web3.eth.accounts[1]
+# エラー系1: issuer以外のアドレスから償還を実施した場合
+def test_redeem_error_1(web3, chain, users):
+    issuer = users['issuer']
+    other = users['admin']
 
-    deploy_args = init_args()
-    bond_contract, _ = chain.provider.get_or_deploy_contract(
-        'IbetStraightBond',
-        deploy_args = deploy_args
-    )
+    # 債券新規発行
+    web3.eth.defaultAccount = issuer
+    bond_token = utils.issue_bond_token(web3, chain, users)
 
     # Owner以外のアドレスから償還を実施 -> Failure
-    web3.eth.defaultAccount = other_address
-    with pytest.raises(TransactionFailed):
-        bond_contract.transact().redeem()
+    web3.eth.defaultAccount = other
+    txn_hash = bond_token.transact().redeem()
+    chain.wait.for_receipt(txn_hash)
+
+    is_redeemed = bond_token.call().isRedeemed()
+    assert is_redeemed == False
 
 
 '''
@@ -609,133 +607,130 @@ TEST8_商品画像の設定（setImageURL, getImageURL）
 '''
 
 # 正常系1: 発行（デプロイ） -> 商品画像の設定
-def test_setImageURL_normal_1(web3,chain):
-    owner_address = web3.eth.accounts[0]
+def test_setImageURL_normal_1(web3, chain, users):
+    issuer = users['issuer']
+
+    # 債券新規発行
+    web3.eth.defaultAccount = issuer
+    bond_token = utils.issue_bond_token(web3, chain, users)
+
     image_url = 'https://some_image_url.com/image.png'
 
-    deploy_args = init_args()
-    bond_contract, _ = chain.provider.get_or_deploy_contract(
-        'IbetStraightBond',
-        deploy_args = deploy_args
-    )
-
     # 商品画像の設定 -> Success
-    web3.eth.defaultAccount = owner_address
-    txn_hash = bond_contract.transact().setImageURL(0, image_url)
+    web3.eth.defaultAccount = issuer
+    txn_hash = bond_token.transact().setImageURL(0, image_url)
     chain.wait.for_receipt(txn_hash)
 
-    image_url_0 = bond_contract.call().getImageURL(0)
+    image_url_0 = bond_token.call().getImageURL(0)
     assert image_url_0 == image_url
 
 
 # 正常系2: 発行（デプロイ） -> 商品画像の設定（複数設定）
-def test_setImageURL_normal_2(web3,chain):
-    owner_address = web3.eth.accounts[0]
+def test_setImageURL_normal_2(web3, chain, users):
+    issuer = users['issuer']
+
+    # 債券新規発行
+    web3.eth.defaultAccount = issuer
+    bond_token = utils.issue_bond_token(web3, chain, users)
+
     image_url = 'https://some_image_url.com/image.png'
 
-    deploy_args = init_args()
-    bond_contract, _ = chain.provider.get_or_deploy_contract(
-        'IbetStraightBond',
-        deploy_args = deploy_args
-    )
-
     # 商品画像の設定（1つ目） -> Success
-    web3.eth.defaultAccount = owner_address
-    txn_hash_1 = bond_contract.transact().setImageURL(0, image_url)
+    web3.eth.defaultAccount = issuer
+    txn_hash_1 = bond_token.transact().setImageURL(0, image_url)
     chain.wait.for_receipt(txn_hash_1)
 
     # 商品画像の設定（2つ目） -> Success
-    web3.eth.defaultAccount = owner_address
-    txn_hash_2 = bond_contract.transact().setImageURL(1, image_url)
+    web3.eth.defaultAccount = issuer
+    txn_hash_2 = bond_token.transact().setImageURL(1, image_url)
     chain.wait.for_receipt(txn_hash_2)
 
-    image_url_0 = bond_contract.call().getImageURL(0)
-    image_url_1 = bond_contract.call().getImageURL(1)
+    image_url_0 = bond_token.call().getImageURL(0)
+    image_url_1 = bond_token.call().getImageURL(1)
     assert image_url_0 == image_url
     assert image_url_1 == image_url
 
 
 # 正常系3: 発行（デプロイ） -> 商品画像の設定（上書き登録）
-def test_setImageURL_normal_3(web3,chain):
-    owner_address = web3.eth.accounts[0]
+def test_setImageURL_normal_3(web3, chain, users):
+    issuer = users['issuer']
+
+    # 債券新規発行
+    web3.eth.defaultAccount = issuer
+    bond_token = utils.issue_bond_token(web3, chain, users)
+
     image_url = 'https://some_image_url.com/image.png'
     image_url_after = 'https://some_image_url.com/image_after.png'
 
-    deploy_args = init_args()
-    bond_contract, _ = chain.provider.get_or_deploy_contract(
-        'IbetStraightBond',
-        deploy_args = deploy_args
-    )
-
     # 商品画像の設定（1回目） -> Success
-    web3.eth.defaultAccount = owner_address
-    txn_hash_1 = bond_contract.transact().setImageURL(0, image_url)
+    web3.eth.defaultAccount = issuer
+    txn_hash_1 = bond_token.transact().setImageURL(0, image_url)
     chain.wait.for_receipt(txn_hash_1)
 
     # 商品画像の設定（2回目：上書き） -> Success
-    web3.eth.defaultAccount = owner_address
-    txn_hash_2 = bond_contract.transact().setImageURL(0, image_url_after)
+    web3.eth.defaultAccount = issuer
+    txn_hash_2 = bond_token.transact().setImageURL(0, image_url_after)
     chain.wait.for_receipt(txn_hash_2)
 
-    image_url_0 = bond_contract.call().getImageURL(0)
+    image_url_0 = bond_token.call().getImageURL(0)
     assert image_url_0 == image_url_after
 
 
 # エラー系1: 入力値の型誤り（Class）
-def test_setImageURL_error_1(web3,chain):
-    owner_address = web3.eth.accounts[0]
+def test_setImageURL_error_1(web3, chain, users):
+    issuer = users['issuer']
+
+    # 債券新規発行
+    web3.eth.defaultAccount = issuer
+    bond_token = utils.issue_bond_token(web3, chain, users)
+
     image_url = 'https://some_image_url.com/image.png'
 
-    deploy_args = init_args()
-    bond_contract, _ = chain.provider.get_or_deploy_contract(
-        'IbetStraightBond',
-        deploy_args = deploy_args
-    )
-
-    web3.eth.defaultAccount = owner_address
+    web3.eth.defaultAccount = issuer
 
     with pytest.raises(TypeError):
-        bond_contract.transact().setImageURL(-1, image_url)
+        bond_token.transact().setImageURL(-1, image_url)
 
     with pytest.raises(TypeError):
-        bond_contract.transact().setImageURL(256, image_url)
+        bond_token.transact().setImageURL(256, image_url)
 
     with pytest.raises(TypeError):
-        bond_contract.transact().setImageURL('0', image_url)
+        bond_token.transact().setImageURL('0', image_url)
 
 
 # エラー系2: 入力値の型誤り（ImageURL）
-def test_setImageURL_error_2(web3,chain):
-    owner_address = web3.eth.accounts[0]
+def test_setImageURL_error_2(web3, chain, users):
+    issuer = users['issuer']
+
+    # 債券新規発行
+    web3.eth.defaultAccount = issuer
+    bond_token = utils.issue_bond_token(web3, chain, users)
+
     image_url = 1234
 
-    deploy_args = init_args()
-    bond_contract, _ = chain.provider.get_or_deploy_contract(
-        'IbetStraightBond',
-        deploy_args = deploy_args
-    )
-
-    web3.eth.defaultAccount = owner_address
+    web3.eth.defaultAccount = issuer
     with pytest.raises(TypeError):
-        bond_contract.transact().setImageURL(0, image_url)
+        bond_token.transact().setImageURL(0, image_url)
 
 
-# エラー系3: Owner以外のアドレスから画像設定を実施した場合
-def test_setImageURL_error_3(web3,chain):
-    owner_address = web3.eth.accounts[0]
-    other_address = web3.eth.accounts[1]
+# エラー系3: Issuer以外のアドレスから画像設定を実施した場合
+def test_setImageURL_error_3(web3, chain, users):
+    issuer = users['issuer']
+    other = users['admin']
+
+    # 債券新規発行
+    web3.eth.defaultAccount = issuer
+    bond_token = utils.issue_bond_token(web3, chain, users)
+
     image_url = 'https://some_image_url.com/image.png'
 
-    deploy_args = init_args()
-    bond_contract, _ = chain.provider.get_or_deploy_contract(
-        'IbetStraightBond',
-        deploy_args = deploy_args
-    )
-
     # Owner以外のアドレスから画像設定を実施 -> Failure
-    web3.eth.defaultAccount = other_address
-    with pytest.raises(TransactionFailed):
-        bond_contract.transact().setImageURL(0, image_url)
+    web3.eth.defaultAccount = other
+    txn_hash = bond_token.transact().setImageURL(0, image_url)
+    chain.wait.for_receipt(txn_hash)
+
+    image_url_0 = bond_token.call().getImageURL(0)
+    assert image_url_0 == ''
 
 
 '''
@@ -743,52 +738,47 @@ TEST9_メモの更新（updateMemo）
 '''
 
 # 正常系1: 発行（デプロイ） -> メモ欄の修正
-def test_updateMemo_normal_1(web3,chain):
-    owner_address = web3.eth.accounts[0]
+def test_updateMemo_normal_1(web3, chain, users):
+    issuer = users['issuer']
 
-    deploy_args = init_args()
-    bond_contract, _ = chain.provider.get_or_deploy_contract(
-        'IbetStraightBond',
-        deploy_args = deploy_args
-    )
 
+    # 債券新規発行
+    web3.eth.defaultAccount = issuer
+    bond_token = utils.issue_bond_token(web3, chain, users)
     # メモ欄の修正 -> Success
-    web3.eth.defaultAccount = owner_address
-    txn_hash = bond_contract.transact().updateMemo('updated memo')
+    web3.eth.defaultAccount = issuer
+    txn_hash = bond_token.transact().updateMemo('updated memo')
     chain.wait.for_receipt(txn_hash)
 
-    memo = bond_contract.call().memo()
+    memo = bond_token.call().memo()
     assert memo == 'updated memo'
 
 
 # エラー系1: 入力値の型誤り
-def test_updateMemo_error_1(web3,chain):
-    owner_address = web3.eth.accounts[0]
+def test_updateMemo_error_1(web3, chain, users):
+    issuer = users['issuer']
 
-    deploy_args = init_args()
-    bond_contract, _ = chain.provider.get_or_deploy_contract(
-        'IbetStraightBond',
-        deploy_args = deploy_args
-    )
+    # 債券新規発行
+    web3.eth.defaultAccount = issuer
+    bond_token = utils.issue_bond_token(web3, chain, users)
 
-    # メモ欄の修正 -> Success
-    web3.eth.defaultAccount = owner_address
+    web3.eth.defaultAccount = issuer
     with pytest.raises(TypeError):
-        bond_contract.transact().updateMemo(1234)
+        bond_token.transact().updateMemo(1234)
 
 
 # エラー系2: Owner以外のアドレスからメモ欄の修正を実施した場合
-def test_updateMemo_error_2(web3,chain):
-    owner_address = web3.eth.accounts[0]
-    other_address = web3.eth.accounts[1]
+def test_updateMemo_error_2(web3, chain, users):
+    issuer = users['issuer']
+    other = users['admin']
 
-    deploy_args = init_args()
-    bond_contract, _ = chain.provider.get_or_deploy_contract(
-        'IbetStraightBond',
-        deploy_args = deploy_args
-    )
+    # 債券新規発行
+    web3.eth.defaultAccount = issuer
+    bond_token = utils.issue_bond_token(web3, chain, users)
 
     # Owner以外のアドレスからメモ欄の修正を実施 -> Failure
-    web3.eth.defaultAccount = other_address
-    with pytest.raises(TransactionFailed):
-        bond_contract.transact().updateMemo('updated memo')
+    web3.eth.defaultAccount = other
+    txn_hash = bond_token.transact().updateMemo('updated memo')
+
+    memo = bond_token.call().memo()
+    assert memo == 'some_memo'
