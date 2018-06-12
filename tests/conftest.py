@@ -1,9 +1,15 @@
 import pytest
+import os
 
 @pytest.yield_fixture()
 def chain(project):
-    with project.get_chain('local_chain') as chain:
-        yield chain
+    APP_ENV = os.environ.get('APP_ENV') or 'local'
+    if APP_ENV == 'local':
+        with project.get_chain('local_chain') as chain:
+            yield chain
+    else:
+        with project.get_chain('dev_chain') as chain:
+            yield chain
 
 @pytest.yield_fixture()
 def users(web3, accounts):
