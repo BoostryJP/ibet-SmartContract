@@ -295,26 +295,26 @@ def test_transfer_error_3(web3, chain, users):
 
 
 # エラー系4: private functionにアクセスできない
-def test_transfer_error_4(web3,chain):
-    from_address = web3.eth.accounts[0]
-    to_address = web3.eth.accounts[1]
+def test_transfer_error_4(web3, chain, users):
+    issuer = users['issuer']
+    from_address = issuer
+    to_address = users['trader']
+
     transfer_amount = 100
     data = 0
 
-    deploy_args = init_args()
-    bond_contract, _ = chain.provider.get_or_deploy_contract(
-        'IbetStraightBond',
-        deploy_args = deploy_args
-    )
+    # 債券新規発行
+    web3.eth.defaultAccount = issuer
+    bond_token = utils.issue_bond_token(web3, chain, users)
 
     with pytest.raises(ValueError):
-        bond_contract.call().isContract(to_address)
+        bond_token.call().isContract(to_address)
 
     with pytest.raises(ValueError):
-        bond_contract.transact().transferToAddress(to_address, transfer_amount, data)
+        bond_token.transact().transferToAddress(to_address, transfer_amount, data)
 
     with pytest.raises(ValueError):
-        bond_contract.transact().transferToContract(to_address, transfer_amount, data)
+        bond_token.transact().transferToContract(to_address, transfer_amount, data)
 
 
 '''
@@ -322,17 +322,15 @@ TEST3_残高確認（balanceOf）
 '''
 
 # 正常系1: 商品コントラクト作成 -> 残高確認
-def test_balanceOf_normal_1(web3,chain):
-    account_address = web3.eth.accounts[0]
+def test_balanceOf_normal_1(web3, chain, users):
+    issuer = users['issuer']
 
-    deploy_args = init_args()
-    bond_contract, _ = chain.provider.get_or_deploy_contract(
-        'IbetStraightBond',
-        deploy_args = deploy_args
-    )
+    # 債券新規発行
+    web3.eth.defaultAccount = issuer
+    bond_token = utils.issue_bond_token(web3, chain, users)
 
-    balance = bond_contract.call().balanceOf(account_address)
-    assert balance == deploy_args[2]
+    balance = bond_token.call().balanceOf(issuer)
+    assert balance == 10000
 
 
 # エラー系1: 入力値の型誤り（Owner）
