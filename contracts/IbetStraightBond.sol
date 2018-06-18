@@ -2,10 +2,7 @@ pragma solidity ^0.4.24;
 
 import "./SafeMath.sol";
 import "./Ownable.sol";
-
-contract ContractReceiver {
-  function tokenFallback(address _from, uint _value, bytes _data) public;
-}
+import "./ContractReceiver.sol";
 
 contract IbetStraightBond is Ownable {
     using SafeMath for uint256;
