@@ -1,5 +1,4 @@
 import pytest
-from ethereum.tester import TransactionFailed
 import utils
 
 '''
