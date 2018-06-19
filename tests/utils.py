@@ -26,3 +26,45 @@ def issue_bond_token(web3,chain,users):
         deploy_args = deploy_args
     )
     return bond_token
+
+# クーポン（譲渡可能）新規発行
+def issue_transferable_coupon(web3,chain):
+    name = 'test_coupon'
+    symbol = 'CPN'
+    total_supply = 1000000
+    details = 'some_details'
+    memo = 'some_memo'
+    expirationDate = '20201231'
+    transferable = True
+
+    deploy_args = [
+        name, symbol, total_supply, details,
+        memo, expirationDate, transferable
+    ]
+
+    coupon, _ = chain.provider.get_or_deploy_contract(
+        'IbetCoupon',
+        deploy_args = deploy_args
+    )
+    return coupon, deploy_args
+
+# クーポン（譲渡不可）新規発行
+def issue_non_transferable_coupon(web3,chain):
+    name = 'test_coupon'
+    symbol = 'CPN'
+    total_supply = 1000000
+    details = 'some_details'
+    memo = 'some_memo'
+    expirationDate = '20201231'
+    transferable = False
+
+    deploy_args = [
+        name, symbol, total_supply, details,
+        memo, expirationDate, transferable
+    ]
+
+    coupon, _ = chain.provider.get_or_deploy_contract(
+        'IbetCoupon',
+        deploy_args = deploy_args
+    )
+    return coupon, deploy_args
