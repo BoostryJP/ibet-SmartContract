@@ -9,7 +9,7 @@ contract IbetCouponExchange is Ownable {
 
     // 残高数量
     // account => token => balance
-    mapping(address => mapping(address => uint256)) public balances;
+    mapping(address => mapping(address => uint)) public balances;
 
     // イベント：全引き出し
     event Withdrawal(address indexed tokenAddress, address indexed accountAddress);
@@ -22,7 +22,7 @@ contract IbetCouponExchange is Ownable {
     }
 
     // ファンクション：クーポントークンを送信する
-    function transfer(address _token, address _to, uint256 _value) public returns (bool) {
+    function transfer(address _token, address _to, uint _value) public returns (bool) {
         // <CHK>
         // 1) 送信数量が0の場合
         // 2) 残高数量が送信数量に満たない場合
