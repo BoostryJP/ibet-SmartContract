@@ -73,17 +73,6 @@ contract IbetStraightBond is Ownable {
         isRedeemed = false;
     }
 
-    // ファンクション：トークンを振替する
-    function transfer(address _to, uint _value) public returns (bool success) {
-        bytes memory empty;
-        if(isContract(_to)) {
-            return transferToContract(_to, _value, empty);
-        }
-        else {
-            return transferToAddress(_to, _value, empty);
-        }
-    }
-
     // ファンクション：アドレスフォーマットがコントラクトのものかを判断する
     function isContract(address _addr) private view returns (bool is_contract) {
         uint length;
@@ -94,31 +83,73 @@ contract IbetStraightBond is Ownable {
     }
 
     // ファンクション：アドレスへの振替
-    function transferToAddress(address _to, uint _value, bytes /*_data*/) private returns (bool success) {
-        // 振替しようとしている数量が残高を超えている場合、エラーを返す
-        if (balanceOf(msg.sender) < _value) revert();
-        // 償還済みの場合、エラーを返す
-        if (isRedeemed == true) revert();
-
+    function transferToAddress(address _to, uint _value, bytes /*_data*/)
+        private
+        returns (bool success)
+    {
         balances[msg.sender] = balanceOf(msg.sender).sub(_value);
         balances[_to] = balanceOf(_to).add(_value);
 
+        // イベント登録
         emit Transfer(msg.sender, _to, _value);
 
         return true;
     }
 
     // ファンクション：コントラクトへの振替
-    function transferToContract(address _to, uint _value, bytes _data) private returns (bool success) {
-        // 振替しようとしている数量が残高を超えている場合、エラーを返す
-        if (balanceOf(msg.sender) < _value) revert();
-        // 償還済みの場合、エラーを返す
-        if (isRedeemed == true) revert();
-
+    function transferToContract(address _to, uint _value, bytes _data)
+        private
+        returns (bool success)
+    {
         balances[msg.sender] = balanceOf(msg.sender).sub(_value);
         balances[_to] = balanceOf(_to).add(_value);
+
         ContractReceiver receiver = ContractReceiver(_to);
         receiver.tokenFallback(msg.sender, _value, _data);
+
+        return true;
+    }
+
+    // ファンクション：トークンの送信
+    function transfer(address _to, uint _value)
+        public
+        returns (bool success)
+    {
+        // <CHK>
+        //  数量が残高を超えている場合、エラーを返す
+        if (balanceOf(msg.sender) < _value) revert();
+
+        bytes memory empty;
+        if(isContract(_to)) {
+            return transferToContract(_to, _value, empty);
+        } else {
+            return transferToAddress(_to, _value, empty);
+        }
+    }
+
+    // ファンクション：トークンの移転
+    // トークンオーナーのみ実施可
+    function transferFrom(address _from, address _to, uint _value)
+        public
+        onlyOwner()
+        returns (bool success)
+    {
+        // <CHK>
+        //  数量が送信元アドレス（from）の残高を超えている場合、エラーを返す
+        if (balanceOf(_from) < _value) revert();
+
+        bytes memory empty;
+
+        if(isContract(_to)) { // 送信先アドレスがコントラクトアドレスの場合
+            balances[_from] = balanceOf(_from).sub(_value);
+            balances[_to] = balanceOf(_to).add(_value);
+            ContractReceiver receiver = ContractReceiver(_to);
+            receiver.tokenFallback(_from, _value, empty);
+        } else { // 送信先アドレスがアカウントアドレスの場合
+            balances[_from] = balanceOf(_from).sub(_value);
+            balances[_to] = balanceOf(_to).add(_value);
+        }
+
         return true;
     }
 
