@@ -25,7 +25,7 @@ def issue_bond_token(web3,chain,users):
         'IbetStraightBond',
         deploy_args = deploy_args
     )
-    return bond_token
+    return bond_token, deploy_args
 
 # クーポン（譲渡可能）新規発行
 def issue_transferable_coupon(web3,chain):

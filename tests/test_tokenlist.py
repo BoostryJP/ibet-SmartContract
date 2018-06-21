@@ -22,7 +22,7 @@ def test_register_normal_1(web3, chain, users):
 
     # Token新規発行
     web3.eth.defaultAccount = issuer
-    bond_token = utils.issue_bond_token(web3, chain, users)
+    bond_token, deploy_args = utils.issue_bond_token(web3, chain, users)
     token_address = bond_token.address
 
     # TokenListに追加
@@ -77,7 +77,7 @@ def test_register_error_2(web3, chain, users):
 
     # Token新規発行
     web3.eth.defaultAccount = issuer
-    bond_token = utils.issue_bond_token(web3, chain, users)
+    bond_token, deploy_args = utils.issue_bond_token(web3, chain, users)
     token_address = bond_token.address
 
     # 新規登録 -> Failure
@@ -98,7 +98,7 @@ def test_register_error_3(web3, chain, users):
 
     # Token新規発行
     web3.eth.defaultAccount = issuer
-    bond_token = utils.issue_bond_token(web3, chain, users)
+    bond_token, deploy_args = utils.issue_bond_token(web3, chain, users)
     token_address = bond_token.address
 
     # 新規登録（1回目） -> Success
@@ -139,7 +139,7 @@ def test_register_error_4(web3, chain, users):
 
     # Token新規発行
     web3.eth.defaultAccount = issuer
-    bond_token = utils.issue_bond_token(web3, chain, users)
+    bond_token, deploy_args = utils.issue_bond_token(web3, chain, users)
     token_address = bond_token.address
 
     # 新規登録（account_1） -> Success
@@ -185,7 +185,7 @@ def test_changeOwner_normal_1(web3, chain, users):
 
     # Token新規発行
     web3.eth.defaultAccount = issuer
-    bond_token = utils.issue_bond_token(web3, chain, users)
+    bond_token, deploy_args = utils.issue_bond_token(web3, chain, users)
     token_address = bond_token.address
 
     # 新規登録 -> Success
@@ -248,7 +248,7 @@ def test_changeOwner_error_2(web3, chain, users):
 
     # Token新規発行
     web3.eth.defaultAccount = issuer
-    bond_token = utils.issue_bond_token(web3, chain, users)
+    bond_token, deploy_args = utils.issue_bond_token(web3, chain, users)
     token_address = bond_token.address
 
     new_owner_address = 'some_address'
@@ -270,7 +270,7 @@ def test_changeOwner_error_3(web3, chain, users):
 
     # Token新規発行
     web3.eth.defaultAccount = issuer
-    bond_token = utils.issue_bond_token(web3, chain, users)
+    bond_token, deploy_args = utils.issue_bond_token(web3, chain, users)
     token_address = bond_token.address
 
     # オーナー変更 -> Failure
@@ -294,7 +294,7 @@ def test_changeOwner_error_4(web3, chain, users):
 
     # Token新規発行
     web3.eth.defaultAccount = issuer
-    bond_token = utils.issue_bond_token(web3, chain, users)
+    bond_token, deploy_args = utils.issue_bond_token(web3, chain, users)
     token_address = bond_token.address
 
     # 新規登録 -> Success

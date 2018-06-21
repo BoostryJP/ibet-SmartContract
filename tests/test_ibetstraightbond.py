@@ -221,7 +221,7 @@ def test_transfer_normal_2(web3,chain, users):
 
     exchange_contract, _ = chain.provider.get_or_deploy_contract(
         'IbetStraightBondExchange',
-        deploy_transaction = {'gas':5500000},
+        deploy_transaction = {'gas':6000000},
         deploy_args = [
             whitelist_contract.address,
             personalinfo_contract.address,
@@ -283,7 +283,7 @@ def test_transfer_error_3(web3, chain, users):
 
     # 債券トークン新規発行
     web3.eth.defaultAccount = issuer
-    bond_token = utils.issue_bond_token(web3, chain, users)
+    bond_token, deploy_args = utils.issue_bond_token(web3, chain, users)
 
     # 債券トークン振替（残高超）
     web3.eth.defaultAccount = issuer
@@ -305,7 +305,7 @@ def test_transfer_error_4(web3, chain, users):
 
     # 債券新規発行
     web3.eth.defaultAccount = issuer
-    bond_token = utils.issue_bond_token(web3, chain, users)
+    bond_token, deploy_args = utils.issue_bond_token(web3, chain, users)
 
     with pytest.raises(ValueError):
         bond_token.call().isContract(to_address)
@@ -327,7 +327,7 @@ def test_balanceOf_normal_1(web3, chain, users):
 
     # 債券新規発行
     web3.eth.defaultAccount = issuer
-    bond_token = utils.issue_bond_token(web3, chain, users)
+    bond_token, deploy_args = utils.issue_bond_token(web3, chain, users)
 
     balance = bond_token.call().balanceOf(issuer)
     assert balance == 10000
@@ -339,7 +339,7 @@ def test_balanceOf_error_1(web3, chain, users):
 
     # 債券新規発行
     web3.eth.defaultAccount = issuer
-    bond_token = utils.issue_bond_token(web3, chain, users)
+    bond_token, deploy_args = utils.issue_bond_token(web3, chain, users)
 
     account_address = 1234
 
@@ -358,7 +358,7 @@ def test_requestSignature_normal_1(web3, chain, users):
 
     # 債券新規発行
     web3.eth.defaultAccount = issuer
-    bond_token = utils.issue_bond_token(web3, chain, users)
+    bond_token, deploy_args = utils.issue_bond_token(web3, chain, users)
 
     signature = bond_token.call().signatures(signer)
     assert signature == 0
@@ -371,7 +371,7 @@ def test_requestSignature_normal_2(web3, chain, users):
 
     # 債券新規発行
     web3.eth.defaultAccount = issuer
-    bond_token = utils.issue_bond_token(web3, chain, users)
+    bond_token, deploy_args = utils.issue_bond_token(web3, chain, users)
 
     txn_hash = bond_token.transact().requestSignature(signer)
     chain.wait.for_receipt(txn_hash)
@@ -387,7 +387,7 @@ def test_requestSignature_error_1(web3, chain, users):
 
     # 債券新規発行
     web3.eth.defaultAccount = issuer
-    bond_token = utils.issue_bond_token(web3, chain, users)
+    bond_token, deploy_args = utils.issue_bond_token(web3, chain, users)
 
     with pytest.raises(TypeError):
         bond_token.transact().requestSignature(signer)
@@ -404,7 +404,7 @@ def test_sign_normal_1(web3, chain, users):
 
     # 債券新規発行
     web3.eth.defaultAccount = issuer
-    bond_token = utils.issue_bond_token(web3, chain, users)
+    bond_token, deploy_args = utils.issue_bond_token(web3, chain, users)
 
     # 認定リクエスト -> Success
     web3.eth.defaultAccount = issuer
@@ -427,7 +427,7 @@ def test_sign_error_1(web3, chain, users):
 
     # 債券新規発行
     web3.eth.defaultAccount = issuer
-    bond_token = utils.issue_bond_token(web3, chain, users)
+    bond_token, deploy_args = utils.issue_bond_token(web3, chain, users)
 
     # 認定 -> Failure
     web3.eth.defaultAccount = signer
@@ -445,7 +445,7 @@ def test_sign_error_2(web3, chain, users):
 
     # 債券新規発行
     web3.eth.defaultAccount = issuer
-    bond_token = utils.issue_bond_token(web3, chain, users)
+    bond_token, deploy_args = utils.issue_bond_token(web3, chain, users)
 
     # 認定リクエスト -> Success
     web3.eth.defaultAccount = issuer
@@ -472,7 +472,7 @@ def test_unsign_normal_1(web3, chain, users):
 
     # 債券新規発行
     web3.eth.defaultAccount = issuer
-    bond_token = utils.issue_bond_token(web3, chain, users)
+    bond_token, deploy_args = utils.issue_bond_token(web3, chain, users)
 
     # 認定リクエスト -> Success
     web3.eth.defaultAccount = issuer
@@ -500,7 +500,7 @@ def test_unsign_error_1(web3, chain, users):
 
     # 債券新規発行
     web3.eth.defaultAccount = issuer
-    bond_token = utils.issue_bond_token(web3, chain, users)
+    bond_token, deploy_args = utils.issue_bond_token(web3, chain, users)
 
     # 認定取消 -> Failure
     web3.eth.defaultAccount = signer
@@ -518,7 +518,7 @@ def test_unsign_error_2(web3, chain, users):
 
     # 債券新規発行
     web3.eth.defaultAccount = issuer
-    bond_token = utils.issue_bond_token(web3, chain, users)
+    bond_token, deploy_args = utils.issue_bond_token(web3, chain, users)
 
     # 認定リクエスト -> Success
     web3.eth.defaultAccount = issuer
@@ -542,7 +542,7 @@ def test_unsign_error_3(web3, chain, users):
 
     # 債券新規発行
     web3.eth.defaultAccount = issuer
-    bond_token = utils.issue_bond_token(web3, chain, users)
+    bond_token, deploy_args = utils.issue_bond_token(web3, chain, users)
 
     # 認定リクエスト -> Success
     web3.eth.defaultAccount = issuer
@@ -573,7 +573,7 @@ def test_redeem_normal_1(web3, chain, users):
 
     # 債券新規発行
     web3.eth.defaultAccount = issuer
-    bond_token = utils.issue_bond_token(web3, chain, users)
+    bond_token, deploy_args = utils.issue_bond_token(web3, chain, users)
 
     # 償還 -> Success
     web3.eth.defaultAccount = issuer
@@ -591,7 +591,7 @@ def test_redeem_error_1(web3, chain, users):
 
     # 債券新規発行
     web3.eth.defaultAccount = issuer
-    bond_token = utils.issue_bond_token(web3, chain, users)
+    bond_token, deploy_args = utils.issue_bond_token(web3, chain, users)
 
     # Owner以外のアドレスから償還を実施 -> Failure
     web3.eth.defaultAccount = other
@@ -612,7 +612,7 @@ def test_setImageURL_normal_1(web3, chain, users):
 
     # 債券新規発行
     web3.eth.defaultAccount = issuer
-    bond_token = utils.issue_bond_token(web3, chain, users)
+    bond_token, deploy_args = utils.issue_bond_token(web3, chain, users)
 
     image_url = 'https://some_image_url.com/image.png'
 
@@ -631,7 +631,7 @@ def test_setImageURL_normal_2(web3, chain, users):
 
     # 債券新規発行
     web3.eth.defaultAccount = issuer
-    bond_token = utils.issue_bond_token(web3, chain, users)
+    bond_token, deploy_args = utils.issue_bond_token(web3, chain, users)
 
     image_url = 'https://some_image_url.com/image.png'
 
@@ -657,7 +657,7 @@ def test_setImageURL_normal_3(web3, chain, users):
 
     # 債券新規発行
     web3.eth.defaultAccount = issuer
-    bond_token = utils.issue_bond_token(web3, chain, users)
+    bond_token, deploy_args = utils.issue_bond_token(web3, chain, users)
 
     image_url = 'https://some_image_url.com/image.png'
     image_url_after = 'https://some_image_url.com/image_after.png'
@@ -682,7 +682,7 @@ def test_setImageURL_error_1(web3, chain, users):
 
     # 債券新規発行
     web3.eth.defaultAccount = issuer
-    bond_token = utils.issue_bond_token(web3, chain, users)
+    bond_token, deploy_args = utils.issue_bond_token(web3, chain, users)
 
     image_url = 'https://some_image_url.com/image.png'
 
@@ -704,7 +704,7 @@ def test_setImageURL_error_2(web3, chain, users):
 
     # 債券新規発行
     web3.eth.defaultAccount = issuer
-    bond_token = utils.issue_bond_token(web3, chain, users)
+    bond_token, deploy_args = utils.issue_bond_token(web3, chain, users)
 
     image_url = 1234
 
@@ -720,7 +720,7 @@ def test_setImageURL_error_3(web3, chain, users):
 
     # 債券新規発行
     web3.eth.defaultAccount = issuer
-    bond_token = utils.issue_bond_token(web3, chain, users)
+    bond_token, deploy_args = utils.issue_bond_token(web3, chain, users)
 
     image_url = 'https://some_image_url.com/image.png'
 
@@ -744,7 +744,7 @@ def test_updateMemo_normal_1(web3, chain, users):
 
     # 債券新規発行
     web3.eth.defaultAccount = issuer
-    bond_token = utils.issue_bond_token(web3, chain, users)
+    bond_token, deploy_args = utils.issue_bond_token(web3, chain, users)
     # メモ欄の修正 -> Success
     web3.eth.defaultAccount = issuer
     txn_hash = bond_token.transact().updateMemo('updated memo')
@@ -760,7 +760,7 @@ def test_updateMemo_error_1(web3, chain, users):
 
     # 債券新規発行
     web3.eth.defaultAccount = issuer
-    bond_token = utils.issue_bond_token(web3, chain, users)
+    bond_token, deploy_args = utils.issue_bond_token(web3, chain, users)
 
     web3.eth.defaultAccount = issuer
     with pytest.raises(TypeError):
@@ -774,7 +774,7 @@ def test_updateMemo_error_2(web3, chain, users):
 
     # 債券新規発行
     web3.eth.defaultAccount = issuer
-    bond_token = utils.issue_bond_token(web3, chain, users)
+    bond_token, deploy_args = utils.issue_bond_token(web3, chain, users)
 
     # Owner以外のアドレスからメモ欄の修正を実施 -> Failure
     web3.eth.defaultAccount = other
@@ -782,3 +782,181 @@ def test_updateMemo_error_2(web3, chain, users):
 
     memo = bond_token.call().memo()
     assert memo == 'some_memo'
+
+
+'''
+TEST10_トークンの移転（transferFrom）
+'''
+# 正常系1: アカウントアドレスへの移転
+def test_transferFrom_normal_1(web3, chain, users):
+    _issuer = users['issuer']
+    _from = users['admin']
+    _to = users['trader']
+    _value = 100
+
+    # 新規発行
+    web3.eth.defaultAccount = _issuer
+    deploy_args = init_args()
+    bond_contract, _ = chain.provider.get_or_deploy_contract(
+        'IbetStraightBond',
+        deploy_args = deploy_args
+    )
+
+    # 譲渡（issuer -> _from）
+    web3.eth.defaultAccount = _issuer
+    txn_hash = bond_contract.transact().transfer(_from, _value)
+    chain.wait.for_receipt(txn_hash)
+
+    # 移転（_from -> _to）
+    web3.eth.defaultAccount = _issuer
+    txn_hash = bond_contract.transact().transferFrom(_from, _to, _value)
+    chain.wait.for_receipt(txn_hash)
+
+    issuer_balance = bond_contract.call().balanceOf(_issuer)
+    from_balance = bond_contract.call().balanceOf(_from)
+    to_balance = bond_contract.call().balanceOf(_to)
+
+    assert issuer_balance == deploy_args[2] - _value
+    assert from_balance == 0
+    assert to_balance == _value
+
+# エラー系1: 入力値の型誤り（From）
+def test_transferFrom_error_1(web3, chain, users):
+    _issuer = users['issuer']
+    _to = users['trader']
+    _value = 100
+
+    # 新規発行
+    web3.eth.defaultAccount = _issuer
+    deploy_args = init_args()
+    bond_contract, _ = chain.provider.get_or_deploy_contract(
+        'IbetStraightBond',
+        deploy_args = deploy_args
+    )
+
+    # 移転（_from -> _to）
+    web3.eth.defaultAccount = _issuer
+
+    with pytest.raises(TypeError):
+        bond_contract.transact().transferFrom('1234', _to, _value)
+
+    with pytest.raises(TypeError):
+        bond_contract.transact().transferFrom(1234, _to, _value)
+
+# エラー系2: 入力値の型誤り（To）
+def test_transferFrom_error_2(web3, chain, users):
+    _issuer = users['issuer']
+    _from = users['admin']
+    _value = 100
+
+    # 新規発行
+    web3.eth.defaultAccount = _issuer
+    deploy_args = init_args()
+    bond_contract, _ = chain.provider.get_or_deploy_contract(
+        'IbetStraightBond',
+        deploy_args = deploy_args
+    )
+
+    # 移転（_from -> _to）
+    web3.eth.defaultAccount = _issuer
+
+    with pytest.raises(TypeError):
+        bond_contract.transact().transferFrom(_from, '1234', _value)
+
+    with pytest.raises(TypeError):
+        bond_contract.transact().transferFrom(_from, 1234, _value)
+
+# エラー系3: 入力値の型誤り（Value）
+def test_transferFrom_error_3(web3, chain, users):
+    _issuer = users['issuer']
+    _from = users['admin']
+    _to = users['trader']
+
+    # 新規発行
+    web3.eth.defaultAccount = _issuer
+    deploy_args = init_args()
+    bond_contract, _ = chain.provider.get_or_deploy_contract(
+        'IbetStraightBond',
+        deploy_args = deploy_args
+    )
+
+    # 移転（_from -> _to）
+    web3.eth.defaultAccount = _issuer
+
+    with pytest.raises(TypeError):
+        bond_contract.transact().transferFrom(_from, _to, -1)
+
+    with pytest.raises(TypeError):
+        bond_contract.transact().transferFrom(_from, _to, 2**256)
+
+    with pytest.raises(TypeError):
+        bond_contract.transact().transferFrom(_from, _to, '0')
+
+    with pytest.raises(TypeError):
+        bond_contract.transact().transferFrom(_from, _to, 0.1)
+
+# エラー系4: 残高不足
+def test_transferFrom_error_4(web3, chain, users):
+    _issuer = users['issuer']
+    _from = users['admin']
+    _to = users['trader']
+    _value = 100
+
+    # 新規発行
+    web3.eth.defaultAccount = _issuer
+    deploy_args = init_args()
+    bond_contract, _ = chain.provider.get_or_deploy_contract(
+        'IbetStraightBond',
+        deploy_args = deploy_args
+    )
+
+    # 譲渡（issuer -> _from）
+    web3.eth.defaultAccount = _issuer
+    txn_hash = bond_contract.transact().transfer(_from, _value)
+    chain.wait.for_receipt(txn_hash)
+
+    # 移転（_from -> _to）
+    web3.eth.defaultAccount = _issuer
+    txn_hash = bond_contract.transact().transferFrom(_from, _to, 101) # エラーになる
+    chain.wait.for_receipt(txn_hash)
+
+    issuer_balance = bond_contract.call().balanceOf(_issuer)
+    from_balance = bond_contract.call().balanceOf(_from)
+    to_balance = bond_contract.call().balanceOf(_to)
+
+    assert issuer_balance == deploy_args[2] - _value
+    assert from_balance == _value
+    assert to_balance == 0
+
+# エラー系5: 権限エラー
+def test_transferFrom_error_5(web3, chain, users):
+    _issuer = users['issuer']
+    _from = users['admin']
+    _to = users['trader']
+    _value = 100
+
+    # 新規発行
+    web3.eth.defaultAccount = _issuer
+    deploy_args = init_args()
+    bond_contract, _ = chain.provider.get_or_deploy_contract(
+        'IbetStraightBond',
+        deploy_args = deploy_args
+    )
+
+    # 譲渡（issuer -> _from）
+    web3.eth.defaultAccount = _issuer
+    txn_hash = bond_contract.transact().transfer(_from, _value)
+    chain.wait.for_receipt(txn_hash)
+
+    # 移転（_from -> _to）
+    web3.eth.defaultAccount = _from
+    txn_hash = bond_contract.transact().transferFrom(_from, _to, _value) # エラーになる
+    chain.wait.for_receipt(txn_hash)
+
+    issuer_balance = bond_contract.call().balanceOf(_issuer)
+    from_balance = bond_contract.call().balanceOf(_from)
+    to_balance = bond_contract.call().balanceOf(_to)
+
+    assert issuer_balance == deploy_args[2] - _value
+    assert from_balance == _value
+    assert to_balance == 0
