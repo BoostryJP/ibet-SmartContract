@@ -226,6 +226,7 @@ contract IbetStraightBondExchange is Ownable {
             //  5) 認可されたアドレスではない場合
             //  6) 名簿用個人情報が登録されていない場合
             //  7) 償還済みフラグがTrueの場合
+            //  8) 数量が元注文の残数量を超過している場合
             //   -> REVERT
             if (_amount == 0 ||
                 order.isBuy == _isBuy ||
@@ -234,7 +235,8 @@ contract IbetStraightBondExchange is Ownable {
                 WhiteList(whiteListAddress).isRegistered(msg.sender,order.agent) == false ||
                 PersonalInfo(personalInfoAddress).isRegistered(
                     msg.sender,IbetStraightBond(order.token).owner()) == false ||
-                IbetStraightBond(order.token).isRedeemed() == true)
+                IbetStraightBond(order.token).isRedeemed() == true ||
+                order.amount < _amount )
             {
                 revert();
             }
@@ -316,11 +318,13 @@ contract IbetStraightBondExchange is Ownable {
         Agreement storage agreement = agreements[_orderId][_agreementId];
 
         // <CHK>
-        //  1) すでに支払い済みの場合
-        //  2) 元注文で指定した決済業者ではない場合
+        //  1) すでに決済承認済み（支払い済み）の場合
+        //  2) すでに決済非承認済み（キャンセル済み）の場合
+        //  3) 元注文で指定した決済業者ではない場合
         //   -> REVERT
         if (agreement.paid ||
-            msg.sender != order.agent ) {
+            agreement.canceled ||
+            msg.sender != order.agent) {
             revert();
         }
 
@@ -368,10 +372,12 @@ contract IbetStraightBondExchange is Ownable {
 
         if (agreement.expiry <= now) { // 約定明細の有効期限を超過している場合
           // <CHK>
-          //  1) すでに支払い済みの場合
-          //  2) msg.senderが、 決済代行（agent）、発注者（owner）、約定相手（counterpart）以外の場合
+          //  1) すでに決済承認済み（支払い済み）の場合
+          //  2) すでに決済非承認済み（キャンセル済み）の場合
+          //  3) msg.senderが、 決済代行（agent）、発注者（owner）、約定相手（counterpart）以外の場合
           //   -> REVERT
           if (agreement.paid ||
+              agreement.canceled ||
               (
                 msg.sender != order.agent &&
                 msg.sender != order.owner &&
@@ -383,9 +389,11 @@ contract IbetStraightBondExchange is Ownable {
         } else { // 約定明細の有効期限を超過していない場合
           // <CHK>
           //  1) すでに支払い済みの場合
-          //  2) msg.senderが、決済代行（agent）以外の場合
+          //  2) すでに決済非承認済み（キャンセル済み）の場合
+          //  3) msg.senderが、決済代行（agent）以外の場合
           //   -> REVERT
           if (agreement.paid ||
+              agreement.canceled ||
               msg.sender != order.agent
           ) {
               revert();

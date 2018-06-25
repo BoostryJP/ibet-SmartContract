@@ -1945,6 +1945,175 @@ def test_executeOrder_error_11_2(web3, chain, users,
     assert balance_maker == 0
     assert balance_taker == deploy_args[2]
 
+# エラー系12-1
+# Take数量が元注文の残数量を超過している場合
+# Take買注文
+def test_executeOrder_error_12_1(web3, chain, users,
+    bond_exchange, personal_info, white_list):
+    _issuer = users['issuer']
+    _trader = users['trader']
+    _agent = users['agent']
+
+    personalinfo_register(web3, chain, personal_info, _issuer, _issuer)
+    whitelist_register(web3, chain, white_list, _issuer, _agent)
+    whitelist_approve(web3, chain, white_list, _issuer, _agent)
+
+    personalinfo_register(web3, chain, personal_info, _trader, _issuer)
+    whitelist_register(web3, chain, white_list, _trader, _agent)
+    whitelist_approve(web3, chain, white_list, _trader, _agent)
+
+    # 新規発行：発行体
+    web3.eth.defaultAccount = _issuer
+    bond_token, deploy_args = utils.issue_bond_token(web3, chain, users)
+
+    # 預かりをExchangeへのデポジット：発行体
+    web3.eth.defaultAccount = _issuer
+    _amount_make = 100
+    txn_hash = bond_token.transact().transfer(bond_exchange.address, _amount_make)
+    chain.wait.for_receipt(txn_hash)
+
+    # Make注文（売）：発行体
+    web3.eth.defaultAccount = _issuer
+    _price = 123
+    txn_hash = bond_exchange.transact().createOrder(
+        bond_token.address, _amount_make, _price, False, _agent)
+    chain.wait.for_receipt(txn_hash)
+
+    order_id = bond_exchange.call().latestOrderId() - 1
+
+    # Take注文（買）：投資家
+    web3.eth.defaultAccount = _trader
+    _amount_take = 101 # Make注文の数量を超過
+    txn_hash = bond_exchange.transact().executeOrder(
+        order_id, _amount_take, True) # エラーになる
+    chain.wait.for_receipt(txn_hash)
+
+    orderbook = bond_exchange.call().orderBook(order_id)
+    balance_maker = bond_token.call().balanceOf(_issuer)
+    balance_taker = bond_token.call().balanceOf(_trader)
+    commitment = bond_exchange.call().commitments(_issuer, bond_token.address)
+
+    assert orderbook == [
+        _issuer, to_checksum_address(bond_token.address),
+        _amount_make, # Make注文の件数から減っていない状態
+        _price, False, _agent, False
+    ]
+    assert balance_maker == deploy_args[2] - _amount_make
+    assert balance_taker == 0
+    assert commitment == _amount_make
+
+# エラー系12-2
+# Take数量が元注文の残数量を超過している場合
+# Take売注文
+def test_executeOrder_error_12_2(web3, chain, users,
+    bond_exchange, personal_info, white_list):
+    _issuer = users['issuer']
+    _trader = users['trader']
+    _agent = users['agent']
+
+    personalinfo_register(web3, chain, personal_info, _issuer, _issuer)
+    whitelist_register(web3, chain, white_list, _issuer, _agent)
+    whitelist_approve(web3, chain, white_list, _issuer, _agent)
+
+    personalinfo_register(web3, chain, personal_info, _trader, _issuer)
+    whitelist_register(web3, chain, white_list, _trader, _agent)
+    whitelist_approve(web3, chain, white_list, _trader, _agent)
+
+    # 新規発行：発行体
+    web3.eth.defaultAccount = _issuer
+    bond_token, deploy_args = utils.issue_bond_token(web3, chain, users)
+
+    # Make注文（買）：投資家
+    web3.eth.defaultAccount = _trader
+    _price = 123
+    _amount_make = 100
+    txn_hash = bond_exchange.transact().createOrder(
+        bond_token.address, _amount_make, _price, True, _agent)
+    chain.wait.for_receipt(txn_hash)
+
+    order_id = bond_exchange.call().latestOrderId() - 1
+
+    # 預かりをExchangeへのデポジット：発行体
+    web3.eth.defaultAccount = _issuer
+    _amount_take = 101 # Make注文の数量を超過
+    txn_hash = bond_token.transact().transfer(bond_exchange.address, _amount_take)
+    chain.wait.for_receipt(txn_hash)
+
+    # Take注文（売）：発行体
+    web3.eth.defaultAccount = _issuer
+    txn_hash = bond_exchange.transact().executeOrder(
+        order_id, _amount_take, False) # エラーになる
+    chain.wait.for_receipt(txn_hash)
+
+    orderbook = bond_exchange.call().orderBook(order_id)
+    balance_maker = bond_token.call().balanceOf(_trader)
+    balance_taker = bond_token.call().balanceOf(_issuer)
+    commitment = bond_exchange.call().commitments(_issuer, bond_token.address)
+
+    assert orderbook == [
+        _trader, to_checksum_address(bond_token.address),
+        _amount_make, # Make注文の件数から減っていない状態
+        _price, True, _agent, False
+    ]
+    assert commitment == 0
+    assert balance_maker == 0
+    assert balance_taker == deploy_args[2]
+
+# エラー系13
+# Take注文の発注者の残高が発注数量を下回っている場合
+def test_executeOrder_error_13(web3, chain, users,
+    bond_exchange, personal_info, white_list):
+    _issuer = users['issuer']
+    _trader = users['trader']
+    _agent = users['agent']
+
+    personalinfo_register(web3, chain, personal_info, _issuer, _issuer)
+    whitelist_register(web3, chain, white_list, _issuer, _agent)
+    whitelist_approve(web3, chain, white_list, _issuer, _agent)
+
+    personalinfo_register(web3, chain, personal_info, _trader, _issuer)
+    whitelist_register(web3, chain, white_list, _trader, _agent)
+    whitelist_approve(web3, chain, white_list, _trader, _agent)
+
+    # 新規発行：発行体
+    web3.eth.defaultAccount = _issuer
+    bond_token, deploy_args = utils.issue_bond_token(web3, chain, users)
+
+    # Make注文（買）：投資家
+    web3.eth.defaultAccount = _trader
+    _price = 123
+    _amount_make = 100
+    txn_hash = bond_exchange.transact().createOrder(
+        bond_token.address, _amount_make, _price, True, _agent)
+    chain.wait.for_receipt(txn_hash)
+
+    order_id = bond_exchange.call().latestOrderId() - 1
+
+    # 預かりをExchangeへのデポジット：発行体
+    web3.eth.defaultAccount = _issuer
+    _amount_take = 50
+    txn_hash = bond_token.transact().transfer(bond_exchange.address, _amount_take)
+    chain.wait.for_receipt(txn_hash)
+
+    # Take注文（売）：発行体
+    web3.eth.defaultAccount = _issuer
+    txn_hash = bond_exchange.transact().executeOrder(
+        order_id, _amount_take + 1, False) # エラーになる
+    chain.wait.for_receipt(txn_hash)
+
+    orderbook = bond_exchange.call().orderBook(order_id)
+    balance_maker = bond_token.call().balanceOf(_trader)
+    balance_taker = bond_token.call().balanceOf(_issuer)
+    commitment = bond_exchange.call().commitments(_issuer, bond_token.address)
+
+    assert orderbook == [
+        _trader, to_checksum_address(bond_token.address),
+        _amount_make, # Make注文の件数から減っていない状態
+        _price, True, _agent, False
+    ]
+    assert commitment == 0
+    assert balance_maker == 0
+    assert balance_taker == deploy_args[2]
 
 '''
 TEST5_決済承認（confirmAgreement）
@@ -2395,6 +2564,76 @@ def test_confirmAgreement_error_6(web3, chain, users,
     assert balance_taker == 0
     assert commitment == _amount_make
 
+# エラー系7
+# 既に決済非承認済み（キャンセル済み）の場合
+def test_confirmAgreement_error_7(web3, chain, users,
+    bond_exchange, personal_info, white_list):
+    _issuer = users['issuer']
+    _trader = users['trader']
+    _agent = users['agent']
+
+    personalinfo_register(web3, chain, personal_info, _issuer, _issuer)
+    whitelist_register(web3, chain, white_list, _issuer, _agent)
+    whitelist_approve(web3, chain, white_list, _issuer, _agent)
+
+    personalinfo_register(web3, chain, personal_info, _trader, _issuer)
+    whitelist_register(web3, chain, white_list, _trader, _agent)
+    whitelist_approve(web3, chain, white_list, _trader, _agent)
+
+    # 新規発行：発行体
+    web3.eth.defaultAccount = _issuer
+    bond_token, deploy_args = utils.issue_bond_token(web3, chain, users)
+
+    # Exchangeへのデポジット：発行体
+    web3.eth.defaultAccount = _issuer
+    _amount_make = 100
+    txn_hash = bond_token.transact().transfer(bond_exchange.address, _amount_make)
+    chain.wait.for_receipt(txn_hash)
+
+    # Make注文（売）：発行体
+    web3.eth.defaultAccount = _issuer
+    _price = 123
+    txn_hash = bond_exchange.transact().createOrder(
+        bond_token.address, _amount_make, _price, False, _agent)
+    chain.wait.for_receipt(txn_hash)
+
+    # Take注文（買）：投資家
+    web3.eth.defaultAccount = _trader
+    order_id = bond_exchange.call().latestOrderId() - 1
+    _amount_take = 50
+    txn_hash = bond_exchange.transact().executeOrder(
+        order_id, _amount_take, True)
+    chain.wait.for_receipt(txn_hash)
+
+    agreement_id = bond_exchange.call().latestAgreementIds(order_id) - 1
+
+    # 決済非承認：決済業者
+    web3.eth.defaultAccount = _agent
+    txn_hash = bond_exchange.transact().cancelAgreement(
+        order_id, agreement_id)
+    chain.wait.for_receipt(txn_hash)
+
+    # 決済承認：決済業者
+    web3.eth.defaultAccount = _agent
+    txn_hash = bond_exchange.transact().confirmAgreement(
+        order_id, agreement_id) # エラーになる
+    chain.wait.for_receipt(txn_hash)
+
+    orderbook = bond_exchange.call().orderBook(order_id)
+    agreement = bond_exchange.call().agreements(order_id, agreement_id)
+    balance_maker = bond_token.call().balanceOf(_issuer)
+    balance_taker = bond_token.call().balanceOf(_trader)
+    commitment = bond_exchange.call().commitments(_issuer, bond_token.address)
+
+    assert orderbook == [
+        _issuer, to_checksum_address(bond_token.address),
+        _amount_make - _amount_take,
+        _price, False, _agent, False
+    ]
+    assert agreement[0:5] == [_trader, _amount_take, _price, True, False]
+    assert balance_maker == deploy_args[2] - _amount_make + _amount_take
+    assert balance_taker == 0
+    assert commitment == _amount_make - _amount_take
 
 '''
 TEST6_決済非承認（cancelAgreement）
@@ -2840,6 +3079,77 @@ def test_cancelAgreement_error_6(web3, chain, users,
     assert balance_maker == deploy_args[2] - _amount_make
     assert balance_taker == 0
     assert commitment == _amount_make
+
+# エラー系5
+# すでに決済非承認済み（キャンセル済み）の場合
+def test_cancelAgreement_error_7(web3, chain, users,
+    bond_exchange, personal_info, white_list):
+    _issuer = users['issuer']
+    _trader = users['trader']
+    _agent = users['agent']
+
+    personalinfo_register(web3, chain, personal_info, _issuer, _issuer)
+    whitelist_register(web3, chain, white_list, _issuer, _agent)
+    whitelist_approve(web3, chain, white_list, _issuer, _agent)
+
+    personalinfo_register(web3, chain, personal_info, _trader, _issuer)
+    whitelist_register(web3, chain, white_list, _trader, _agent)
+    whitelist_approve(web3, chain, white_list, _trader, _agent)
+
+    # 新規発行：発行体
+    web3.eth.defaultAccount = _issuer
+    bond_token, deploy_args = utils.issue_bond_token(web3, chain, users)
+
+    # Exchangeへのデポジット：発行体
+    web3.eth.defaultAccount = _issuer
+    _amount_make = 100
+    txn_hash = bond_token.transact().transfer(bond_exchange.address, _amount_make)
+    chain.wait.for_receipt(txn_hash)
+
+    # Make注文（売）：発行体
+    web3.eth.defaultAccount = _issuer
+    _price = 123
+    txn_hash = bond_exchange.transact().createOrder(
+        bond_token.address, _amount_make, _price, False, _agent)
+    chain.wait.for_receipt(txn_hash)
+
+    # Take注文（買）：投資家
+    web3.eth.defaultAccount = _trader
+    order_id = bond_exchange.call().latestOrderId() - 1
+    _amount_take = 50
+    txn_hash = bond_exchange.transact().executeOrder(
+        order_id, _amount_take, True)
+    chain.wait.for_receipt(txn_hash)
+
+    agreement_id = bond_exchange.call().latestAgreementIds(order_id) - 1
+
+    # 決済非承認：決済業者
+    web3.eth.defaultAccount = _agent
+    txn_hash = bond_exchange.transact().cancelAgreement(
+        order_id, agreement_id)
+    chain.wait.for_receipt(txn_hash)
+
+    # 決済非承認：決済業者（2回目）
+    web3.eth.defaultAccount = _agent
+    txn_hash = bond_exchange.transact().cancelAgreement(
+        order_id, agreement_id) # エラーになる
+    chain.wait.for_receipt(txn_hash)
+
+    orderbook = bond_exchange.call().orderBook(order_id)
+    agreement = bond_exchange.call().agreements(order_id, agreement_id)
+    balance_maker = bond_token.call().balanceOf(_issuer)
+    balance_taker = bond_token.call().balanceOf(_trader)
+    commitment = bond_exchange.call().commitments(_issuer, bond_token.address)
+
+    assert orderbook == [
+        _issuer, to_checksum_address(bond_token.address),
+        _amount_make - _amount_take,
+        _price, False, _agent, False
+    ]
+    assert agreement[0:5] == [_trader, _amount_take, _price, True, False]
+    assert balance_maker == deploy_args[2] - _amount_make + _amount_take
+    assert balance_taker == 0
+    assert commitment == _amount_make - _amount_take
 
 
 '''
