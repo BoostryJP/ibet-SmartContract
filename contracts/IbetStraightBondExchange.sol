@@ -170,16 +170,19 @@ contract IbetStraightBondExchange is Ownable {
 
     // ファンクション：（投資家）注文をキャンセルする
     function cancelOrder(uint256 _orderId) public returns (bool) {
+        // <CHK>
+        //  指定した注文番号が、直近の注文ID以上の場合
+        //   -> REVERT
+        require(_orderId < latestOrderId);
+
         Order storage order = orderBook[_orderId];
 
         // <CHK>
-        //  1) 指定した注文IDが直近の注文IDを超えている場合
-        //  2) 元注文の残注文数量が0の場合
-        //  3) 注文がキャンセル済みの場合
-        //  4) 元注文の発注者と、注文キャンセルの実施者が異なる場合
+        //  1) 元注文の残注文数量が0の場合
+        //  2) 注文がキャンセル済みの場合
+        //  3) 元注文の発注者と、注文キャンセルの実施者が異なる場合
         //   -> REVERT
-        if (_orderId > latestOrderId ||
-            order.amount == 0 ||
+        if (order.amount == 0 ||
             order.canceled == true ||
             order.owner != msg.sender) {
             revert();
@@ -260,8 +263,6 @@ contract IbetStraightBondExchange is Ownable {
                 balances[msg.sender][order.token] < _amount ||
                 order.amount < _amount )
             {
-                balances[msg.sender][order.token] =
-                    balances[msg.sender][order.token].sub(_amount);
                 IbetStraightBond(order.token).transfer(msg.sender,
                     balances[msg.sender][order.token]);
                 balances[msg.sender][order.token] = 0;
@@ -304,18 +305,21 @@ contract IbetStraightBondExchange is Ownable {
         public
         returns (bool)
     {
+        // <CHK>
+        //  1) 指定した注文番号が、直近の注文ID以上の場合
+        //  2) 指定した約定IDが、直近の約定ID以上の場合
+        //   -> REVERT
+        require(_orderId < latestOrderId);
+        require(_agreementId < latestAgreementIds[_orderId]);
+
         Order storage order = orderBook[_orderId];
         Agreement storage agreement = agreements[_orderId][_agreementId];
 
         // <CHK>
-        //  1) 指定した注文番号が、直近の注文IDを上回っている場合
-        //  2) 指定した約定IDが、直近の約定IDを上回っている場合
-        //  3) すでに支払い済みの場合
-        //  4) 元注文で指定した決済業者ではない場合
+        //  1) すでに支払い済みの場合
+        //  2) 元注文で指定した決済業者ではない場合
         //   -> REVERT
-        if (_orderId > latestOrderId ||
-            _agreementId > latestAgreementIds[_orderId] ||
-            agreement.paid ||
+        if (agreement.paid ||
             msg.sender != order.agent ) {
             revert();
         }
@@ -348,21 +352,26 @@ contract IbetStraightBondExchange is Ownable {
     }
 
     // ファンクション：（決済業者）約定キャンセル
-    function cancelAgreement(uint256 _orderId, uint256 _agreementId) public returns (bool) {
+    function cancelAgreement(uint256 _orderId, uint256 _agreementId)
+        public
+        returns (bool)
+    {
+        // <CHK>
+        //  1) 指定した注文番号が、直近の注文ID以上の場合
+        //  2) 指定した約定IDが、直近の約定ID以上の場合
+        //   -> REVERT
+        require(_orderId < latestOrderId);
+        require(_agreementId < latestAgreementIds[_orderId]);
+
         Order storage order = orderBook[_orderId];
         Agreement storage agreement = agreements[_orderId][_agreementId];
 
         if (agreement.expiry <= now) { // 約定明細の有効期限を超過している場合
           // <CHK>
-          //  1) 指定した注文番号が、直近の注文IDを上回っている場合
-          //  2) 指定した約定IDが、直近の約定IDを上回っている場合
-          //  3) すでに支払い済みの場合
-          //  4) msg.senderが、 決済代行（agent）、発注者（owner）、約定相手（counterpart）以外の場合
+          //  1) すでに支払い済みの場合
+          //  2) msg.senderが、 決済代行（agent）、発注者（owner）、約定相手（counterpart）以外の場合
           //   -> REVERT
-          if (
-              _orderId > latestOrderId ||
-              _agreementId > latestAgreementIds[_orderId] ||
-              agreement.paid ||
+          if (agreement.paid ||
               (
                 msg.sender != order.agent &&
                 msg.sender != order.owner &&
@@ -373,15 +382,10 @@ contract IbetStraightBondExchange is Ownable {
           }
         } else { // 約定明細の有効期限を超過していない場合
           // <CHK>
-          //  1) 指定した注文番号が、直近の注文IDを上回っている場合
-          //  2) 指定した約定IDが、直近の約定IDを上回っている場合
-          //  3) すでに支払い済みの場合
-          //  4) msg.senderが、決済代行（agent）以外の場合
+          //  1) すでに支払い済みの場合
+          //  2) msg.senderが、決済代行（agent）以外の場合
           //   -> REVERT
-          if (
-              _orderId > latestOrderId ||
-              _agreementId > latestAgreementIds[_orderId] ||
-              agreement.paid ||
+          if (agreement.paid ||
               msg.sender != order.agent
           ) {
               revert();
