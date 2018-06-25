@@ -1884,7 +1884,7 @@ def test_executeOrder_error_11_1(web3, chain, users,
     assert commitment == _amount_make
 
 # エラー系11-2
-# 名簿用個人情報が登録されていない場合
+# 償還済みフラグがTrueの場合
 # Take売注文
 def test_executeOrder_error_11_2(web3, chain, users,
     bond_exchange, personal_info, white_list):
