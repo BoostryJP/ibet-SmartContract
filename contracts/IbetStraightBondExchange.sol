@@ -106,7 +106,7 @@ contract IbetStraightBondExchange is Ownable {
         personalInfoAddress = _personalInfoAddress;
     }
 
-    // ファンクション：（投資家）新規注文を作成する
+    // ファンクション：（投資家）新規注文を作成する　Make注文
     function createOrder(address _token, uint256 _amount, uint256 _price,
         bool _isBuy, address _agent)
         public
@@ -170,16 +170,19 @@ contract IbetStraightBondExchange is Ownable {
 
     // ファンクション：（投資家）注文をキャンセルする
     function cancelOrder(uint256 _orderId) public returns (bool) {
+        // <CHK>
+        //  指定した注文番号が、直近の注文ID以上の場合
+        //   -> REVERT
+        require(_orderId < latestOrderId);
+
         Order storage order = orderBook[_orderId];
 
         // <CHK>
-        //  1) 指定した注文IDが直近の注文IDを超えている場合
-        //  2) 元注文の残注文数量が0の場合
-        //  3) 注文がキャンセル済みの場合
-        //  4) 元注文の発注者と、注文キャンセルの実施者が異なる場合
+        //  1) 元注文の残注文数量が0の場合
+        //  2) 注文がキャンセル済みの場合
+        //  3) 元注文の発注者と、注文キャンセルの実施者が異なる場合
         //   -> REVERT
-        if (_orderId > latestOrderId ||
-            order.amount == 0 ||
+        if (order.amount == 0 ||
             order.canceled == true ||
             order.owner != msg.sender) {
             revert();
@@ -202,33 +205,38 @@ contract IbetStraightBondExchange is Ownable {
         return true;
     }
 
-    // ファンクション：（投資家）注文に応じる -> 約定
+    // ファンクション：（投資家）注文に応じる　Take注文 -> 約定
     function executeOrder(uint256 _orderId, uint256 _amount, bool _isBuy)
         public
         returns (bool)
     {
+        // <CHK>
+        //  指定した注文IDが直近の注文IDを超えている場合
+        require(_orderId < latestOrderId);
+
         Order storage order = orderBook[_orderId];
+        require(order.owner != 0x0000000000000000000000000000000000000000);
 
         if (_isBuy == true) { // 買注文の場合
             // <CHK>
-            //  1) 指定した注文IDが直近の注文IDを超えている場合
-            //  2) 注文数量が0の場合
-            //  3) 元注文と、発注する注文が同一の売買区分の場合
-            //  4) 元注文の発注者と同一のアドレスからの発注の場合
-            //  5) 元注文がキャンセル済の場合
-            //  6) 認可されたアドレスではない場合
-            //  7) 名簿用個人情報が登録されていない場合
-            //  8) 償還済みフラグがTrueの場合
+            //  1) 注文数量が0の場合
+            //  2) 元注文と、発注する注文が同一の売買区分の場合
+            //  3) 元注文の発注者と同一のアドレスからの発注の場合
+            //  4) 元注文がキャンセル済の場合
+            //  5) 認可されたアドレスではない場合
+            //  6) 名簿用個人情報が登録されていない場合
+            //  7) 償還済みフラグがTrueの場合
+            //  8) 数量が元注文の残数量を超過している場合
             //   -> REVERT
-            if (_orderId > latestOrderId ||
-                _amount == 0 ||
+            if (_amount == 0 ||
                 order.isBuy == _isBuy ||
                 msg.sender == order.owner ||
                 order.canceled == true ||
                 WhiteList(whiteListAddress).isRegistered(msg.sender,order.agent) == false ||
                 PersonalInfo(personalInfoAddress).isRegistered(
                     msg.sender,IbetStraightBond(order.token).owner()) == false ||
-                IbetStraightBond(order.token).isRedeemed() == true)
+                IbetStraightBond(order.token).isRedeemed() == true ||
+                order.amount < _amount )
             {
                 revert();
             }
@@ -236,19 +244,17 @@ contract IbetStraightBondExchange is Ownable {
 
         if (_isBuy == false) { // 売注文の場合
             // <CHK>
-            //  1) 指定した注文IDが直近の注文IDを超えている場合
-            //  2) 注文数量が0の場合
-            //  3) 元注文と、発注する注文が同一の売買区分の場合
-            //  4) 元注文の発注者と同一のアドレスからの発注の場合
-            //  5) 元注文がキャンセル済の場合
-            //  6) 認可されたアドレスではない場合
-            //  7) 名簿用個人情報が登録されていない場合
-            //  8) 償還済みフラグがTrueの場合
-            //  9) 発注者の残高が発注数量を下回っている場合
-            //  10) 数量が元注文の残数量を超過している場合
+            //  1) 注文数量が0の場合
+            //  2) 元注文と、発注する注文が同一の売買区分の場合
+            //  3) 元注文の発注者と同一のアドレスからの発注の場合
+            //  4) 元注文がキャンセル済の場合
+            //  5) 認可されたアドレスではない場合
+            //  6) 名簿用個人情報が登録されていない場合
+            //  7) 償還済みフラグがTrueの場合
+            //  8) 発注者の残高が発注数量を下回っている場合
+            //  9) 数量が元注文の残数量を超過している場合
             //   -> 更新処理：残高を投資家のアカウントに全て戻し、falseを返す
-            if (_orderId > latestOrderId ||
-                _amount == 0 ||
+            if (_amount == 0 ||
                 order.isBuy == _isBuy ||
                 msg.sender == order.owner ||
                 order.canceled == true ||
@@ -259,8 +265,6 @@ contract IbetStraightBondExchange is Ownable {
                 balances[msg.sender][order.token] < _amount ||
                 order.amount < _amount )
             {
-                balances[msg.sender][order.token] =
-                    balances[msg.sender][order.token].sub(_amount);
                 IbetStraightBond(order.token).transfer(msg.sender,
                     balances[msg.sender][order.token]);
                 balances[msg.sender][order.token] = 0;
@@ -303,19 +307,24 @@ contract IbetStraightBondExchange is Ownable {
         public
         returns (bool)
     {
+        // <CHK>
+        //  1) 指定した注文番号が、直近の注文ID以上の場合
+        //  2) 指定した約定IDが、直近の約定ID以上の場合
+        //   -> REVERT
+        require(_orderId < latestOrderId);
+        require(_agreementId < latestAgreementIds[_orderId]);
+
         Order storage order = orderBook[_orderId];
         Agreement storage agreement = agreements[_orderId][_agreementId];
 
         // <CHK>
-        //  1) 指定した注文番号が、直近の注文IDを上回っている場合
-        //  2) 指定した約定IDが、直近の約定IDを上回っている場合
-        //  3) すでに支払い済みの場合
-        //  4) 元注文で指定した決済業者ではない場合
+        //  1) すでに決済承認済み（支払い済み）の場合
+        //  2) すでに決済非承認済み（キャンセル済み）の場合
+        //  3) 元注文で指定した決済業者ではない場合
         //   -> REVERT
-        if (_orderId > latestOrderId ||
-            _agreementId > latestAgreementIds[_orderId] ||
-            agreement.paid ||
-            msg.sender != order.agent ) {
+        if (agreement.paid ||
+            agreement.canceled ||
+            msg.sender != order.agent) {
             revert();
         }
 
@@ -347,21 +356,28 @@ contract IbetStraightBondExchange is Ownable {
     }
 
     // ファンクション：（決済業者）約定キャンセル
-    function cancelAgreement(uint256 _orderId, uint256 _agreementId) public returns (bool) {
+    function cancelAgreement(uint256 _orderId, uint256 _agreementId)
+        public
+        returns (bool)
+    {
+        // <CHK>
+        //  1) 指定した注文番号が、直近の注文ID以上の場合
+        //  2) 指定した約定IDが、直近の約定ID以上の場合
+        //   -> REVERT
+        require(_orderId < latestOrderId);
+        require(_agreementId < latestAgreementIds[_orderId]);
+
         Order storage order = orderBook[_orderId];
         Agreement storage agreement = agreements[_orderId][_agreementId];
 
         if (agreement.expiry <= now) { // 約定明細の有効期限を超過している場合
           // <CHK>
-          //  1) 指定した注文番号が、直近の注文IDを上回っている場合
-          //  2) 指定した約定IDが、直近の約定IDを上回っている場合
-          //  3) すでに支払い済みの場合
-          //  4) msg.senderが、 決済代行（agent）、発注者（owner）、約定相手（counterpart）以外の場合
+          //  1) すでに決済承認済み（支払い済み）の場合
+          //  2) すでに決済非承認済み（キャンセル済み）の場合
+          //  3) msg.senderが、 決済代行（agent）、発注者（owner）、約定相手（counterpart）以外の場合
           //   -> REVERT
-          if (
-              _orderId > latestOrderId ||
-              _agreementId > latestAgreementIds[_orderId] ||
-              agreement.paid ||
+          if (agreement.paid ||
+              agreement.canceled ||
               (
                 msg.sender != order.agent &&
                 msg.sender != order.owner &&
@@ -372,15 +388,12 @@ contract IbetStraightBondExchange is Ownable {
           }
         } else { // 約定明細の有効期限を超過していない場合
           // <CHK>
-          //  1) 指定した注文番号が、直近の注文IDを上回っている場合
-          //  2) 指定した約定IDが、直近の約定IDを上回っている場合
-          //  3) すでに支払い済みの場合
-          //  4) msg.senderが、決済代行（agent）以外の場合
+          //  1) すでに支払い済みの場合
+          //  2) すでに決済非承認済み（キャンセル済み）の場合
+          //  3) msg.senderが、決済代行（agent）以外の場合
           //   -> REVERT
-          if (
-              _orderId > latestOrderId ||
-              _agreementId > latestAgreementIds[_orderId] ||
-              agreement.paid ||
+          if (agreement.paid ||
+              agreement.canceled ||
               msg.sender != order.agent
           ) {
               revert();
