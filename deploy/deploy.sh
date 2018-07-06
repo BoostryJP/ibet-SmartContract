@@ -7,4 +7,4 @@ cd /app/tmr-sc
 populus compile
 
 # deploy実施
-python deploy/contranct_deploy.py
+python deploy/contract_deploy.py
