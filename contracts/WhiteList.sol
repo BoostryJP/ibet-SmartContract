@@ -2,24 +2,18 @@ pragma solidity ^0.4.24;
 
 contract WhiteList {
 
+    // 利用規約
+    struct Terms {
+        string text; // 規約本文
+        bool status; // 登録済：True、未登録：False
+    }
+
     // 利用規約同意
     struct Agreement {
         address account_address; // アカウントアドレス
         address agent_address; // アカウントアドレス（決済業者）
         bool status; // 同意状況（同意済:true）
     }
-
-    // 利用規約
-    // agent_address => 版番 => 規約本文
-    mapping(address => mapping(uint16 => string)) public terms;
-
-    // 最新の版番
-    // agent_address => 版番
-    mapping(address => uint16) public latest_terms_version;
-
-    // 利用規約同意情報
-    // account_address => agent_address => 版番 => Agreement
-    mapping(address => mapping(address => mapping(uint16 => Agreement))) public agreements;
 
     // 支払用口座
     struct PaymentAccount {
@@ -28,6 +22,18 @@ contract WhiteList {
         string encrypted_info; // 銀行口座情報（暗号化済）
         uint8 approval_status; // 承認状態（NONE(0)/NG(1)/OK(2)/WARN(3)/BAN(4)）
     }
+
+    // 利用規約情報
+    // agent_address => 版番 => 規約本文
+    mapping(address => mapping(uint16 => Terms)) public terms;
+
+    // 最新の版番
+    // agent_address => 版番
+    mapping(address => uint16) public latest_terms_version;
+
+    // 利用規約同意情報
+    // account_address => agent_address => 版番 => Agreement
+    mapping(address => mapping(address => mapping(uint16 => Agreement))) public agreements;
 
     // 支払用口座情報
     // account_address => agent_address => PaymentAccount
@@ -58,14 +64,24 @@ contract WhiteList {
     // ファンクション：（決済業者）利用規約登録
     function register_terms(string _text) public returns (bool) {
         uint16 version = latest_terms_version[msg.sender]++;
-        terms[msg.sender][version] = _text;
+        Terms storage new_terms = terms[msg.sender][version];
+        new_terms.text = _text;
+        new_terms.status = true;
         return true;
     }
 
     // ファンクション：利用規約同意
-    function agree_terms(address _agent_address) returns (bool) {
+    function agree_terms(address _agent_address)
+        returns (bool)
+    {
+        // 利用規約が登録済であることを確認
+        require(latest_terms_version[_agent_address] > 0);
+        Terms storage latest_terms =
+            terms[_agent_address][latest_terms_version[_agent_address] - 1];
+        require(latest_terms.status == true);
+
         Agreement storage agreement =
-            agreements[msg.sender][_agent_address][latest_terms_version[_agent_address]];
+            agreements[msg.sender][_agent_address][latest_terms_version[_agent_address] - 1];
         agreement.account_address = msg.sender;
         agreement.agent_address = _agent_address;
         agreement.status = true;
@@ -77,9 +93,18 @@ contract WhiteList {
 
     // ファンクション：（投資家）支払情報を登録する
     //  ２回目以降は上書き登録を行う
-    function register(address _agent_address, string _encrypted_info) public returns (bool) {
+    function register(address _agent_address, string _encrypted_info)
+        public
+        returns (bool)
+    {
         PaymentAccount storage payment_account = payment_accounts[msg.sender][_agent_address];
         require(payment_account.approval_status != 4);
+
+        // 利用規約が登録済であることを確認
+        require(latest_terms_version[_agent_address] > 0);
+        Terms storage latest_terms =
+            terms[_agent_address][latest_terms_version[_agent_address] - 1];
+        require(latest_terms.status == true);
 
         // 口座情報の登録
         payment_account.account_address = msg.sender;
@@ -89,7 +114,7 @@ contract WhiteList {
 
         // 利用規約同意
         Agreement storage agreement =
-            agreements[msg.sender][_agent_address][latest_terms_version[_agent_address]];
+            agreements[msg.sender][_agent_address][latest_terms_version[_agent_address] - 1];
         agreement.account_address = msg.sender;
         agreement.agent_address = _agent_address;
         agreement.status = true;
@@ -150,9 +175,13 @@ contract WhiteList {
 
     // ファンクション：直近の利用規約に同意していることを確認する
     function isAgreed(address _account_address, address _agent_address) public view returns (bool) {
-        Agreement storage agreement =
-            agreements[msg.sender][_agent_address][latest_terms_version[_agent_address]];
-        return agreement.status;
+        if (latest_terms_version[_agent_address] == 0) {
+            return false;
+        } else {
+            Agreement storage agreement =
+                agreements[_account_address][_agent_address][latest_terms_version[_agent_address] - 1];
+            return agreement.status;
+        }
     }
 
     // ファンクション：登録状況を確認する
