@@ -10,12 +10,16 @@ contract WhiteList {
     }
 
     // 利用規約
-    // agent_address => 規約本文
-    mapping(address => string) public terms;
+    // agent_address => 版番 => 規約本文
+    mapping(address => mapping(uint16 => string)) public terms;
+
+    // 最新の版番
+    // agent_address => 版番
+    mapping(address => uint16) public latest_terms_version;
 
     // 利用規約同意情報
-    // account_address => agent_address => Agreement
-    mapping(address => mapping(address => Agreement)) public agreements;
+    // account_address => agent_address => 版番 => Agreement
+    mapping(address => mapping(address => mapping(uint16 => Agreement))) public agreements;
 
     // 支払用口座
     struct PaymentAccount {
@@ -53,21 +57,20 @@ contract WhiteList {
 
     // ファンクション：（決済業者）利用規約登録
     function register_terms(string _text) public returns (bool) {
-        terms[msg.sender] = _text;
+        uint16 version = latest_terms_version[msg.sender]++;
+        terms[msg.sender][version] = _text;
         return true;
     }
 
     // ファンクション：利用規約同意
-    function agree_terms(address _account_address, address _agent_address)
-        private
-        returns (bool)
-    {
-        Agreement storage agreement = agreements[_account_address][_agent_address];
-        agreement.account_address = _account_address;
+    function agree_terms(address _agent_address) returns (bool) {
+        Agreement storage agreement =
+            agreements[msg.sender][_agent_address][latest_terms_version[_agent_address]];
+        agreement.account_address = msg.sender;
         agreement.agent_address = _agent_address;
         agreement.status = true;
 
-        emit Agree(_account_address, _agent_address);
+        emit Agree(msg.sender, _agent_address);
 
         return true;
     }
@@ -78,14 +81,20 @@ contract WhiteList {
         PaymentAccount storage payment_account = payment_accounts[msg.sender][_agent_address];
         require(payment_account.approval_status != 4);
 
+        // 口座情報の登録
         payment_account.account_address = msg.sender;
         payment_account.agent_address = _agent_address;
         payment_account.encrypted_info = _encrypted_info;
         payment_account.approval_status = 1;
 
         // 利用規約同意
-        agree_terms(msg.sender, _agent_address);
+        Agreement storage agreement =
+            agreements[msg.sender][_agent_address][latest_terms_version[_agent_address]];
+        agreement.account_address = msg.sender;
+        agreement.agent_address = _agent_address;
+        agreement.status = true;
 
+        emit Agree(msg.sender, _agent_address);
         emit Register(msg.sender, _agent_address);
 
         return true;
@@ -137,6 +146,13 @@ contract WhiteList {
         emit Ban(_account_address, msg.sender);
 
         return true;
+    }
+
+    // ファンクション：直近の利用規約に同意していることを確認する
+    function isAgreed(address _account_address, address _agent_address) public view returns (bool) {
+        Agreement storage agreement =
+            agreements[msg.sender][_agent_address][latest_terms_version[_agent_address]];
+        return agreement.status;
     }
 
     // ファンクション：登録状況を確認する
