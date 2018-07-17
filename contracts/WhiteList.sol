@@ -72,6 +72,7 @@ contract WhiteList {
 
     // ファンクション：利用規約同意
     function agree_terms(address _agent_address)
+        public
         returns (bool)
     {
         // 利用規約が登録済であることを確認
