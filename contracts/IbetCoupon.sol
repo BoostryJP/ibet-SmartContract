@@ -34,6 +34,9 @@ contract IbetCoupon is Ownable {
     // イベント：振替
     event Transfer(address indexed from, address indexed to, uint value);
 
+    // イベント:消費
+    event Consume(address indexed consumer, uint balance, uint used, uint value);
+
     // コンストラクタ
     constructor(string _name, string _symbol, uint _totalSupply,
         string _details, string _memo, string _expirationDate,
@@ -120,9 +123,10 @@ contract IbetCoupon is Ownable {
 
         // 残高数量を更新する
         balances[msg.sender] = balanceOf(msg.sender).sub(_value);
-
         // 使用済数量を更新する
         useds[msg.sender] = usedOf(msg.sender).add(_value);
+
+        emit Consume(msg.sender, balances[msg.sender], useds[msg.sender], _value);
     }
 
     // ファンクション：追加発行
