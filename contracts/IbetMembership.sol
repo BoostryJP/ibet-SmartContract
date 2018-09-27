@@ -100,10 +100,11 @@ contract IbetMembership is Ownable {
     public
     returns (bool)
   {
-    // <CHK>
     //  数量が残高を超えている場合、エラーを返す
     if (balanceOf(msg.sender) < _value) revert();
-
+    // 譲渡可能なクーポンではない場合、エラーを返す
+    require(transferable == true);
+    
     bytes memory empty;
     if(isContract(_to)) {
       return transferToContract(_to, _value, empty);
@@ -119,7 +120,6 @@ contract IbetMembership is Ownable {
     onlyOwner()
     returns (bool)
   {
-    // <CHK>
     //  数量が送信元アドレス（from）の残高を超えている場合、エラーを返す
     if (balanceOf(_from) < _value) revert();
 
