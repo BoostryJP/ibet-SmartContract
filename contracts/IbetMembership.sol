@@ -104,7 +104,7 @@ contract IbetMembership is Ownable {
     if (balanceOf(msg.sender) < _value) revert();
     // 譲渡可能なクーポンではない場合、エラーを返す
     require(transferable == true);
-    
+
     bytes memory empty;
     if(isContract(_to)) {
       return transferToContract(_to, _value, empty);
@@ -208,6 +208,15 @@ contract IbetMembership is Ownable {
     onlyOwner()
   {
     image_urls[_class] = _image_url;
+  }
+
+  // ファンクション：商品の画像を取得する
+  function getImageURL(uint8 _class)
+    public
+    view
+    returns (string)
+  {
+    return image_urls[_class];
   }
 
   // ファンクション：追加発行
