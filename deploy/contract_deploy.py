@@ -18,11 +18,7 @@ with project.get_chain('dev_chain') as chain:
         deploy_args = deploy_args
     )
     coupon_exchange, _ = chain.provider.get_or_deploy_contract('IbetCouponExchange')
-    deploy_args_member = [white_list.address]
-    membership_exchange, _ = chain.provider.get_or_deploy_contract(
-        'IbetMembershipExchange',
-        deploy_args = deploy_args_member
-    )
+    membership_exchange, _ = chain.provider.get_or_deploy_contract('IbetMembershipExchange')
     print('TokenList : ' + token_list.address)
     print('PersonalInfo : ' + personal_info.address)
     print('WhiteList : ' + white_list.address)
