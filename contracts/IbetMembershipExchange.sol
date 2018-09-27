@@ -116,7 +116,7 @@ contract IbetMembershipExchange is Ownable {
             //  3) 取扱ステータスがFalseの場合
             //   -> REVERT
             if (_amount == 0 ||
-                keccak256(WhiteList(whiteListAddress).getPaymentInfo(msg.sender, _agent)) != keccak256('') ||
+                keccak256(WhiteList(whiteListAddress).getPaymentInfo(msg.sender, _agent)) == keccak256('') ||
                 IbetMembership(_token).status() == false)
             {
                 revert();
@@ -132,7 +132,7 @@ contract IbetMembershipExchange is Ownable {
             //   -> 更新処理：全ての残高を投資家のアカウントに戻し、falseを返す
             if (_amount == 0 ||
                 balances[msg.sender][_token] < _amount ||
-                keccak256(WhiteList(whiteListAddress).getPaymentInfo(msg.sender, _agent)) != keccak256('') ||
+                keccak256(WhiteList(whiteListAddress).getPaymentInfo(msg.sender, _agent)) == keccak256('') ||
                 IbetMembership(_token).status() == false)
             {
                 IbetMembership(_token).transfer(msg.sender,balances[msg.sender][_token]);
@@ -221,7 +221,7 @@ contract IbetMembershipExchange is Ownable {
                 order.isBuy == _isBuy ||
                 msg.sender == order.owner ||
                 order.canceled == true ||
-                keccak256(WhiteList(whiteListAddress).getPaymentInfo(msg.sender, order.agent)) != keccak256('') ||
+                keccak256(WhiteList(whiteListAddress).getPaymentInfo(msg.sender, order.agent)) == keccak256('') ||
                 IbetMembership(order.token).status() == false ||
                 order.amount < _amount )
             {
@@ -244,7 +244,7 @@ contract IbetMembershipExchange is Ownable {
                 order.isBuy == _isBuy ||
                 msg.sender == order.owner ||
                 order.canceled == true ||
-                keccak256(WhiteList(whiteListAddress).getPaymentInfo(msg.sender, order.agent)) != keccak256('') ||
+                keccak256(WhiteList(whiteListAddress).getPaymentInfo(msg.sender, order.agent)) == keccak256('') ||
                 IbetMembership(order.token).status() == false ||
                 balances[msg.sender][order.token] < _amount ||
                 order.amount < _amount )
