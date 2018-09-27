@@ -3,7 +3,6 @@ pragma solidity ^0.4.24;
 import "./SafeMath.sol";
 import "./Ownable.sol";
 import "./IbetMembership.sol";
-import "./WhiteList.sol";
 
 contract IbetMembershipExchange is Ownable {
     using SafeMath for uint256;
@@ -99,9 +98,7 @@ contract IbetMembershipExchange is Ownable {
         address indexed to, uint256 value);
 
     // コンストラクタ
-    constructor(address _whiteListAddress) public {
-        whiteListAddress = _whiteListAddress;
-    }
+    constructor() public {}
 
     // ファンクション：（投資家）新規注文を作成する　Make注文
     function createOrder(address _token, uint256 _amount, uint256 _price,
@@ -112,11 +109,9 @@ contract IbetMembershipExchange is Ownable {
         if (_isBuy == true) { // 買注文の場合
             // <CHK>
             //  1) 注文数量が0の場合
-            //  2) 認可されたアドレスではない場合
-            //  3) 取扱ステータスがFalseの場合
+            //  2) 取扱ステータスがFalseの場合
             //   -> REVERT
             if (_amount == 0 ||
-                keccak256(WhiteList(whiteListAddress).getPaymentInfo(msg.sender, _agent)) == keccak256('') ||
                 IbetMembership(_token).status() == false)
             {
                 revert();
@@ -127,12 +122,10 @@ contract IbetMembershipExchange is Ownable {
             // <CHK>
             //  1) 注文数量が0の場合
             //  2) 残高数量が発注数量に満たない場合
-            //  3) 認可されたアドレスではない場合
-            //  4) 取扱ステータスがFalseの場合
+            //  3) 取扱ステータスがFalseの場合
             //   -> 更新処理：全ての残高を投資家のアカウントに戻し、falseを返す
             if (_amount == 0 ||
                 balances[msg.sender][_token] < _amount ||
-                keccak256(WhiteList(whiteListAddress).getPaymentInfo(msg.sender, _agent)) == keccak256('') ||
                 IbetMembership(_token).status() == false)
             {
                 IbetMembership(_token).transfer(msg.sender,balances[msg.sender][_token]);
@@ -213,15 +206,13 @@ contract IbetMembershipExchange is Ownable {
             //  2) 元注文と、発注する注文が同一の売買区分の場合
             //  3) 元注文の発注者と同一のアドレスからの発注の場合
             //  4) 元注文がキャンセル済の場合
-            //  5) 認可されたアドレスではない場合
-            //  6) 取扱ステータスがFalseの場合
-            //  7) 数量が元注文の残数量を超過している場合
+            //  5) 取扱ステータスがFalseの場合
+            //  6) 数量が元注文の残数量を超過している場合
             //   -> REVERT
             if (_amount == 0 ||
                 order.isBuy == _isBuy ||
                 msg.sender == order.owner ||
                 order.canceled == true ||
-                keccak256(WhiteList(whiteListAddress).getPaymentInfo(msg.sender, order.agent)) == keccak256('') ||
                 IbetMembership(order.token).status() == false ||
                 order.amount < _amount )
             {
@@ -235,16 +226,14 @@ contract IbetMembershipExchange is Ownable {
             //  2) 元注文と、発注する注文が同一の売買区分の場合
             //  3) 元注文の発注者と同一のアドレスからの発注の場合
             //  4) 元注文がキャンセル済の場合
-            //  5) 認可されたアドレスではない場合
-            //  6) 取扱ステータスがFalseの場合
-            //  7) 発注者の残高が発注数量を下回っている場合
-            //  8) 数量が元注文の残数量を超過している場合
+            //  5) 取扱ステータスがFalseの場合
+            //  6) 発注者の残高が発注数量を下回っている場合
+            //  7) 数量が元注文の残数量を超過している場合
             //   -> 更新処理：残高を投資家のアカウントに全て戻し、falseを返す
             if (_amount == 0 ||
                 order.isBuy == _isBuy ||
                 msg.sender == order.owner ||
                 order.canceled == true ||
-                keccak256(WhiteList(whiteListAddress).getPaymentInfo(msg.sender, order.agent)) == keccak256('') ||
                 IbetMembership(order.token).status() == false ||
                 balances[msg.sender][order.token] < _amount ||
                 order.amount < _amount )

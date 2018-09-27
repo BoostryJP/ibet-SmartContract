@@ -196,13 +196,4 @@ contract WhiteList {
         }
     }
 
-    // ファンクション：登録内容を参照する
-    function getPaymentInfo(address _account_address, address _agent_address)
-        public
-        view
-        returns (string)
-    {
-        PaymentAccount storage payment_account = payment_accounts[_account_address][_agent_address];
-        return payment_account.encrypted_info;
-    }
 }
