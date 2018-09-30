@@ -102,7 +102,7 @@ contract IbetMembership is Ownable {
   {
     //  数量が残高を超えている場合、エラーを返す
     if (balanceOf(msg.sender) < _value) revert();
-    // 譲渡可能なクーポンではない場合、エラーを返す
+    // 譲渡可能ではない場合、エラーを返す
     require(transferable == true);
 
     bytes memory empty;
