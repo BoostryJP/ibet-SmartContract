@@ -50,3 +50,13 @@ def bond_exchange(web3, chain, users, personal_info, white_list):
         deploy_args = deploy_args
     )
     return bond_exchange
+
+@pytest.yield_fixture()
+def membership_exchange(web3, chain, users):
+    web3.eth.defaultAccount = users['admin']
+    deploy_args = []
+    membership_exchange, _ = chain.provider.get_or_deploy_contract(
+        'IbetMembershipExchange',
+        deploy_args = deploy_args
+    )
+    return membership_exchange
