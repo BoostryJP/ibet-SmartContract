@@ -368,6 +368,7 @@ def test_createorder_error_6_1(web3, chain, users, membership_exchange):
     membership_token = deploy(chain, deploy_args)
 
     # Make注文（買）：エラー
+    order_id_before = membership_exchange.call().latestOrderId()
     _amount = 0
     _price = 123
     _isBuy = True
@@ -376,12 +377,14 @@ def test_createorder_error_6_1(web3, chain, users, membership_exchange):
         membership_token, membership_exchange,
         trader, _amount, _price, _isBuy, agent
     ) # エラーになる
+    order_id_after = membership_exchange.call().latestOrderId()
 
     trader_commitment = membership_exchange.call().\
         commitments(trader, membership_token.address)
     assert trader_commitment == 0
     assert membership_token.call().balanceOf(issuer) == deploy_args[2]
     assert membership_token.call().balanceOf(trader) == 0
+    assert order_id_before == order_id_after
 
 # エラー系6-2
 #   買注文に対するチェック
@@ -403,6 +406,7 @@ def test_createorder_error_6_2(web3, chain, users, membership_exchange):
     )
 
     # Make注文（買）：エラー
+    order_id_before = membership_exchange.call().latestOrderId()
     _amount = 0
     _price = 123
     _isBuy = True
@@ -411,12 +415,14 @@ def test_createorder_error_6_2(web3, chain, users, membership_exchange):
         membership_token, membership_exchange,
         trader, _amount, _price, _isBuy, agent
     ) # エラーになる
+    order_id_after = membership_exchange.call().latestOrderId()
 
     trader_commitment = membership_exchange.call().\
         commitments(trader, membership_token.address)
     assert trader_commitment == 0
     assert membership_token.call().balanceOf(issuer) == deploy_args[2]
     assert membership_token.call().balanceOf(trader) == 0
+    assert order_id_before == order_id_after
 
 # エラー系7-1
 #   売注文に対するチェック
