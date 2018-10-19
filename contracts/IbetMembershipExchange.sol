@@ -7,8 +7,6 @@ import "./IbetMembership.sol";
 contract IbetMembershipExchange is Ownable {
     using SafeMath for uint256;
 
-    address public whiteListAddress;
-
     // 約定明細の有効期限
     //  Note:
     //   現在の設定値は14日で設定している（長期の連休を考慮）。
