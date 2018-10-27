@@ -1,6 +1,6 @@
 pragma solidity ^0.4.24;
 
-import "./IbetStraightBond.sol";
+import "./IbetStandardTokenInterface.sol";
 import "./Ownable.sol";
 
 contract TokenList is Ownable {
@@ -16,7 +16,7 @@ contract TokenList is Ownable {
 
     function register(address _token_address, string _token_template) public {
         require(tokens[_token_address].token_address == 0);
-        require(IbetStraightBond(_token_address).owner() == msg.sender);
+        require(IbetStandardTokenInterface(_token_address).owner() == msg.sender);
         tokens[_token_address].token_address = _token_address;
         tokens[_token_address].token_template = _token_template;
         tokens[_token_address].owner_address = msg.sender;

@@ -3,16 +3,12 @@ pragma solidity ^0.4.24;
 import "./SafeMath.sol";
 import "./Ownable.sol";
 import "./ContractReceiver.sol";
+import "./IbetStandardTokenInterface.sol";
 
-contract IbetMembership is Ownable {
+contract IbetMembership is Ownable, IbetStandardTokenInterface {
   using SafeMath for uint256;
 
   // 属性情報
-  address public owner;
-  string public name;
-  string public symbol;
-  uint8 public constant decimals = 0;
-  uint256 public totalSupply;
   string public details; // 会員権詳細
   string public returnDetails; // リターン詳細
   string public expirationDate; // 有効期限
