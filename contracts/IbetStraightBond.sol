@@ -3,16 +3,12 @@ pragma solidity ^0.4.24;
 import "./SafeMath.sol";
 import "./Ownable.sol";
 import "./ContractReceiver.sol";
+import "./IbetStandardTokenInterface.sol";
 
-contract IbetStraightBond is Ownable {
+contract IbetStraightBond is Ownable, IbetStandardTokenInterface {
     using SafeMath for uint256;
 
     // 属性情報
-    address public owner;
-    string public name;
-    string public symbol;
-    uint256 public constant decimals = 0;
-    uint256 public totalSupply; // 総発行量
     uint256 public faceValue; // 額面
     uint256 public interestRate; // 金利
     string public interestPaymentDate; // 利払日（JSON）

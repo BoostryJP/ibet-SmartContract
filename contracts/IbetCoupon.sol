@@ -3,16 +3,12 @@ pragma solidity ^0.4.24;
 import "./SafeMath.sol";
 import "./Ownable.sol";
 import "./ContractReceiver.sol";
+import "./IbetStandardTokenInterface.sol";
 
-contract IbetCoupon is Ownable {
+contract IbetCoupon is Ownable, IbetStandardTokenInterface {
     using SafeMath for uint;
 
     // 属性情報
-    address public owner; // オーナー
-    string public name; // クーポン名
-    string public symbol; // シンボル
-    uint public constant decimals = 0; // 小数点以下桁数
-    uint public totalSupply; // 総発行量
     string public details; // クーポン詳細
     string public memo; // メモ欄
     string public expirationDate; // 有効期限
@@ -21,7 +17,7 @@ contract IbetCoupon is Ownable {
 
     // 残高数量
     // account_address => balance
-    mapping (address => uint) public balances;
+    mapping (address => uint256) public balances;
 
     // 使用済数量
     // account_address => used quantity
@@ -149,7 +145,7 @@ contract IbetCoupon is Ownable {
     }
 
     // ファンクション：残高確認
-    function balanceOf(address _owner) public view returns (uint) {
+    function balanceOf(address _owner) public view returns (uint256) {
         return balances[_owner];
     }
 
