@@ -287,7 +287,7 @@ def test_transfer_error_5(web3,chain, users, bond_exchange):
     # 取引不可Exchange
     web3.eth.defaultAccount = users['admin']
     dummy_exchange, _ = chain.provider.get_or_deploy_contract(
-        'IbetCouponExchange', # IbetMembershipExchange以外を読み込む必要がある
+        'IbetCouponExchange', # IbetStraightBondExchange以外を読み込む必要がある
         deploy_args = []
     )
 
@@ -919,3 +919,70 @@ def test_transferFrom_error_5(web3, chain, users, bond_exchange):
     assert issuer_balance == deploy_args[2] - _value
     assert from_balance == _value
     assert to_balance == 0
+
+'''
+TEST11_取引可能Exchangeの更新（setTradableExchange）
+'''
+# 正常系1: 発行 -> Exchangeの更新
+def test_setTradableExchange_normal_1(web3, chain, users, bond_exchange):
+    issuer = users['issuer']
+
+    # 債券トークン新規発行
+    web3.eth.defaultAccount = issuer
+    bond_token, deploy_args = utils.\
+        issue_bond_token(web3, chain, users, bond_exchange.address)
+
+    # その他Exchange
+    web3.eth.defaultAccount = users['admin']
+    other_exchange, _ = chain.provider.get_or_deploy_contract(
+        'IbetCouponExchange', # IbetStraightBondExchange以外を読み込む必要がある
+        deploy_args = []
+    )
+
+    # Exchangeの更新
+    web3.eth.defaultAccount = issuer
+    txn_hash = bond_token.transact().setTradableExchange(other_exchange.address)
+    chain.wait.for_receipt(txn_hash)
+
+    assert bond_token.call().tradableExchange() == \
+        to_checksum_address(other_exchange.address)
+
+# エラー系1: 発行 -> Exchangeの更新（入力値の型誤り）
+def test_setTradableExchange_error_1(web3, chain, users, bond_exchange):
+    issuer = users['issuer']
+
+    # 債券トークン新規発行
+    web3.eth.defaultAccount = issuer
+    bond_token, deploy_args = utils.\
+        issue_bond_token(web3, chain, users, bond_exchange.address)
+
+    # Exchangeの更新
+    web3.eth.defaultAccount = issuer
+    with pytest.raises(TypeError):
+        bond_token.transact().setTradableExchange('0xaaaa')
+
+# エラー系2: 発行 -> Exchangeの更新（権限エラー）
+def test_setTradableExchange_error_2(web3, chain, users, bond_exchange):
+    issuer = users['issuer']
+    trader = users['trader']
+
+    # 債券トークン新規発行
+    web3.eth.defaultAccount = issuer
+    bond_token, deploy_args = utils.\
+        issue_bond_token(web3, chain, users, bond_exchange.address)
+
+    # その他Exchange
+    web3.eth.defaultAccount = users['admin']
+    other_exchange, _ = chain.provider.get_or_deploy_contract(
+        'IbetCouponExchange', # IbetStraightBondExchange以外を読み込む必要がある
+        deploy_args = []
+    )
+
+    # Exchangeの更新
+    web3.eth.defaultAccount = trader
+    txn_hash = bond_token.transact().\
+        setTradableExchange(other_exchange.address) #エラーになる
+    chain.wait.for_receipt(txn_hash)
+
+    assert bond_token.call().tradableExchange() == \
+        to_checksum_address(bond_exchange.address)

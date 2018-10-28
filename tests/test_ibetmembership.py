@@ -1358,3 +1358,71 @@ def test_issue_error_4(web3, chain, users, membership_exchange):
 
     assert total_supply == deploy_args[2]
     assert balance == deploy_args[2]
+
+'''
+TEST13_取引可能Exchangeの更新（setTradableExchange）
+'''
+# 正常系1: 発行 -> Exchangeの更新
+def test_setTradableExchange_normal_1(web3, chain, users, membership_exchange):
+    issuer = users['issuer']
+
+    # トークン新規発行
+    web3.eth.defaultAccount = issuer
+    deploy_args = init_args(membership_exchange.address)
+    membership_contract = deploy(chain, deploy_args)
+
+    # その他Exchange
+    web3.eth.defaultAccount = users['admin']
+    other_exchange, _ = chain.provider.get_or_deploy_contract(
+        'IbetCouponExchange', # IbetMembershipExchange以外を読み込む必要がある
+        deploy_args = []
+    )
+
+    # Exchangeの更新
+    web3.eth.defaultAccount = issuer
+    txn_hash = membership_contract.transact().\
+        setTradableExchange(other_exchange.address)
+    chain.wait.for_receipt(txn_hash)
+
+    assert membership_contract.call().tradableExchange() == \
+        to_checksum_address(other_exchange.address)
+
+# エラー系1: 発行 -> Exchangeの更新（入力値の型誤り）
+def test_setTradableExchange_error_1(web3, chain, users, membership_exchange):
+    issuer = users['issuer']
+
+    # トークン新規発行
+    web3.eth.defaultAccount = issuer
+    deploy_args = init_args(membership_exchange.address)
+    membership_contract = deploy(chain, deploy_args)
+
+    # Exchangeの更新
+    web3.eth.defaultAccount = issuer
+    with pytest.raises(TypeError):
+        membership_contract.transact().setTradableExchange('0xaaaa')
+
+# エラー系2: 発行 -> Exchangeの更新（権限エラー）
+def test_setTradableExchange_error_2(web3, chain, users, membership_exchange):
+    issuer = users['issuer']
+    trader = users['trader']
+
+    # トークン新規発行
+    web3.eth.defaultAccount = issuer
+    deploy_args = init_args(membership_exchange.address)
+    membership_contract = deploy(chain, deploy_args)
+
+    # その他Exchange
+    web3.eth.defaultAccount = users['admin']
+    other_exchange, _ = chain.provider.get_or_deploy_contract(
+        'IbetCouponExchange', # IbetMembershipExchange以外を読み込む必要がある
+        deploy_args = []
+    )
+
+    # Exchangeの更新
+    web3.eth.defaultAccount = trader
+    txn_hash = membership_contract.transact().\
+        setTradableExchange(other_exchange.address) #エラーになる
+    chain.wait.for_receipt(txn_hash)
+
+    assert membership_contract.call().tradableExchange() == \
+        to_checksum_address(membership_exchange.address)
