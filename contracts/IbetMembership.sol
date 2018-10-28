@@ -31,7 +31,8 @@ contract IbetMembership is Ownable, IbetStandardTokenInterface {
   event ChangeStatus(bool indexed status);
 
   // コンストラクタ
-  constructor(string _name, string _symbol, uint256 _initialSupply,
+  constructor(string _name, string _symbol,
+    uint256 _initialSupply, address _tradableExchange,
     string _details, string _returnDetails,
     string _expirationDate, string _memo,
     bool _transferable)
@@ -41,6 +42,7 @@ contract IbetMembership is Ownable, IbetStandardTokenInterface {
     name = _name;
     symbol = _symbol;
     totalSupply = _initialSupply;
+    tradableExchange = _tradableExchange;
     details = _details;
     returnDetails = _returnDetails;
     expirationDate = _expirationDate;
@@ -82,6 +84,7 @@ contract IbetMembership is Ownable, IbetStandardTokenInterface {
     private
     returns (bool success)
   {
+    require(_to == tradableExchange);
     balances[msg.sender] = balanceOf(msg.sender).sub(_value);
     balances[_to] = balanceOf(_to).add(_value);
 
@@ -140,6 +143,14 @@ contract IbetMembership is Ownable, IbetStandardTokenInterface {
     returns (uint256)
   {
     return balances[_owner];
+  }
+
+  // ファンクション：取引可能Exchangeの更新
+  function setTradableExchange(address _exchange)
+    public
+    onlyOwner()
+  {
+    tradableExchange = _exchange;
   }
 
   // ファンクション：会員権詳細更新

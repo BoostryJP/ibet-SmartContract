@@ -34,13 +34,15 @@ contract IbetCoupon is Ownable, IbetStandardTokenInterface {
     event Consume(address indexed consumer, uint balance, uint used, uint value);
 
     // コンストラクタ
-    constructor(string _name, string _symbol, uint _totalSupply,
+    constructor(string _name, string _symbol,
+        uint256 _totalSupply, address _tradableExchange,
         string _details, string _memo, string _expirationDate,
         bool _transferable) public {
         owner = msg.sender;
         name = _name;
         symbol = _symbol;
         totalSupply = _totalSupply;
+        tradableExchange = _tradableExchange;
         details = _details;
         memo = _memo;
         expirationDate = _expirationDate;
@@ -68,6 +70,7 @@ contract IbetCoupon is Ownable, IbetStandardTokenInterface {
 
     // ファンクション：コントラクトアドレスへの振替
     function transferToContract(address _to, uint _value, bytes _data) private returns (bool success) {
+        require(_to == tradableExchange);
         balances[msg.sender] = balanceOf(msg.sender).sub(_value);
         balances[_to] = balanceOf(_to).add(_value);
         ContractReceiver receiver = ContractReceiver(_to);
@@ -152,6 +155,14 @@ contract IbetCoupon is Ownable, IbetStandardTokenInterface {
     // ファンクション：使用済数量確認
     function usedOf(address _owner) public view returns (uint) {
         return useds[_owner];
+    }
+
+    // ファンクション：取引可能Exchangeの更新
+    function setTradableExchange(address _exchange)
+      public
+      onlyOwner()
+    {
+      tradableExchange = _exchange;
     }
 
     // ファンクション：商品の画像を設定する

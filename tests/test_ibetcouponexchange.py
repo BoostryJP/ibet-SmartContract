@@ -6,19 +6,14 @@ TEST1_クーポントークンのデポジット
 '''
 # 正常系1
 # ＜発行体＞新規発行 -> ＜発行体＞Exchangeへのデポジット
-def test_deposit_normal_1(web3, chain, users):
-    _admin = users['admin']
+def test_deposit_normal_1(web3, chain, users, coupon_exchange):
     _issuer = users['issuer']
     _value = 100
 
     # 新規発行
     web3.eth.defaultAccount = _issuer
-    coupon, deploy_args = utils.issue_transferable_coupon(web3, chain)
-
-    # Exchange
-    web3.eth.defaultAccount = _admin
-    coupon_exchange, _ = chain.provider.get_or_deploy_contract(
-        'IbetCouponExchange', deploy_args = [])
+    coupon, deploy_args = utils.\
+        issue_transferable_coupon(web3, chain, coupon_exchange.address)
 
     # Exchangeへのデポジット
     web3.eth.defaultAccount = _issuer
@@ -31,27 +26,21 @@ def test_deposit_normal_1(web3, chain, users):
     assert balance_coupon == deploy_args[2] - _value
     assert balance_exchange == _value
 
-
 '''
 TEST2_クーポントークンの割当（Transfer）
 '''
 # 正常系1
 # ＜発行体＞新規発行 -> ＜発行体＞Exchangeへのデポジット
 #  -> ＜発行体＞アカウントアドレスへの割当（Transfer）
-def test_transfer_normal_1(web3, chain, users):
-    _admin = users['admin']
+def test_transfer_normal_1(web3, chain, users, coupon_exchange):
     _issuer = users['issuer']
     _consumer = users['trader']
     _value = 100
 
     # 新規発行
     web3.eth.defaultAccount = _issuer
-    coupon, deploy_args = utils.issue_transferable_coupon(web3, chain)
-
-    # Exchange
-    web3.eth.defaultAccount = _admin
-    coupon_exchange, _ = chain.provider.get_or_deploy_contract(
-        'IbetCouponExchange', deploy_args = [])
+    coupon, deploy_args = utils.\
+        issue_transferable_coupon(web3, chain, coupon_exchange.address)
 
     # Exchangeへのデポジット
     web3.eth.defaultAccount = _issuer
@@ -77,19 +66,15 @@ def test_transfer_normal_1(web3, chain, users):
 # 正常系２
 # ＜発行体＞新規発行 -> ＜発行体＞Exchangeへのデポジット（２回）
 #  -> ＜発行体＞アカウントアドレスへの割当（Transfer）
-def test_transfer_normal_2(web3, chain, users):
+def test_transfer_normal_2(web3, chain, users, coupon_exchange):
     _admin = users['admin']
     _issuer = users['issuer']
     _consumer = users['trader']
 
     # 新規発行
     web3.eth.defaultAccount = _issuer
-    coupon, deploy_args = utils.issue_transferable_coupon(web3, chain)
-
-    # Exchange
-    web3.eth.defaultAccount = _admin
-    coupon_exchange, _ = chain.provider.get_or_deploy_contract(
-        'IbetCouponExchange', deploy_args = [])
+    coupon, deploy_args = utils.\
+        issue_transferable_coupon(web3, chain, coupon_exchange.address)
 
     # Exchangeへのデポジット（１回目）
     web3.eth.defaultAccount = _issuer
@@ -118,16 +103,10 @@ def test_transfer_normal_2(web3, chain, users):
     assert consumer_balance_exchange == 0
 
 # エラー系１：入力値の型誤り（Token）
-def test_transfer_error_1(web3, chain, users):
-    _admin = users['admin']
+def test_transfer_error_1(web3, chain, users, coupon_exchange):
     _issuer = users['issuer']
     _consumer = users['trader']
     _value = 100
-
-    # Exchange
-    web3.eth.defaultAccount = _admin
-    coupon_exchange, _ = chain.provider.get_or_deploy_contract(
-        'IbetCouponExchange', deploy_args = [])
 
     # アカウントアドレスへの割当（Transfer)
     web3.eth.defaultAccount = _issuer
@@ -139,19 +118,15 @@ def test_transfer_error_1(web3, chain, users):
         coupon_exchange.transact().transfer('1234', _consumer, _value)
 
 # エラー系２：入力値の型誤り（To）
-def test_transfer_error_2(web3, chain, users):
+def test_transfer_error_2(web3, chain, users, coupon_exchange):
     _admin = users['admin']
     _issuer = users['issuer']
     _value = 100
 
     # 新規発行
     web3.eth.defaultAccount = _issuer
-    coupon, deploy_args = utils.issue_transferable_coupon(web3, chain)
-
-    # Exchange
-    web3.eth.defaultAccount = _admin
-    coupon_exchange, _ = chain.provider.get_or_deploy_contract(
-        'IbetCouponExchange', deploy_args = [])
+    coupon, deploy_args = utils.\
+        issue_transferable_coupon(web3, chain, coupon_exchange.address)
 
     # アカウントアドレスへの割当（Transfer)
     web3.eth.defaultAccount = _issuer
@@ -163,20 +138,15 @@ def test_transfer_error_2(web3, chain, users):
         coupon_exchange.transact().transfer(coupon.address, '1234', _value)
 
 # エラー系３：入力値の型誤り（To）
-def test_transfer_error_3(web3, chain, users):
-    _admin = users['admin']
+def test_transfer_error_3(web3, chain, users, coupon_exchange):
     _issuer = users['issuer']
     _consumer = users['trader']
     _value = 100
 
     # 新規発行
     web3.eth.defaultAccount = _issuer
-    coupon, deploy_args = utils.issue_transferable_coupon(web3, chain)
-
-    # Exchange
-    web3.eth.defaultAccount = _admin
-    coupon_exchange, _ = chain.provider.get_or_deploy_contract(
-        'IbetCouponExchange', deploy_args = [])
+    coupon, deploy_args = utils.\
+        issue_transferable_coupon(web3, chain, coupon_exchange.address)
 
     # アカウントアドレスへの割当（Transfer)
     web3.eth.defaultAccount = _issuer
@@ -196,20 +166,15 @@ def test_transfer_error_3(web3, chain, users):
 # エラー系４
 # ＜発行体＞新規発行 -> ＜発行体＞Exchangeへのデポジット
 #  -> ＜発行体＞アカウントアドレスへの割当（Transfer）　残高超過
-def test_transfer_error_4(web3, chain, users):
-    _admin = users['admin']
+def test_transfer_error_4(web3, chain, users, coupon_exchange):
     _issuer = users['issuer']
     _consumer = users['trader']
     _value = 100
 
     # 新規発行
     web3.eth.defaultAccount = _issuer
-    coupon, deploy_args = utils.issue_transferable_coupon(web3, chain)
-
-    # Exchange
-    web3.eth.defaultAccount = _admin
-    coupon_exchange, _ = chain.provider.get_or_deploy_contract(
-        'IbetCouponExchange', deploy_args = [])
+    coupon, deploy_args = utils.\
+        issue_transferable_coupon(web3, chain, coupon_exchange.address)
 
     # Exchangeへのデポジット
     web3.eth.defaultAccount = _issuer
@@ -235,20 +200,15 @@ def test_transfer_error_4(web3, chain, users):
 # エラー系5
 # ＜発行体＞新規発行 -> ＜発行体＞Exchangeへのデポジット
 #  -> ＜発行体＞アカウントアドレスへの割当（Transfer）　数量0指定
-def test_transfer_error_5(web3, chain, users):
-    _admin = users['admin']
+def test_transfer_error_5(web3, chain, users, coupon_exchange):
     _issuer = users['issuer']
     _consumer = users['trader']
     _value = 100
 
     # 新規発行
     web3.eth.defaultAccount = _issuer
-    coupon, deploy_args = utils.issue_transferable_coupon(web3, chain)
-
-    # Exchange
-    web3.eth.defaultAccount = _admin
-    coupon_exchange, _ = chain.provider.get_or_deploy_contract(
-        'IbetCouponExchange', deploy_args = [])
+    coupon, deploy_args = utils.\
+        issue_transferable_coupon(web3, chain, coupon_exchange.address)
 
     # Exchangeへのデポジット
     web3.eth.defaultAccount = _issuer
@@ -274,20 +234,15 @@ def test_transfer_error_5(web3, chain, users):
 # ＜発行体＞新規発行 -> ＜発行体＞Exchangeへのデポジット
 #  -> ＜発行体＞クーポントークンを無効化
 #  -> ＜発行体＞アカウントアドレスへの割当（Transfer）
-def test_transfer_error_6(web3, chain, users):
-    _admin = users['admin']
+def test_transfer_error_6(web3, chain, users, coupon_exchange):
     _issuer = users['issuer']
     _consumer = users['trader']
     _value = 100
 
     # 新規発行
     web3.eth.defaultAccount = _issuer
-    coupon, deploy_args = utils.issue_transferable_coupon(web3, chain)
-
-    # Exchange
-    web3.eth.defaultAccount = _admin
-    coupon_exchange, _ = chain.provider.get_or_deploy_contract(
-        'IbetCouponExchange', deploy_args = [])
+    coupon, deploy_args = utils.\
+        issue_transferable_coupon(web3, chain, coupon_exchange.address)
 
     # Exchangeへのデポジット
     web3.eth.defaultAccount = _issuer
@@ -320,19 +275,14 @@ TEST3_全ての残高の引き出し（withdrawAll）
 # 正常系1
 # ＜発行体＞新規発行 -> ＜発行体＞Exchangeへのデポジット
 #  -> ＜発行体＞引き出し（withdrawAll）
-def test_withdrawAll_normal_1(web3, chain, users):
-    _admin = users['admin']
+def test_withdrawAll_normal_1(web3, chain, users, coupon_exchange):
     _issuer = users['issuer']
     _value = 100
 
     # 新規発行
     web3.eth.defaultAccount = _issuer
-    coupon, deploy_args = utils.issue_transferable_coupon(web3, chain)
-
-    # Exchange
-    web3.eth.defaultAccount = _admin
-    coupon_exchange, _ = chain.provider.get_or_deploy_contract(
-        'IbetCouponExchange', deploy_args = [])
+    coupon, deploy_args = utils.\
+        issue_transferable_coupon(web3, chain, coupon_exchange.address)
 
     # Exchangeへのデポジット
     web3.eth.defaultAccount = _issuer
@@ -353,19 +303,14 @@ def test_withdrawAll_normal_1(web3, chain, users):
 # 正常系2
 # ＜発行体＞新規発行 -> ＜発行体＞Exchangeへのデポジット（２回）
 #  -> ＜発行体＞引き出し（withdrawAll）
-def test_withdrawAll_normal_2(web3, chain, users):
-    _admin = users['admin']
+def test_withdrawAll_normal_2(web3, chain, users, coupon_exchange):
     _issuer = users['issuer']
     _value = 100
 
     # 新規発行
     web3.eth.defaultAccount = _issuer
-    coupon, deploy_args = utils.issue_transferable_coupon(web3, chain)
-
-    # Exchange
-    web3.eth.defaultAccount = _admin
-    coupon_exchange, _ = chain.provider.get_or_deploy_contract(
-        'IbetCouponExchange', deploy_args = [])
+    coupon, deploy_args = utils.\
+        issue_transferable_coupon(web3, chain, coupon_exchange.address)
 
     # Exchangeへのデポジット（１回目）
     web3.eth.defaultAccount = _issuer
@@ -389,14 +334,8 @@ def test_withdrawAll_normal_2(web3, chain, users):
     assert balance_exchange == 0
 
 # エラー系１：入力値の型誤り
-def test_withdrawAll_error_1(web3, chain, users):
-    _admin = users['admin']
+def test_withdrawAll_error_1(web3, chain, users, coupon_exchange):
     _issuer = users['issuer']
-
-    # Exchange
-    web3.eth.defaultAccount = _admin
-    coupon_exchange, _ = chain.provider.get_or_deploy_contract(
-        'IbetCouponExchange', deploy_args = [])
 
     # 引き出し（withdrawAll)
     web3.eth.defaultAccount = _issuer
@@ -408,18 +347,13 @@ def test_withdrawAll_error_1(web3, chain, users):
         coupon_exchange.transact().withdrawAll('1234')
 
 # エラー系2-1：残高がゼロ（デポジットなし）
-def test_withdrawAll_error_2_1(web3, chain, users):
-    _admin = users['admin']
+def test_withdrawAll_error_2_1(web3, chain, users, coupon_exchange):
     _issuer = users['issuer']
 
     # 新規発行
     web3.eth.defaultAccount = _issuer
-    coupon, deploy_args = utils.issue_transferable_coupon(web3, chain)
-
-    # Exchange
-    web3.eth.defaultAccount = _admin
-    coupon_exchange, _ = chain.provider.get_or_deploy_contract(
-        'IbetCouponExchange', deploy_args = [])
+    coupon, deploy_args = utils.\
+        issue_transferable_coupon(web3, chain, coupon_exchange.address)
 
     # 引き出し（withdrawAll)
     web3.eth.defaultAccount = _issuer
@@ -433,20 +367,15 @@ def test_withdrawAll_error_2_1(web3, chain, users):
     assert balance_exchange == 0
 
 # エラー系2-2：残高がゼロ（デポジットあり）
-def test_withdrawAll_error_2_2(web3, chain, users):
-    _admin = users['admin']
+def test_withdrawAll_error_2_2(web3, chain, users, coupon_exchange):
     _issuer = users['issuer']
     _consumer = users['trader']
     _value = 100
 
     # 新規発行
     web3.eth.defaultAccount = _issuer
-    coupon, deploy_args = utils.issue_transferable_coupon(web3, chain)
-
-    # Exchange
-    web3.eth.defaultAccount = _admin
-    coupon_exchange, _ = chain.provider.get_or_deploy_contract(
-        'IbetCouponExchange', deploy_args = [])
+    coupon, deploy_args = utils.\
+        issue_transferable_coupon(web3, chain, coupon_exchange.address)
 
     # Exchangeへのデポジット
     web3.eth.defaultAccount = _issuer
@@ -471,20 +400,15 @@ def test_withdrawAll_error_2_2(web3, chain, users):
     assert balance_exchange == 0
 
 # エラー系3：クーポントークンが無効化
-def test_withdrawAll_error_3(web3, chain, users):
-    _admin = users['admin']
+def test_withdrawAll_error_3(web3, chain, users, coupon_exchange):
     _issuer = users['issuer']
     _consumer = users['trader']
     _value = 100
 
     # 新規発行
     web3.eth.defaultAccount = _issuer
-    coupon, deploy_args = utils.issue_transferable_coupon(web3, chain)
-
-    # Exchange
-    web3.eth.defaultAccount = _admin
-    coupon_exchange, _ = chain.provider.get_or_deploy_contract(
-        'IbetCouponExchange', deploy_args = [])
+    coupon, deploy_args = utils.\
+        issue_transferable_coupon(web3, chain, coupon_exchange.address)
 
     # Exchangeへのデポジット
     web3.eth.defaultAccount = _issuer
