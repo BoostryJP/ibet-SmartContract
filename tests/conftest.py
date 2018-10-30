@@ -60,3 +60,13 @@ def membership_exchange(web3, chain, users):
         deploy_args = deploy_args
     )
     return membership_exchange
+
+@pytest.yield_fixture()
+def coupon_exchange(web3, chain, users):
+    web3.eth.defaultAccount = users['admin']
+    deploy_args = []
+    coupon_exchange, _ = chain.provider.get_or_deploy_contract(
+        'IbetCouponExchange',
+        deploy_args = deploy_args
+    )
+    return coupon_exchange

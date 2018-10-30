@@ -99,7 +99,9 @@ def test_createorder_normal_1(web3, chain, users,
     whitelist_approve(web3, chain, white_list, issuer, agent)
 
     # 新規発行
-    bond_token, deploy_args = utils.issue_bond_token(web3, chain, users)
+    web3.eth.defaultAccount = issuer
+    bond_token, deploy_args = utils.\
+        issue_bond_token(web3, chain, users, bond_exchange.address)
 
     # 新規注文（買）
     web3.eth.defaultAccount = issuer
@@ -132,7 +134,9 @@ def test_createorder_normal_2(web3, chain, users,
     whitelist_approve(web3, chain, white_list, issuer, agent)
 
     # 新規発行
-    bond_token, deploy_args = utils.issue_bond_token(web3, chain, users)
+    web3.eth.defaultAccount = issuer
+    bond_token, deploy_args = utils.\
+        issue_bond_token(web3, chain, users, bond_exchange.address)
 
     # Exchangeへのデポジット
     web3.eth.defaultAccount = issuer
@@ -188,7 +192,8 @@ def test_createorder_error_2(web3, chain, users,
 
     # 新規発行
     web3.eth.defaultAccount = issuer
-    bond_token, deploy_args = utils.issue_bond_token(web3, chain, users)
+    bond_token, deploy_args = utils.\
+        issue_bond_token(web3, chain, users, bond_exchange.address)
 
     # 新規注文
     web3.eth.defaultAccount = issuer
@@ -220,7 +225,8 @@ def test_createorder_error_3(web3, chain, users,
 
     # 新規発行
     web3.eth.defaultAccount = issuer
-    bond_token, deploy_args = utils.issue_bond_token(web3, chain, users)
+    bond_token, deploy_args = utils.\
+        issue_bond_token(web3, chain, users, bond_exchange.address)
 
     # 新規注文
     web3.eth.defaultAccount = issuer
@@ -252,7 +258,8 @@ def test_createorder_error_4(web3, chain, users,
 
     # 新規発行
     web3.eth.defaultAccount = issuer
-    bond_token, deploy_args = utils.issue_bond_token(web3, chain, users)
+    bond_token, deploy_args = utils.\
+        issue_bond_token(web3, chain, users, bond_exchange.address)
 
     # 新規注文
     web3.eth.defaultAccount = issuer
@@ -275,7 +282,8 @@ def test_createorder_error_5(web3, chain, users,
 
     # 新規発行
     web3.eth.defaultAccount = issuer
-    bond_token, deploy_args = utils.issue_bond_token(web3, chain, users)
+    bond_token, deploy_args = utils.\
+        issue_bond_token(web3, chain, users, bond_exchange.address)
 
     # 新規注文
     web3.eth.defaultAccount = issuer
@@ -304,7 +312,9 @@ def test_createorder_error_6_1(web3, chain, users,
     whitelist_approve(web3, chain, white_list, issuer, agent)
 
     # 新規発行
-    bond_token, deploy_args = utils.issue_bond_token(web3, chain, users)
+    web3.eth.defaultAccount = issuer
+    bond_token, deploy_args = utils.\
+        issue_bond_token(web3, chain, users, bond_exchange.address)
 
     # 新規注文（買）
     web3.eth.defaultAccount = issuer
@@ -334,7 +344,9 @@ def test_createorder_error_6_2(web3, chain, users,
     whitelist_approve(web3, chain, white_list, issuer, agent)
 
     # 新規発行
-    bond_token, deploy_args = utils.issue_bond_token(web3, chain, users)
+    web3.eth.defaultAccount = issuer
+    bond_token, deploy_args = utils.\
+        issue_bond_token(web3, chain, users, bond_exchange.address)
 
     # Exchangeへのデポジット
     web3.eth.defaultAccount = issuer
@@ -370,7 +382,8 @@ def test_createorder_error_7_1(web3, chain, users,
 
     # 新規発行
     web3.eth.defaultAccount = issuer
-    bond_token, deploy_args = utils.issue_bond_token(web3, chain, users)
+    bond_token, deploy_args = utils.\
+        issue_bond_token(web3, chain, users, bond_exchange.address)
 
     # 新規注文（買）
     web3.eth.defaultAccount = issuer
@@ -398,7 +411,8 @@ def test_createorder_error_7_2(web3, chain, users,
 
     # 新規発行
     web3.eth.defaultAccount = issuer
-    bond_token, deploy_args = utils.issue_bond_token(web3, chain, users)
+    bond_token, deploy_args = utils.\
+        issue_bond_token(web3, chain, users, bond_exchange.address)
 
     # Exchangeへのデポジット
     web3.eth.defaultAccount = issuer
@@ -434,7 +448,8 @@ def test_createorder_error_8_1(web3, chain, users,
 
     # 新規発行
     web3.eth.defaultAccount = issuer
-    bond_token, deploy_args = utils.issue_bond_token(web3, chain, users)
+    bond_token, deploy_args = utils.\
+        issue_bond_token(web3, chain, users, bond_exchange.address)
 
     # 新規注文（買）
     web3.eth.defaultAccount = issuer
@@ -463,7 +478,9 @@ def test_createorder_error_8_2(web3, chain, users,
     whitelist_approve(web3, chain, white_list, issuer, agent)
 
     # 新規発行
-    bond_token, deploy_args = utils.issue_bond_token(web3, chain, users)
+    web3.eth.defaultAccount = issuer
+    bond_token, deploy_args = utils.\
+        issue_bond_token(web3, chain, users, bond_exchange.address)
 
     # Exchangeへのデポジット
     web3.eth.defaultAccount = issuer
@@ -500,7 +517,9 @@ def test_createorder_error_9_1(web3, chain, users,
     whitelist_approve(web3, chain, white_list, issuer, agent)
 
     # 新規発行
-    bond_token, deploy_args = utils.issue_bond_token(web3, chain, users)
+    web3.eth.defaultAccount = issuer
+    bond_token, deploy_args = utils.\
+        issue_bond_token(web3, chain, users, bond_exchange.address)
 
     # 償還設定
     web3.eth.defaultAccount = issuer
@@ -536,7 +555,9 @@ def test_createorder_error_9_2(web3, chain, users,
     whitelist_approve(web3, chain, white_list, issuer, agent)
 
     # 新規発行
-    bond_token, deploy_args = utils.issue_bond_token(web3, chain, users)
+    web3.eth.defaultAccount = issuer
+    bond_token, deploy_args = utils.\
+        issue_bond_token(web3, chain, users, bond_exchange.address)
 
     # Exchangeへのデポジット
     web3.eth.defaultAccount = issuer
@@ -576,7 +597,9 @@ def test_createorder_error_10(web3, chain, users,
     whitelist_approve(web3, chain, white_list, issuer, agent)
 
     # 新規発行
-    bond_token, deploy_args = utils.issue_bond_token(web3, chain, users)
+    web3.eth.defaultAccount = issuer
+    bond_token, deploy_args = utils.\
+        issue_bond_token(web3, chain, users, bond_exchange.address)
 
     # Exchangeへのデポジット
     web3.eth.defaultAccount = issuer
@@ -598,7 +621,6 @@ def test_createorder_error_10(web3, chain, users,
     assert balance == deploy_args[2]
     assert commitment == 0
 
-
 '''
 TEST3_注文キャンセル（cancelOrder）
 '''
@@ -617,7 +639,8 @@ def test_cancelOrder_normal_1(web3, chain, users,
 
     # 新規発行
     web3.eth.defaultAccount = issuer
-    bond_token, deploy_args = utils.issue_bond_token(web3, chain, users)
+    bond_token, deploy_args = utils.\
+        issue_bond_token(web3, chain, users, bond_exchange.address)
 
     # 新規注文（買）
     web3.eth.defaultAccount = issuer
@@ -656,7 +679,9 @@ def test_cancelOrder_normal_2(web3, chain, users,
     whitelist_approve(web3, chain, white_list, issuer, agent)
 
     # 新規発行
-    bond_token, deploy_args = utils.issue_bond_token(web3, chain, users)
+    web3.eth.defaultAccount = issuer
+    bond_token, deploy_args = utils.\
+        issue_bond_token(web3, chain, users, bond_exchange.address)
 
     # Exchangeへのデポジット
     web3.eth.defaultAccount = issuer
@@ -724,7 +749,8 @@ def test_cancelOrder_error_2(web3, chain, users,
 
     # 新規発行
     web3.eth.defaultAccount = issuer
-    bond_token, deploy_args = utils.issue_bond_token(web3, chain, users)
+    bond_token, deploy_args = utils.\
+        issue_bond_token(web3, chain, users, bond_exchange.address)
 
     # 新規注文（買）
     web3.eth.defaultAccount = issuer
@@ -763,7 +789,8 @@ def test_cancelOrder_error_3_1(web3, chain, users,
 
     # 新規発行
     web3.eth.defaultAccount = issuer
-    bond_token, deploy_args = utils.issue_bond_token(web3, chain, users)
+    bond_token, deploy_args = utils.\
+        issue_bond_token(web3, chain, users, bond_exchange.address)
 
     # 新規注文（買）
     web3.eth.defaultAccount = issuer
@@ -807,7 +834,8 @@ def test_cancelOrder_error_3_2(web3, chain, users,
 
     # 新規発行
     web3.eth.defaultAccount = issuer
-    bond_token, deploy_args = utils.issue_bond_token(web3, chain, users)
+    bond_token, deploy_args = utils.\
+        issue_bond_token(web3, chain, users, bond_exchange.address)
 
     # Exchangeへのデポジット
     web3.eth.defaultAccount = issuer
@@ -857,7 +885,8 @@ def test_cancelOrder_error_4_1(web3, chain, users,
 
     # 新規発行
     web3.eth.defaultAccount = issuer
-    bond_token, deploy_args = utils.issue_bond_token(web3, chain, users)
+    bond_token, deploy_args = utils.\
+        issue_bond_token(web3, chain, users, bond_exchange.address)
 
     # 新規注文（買）
     web3.eth.defaultAccount = issuer
@@ -897,7 +926,8 @@ def test_cancelOrder_error_4_2(web3, chain, users,
 
     # 新規発行
     web3.eth.defaultAccount = issuer
-    bond_token, deploy_args = utils.issue_bond_token(web3, chain, users)
+    bond_token, deploy_args = utils.\
+        issue_bond_token(web3, chain, users, bond_exchange.address)
 
     # Exchangeへのデポジット
     web3.eth.defaultAccount = issuer
@@ -930,7 +960,6 @@ def test_cancelOrder_error_4_2(web3, chain, users,
     assert balance == deploy_args[2] - _amount
     assert commitment == _amount
 
-
 '''
 TEST4_Take注文（executeOrder）
 '''
@@ -954,7 +983,8 @@ def test_executeOrder_normal_1(web3, chain, users,
 
     # 新規発行
     web3.eth.defaultAccount = _issuer
-    bond_token, deploy_args = utils.issue_bond_token(web3, chain, users)
+    bond_token, deploy_args = utils.\
+        issue_bond_token(web3, chain, users, bond_exchange.address)
 
     # Exchangeへのデポジット
     web3.eth.defaultAccount = _issuer
@@ -1014,9 +1044,10 @@ def test_executeOrder_normal_2(web3, chain, users,
     whitelist_register(web3, chain, white_list, _trader, _agent)
     whitelist_approve(web3, chain, white_list, _trader, _agent)
 
-    # 新規発行：発行体
+    # 新規発行
     web3.eth.defaultAccount = _issuer
-    bond_token, deploy_args = utils.issue_bond_token(web3, chain, users)
+    bond_token, deploy_args = utils.\
+        issue_bond_token(web3, chain, users, bond_exchange.address)
 
     # 新規注文（買）：投資家
     web3.eth.defaultAccount = _trader
@@ -1145,7 +1176,8 @@ def test_executeOrder_error_4(web3, chain, users,
 
     # 新規発行
     web3.eth.defaultAccount = _issuer
-    bond_token, deploy_args = utils.issue_bond_token(web3, chain, users)
+    bond_token, deploy_args = utils.\
+        issue_bond_token(web3, chain, users, bond_exchange.address)
 
     # Make注文（買）：投資家
     web3.eth.defaultAccount = _trader
@@ -1200,7 +1232,8 @@ def test_executeOrder_error_5_1(web3, chain, users,
 
     # 新規発行
     web3.eth.defaultAccount = _issuer
-    bond_token, deploy_args = utils.issue_bond_token(web3, chain, users)
+    bond_token, deploy_args = utils.\
+        issue_bond_token(web3, chain, users, bond_exchange.address)
 
     # 預かりをExchangeへのデポジット：発行体
     web3.eth.defaultAccount = _issuer
@@ -1255,9 +1288,10 @@ def test_executeOrder_error_5_2(web3, chain, users,
     whitelist_register(web3, chain, white_list, _trader, _agent)
     whitelist_approve(web3, chain, white_list, _trader, _agent)
 
-    # 新規発行：発行体
+    # 新規発行
     web3.eth.defaultAccount = _issuer
-    bond_token, deploy_args = utils.issue_bond_token(web3, chain, users)
+    bond_token, deploy_args = utils.\
+        issue_bond_token(web3, chain, users, bond_exchange.address)
 
     # 新規注文（買）：投資家
     web3.eth.defaultAccount = _trader
@@ -1315,7 +1349,8 @@ def test_executeOrder_error_6_1(web3, chain, users,
 
     # 新規発行
     web3.eth.defaultAccount = _issuer
-    bond_token, deploy_args = utils.issue_bond_token(web3, chain, users)
+    bond_token, deploy_args = utils.\
+        issue_bond_token(web3, chain, users, bond_exchange.address)
 
     # 預かりをExchangeへのデポジット：発行体
     web3.eth.defaultAccount = _issuer
@@ -1372,9 +1407,10 @@ def test_executeOrder_error_6_2(web3, chain, users,
     whitelist_register(web3, chain, white_list, _trader, _agent)
     whitelist_approve(web3, chain, white_list, _trader, _agent)
 
-    # 新規発行：発行体
+    # 新規発行
     web3.eth.defaultAccount = _issuer
-    bond_token, deploy_args = utils.issue_bond_token(web3, chain, users)
+    bond_token, deploy_args = utils.\
+        issue_bond_token(web3, chain, users, bond_exchange.address)
 
     # 新規注文（買）：投資家
     web3.eth.defaultAccount = _trader
@@ -1423,7 +1459,8 @@ def test_executeOrder_error_7_1(web3, chain, users,
 
     # 新規発行
     web3.eth.defaultAccount = _issuer
-    bond_token, deploy_args = utils.issue_bond_token(web3, chain, users)
+    bond_token, deploy_args = utils.\
+        issue_bond_token(web3, chain, users, bond_exchange.address)
 
     # 預かりをExchangeへのデポジット：発行体
     web3.eth.defaultAccount = _issuer
@@ -1478,9 +1515,10 @@ def test_executeOrder_error_7_2(web3, chain, users,
     whitelist_register(web3, chain, white_list, _trader, _agent)
     whitelist_approve(web3, chain, white_list, _trader, _agent)
 
-    # 新規発行：発行体
+    # 新規発行
     web3.eth.defaultAccount = _issuer
-    bond_token, deploy_args = utils.issue_bond_token(web3, chain, users)
+    bond_token, deploy_args = utils.\
+        issue_bond_token(web3, chain, users, bond_exchange.address)
 
     # 新規注文（買）：発行体
     web3.eth.defaultAccount = _issuer
@@ -1536,7 +1574,8 @@ def test_executeOrder_error_8_1(web3, chain, users,
 
     # 新規発行
     web3.eth.defaultAccount = _issuer
-    bond_token, deploy_args = utils.issue_bond_token(web3, chain, users)
+    bond_token, deploy_args = utils.\
+        issue_bond_token(web3, chain, users, bond_exchange.address)
 
     # 預かりをExchangeへのデポジット：発行体
     web3.eth.defaultAccount = _issuer
@@ -1598,9 +1637,10 @@ def test_executeOrder_error_8_2(web3, chain, users,
     whitelist_register(web3, chain, white_list, _trader, _agent)
     whitelist_approve(web3, chain, white_list, _trader, _agent)
 
-    # 新規発行：発行体
+    # 新規発行
     web3.eth.defaultAccount = _issuer
-    bond_token, deploy_args = utils.issue_bond_token(web3, chain, users)
+    bond_token, deploy_args = utils.\
+        issue_bond_token(web3, chain, users, bond_exchange.address)
 
     # Make注文（買）：投資家
     web3.eth.defaultAccount = _trader
@@ -1663,7 +1703,8 @@ def test_executeOrder_error_9_1(web3, chain, users,
 
     # 新規発行
     web3.eth.defaultAccount = _issuer
-    bond_token, deploy_args = utils.issue_bond_token(web3, chain, users)
+    bond_token, deploy_args = utils.\
+        issue_bond_token(web3, chain, users, bond_exchange.address)
 
     # 預かりをExchangeへのデポジット：発行体
     web3.eth.defaultAccount = _issuer
@@ -1719,9 +1760,10 @@ def test_executeOrder_error_9_2(web3, chain, users,
     whitelist_register(web3, chain, white_list, _trader, _agent)
     whitelist_approve(web3, chain, white_list, _trader, _agent)
 
-    # 新規発行：発行体
+    # 新規発行
     web3.eth.defaultAccount = _issuer
-    bond_token, deploy_args = utils.issue_bond_token(web3, chain, users)
+    bond_token, deploy_args = utils.\
+        issue_bond_token(web3, chain, users, bond_exchange.address)
 
     # Make注文（買）：投資家
     web3.eth.defaultAccount = _trader
@@ -1779,7 +1821,8 @@ def test_executeOrder_error_10_1(web3, chain, users,
 
     # 新規発行
     web3.eth.defaultAccount = _issuer
-    bond_token, deploy_args = utils.issue_bond_token(web3, chain, users)
+    bond_token, deploy_args = utils.\
+        issue_bond_token(web3, chain, users, bond_exchange.address)
 
     # 預かりをExchangeへのデポジット：発行体
     web3.eth.defaultAccount = _issuer
@@ -1835,9 +1878,10 @@ def test_executeOrder_error_10_2(web3, chain, users,
     whitelist_register(web3, chain, white_list, _trader, _agent)
     whitelist_approve(web3, chain, white_list, _trader, _agent)
 
-    # 新規発行：発行体
+    # 新規発行
     web3.eth.defaultAccount = _issuer
-    bond_token, deploy_args = utils.issue_bond_token(web3, chain, users)
+    bond_token, deploy_args = utils.\
+        issue_bond_token(web3, chain, users, bond_exchange.address)
 
     # Make注文（買）：投資家
     web3.eth.defaultAccount = _trader
@@ -1894,9 +1938,10 @@ def test_executeOrder_error_11_1(web3, chain, users,
     whitelist_register(web3, chain, white_list, _trader, _agent)
     whitelist_approve(web3, chain, white_list, _trader, _agent)
 
-    # 新規発行：発行体
+    # 新規発行
     web3.eth.defaultAccount = _issuer
-    bond_token, deploy_args = utils.issue_bond_token(web3, chain, users)
+    bond_token, deploy_args = utils.\
+        issue_bond_token(web3, chain, users, bond_exchange.address)
 
     # 預かりをExchangeへのデポジット：発行体
     web3.eth.defaultAccount = _issuer
@@ -1958,9 +2003,10 @@ def test_executeOrder_error_11_2(web3, chain, users,
     whitelist_register(web3, chain, white_list, _trader, _agent)
     whitelist_approve(web3, chain, white_list, _trader, _agent)
 
-    # 新規発行：発行体
+    # 新規発行
     web3.eth.defaultAccount = _issuer
-    bond_token, deploy_args = utils.issue_bond_token(web3, chain, users)
+    bond_token, deploy_args = utils.\
+        issue_bond_token(web3, chain, users, bond_exchange.address)
 
     # Make注文（買）：投資家
     web3.eth.defaultAccount = _trader
@@ -2022,9 +2068,10 @@ def test_executeOrder_error_12_1(web3, chain, users,
     whitelist_register(web3, chain, white_list, _trader, _agent)
     whitelist_approve(web3, chain, white_list, _trader, _agent)
 
-    # 新規発行：発行体
+    # 新規発行
     web3.eth.defaultAccount = _issuer
-    bond_token, deploy_args = utils.issue_bond_token(web3, chain, users)
+    bond_token, deploy_args = utils.\
+        issue_bond_token(web3, chain, users, bond_exchange.address)
 
     # 預かりをExchangeへのデポジット：発行体
     web3.eth.defaultAccount = _issuer
@@ -2081,9 +2128,10 @@ def test_executeOrder_error_12_2(web3, chain, users,
     whitelist_register(web3, chain, white_list, _trader, _agent)
     whitelist_approve(web3, chain, white_list, _trader, _agent)
 
-    # 新規発行：発行体
+    # 新規発行
     web3.eth.defaultAccount = _issuer
-    bond_token, deploy_args = utils.issue_bond_token(web3, chain, users)
+    bond_token, deploy_args = utils.\
+        issue_bond_token(web3, chain, users, bond_exchange.address)
 
     # Make注文（買）：投資家
     web3.eth.defaultAccount = _trader
@@ -2139,9 +2187,10 @@ def test_executeOrder_error_13(web3, chain, users,
     whitelist_register(web3, chain, white_list, _trader, _agent)
     whitelist_approve(web3, chain, white_list, _trader, _agent)
 
-    # 新規発行：発行体
+    # 新規発行
     web3.eth.defaultAccount = _issuer
-    bond_token, deploy_args = utils.issue_bond_token(web3, chain, users)
+    bond_token, deploy_args = utils.\
+        issue_bond_token(web3, chain, users, bond_exchange.address)
 
     # Make注文（買）：投資家
     web3.eth.defaultAccount = _trader
@@ -2202,9 +2251,10 @@ def test_confirmAgreement_normal_1(web3, chain, users,
     whitelist_register(web3, chain, white_list, _trader, _agent)
     whitelist_approve(web3, chain, white_list, _trader, _agent)
 
-    # 新規発行：発行体
+    # 新規発行
     web3.eth.defaultAccount = _issuer
-    bond_token, deploy_args = utils.issue_bond_token(web3, chain, users)
+    bond_token, deploy_args = utils.\
+        issue_bond_token(web3, chain, users, bond_exchange.address)
 
     # Exchangeへのデポジット：発行体
     web3.eth.defaultAccount = _issuer
@@ -2272,9 +2322,10 @@ def test_confirmAgreement_normal_2(web3, chain, users,
     whitelist_register(web3, chain, white_list, _trader, _agent)
     whitelist_approve(web3, chain, white_list, _trader, _agent)
 
-    # 新規発行：発行体
+    # 新規発行
     web3.eth.defaultAccount = _issuer
-    bond_token, deploy_args = utils.issue_bond_token(web3, chain, users)
+    bond_token, deploy_args = utils.\
+        issue_bond_token(web3, chain, users, bond_exchange.address)
 
     # 新規注文（買）：投資家
     web3.eth.defaultAccount = _trader
@@ -2379,9 +2430,10 @@ def test_confirmAgreement_error_3(web3, chain, users,
     whitelist_register(web3, chain, white_list, _trader, _agent)
     whitelist_approve(web3, chain, white_list, _trader, _agent)
 
-    # 新規発行：発行体
+    # 新規発行
     web3.eth.defaultAccount = _issuer
-    bond_token, deploy_args = utils.issue_bond_token(web3, chain, users)
+    bond_token, deploy_args = utils.\
+        issue_bond_token(web3, chain, users, bond_exchange.address)
 
     # Exchangeへのデポジット：発行体
     web3.eth.defaultAccount = _issuer
@@ -2448,9 +2500,10 @@ def test_confirmAgreement_error_4(web3, chain, users,
     whitelist_register(web3, chain, white_list, _trader, _agent)
     whitelist_approve(web3, chain, white_list, _trader, _agent)
 
-    # 新規発行：発行体
+    # 新規発行
     web3.eth.defaultAccount = _issuer
-    bond_token, deploy_args = utils.issue_bond_token(web3, chain, users)
+    bond_token, deploy_args = utils.\
+        issue_bond_token(web3, chain, users, bond_exchange.address)
 
     # Exchangeへのデポジット：発行体
     web3.eth.defaultAccount = _issuer
@@ -2517,9 +2570,10 @@ def test_confirmAgreement_error_5(web3, chain, users,
     whitelist_register(web3, chain, white_list, _trader, _agent)
     whitelist_approve(web3, chain, white_list, _trader, _agent)
 
-    # 新規発行：発行体
+    # 新規発行
     web3.eth.defaultAccount = _issuer
-    bond_token, deploy_args = utils.issue_bond_token(web3, chain, users)
+    bond_token, deploy_args = utils.\
+        issue_bond_token(web3, chain, users, bond_exchange.address)
 
     # Exchangeへのデポジット：発行体
     web3.eth.defaultAccount = _issuer
@@ -2590,9 +2644,10 @@ def test_confirmAgreement_error_6(web3, chain, users,
     whitelist_register(web3, chain, white_list, _trader, _agent)
     whitelist_approve(web3, chain, white_list, _trader, _agent)
 
-    # 新規発行：発行体
+    # 新規発行
     web3.eth.defaultAccount = _issuer
-    bond_token, deploy_args = utils.issue_bond_token(web3, chain, users)
+    bond_token, deploy_args = utils.\
+        issue_bond_token(web3, chain, users, bond_exchange.address)
 
     # Exchangeへのデポジット：発行体
     web3.eth.defaultAccount = _issuer
@@ -2658,9 +2713,10 @@ def test_confirmAgreement_error_7(web3, chain, users,
     whitelist_register(web3, chain, white_list, _trader, _agent)
     whitelist_approve(web3, chain, white_list, _trader, _agent)
 
-    # 新規発行：発行体
+    # 新規発行
     web3.eth.defaultAccount = _issuer
-    bond_token, deploy_args = utils.issue_bond_token(web3, chain, users)
+    bond_token, deploy_args = utils.\
+        issue_bond_token(web3, chain, users, bond_exchange.address)
 
     # Exchangeへのデポジット：発行体
     web3.eth.defaultAccount = _issuer
@@ -2736,9 +2792,10 @@ def test_cancelAgreement_normal_1(web3, chain, users,
     whitelist_register(web3, chain, white_list, _trader, _agent)
     whitelist_approve(web3, chain, white_list, _trader, _agent)
 
-    # 新規発行：発行体
+    # 新規発行
     web3.eth.defaultAccount = _issuer
-    bond_token, deploy_args = utils.issue_bond_token(web3, chain, users)
+    bond_token, deploy_args = utils.\
+        issue_bond_token(web3, chain, users, bond_exchange.address)
 
     # Exchangeへのデポジット：発行体
     web3.eth.defaultAccount = _issuer
@@ -2805,9 +2862,10 @@ def test_cancelAgreement_normal_2(web3, chain, users,
     whitelist_register(web3, chain, white_list, _trader, _agent)
     whitelist_approve(web3, chain, white_list, _trader, _agent)
 
-    # 新規発行：発行体
+    # 新規発行
     web3.eth.defaultAccount = _issuer
-    bond_token, deploy_args = utils.issue_bond_token(web3, chain, users)
+    bond_token, deploy_args = utils.\
+        issue_bond_token(web3, chain, users, bond_exchange.address)
 
     # 新規注文（買）：投資家
     web3.eth.defaultAccount = _trader
@@ -2912,9 +2970,10 @@ def test_cancelAgreement_error_3(web3, chain, users,
     whitelist_register(web3, chain, white_list, _trader, _agent)
     whitelist_approve(web3, chain, white_list, _trader, _agent)
 
-    # 新規発行：発行体
+    # 新規発行
     web3.eth.defaultAccount = _issuer
-    bond_token, deploy_args = utils.issue_bond_token(web3, chain, users)
+    bond_token, deploy_args = utils.\
+        issue_bond_token(web3, chain, users, bond_exchange.address)
 
     # Exchangeへのデポジット：発行体
     web3.eth.defaultAccount = _issuer
@@ -2980,9 +3039,10 @@ def test_cancelAgreement_error_4(web3, chain, users,
     whitelist_register(web3, chain, white_list, _trader, _agent)
     whitelist_approve(web3, chain, white_list, _trader, _agent)
 
-    # 新規発行：発行体
+    # 新規発行
     web3.eth.defaultAccount = _issuer
-    bond_token, deploy_args = utils.issue_bond_token(web3, chain, users)
+    bond_token, deploy_args = utils.\
+        issue_bond_token(web3, chain, users, bond_exchange.address)
 
     # Exchangeへのデポジット：発行体
     web3.eth.defaultAccount = _issuer
@@ -3048,9 +3108,10 @@ def test_cancelAgreement_error_5(web3, chain, users,
     whitelist_register(web3, chain, white_list, _trader, _agent)
     whitelist_approve(web3, chain, white_list, _trader, _agent)
 
-    # 新規発行：発行体
+    # 新規発行
     web3.eth.defaultAccount = _issuer
-    bond_token, deploy_args = utils.issue_bond_token(web3, chain, users)
+    bond_token, deploy_args = utils.\
+        issue_bond_token(web3, chain, users, bond_exchange.address)
 
     # Exchangeへのデポジット：発行体
     web3.eth.defaultAccount = _issuer
@@ -3121,9 +3182,10 @@ def test_cancelAgreement_error_6(web3, chain, users,
     whitelist_register(web3, chain, white_list, _trader, _agent)
     whitelist_approve(web3, chain, white_list, _trader, _agent)
 
-    # 新規発行：発行体
+    # 新規発行
     web3.eth.defaultAccount = _issuer
-    bond_token, deploy_args = utils.issue_bond_token(web3, chain, users)
+    bond_token, deploy_args = utils.\
+        issue_bond_token(web3, chain, users, bond_exchange.address)
 
     # Exchangeへのデポジット：発行体
     web3.eth.defaultAccount = _issuer
@@ -3188,9 +3250,10 @@ def test_cancelAgreement_error_7(web3, chain, users,
     whitelist_register(web3, chain, white_list, _trader, _agent)
     whitelist_approve(web3, chain, white_list, _trader, _agent)
 
-    # 新規発行：発行体
+    # 新規発行
     web3.eth.defaultAccount = _issuer
-    bond_token, deploy_args = utils.issue_bond_token(web3, chain, users)
+    bond_token, deploy_args = utils.\
+        issue_bond_token(web3, chain, users, bond_exchange.address)
 
     # Exchangeへのデポジット：発行体
     web3.eth.defaultAccount = _issuer
@@ -3243,7 +3306,6 @@ def test_cancelAgreement_error_7(web3, chain, users,
     assert balance_taker == 0
     assert commitment == _amount_make - _amount_take
 
-
 '''
 TEST7_引き出し（withdrawAll）
 '''
@@ -3252,9 +3314,10 @@ TEST7_引き出し（withdrawAll）
 def test_withdrawAll_normal_1(web3, chain, users, bond_exchange):
     _issuer = users['issuer']
 
-    # 新規発行：発行体
+    # 新規発行
     web3.eth.defaultAccount = _issuer
-    bond_token, deploy_args = utils.issue_bond_token(web3, chain, users)
+    bond_token, deploy_args = utils.\
+        issue_bond_token(web3, chain, users, bond_exchange.address)
 
     # Exchangeへのデポジット：発行体
     web3.eth.defaultAccount = _issuer
@@ -3278,9 +3341,10 @@ def test_withdrawAll_normal_1(web3, chain, users, bond_exchange):
 def test_withdrawAll_normal_2(web3, chain, users, bond_exchange):
     _issuer = users['issuer']
 
-    # 新規発行：発行体
+    # 新規発行
     web3.eth.defaultAccount = _issuer
-    bond_token, deploy_args = utils.issue_bond_token(web3, chain, users)
+    bond_token, deploy_args = utils.\
+        issue_bond_token(web3, chain, users, bond_exchange.address)
 
     # Exchangeへのデポジット：発行体
     web3.eth.defaultAccount = _issuer
@@ -3320,9 +3384,10 @@ def test_withdrawAll_normal_3(web3, chain, users,
     whitelist_register(web3, chain, white_list, _issuer, _agent)
     whitelist_approve(web3, chain, white_list, _issuer, _agent)
 
-    # 新規発行：発行体
+    # 新規発行
     web3.eth.defaultAccount = _issuer
-    bond_token, deploy_args = utils.issue_bond_token(web3, chain, users)
+    bond_token, deploy_args = utils.\
+        issue_bond_token(web3, chain, users, bond_exchange.address)
 
     # Exchangeへのデポジット：発行体
     web3.eth.defaultAccount = _issuer
@@ -3370,9 +3435,10 @@ def test_withdrawAll_normal_4(web3, chain, users,
     whitelist_register(web3, chain, white_list, _trader, _agent)
     whitelist_approve(web3, chain, white_list, _trader, _agent)
 
-    # 新規発行：発行体
+    # 新規発行
     web3.eth.defaultAccount = _issuer
-    bond_token, deploy_args = utils.issue_bond_token(web3, chain, users)
+    bond_token, deploy_args = utils.\
+        issue_bond_token(web3, chain, users, bond_exchange.address)
 
     # Exchangeへのデポジット：発行体
     web3.eth.defaultAccount = _issuer
@@ -3430,9 +3496,10 @@ def test_withdrawAll_normal_5(web3, chain, users,
     whitelist_register(web3, chain, white_list, _trader, _agent)
     whitelist_approve(web3, chain, white_list, _trader, _agent)
 
-    # 新規発行：発行体
+    # 新規発行
     web3.eth.defaultAccount = _issuer
-    bond_token, deploy_args = utils.issue_bond_token(web3, chain, users)
+    bond_token, deploy_args = utils.\
+        issue_bond_token(web3, chain, users, bond_exchange.address)
 
     # Exchangeへのデポジット：発行体
     web3.eth.defaultAccount = _issuer
@@ -3501,9 +3568,10 @@ def test_withdrawAll_error_1(web3, users, bond_exchange):
 def test_withdrawAll_error_2_1(web3, chain, users, bond_exchange):
     _issuer = users['issuer']
 
-    # 新規発行：発行体
+    # 新規発行
     web3.eth.defaultAccount = _issuer
-    bond_token, deploy_args = utils.issue_bond_token(web3, chain, users)
+    bond_token, deploy_args = utils.\
+        issue_bond_token(web3, chain, users, bond_exchange.address)
 
     # Exchangeへのデポジット：発行体
     web3.eth.defaultAccount = _issuer
@@ -3534,9 +3602,10 @@ def test_withdrawAll_error_2_2(web3, chain, users, bond_exchange):
     _issuer = users['issuer']
     _trader = users['trader']
 
-    # 新規発行：発行体
+    # 新規発行
     web3.eth.defaultAccount = _issuer
-    bond_token, deploy_args = utils.issue_bond_token(web3, chain, users)
+    bond_token, deploy_args = utils.\
+        issue_bond_token(web3, chain, users, bond_exchange.address)
 
     # Exchangeへのデポジット：発行体
     web3.eth.defaultAccount = _issuer
@@ -3556,7 +3625,6 @@ def test_withdrawAll_error_2_2(web3, chain, users, bond_exchange):
     assert balance_exchange == _amount_transfer
     assert balance_token == deploy_args[2] - _amount_transfer
 
-
 '''
 TEST8_送信（transfer）
 '''
@@ -3567,9 +3635,10 @@ def test_transfer_normal_1(web3, chain, users, bond_exchange):
     _issuer = users['issuer']
     _trader = users['trader']
 
-    # 新規発行：発行体
+    # 新規発行
     web3.eth.defaultAccount = _issuer
-    bond_token, deploy_args = utils.issue_bond_token(web3, chain, users)
+    bond_token, deploy_args = utils.\
+        issue_bond_token(web3, chain, users, bond_exchange.address)
 
     # Exchangeへのデポジット：発行体
     web3.eth.defaultAccount = _issuer
@@ -3614,9 +3683,10 @@ def test_transfer_error_1(web3, chain, users, bond_exchange):
 def test_transfer_error_2(web3, chain, users, bond_exchange):
     _issuer = users['issuer']
 
-    # 新規発行：発行体
+    # 新規発行
     web3.eth.defaultAccount = _issuer
-    bond_token, deploy_args = utils.issue_bond_token(web3, chain, users)
+    bond_token, deploy_args = utils.\
+        issue_bond_token(web3, chain, users, bond_exchange.address)
 
     # 送信：発行体
     web3.eth.defaultAccount = _issuer
@@ -3633,9 +3703,10 @@ def test_transfer_error_3(web3, chain, users, bond_exchange):
     _issuer = users['issuer']
     _trader = users['trader']
 
-    # 新規発行：発行体
+    # 新規発行
     web3.eth.defaultAccount = _issuer
-    bond_token, deploy_args = utils.issue_bond_token(web3, chain, users)
+    bond_token, deploy_args = utils.\
+        issue_bond_token(web3, chain, users, bond_exchange.address)
 
     # 送信：発行体
     web3.eth.defaultAccount = _issuer
@@ -3658,9 +3729,10 @@ def test_transfer_error_4(web3, chain, users, bond_exchange):
     _issuer = users['issuer']
     _trader = users['trader']
 
-    # 新規発行：発行体
+    # 新規発行
     web3.eth.defaultAccount = _issuer
-    bond_token, deploy_args = utils.issue_bond_token(web3, chain, users)
+    bond_token, deploy_args = utils.\
+        issue_bond_token(web3, chain, users, bond_exchange.address)
 
     # Exchangeへのデポジット：発行体
     web3.eth.defaultAccount = _issuer
@@ -3691,9 +3763,10 @@ def test_transfer_error_5(web3, chain, users, bond_exchange):
     _issuer = users['issuer']
     _trader = users['trader']
 
-    # 新規発行：発行体
+    # 新規発行
     web3.eth.defaultAccount = _issuer
-    bond_token, deploy_args = utils.issue_bond_token(web3, chain, users)
+    bond_token, deploy_args = utils.\
+        issue_bond_token(web3, chain, users, bond_exchange.address)
 
     # Exchangeへのデポジット：発行体
     web3.eth.defaultAccount = _issuer
