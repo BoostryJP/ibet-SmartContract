@@ -2,3 +2,6 @@
 tests/__pycache__/
 build/
 .vscode/
+
+#pyenv
+.python-version
