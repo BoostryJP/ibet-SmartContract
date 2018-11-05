@@ -9,7 +9,7 @@ token_template = 'some_template'
 TEST1_トークン情報を登録（register）
 '''
 # 正常系1: 新規登録(普通社債Token)
-def test_register_normal_1(web3, chain, users):
+def test_register_normal_1(web3, chain, users, bond_exchange):
     admin = users['admin']
     issuer = users['issuer']
 
@@ -19,7 +19,8 @@ def test_register_normal_1(web3, chain, users):
 
     # Token新規発行
     web3.eth.defaultAccount = issuer
-    bond_token, deploy_args = utils.issue_bond_token(web3, chain, users)
+    bond_token, deploy_args = \
+        utils.issue_bond_token(web3, chain, users, bond_exchange.address)
     token_address = bond_token.address
 
     # TokenListに追加
@@ -47,7 +48,7 @@ def test_register_normal_1(web3, chain, users):
     assert token_by_num[2] == to_checksum_address(issuer)
 
 # 正常系2: 新規登録（クーポンToken）
-def test_register_normal_2(web3, chain, users):
+def test_register_normal_2(web3, chain, users, coupon_exchange):
     admin = users['admin']
     issuer = users['issuer']
 
@@ -57,7 +58,8 @@ def test_register_normal_2(web3, chain, users):
 
     # Token新規発行
     web3.eth.defaultAccount = issuer
-    token, deploy_args = utils.issue_transferable_coupon(web3, chain)
+    token, deploy_args = \
+        utils.issue_transferable_coupon(web3, chain, coupon_exchange.address)
     token_address = token.address
 
     # TokenListに追加
@@ -100,7 +102,7 @@ def test_register_error_1(web3, chain, users):
         tokenlist_contract.transact().register(token_address, token_template)
 
 # エラー系2: トークンテンプレートの型（string）が正しくない場合
-def test_register_error_2(web3, chain, users):
+def test_register_error_2(web3, chain, users, bond_exchange):
     admin = users['admin']
     issuer = users['issuer']
 
@@ -110,7 +112,8 @@ def test_register_error_2(web3, chain, users):
 
     # Token新規発行
     web3.eth.defaultAccount = issuer
-    bond_token, deploy_args = utils.issue_bond_token(web3, chain, users)
+    bond_token, deploy_args = \
+        utils.issue_bond_token(web3, chain, users, bond_exchange.address)
     token_address = bond_token.address
 
     # 新規登録 -> Failure
@@ -120,7 +123,7 @@ def test_register_error_2(web3, chain, users):
         tokenlist_contract.transact().register(token_address, token_template)
 
 # エラー系3: 同一トークンを複数回登録
-def test_register_error_3(web3, chain, users):
+def test_register_error_3(web3, chain, users, bond_exchange):
     admin = users['admin']
     issuer = users['issuer']
 
@@ -130,7 +133,8 @@ def test_register_error_3(web3, chain, users):
 
     # Token新規発行
     web3.eth.defaultAccount = issuer
-    bond_token, deploy_args = utils.issue_bond_token(web3, chain, users)
+    bond_token, deploy_args = \
+        utils.issue_bond_token(web3, chain, users, bond_exchange.address)
     token_address = bond_token.address
 
     # 新規登録（1回目） -> Success
@@ -160,7 +164,7 @@ def test_register_error_3(web3, chain, users):
     assert token_by_num[2] == to_checksum_address(issuer)
 
 # エラー系4: 異なるアドレスから同一トークンを登録
-def test_register_error_4(web3, chain, users):
+def test_register_error_4(web3, chain, users, bond_exchange):
     admin = users['admin']
     issuer = users['issuer']
 
@@ -170,7 +174,8 @@ def test_register_error_4(web3, chain, users):
 
     # Token新規発行
     web3.eth.defaultAccount = issuer
-    bond_token, deploy_args = utils.issue_bond_token(web3, chain, users)
+    bond_token, deploy_args = \
+        utils.issue_bond_token(web3, chain, users, bond_exchange.address)
     token_address = bond_token.address
 
     # 新規登録（account_1） -> Success
@@ -204,7 +209,7 @@ def test_register_error_4(web3, chain, users):
 TEST2_オーナーを変更（changeOwner）
 '''
 # 正常系1: オーナー変更
-def test_changeOwner_normal_1(web3, chain, users):
+def test_changeOwner_normal_1(web3, chain, users, bond_exchange):
     admin = users['admin']
     issuer = users['issuer']
     new_owner_address = admin
@@ -215,7 +220,8 @@ def test_changeOwner_normal_1(web3, chain, users):
 
     # Token新規発行
     web3.eth.defaultAccount = issuer
-    bond_token, deploy_args = utils.issue_bond_token(web3, chain, users)
+    bond_token, deploy_args = \
+        utils.issue_bond_token(web3, chain, users, bond_exchange.address)
     token_address = bond_token.address
 
     # 新規登録 -> Success
@@ -265,7 +271,7 @@ def test_changeOwner_error_1(web3, chain, users):
         tokenlist_contract.transact().changeOwner(token_address, new_owner_address)
 
 # エラー系2: オーナーアドレスの型（address）が正しくない場合
-def test_changeOwner_error_2(web3, chain, users):
+def test_changeOwner_error_2(web3, chain, users, bond_exchange):
     admin = users['admin']
     issuer = users['issuer']
     new_owner_address = admin
@@ -276,7 +282,8 @@ def test_changeOwner_error_2(web3, chain, users):
 
     # Token新規発行
     web3.eth.defaultAccount = issuer
-    bond_token, deploy_args = utils.issue_bond_token(web3, chain, users)
+    bond_token, deploy_args = \
+        utils.issue_bond_token(web3, chain, users, bond_exchange.address)
     token_address = bond_token.address
 
     new_owner_address = 'some_address'
@@ -286,7 +293,7 @@ def test_changeOwner_error_2(web3, chain, users):
         tokenlist_contract.transact().changeOwner(token_address, new_owner_address)
 
 # エラー系3: 登録なし -> オーナー変更
-def test_changeOwner_error_3(web3, chain, users):
+def test_changeOwner_error_3(web3, chain, users, bond_exchange):
     admin = users['admin']
     issuer = users['issuer']
     new_owner_address = users['issuer']
@@ -297,7 +304,8 @@ def test_changeOwner_error_3(web3, chain, users):
 
     # Token新規発行
     web3.eth.defaultAccount = issuer
-    bond_token, deploy_args = utils.issue_bond_token(web3, chain, users)
+    bond_token, deploy_args = \
+        utils.issue_bond_token(web3, chain, users, bond_exchange.address)
     token_address = bond_token.address
 
     # オーナー変更 -> Failure
@@ -309,7 +317,7 @@ def test_changeOwner_error_3(web3, chain, users):
     assert owner_address == '0x0000000000000000000000000000000000000000'
 
 # エラー系4: オーナー権限のないアドレスでオーナー変更を実施した場合
-def test_changeOwner_error_4(web3, chain, users):
+def test_changeOwner_error_4(web3, chain, users, bond_exchange):
     admin = users['admin']
     issuer = users['issuer']
     new_owner_address = users['issuer']
@@ -320,7 +328,8 @@ def test_changeOwner_error_4(web3, chain, users):
 
     # Token新規発行
     web3.eth.defaultAccount = issuer
-    bond_token, deploy_args = utils.issue_bond_token(web3, chain, users)
+    bond_token, deploy_args = \
+        utils.issue_bond_token(web3, chain, users, bond_exchange.address)
     token_address = bond_token.address
 
     # 新規登録 -> Success
