@@ -224,30 +224,6 @@ def test_allocate_error_4(web3, chain, users, coupon_exchange):
     assert coupon.call().balanceOf(_issuer) == deploy_args[2]
     assert coupon.call().balanceOf(_other) == 0
 
-# エラー系5: 無効化されたクーポンの割当
-def test_allocate_error_5(web3, chain, users, coupon_exchange):
-    _issuer = users['issuer']
-    _trader = users['trader']
-
-    # クーポン新規発行
-    web3.eth.defaultAccount = _issuer
-    coupon, deploy_args = utils.\
-        issue_transferable_coupon(web3, chain, coupon_exchange.address)
-
-    # クーポンの無効化
-    web3.eth.defaultAccount = _issuer
-    txn_hash = coupon.transact().updateStatus(False)
-    chain.wait.for_receipt(txn_hash)
-
-    # 割当
-    web3.eth.defaultAccount = _issuer
-    _value = deploy_args[2]
-    txn_hash = coupon.transact().allocate(_trader, _value) #エラーになる
-    chain.wait.for_receipt(txn_hash)
-
-    assert coupon.call().balanceOf(_issuer) == deploy_args[2]
-    assert coupon.call().balanceOf(_trader) == 0
-
 '''
 TEST3_クーポンの譲渡（transfer）
 '''
@@ -351,32 +327,8 @@ def test_transfer_error_4(web3, chain, users, coupon_exchange):
     assert coupon.call().balanceOf(_from) == deploy_args[2]
     assert coupon.call().balanceOf(_to) == 0
 
-# エラー系5: 無効化されたクーポンの譲渡
+# エラー系5: 取引不可Exchangeへの振替
 def test_transfer_error_5(web3, chain, users, coupon_exchange):
-    _issuer = users['issuer']
-    _to = users['trader']
-
-    # 新規発行
-    web3.eth.defaultAccount = _issuer
-    coupon, deploy_args = utils.\
-        issue_transferable_coupon(web3, chain, coupon_exchange.address)
-
-    # クーポンの無効化
-    web3.eth.defaultAccount = _issuer
-    txn_hash = coupon.transact().updateStatus(False)
-    chain.wait.for_receipt(txn_hash)
-
-    # 譲渡
-    web3.eth.defaultAccount = _issuer
-    _value = deploy_args[2]
-    txn_hash = coupon.transact().transfer(_to, _value) #エラーになる
-    chain.wait.for_receipt(txn_hash)
-
-    assert coupon.call().balanceOf(_issuer) == deploy_args[2]
-    assert coupon.call().balanceOf(_to) == 0
-
-# エラー系6: 取引不可Exchangeへの振替
-def test_transfer_error_6(web3, chain, users, coupon_exchange):
     _issuer = users['issuer']
 
     # 新規発行
