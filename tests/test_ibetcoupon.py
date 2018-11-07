@@ -462,7 +462,7 @@ def test_consume_error_3(web3, chain, users, coupon_exchange):
 
     # クーポンの無効化
     web3.eth.defaultAccount = _issuer
-    txn_hash = coupon.transact().updateStatus(False)
+    txn_hash = coupon.transact().setStatus(False)
     chain.wait.for_receipt(txn_hash)
 
     # 消費
@@ -601,11 +601,11 @@ def test_issue_error_3(web3, chain, users, coupon_exchange):
     assert totalSupply == deploy_args[2]
 
 '''
-TEST6_クーポン詳細欄の更新（updateDetails）
+TEST6_クーポン詳細欄の更新（setDetails）
 '''
 # 正常系1
 # ＜発行者＞発行 -> ＜発行者＞詳細欄の修正
-def test_updateDetails_normal_1(web3, chain, users, coupon_exchange):
+def test_setDetails_normal_1(web3, chain, users, coupon_exchange):
     issuer = users['issuer']
 
     # 新規発行
@@ -615,14 +615,14 @@ def test_updateDetails_normal_1(web3, chain, users, coupon_exchange):
 
     # 詳細欄の修正
     web3.eth.defaultAccount = issuer
-    txn_hash = coupon.transact().updateDetails('updated details')
+    txn_hash = coupon.transact().setDetails('updated details')
     chain.wait.for_receipt(txn_hash)
 
     details = coupon.call().details()
     assert details == 'updated details'
 
 # エラー系1: 入力値の型誤り
-def test_updateDetails_error_1(web3, chain, users, coupon_exchange):
+def test_setDetails_error_1(web3, chain, users, coupon_exchange):
     issuer = users['issuer']
 
     # 新規発行
@@ -633,10 +633,10 @@ def test_updateDetails_error_1(web3, chain, users, coupon_exchange):
     # 詳細欄の修正
     web3.eth.defaultAccount = issuer
     with pytest.raises(TypeError):
-        coupon.transact().updateDetails(1234)
+        coupon.transact().setDetails(1234)
 
 # エラー系2: 権限エラー
-def test_updateDetails_error_2(web3, chain, users, coupon_exchange):
+def test_setDetails_error_2(web3, chain, users, coupon_exchange):
     issuer = users['issuer']
     other = users['trader']
 
@@ -647,18 +647,18 @@ def test_updateDetails_error_2(web3, chain, users, coupon_exchange):
 
     # 詳細欄の修正
     web3.eth.defaultAccount = other
-    txn_hash = coupon.transact().updateDetails('updated details')
+    txn_hash = coupon.transact().setDetails('updated details')
     chain.wait.for_receipt(txn_hash)
 
     details = coupon.call().details()
     assert details == 'some_details'
 
 '''
-TEST7_メモ欄の更新（updateMemo）
+TEST7_メモ欄の更新（setMemo）
 '''
 # 正常系1
 # ＜発行者＞発行 -> ＜発行者＞メモ欄の修正
-def test_updateMemo_normal_1(web3, chain, users, coupon_exchange):
+def test_setMemo_normal_1(web3, chain, users, coupon_exchange):
     issuer = users['issuer']
 
     # 新規発行
@@ -668,14 +668,14 @@ def test_updateMemo_normal_1(web3, chain, users, coupon_exchange):
 
     # メモ欄の修正
     web3.eth.defaultAccount = issuer
-    txn_hash = coupon.transact().updateMemo('updated memo')
+    txn_hash = coupon.transact().setMemo('updated memo')
     chain.wait.for_receipt(txn_hash)
 
     details = coupon.call().memo()
     assert details == 'updated memo'
 
 # エラー系1: 入力値の型誤り
-def test_updateMemo_error_1(web3, chain, users, coupon_exchange):
+def test_setMemo_error_1(web3, chain, users, coupon_exchange):
     issuer = users['issuer']
 
     # 新規発行
@@ -686,10 +686,10 @@ def test_updateMemo_error_1(web3, chain, users, coupon_exchange):
     # メモ欄の修正
     web3.eth.defaultAccount = issuer
     with pytest.raises(TypeError):
-        coupon.transact().updateMemo(1234)
+        coupon.transact().setMemo(1234)
 
 # エラー系2: 権限エラー
-def test_updateMemo_error_2(web3, chain, users, coupon_exchange):
+def test_setMemo_error_2(web3, chain, users, coupon_exchange):
     issuer = users['issuer']
     other = users['trader']
 
@@ -700,7 +700,7 @@ def test_updateMemo_error_2(web3, chain, users, coupon_exchange):
 
     # メモ欄の修正
     web3.eth.defaultAccount = other
-    txn_hash = coupon.transact().updateMemo('updated memo')
+    txn_hash = coupon.transact().setMemo('updated memo')
     chain.wait.for_receipt(txn_hash)
 
     details = coupon.call().memo()
@@ -911,11 +911,11 @@ def test_setImageURL_error_3(web3, chain, users, coupon_exchange):
     assert image_url_0 == ''
 
 '''
-TEST11_ステータス（有効・無効）の更新（updateStatus）
+TEST11_ステータス（有効・無効）の更新（setStatus）
 '''
 # 正常系1
 # ＜発行者＞発行 -> ＜発行者＞ステータスの修正
-def test_updateStatus_normal_1(web3, chain, users, coupon_exchange):
+def test_setStatus_normal_1(web3, chain, users, coupon_exchange):
     issuer = users['issuer']
 
     # 新規発行
@@ -925,13 +925,13 @@ def test_updateStatus_normal_1(web3, chain, users, coupon_exchange):
 
     # ステータスの修正
     web3.eth.defaultAccount = issuer
-    txn_hash = coupon.transact().updateStatus(False)
+    txn_hash = coupon.transact().setStatus(False)
     chain.wait.for_receipt(txn_hash)
 
     assert coupon.call().isValid() == False
 
 # エラー系1: 入力値の型誤り
-def test_updateStatus_error_1(web3, chain, users, coupon_exchange):
+def test_setStatus_error_1(web3, chain, users, coupon_exchange):
     issuer = users['issuer']
 
     # 新規発行
@@ -942,10 +942,10 @@ def test_updateStatus_error_1(web3, chain, users, coupon_exchange):
     # ステータスの修正
     web3.eth.defaultAccount = issuer
     with pytest.raises(TypeError):
-        coupon.transact().updateStatus('False')
+        coupon.transact().setStatus('False')
 
 # エラー系2: 権限エラー
-def test_updateStatus_error_2(web3, chain, users, coupon_exchange):
+def test_setStatus_error_2(web3, chain, users, coupon_exchange):
     issuer = users['issuer']
     other = users['trader']
 
@@ -956,7 +956,7 @@ def test_updateStatus_error_2(web3, chain, users, coupon_exchange):
 
     # メモ欄の修正
     web3.eth.defaultAccount = other
-    txn_hash = coupon.transact().updateStatus(False)
+    txn_hash = coupon.transact().setStatus(False)
     chain.wait.for_receipt(txn_hash)
 
     assert coupon.call().isValid() == True
