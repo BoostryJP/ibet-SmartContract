@@ -1,5 +1,4 @@
 import pytest
-import utils
 from eth_utils import to_checksum_address
 
 '''
@@ -13,7 +12,7 @@ def init_args(exchange_address):
     details = 'some_details'
     memo = 'some_memo'
     expirationDate = '20201231'
-    transferable = False
+    transferable = True
 
     deploy_args = [
         name, symbol, total_supply, tradableExchange, details,
@@ -21,14 +20,21 @@ def init_args(exchange_address):
     ]
     return deploy_args
 
+def deploy(chain, deploy_args):
+    coupon_contract, _ = chain.provider.get_or_deploy_contract(
+        'IbetCoupon',
+        deploy_args = deploy_args
+    )
+    return coupon_contract
+
 # 正常系1: deploy
 def test_deploy_normal_1(web3, chain, users, coupon_exchange):
     issuer = users['issuer']
 
     # 新規発行
     web3.eth.defaultAccount = issuer
-    coupon, deploy_args = utils.\
-        issue_transferable_coupon(web3, chain, coupon_exchange.address)
+    deploy_args = init_args(coupon_exchange.address)
+    coupon = deploy(chain, deploy_args)
 
     owner_address = coupon.call().owner()
     name = coupon.call().name()
@@ -135,8 +141,8 @@ def test_allocate_normal_1(web3, chain, users, coupon_exchange):
 
     # 新規発行
     web3.eth.defaultAccount = _from
-    coupon, deploy_args = utils.\
-        issue_transferable_coupon(web3, chain, coupon_exchange.address)
+    deploy_args = init_args(coupon_exchange.address)
+    coupon = deploy(chain, deploy_args)
 
     # 割当
     txn_hash = coupon.transact().allocate(_to, _value)
@@ -156,8 +162,8 @@ def test_allocate_error_1(web3, chain, users, coupon_exchange):
 
     # 新規発行
     web3.eth.defaultAccount = _from
-    coupon, deploy_args = utils.\
-        issue_transferable_coupon(web3, chain, coupon_exchange.address)
+    deploy_args = init_args(coupon_exchange.address)
+    coupon = deploy(chain, deploy_args)
 
     web3.eth.defaultAccount = _from
     with pytest.raises(TypeError):
@@ -170,8 +176,8 @@ def test_allocate_error_2(web3, chain, users, coupon_exchange):
 
     # 新規発行
     web3.eth.defaultAccount = _from
-    coupon, deploy_args = utils.\
-        issue_transferable_coupon(web3, chain, coupon_exchange.address)
+    deploy_args = init_args(coupon_exchange.address)
+    coupon = deploy(chain, deploy_args)
 
     web3.eth.defaultAccount = _from
     with pytest.raises(TypeError):
@@ -191,10 +197,10 @@ def test_allocate_error_3(web3, chain, users, coupon_exchange):
     _from = users['issuer']
     _to = users['trader']
 
-    # クーポン新規発行
+    # 新規発行
     web3.eth.defaultAccount = _from
-    coupon, deploy_args = utils.\
-        issue_transferable_coupon(web3, chain, coupon_exchange.address)
+    deploy_args = init_args(coupon_exchange.address)
+    coupon = deploy(chain, deploy_args)
 
     # 割当（残高超）
     web3.eth.defaultAccount = _from
@@ -210,10 +216,10 @@ def test_allocate_error_4(web3, chain, users, coupon_exchange):
     _issuer = users['issuer']
     _other = users['trader']
 
-    # クーポン新規発行
+    # 新規発行
     web3.eth.defaultAccount = _issuer
-    coupon, deploy_args = utils.\
-        issue_transferable_coupon(web3, chain, coupon_exchange.address)
+    deploy_args = init_args(coupon_exchange.address)
+    coupon = deploy(chain, deploy_args)
 
     # 割当（権限なし）
     web3.eth.defaultAccount = _other
@@ -235,8 +241,8 @@ def test_transfer_normal_1(web3, chain, users, coupon_exchange):
 
     # 新規発行
     web3.eth.defaultAccount = _from
-    coupon, deploy_args = utils.\
-        issue_transferable_coupon(web3, chain, coupon_exchange.address)
+    deploy_args = init_args(coupon_exchange.address)
+    coupon = deploy(chain, deploy_args)
 
     # 譲渡
     web3.eth.defaultAccount = _from
@@ -257,8 +263,8 @@ def test_transfer_error_1(web3, chain, users, coupon_exchange):
 
     # 新規発行
     web3.eth.defaultAccount = _from
-    coupon, deploy_args = utils.\
-        issue_transferable_coupon(web3, chain, coupon_exchange.address)
+    deploy_args = init_args(coupon_exchange.address)
+    coupon = deploy(chain, deploy_args)
 
     # 譲渡
     web3.eth.defaultAccount = _from
@@ -272,8 +278,8 @@ def test_transfer_error_2(web3, chain, users, coupon_exchange):
 
     # 新規発行
     web3.eth.defaultAccount = _from
-    coupon, deploy_args = utils.\
-        issue_transferable_coupon(web3, chain, coupon_exchange.address)
+    deploy_args = init_args(coupon_exchange.address)
+    coupon = deploy(chain, deploy_args)
 
     # 譲渡
     web3.eth.defaultAccount = _from
@@ -296,8 +302,8 @@ def test_transfer_error_3(web3, chain, users, coupon_exchange):
 
     # 新規発行
     web3.eth.defaultAccount = _from
-    coupon, deploy_args = utils.\
-        issue_transferable_coupon(web3, chain, coupon_exchange.address)
+    deploy_args = init_args(coupon_exchange.address)
+    coupon = deploy(chain, deploy_args)
 
     # 譲渡（残高超）
     web3.eth.defaultAccount = _from
@@ -313,10 +319,11 @@ def test_transfer_error_4(web3, chain, users, coupon_exchange):
     _from = users['issuer']
     _to = users['trader']
 
-    # 新規発行
+    # 新規発行（譲渡不可クーポン）
     web3.eth.defaultAccount = _from
-    coupon, deploy_args = utils.\
-        issue_non_transferable_coupon(web3, chain, coupon_exchange.address)
+    deploy_args = init_args(coupon_exchange.address)
+    deploy_args[7] = False
+    coupon = deploy(chain, deploy_args)
 
     # 譲渡（譲渡不可）
     web3.eth.defaultAccount = _from
@@ -333,8 +340,8 @@ def test_transfer_error_5(web3, chain, users, coupon_exchange):
 
     # 新規発行
     web3.eth.defaultAccount = _issuer
-    coupon, deploy_args = utils.\
-        issue_transferable_coupon(web3, chain, coupon_exchange.address)
+    deploy_args = init_args(coupon_exchange.address)
+    coupon = deploy(chain, deploy_args)
 
     # 取引不可Exchange
     web3.eth.defaultAccount = users['admin']
@@ -363,8 +370,8 @@ def test_consume_normal_1(web3, chain, users, coupon_exchange):
 
     # 新規発行
     web3.eth.defaultAccount = _user
-    coupon, deploy_args = utils.\
-        issue_transferable_coupon(web3, chain, coupon_exchange.address)
+    deploy_args = init_args(coupon_exchange.address)
+    coupon = deploy(chain, deploy_args)
 
     # 消費
     web3.eth.defaultAccount = _user
@@ -386,8 +393,8 @@ def test_consume_normal_2(web3, chain, users, coupon_exchange):
 
     # 新規発行
     web3.eth.defaultAccount = _issuer
-    coupon, deploy_args = utils.\
-        issue_transferable_coupon(web3, chain, coupon_exchange.address)
+    deploy_args = init_args(coupon_exchange.address)
+    coupon = deploy(chain, deploy_args)
 
     # 割当
     web3.eth.defaultAccount = _issuer
@@ -415,8 +422,8 @@ def test_consume_error_1(web3, chain, users, coupon_exchange):
 
     # 新規発行
     web3.eth.defaultAccount = _issuer
-    coupon, deploy_args = utils.\
-        issue_transferable_coupon(web3, chain, coupon_exchange.address)
+    deploy_args = init_args(coupon_exchange.address)
+    coupon = deploy(chain, deploy_args)
 
     # 消費
     web3.eth.defaultAccount = _issuer
@@ -438,8 +445,8 @@ def test_consume_error_2(web3, chain, users, coupon_exchange):
 
     # 新規発行
     web3.eth.defaultAccount = _issuer
-    coupon, deploy_args = utils.\
-        issue_transferable_coupon(web3, chain, coupon_exchange.address)
+    deploy_args = init_args(coupon_exchange.address)
+    coupon = deploy(chain, deploy_args)
 
     # 消費
     web3.eth.defaultAccount = _issuer
@@ -455,10 +462,10 @@ def test_consume_error_3(web3, chain, users, coupon_exchange):
     _issuer = users['issuer']
     _value = 1
 
-    # クーポン新規発行
+    # 新規発行
     web3.eth.defaultAccount = _issuer
-    coupon, deploy_args = utils.\
-        issue_transferable_coupon(web3, chain, coupon_exchange.address)
+    deploy_args = init_args(coupon_exchange.address)
+    coupon = deploy(chain, deploy_args)
 
     # クーポンの無効化
     web3.eth.defaultAccount = _issuer
@@ -484,8 +491,8 @@ def test_issue_normal_1(web3, chain, users, coupon_exchange):
 
     # 新規発行
     web3.eth.defaultAccount = _issuer
-    coupon, deploy_args = utils.\
-        issue_transferable_coupon(web3, chain, coupon_exchange.address)
+    deploy_args = init_args(coupon_exchange.address)
+    coupon = deploy(chain, deploy_args)
 
     # 追加発行
     web3.eth.defaultAccount = _issuer
@@ -508,8 +515,8 @@ def test_issue_normal_2(web3, chain, users, coupon_exchange):
 
     # 新規発行
     web3.eth.defaultAccount = _issuer
-    coupon, deploy_args = utils.\
-        issue_transferable_coupon(web3, chain, coupon_exchange.address)
+    deploy_args = init_args(coupon_exchange.address)
+    coupon = deploy(chain, deploy_args)
 
     # 割当
     txn_hash = coupon.transact().allocate(_consumer, _allocated)
@@ -532,8 +539,8 @@ def test_issue_error_1(web3, chain, users, coupon_exchange):
 
     # 新規発行
     web3.eth.defaultAccount = _issuer
-    coupon, deploy_args = utils.\
-        issue_transferable_coupon(web3, chain, coupon_exchange.address)
+    deploy_args = init_args(coupon_exchange.address)
+    coupon = deploy(chain, deploy_args)
 
     # 追加発行
     web3.eth.defaultAccount = _issuer
@@ -559,8 +566,8 @@ def test_issue_error_2(web3, chain, users, coupon_exchange):
 
     # 新規発行
     web3.eth.defaultAccount = _issuer
-    coupon, deploy_args = utils.\
-        issue_transferable_coupon(web3, chain, coupon_exchange.address)
+    deploy_args = init_args(coupon_exchange.address)
+    coupon = deploy(chain, deploy_args)
 
     # 割当
     txn_hash = coupon.transact().allocate(_consumer, _allocated)
@@ -586,8 +593,8 @@ def test_issue_error_3(web3, chain, users, coupon_exchange):
 
     # 新規発行
     web3.eth.defaultAccount = _issuer
-    coupon, deploy_args = utils.\
-        issue_transferable_coupon(web3, chain, coupon_exchange.address)
+    deploy_args = init_args(coupon_exchange.address)
+    coupon = deploy(chain, deploy_args)
 
     # 追加発行（uint最大値超）
     web3.eth.defaultAccount = _other
@@ -610,8 +617,8 @@ def test_setDetails_normal_1(web3, chain, users, coupon_exchange):
 
     # 新規発行
     web3.eth.defaultAccount = issuer
-    coupon, deploy_args = utils.\
-        issue_transferable_coupon(web3, chain, coupon_exchange.address)
+    deploy_args = init_args(coupon_exchange.address)
+    coupon = deploy(chain, deploy_args)
 
     # 詳細欄の修正
     web3.eth.defaultAccount = issuer
@@ -627,8 +634,8 @@ def test_setDetails_error_1(web3, chain, users, coupon_exchange):
 
     # 新規発行
     web3.eth.defaultAccount = issuer
-    coupon, deploy_args = utils.\
-        issue_transferable_coupon(web3, chain, coupon_exchange.address)
+    deploy_args = init_args(coupon_exchange.address)
+    coupon = deploy(chain, deploy_args)
 
     # 詳細欄の修正
     web3.eth.defaultAccount = issuer
@@ -642,8 +649,8 @@ def test_setDetails_error_2(web3, chain, users, coupon_exchange):
 
     # 新規発行
     web3.eth.defaultAccount = issuer
-    coupon, deploy_args = utils.\
-        issue_transferable_coupon(web3, chain, coupon_exchange.address)
+    deploy_args = init_args(coupon_exchange.address)
+    coupon = deploy(chain, deploy_args)
 
     # 詳細欄の修正
     web3.eth.defaultAccount = other
@@ -663,8 +670,8 @@ def test_setMemo_normal_1(web3, chain, users, coupon_exchange):
 
     # 新規発行
     web3.eth.defaultAccount = issuer
-    coupon, deploy_args = utils.\
-        issue_transferable_coupon(web3, chain, coupon_exchange.address)
+    deploy_args = init_args(coupon_exchange.address)
+    coupon = deploy(chain, deploy_args)
 
     # メモ欄の修正
     web3.eth.defaultAccount = issuer
@@ -680,8 +687,8 @@ def test_setMemo_error_1(web3, chain, users, coupon_exchange):
 
     # 新規発行
     web3.eth.defaultAccount = issuer
-    coupon, deploy_args = utils.\
-        issue_transferable_coupon(web3, chain, coupon_exchange.address)
+    deploy_args = init_args(coupon_exchange.address)
+    coupon = deploy(chain, deploy_args)
 
     # メモ欄の修正
     web3.eth.defaultAccount = issuer
@@ -695,8 +702,8 @@ def test_setMemo_error_2(web3, chain, users, coupon_exchange):
 
     # 新規発行
     web3.eth.defaultAccount = issuer
-    coupon, deploy_args = utils.\
-        issue_transferable_coupon(web3, chain, coupon_exchange.address)
+    deploy_args = init_args(coupon_exchange.address)
+    coupon = deploy(chain, deploy_args)
 
     # メモ欄の修正
     web3.eth.defaultAccount = other
@@ -713,10 +720,10 @@ TEST8_残高確認（balanceOf）
 def test_balanceOf_normal_1(web3, chain, users, coupon_exchange):
     issuer = users['issuer']
 
-    # 債券新規発行
+    # 新規発行
     web3.eth.defaultAccount = issuer
-    coupon, deploy_args = utils.\
-        issue_transferable_coupon(web3, chain, coupon_exchange.address)
+    deploy_args = init_args(coupon_exchange.address)
+    coupon = deploy(chain, deploy_args)
 
     balance = coupon.call().balanceOf(issuer)
     assert balance == deploy_args[2]
@@ -725,10 +732,10 @@ def test_balanceOf_normal_1(web3, chain, users, coupon_exchange):
 def test_balanceOf_error_1(web3, chain, users, coupon_exchange):
     issuer = users['issuer']
 
-    # 債券新規発行
+    # 新規発行
     web3.eth.defaultAccount = issuer
-    coupon, deploy_args = utils.\
-        issue_transferable_coupon(web3, chain, coupon_exchange.address)
+    deploy_args = init_args(coupon_exchange.address)
+    coupon = deploy(chain, deploy_args)
 
     account_address = 1234
 
@@ -745,8 +752,8 @@ def test_usedOf_normal_1(web3, chain, users, coupon_exchange):
 
     # 新規発行
     web3.eth.defaultAccount = _issuer
-    coupon, deploy_args = utils.\
-        issue_transferable_coupon(web3, chain, coupon_exchange.address)
+    deploy_args = init_args(coupon_exchange.address)
+    coupon = deploy(chain, deploy_args)
 
     # 消費
     web3.eth.defaultAccount = _issuer
@@ -764,8 +771,8 @@ def test_usedOf_error_1(web3, chain, users, coupon_exchange):
 
     # 新規発行
     web3.eth.defaultAccount = _issuer
-    coupon, deploy_args = utils.\
-        issue_transferable_coupon(web3, chain, coupon_exchange.address)
+    deploy_args = init_args(coupon_exchange.address)
+    coupon = deploy(chain, deploy_args)
 
     account_address = 1234
 
@@ -781,8 +788,8 @@ def test_setImageURL_normal_1(web3, chain, users, coupon_exchange):
 
     # 新規発行
     web3.eth.defaultAccount = issuer
-    coupon, deploy_args = utils.\
-        issue_transferable_coupon(web3, chain, coupon_exchange.address)
+    deploy_args = init_args(coupon_exchange.address)
+    coupon = deploy(chain, deploy_args)
 
     # 商品画像の設定
     web3.eth.defaultAccount = issuer
@@ -799,8 +806,8 @@ def test_setImageURL_normal_2(web3, chain, users, coupon_exchange):
 
     # 新規発行
     web3.eth.defaultAccount = issuer
-    coupon, deploy_args = utils.\
-        issue_transferable_coupon(web3, chain, coupon_exchange.address)
+    deploy_args = init_args(coupon_exchange.address)
+    coupon = deploy(chain, deploy_args)
 
     image_url = 'https://some_image_url.com/image1.png'
 
@@ -825,8 +832,8 @@ def test_setImageURL_normal_3(web3, chain, users, coupon_exchange):
 
     # 新規発行
     web3.eth.defaultAccount = issuer
-    coupon, deploy_args = utils.\
-        issue_transferable_coupon(web3, chain, coupon_exchange.address)
+    deploy_args = init_args(coupon_exchange.address)
+    coupon = deploy(chain, deploy_args)
 
     image_url = 'https://some_image_url.com/image.png'
     image_url_after = 'https://some_image_url.com/image_after.png'
@@ -850,8 +857,8 @@ def test_setImageURL_error_1(web3, chain, users, coupon_exchange):
 
     # 新規発行
     web3.eth.defaultAccount = issuer
-    coupon, deploy_args = utils.\
-        issue_transferable_coupon(web3, chain, coupon_exchange.address)
+    deploy_args = init_args(coupon_exchange.address)
+    coupon = deploy(chain, deploy_args)
 
     image_url = 'https://some_image_url.com/image.png'
 
@@ -881,8 +888,8 @@ def test_setImageURL_error_2(web3, chain, users, coupon_exchange):
 
     # 新規発行
     web3.eth.defaultAccount = issuer
-    coupon, deploy_args = utils.\
-        issue_transferable_coupon(web3, chain, coupon_exchange.address)
+    deploy_args = init_args(coupon_exchange.address)
+    coupon = deploy(chain, deploy_args)
 
     image_url = 1234
 
@@ -897,8 +904,8 @@ def test_setImageURL_error_3(web3, chain, users, coupon_exchange):
 
     # 新規発行
     web3.eth.defaultAccount = issuer
-    coupon, deploy_args = utils.\
-        issue_transferable_coupon(web3, chain, coupon_exchange.address)
+    deploy_args = init_args(coupon_exchange.address)
+    coupon = deploy(chain, deploy_args)
 
     image_url = 'https://some_image_url.com/image.png'
 
@@ -920,8 +927,8 @@ def test_setStatus_normal_1(web3, chain, users, coupon_exchange):
 
     # 新規発行
     web3.eth.defaultAccount = issuer
-    coupon, deploy_args = utils.\
-        issue_transferable_coupon(web3, chain, coupon_exchange.address)
+    deploy_args = init_args(coupon_exchange.address)
+    coupon = deploy(chain, deploy_args)
 
     # ステータスの修正
     web3.eth.defaultAccount = issuer
@@ -936,8 +943,8 @@ def test_setStatus_error_1(web3, chain, users, coupon_exchange):
 
     # 新規発行
     web3.eth.defaultAccount = issuer
-    coupon, deploy_args = utils.\
-        issue_transferable_coupon(web3, chain, coupon_exchange.address)
+    deploy_args = init_args(coupon_exchange.address)
+    coupon = deploy(chain, deploy_args)
 
     # ステータスの修正
     web3.eth.defaultAccount = issuer
@@ -951,8 +958,8 @@ def test_setStatus_error_2(web3, chain, users, coupon_exchange):
 
     # 新規発行
     web3.eth.defaultAccount = issuer
-    coupon, deploy_args = utils.\
-        issue_transferable_coupon(web3, chain, coupon_exchange.address)
+    deploy_args = init_args(coupon_exchange.address)
+    coupon = deploy(chain, deploy_args)
 
     # メモ欄の修正
     web3.eth.defaultAccount = other
@@ -968,10 +975,10 @@ TEST12_取引可能Exchangeの更新（setTradableExchange）
 def test_setTradableExchange_normal_1(web3, chain, users, coupon_exchange):
     issuer = users['issuer']
 
-    # トークン新規発行
+    # 新規発行
     web3.eth.defaultAccount = issuer
-    coupon, deploy_args = utils.\
-        issue_transferable_coupon(web3, chain, coupon_exchange.address)
+    deploy_args = init_args(coupon_exchange.address)
+    coupon = deploy(chain, deploy_args)
 
     # その他Exchange
     web3.eth.defaultAccount = users['admin']
@@ -992,10 +999,10 @@ def test_setTradableExchange_normal_1(web3, chain, users, coupon_exchange):
 def test_setTradableExchange_error_1(web3, chain, users, coupon_exchange):
     issuer = users['issuer']
 
-    # トークン新規発行
+    # 新規発行
     web3.eth.defaultAccount = issuer
-    coupon, deploy_args = utils.\
-        issue_transferable_coupon(web3, chain, coupon_exchange.address)
+    deploy_args = init_args(coupon_exchange.address)
+    coupon = deploy(chain, deploy_args)
 
     # Exchangeの更新
     web3.eth.defaultAccount = issuer
@@ -1007,10 +1014,10 @@ def test_setTradableExchange_error_2(web3, chain, users, coupon_exchange):
     issuer = users['issuer']
     trader = users['trader']
 
-    # トークン新規発行
+    # 新規発行
     web3.eth.defaultAccount = issuer
-    coupon, deploy_args = utils.\
-        issue_transferable_coupon(web3, chain, coupon_exchange.address)
+    deploy_args = init_args(coupon_exchange.address)
+    coupon = deploy(chain, deploy_args)
 
     # その他Exchange
     web3.eth.defaultAccount = users['admin']
@@ -1026,3 +1033,114 @@ def test_setTradableExchange_error_2(web3, chain, users, coupon_exchange):
 
     assert coupon.call().tradableExchange() == \
         to_checksum_address(coupon_exchange.address)
+
+'''
+TEST13_有効期限更新（setExpirationDate）
+'''
+# 正常系1: 発行 -> 有効期限更新
+def test_setExpirationDate_normal_1(web3, chain, users, coupon_exchange):
+    issuer = users['issuer']
+    after_expiration_date = 'after_expiration_date'
+
+    # 新規発行
+    web3.eth.defaultAccount = issuer
+    deploy_args = init_args(coupon_exchange.address)
+    coupon = deploy(chain, deploy_args)
+
+    # 有効期限更新
+    web3.eth.defaultAccount = issuer
+    txn_hash = \
+        coupon.transact().setExpirationDate(after_expiration_date)
+    chain.wait.for_receipt(txn_hash)
+
+    expiration_date = coupon.call().expirationDate()
+    assert after_expiration_date == expiration_date
+
+# エラー系1: 入力値の型誤り
+def test_setExpirationDate_errors_1(web3, chain, users, coupon_exchange):
+    issuer = users['issuer']
+
+    # 新規発行
+    web3.eth.defaultAccount = issuer
+    deploy_args = init_args(coupon_exchange.address)
+    coupon = deploy(chain, deploy_args)
+
+    # 型誤り
+    web3.eth.defaultAccount = issuer
+    with pytest.raises(TypeError):
+        coupon.transact().setExpirationDate(1234)
+
+# エラー系2: 権限エラー
+def test_setExpirationDate_error_2(web3, chain, users, coupon_exchange):
+    issuer = users['issuer']
+    attacker = users['trader']
+    after_expiration_date = 'after_expiration_date'
+
+    # 新規発行
+    web3.eth.defaultAccount = issuer
+    deploy_args = init_args(coupon_exchange.address)
+    coupon = deploy(chain, deploy_args)
+
+    # 有効期限更新：権限エラー
+    web3.eth.defaultAccount = attacker
+    txn_hash = \
+        coupon.transact().setExpirationDate(after_expiration_date) # エラーになる
+    chain.wait.for_receipt(txn_hash)
+
+    expiration_date = coupon.call().expirationDate()
+    assert expiration_date == deploy_args[6]
+
+'''
+TEST14_譲渡可能更新（setTransferable）
+'''
+# 正常系1: 発行 -> 譲渡可能更新
+def test_setTransferable_normal_1(web3, chain, users, coupon_exchange):
+    issuer = users['issuer']
+    after_transferable = False
+
+    # 新規発行
+    web3.eth.defaultAccount = issuer
+    deploy_args = init_args(coupon_exchange.address)
+    coupon = deploy(chain, deploy_args)
+
+    # 譲渡可能更新
+    web3.eth.defaultAccount = issuer
+    txn_hash = coupon.transact().setTransferable(after_transferable)
+    chain.wait.for_receipt(txn_hash)
+
+    transferable = coupon.call().transferable()
+    assert after_transferable == transferable
+
+# エラー系1: 入力値の型誤り
+def test_setTransferable_error_1(web3, chain, users, coupon_exchange):
+    issuer = users['issuer']
+
+    # 新規発行
+    web3.eth.defaultAccount = issuer
+    deploy_args = init_args(coupon_exchange.address)
+    coupon = deploy(chain, deploy_args)
+
+    # 型誤り
+    web3.eth.defaultAccount = issuer
+    with pytest.raises(TypeError):
+        coupon.transact().setTransferable('True')
+
+# エラー系2: 権限エラー
+def test_setTransferable_error_2(web3, chain, users, coupon_exchange):
+    issuer = users['issuer']
+    attacker = users['trader']
+    after_transferable = False
+
+    # 新規発行
+    web3.eth.defaultAccount = issuer
+    deploy_args = init_args(coupon_exchange.address)
+    coupon = deploy(chain, deploy_args)
+
+    # 譲渡可能更新
+    web3.eth.defaultAccount = attacker
+    txn_hash = \
+        coupon.transact().setTransferable(after_transferable) # エラーになる
+    chain.wait.for_receipt(txn_hash)
+
+    transferable = coupon.call().transferable()
+    assert transferable == deploy_args[7]
