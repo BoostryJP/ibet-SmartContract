@@ -131,18 +131,6 @@ contract IbetCoupon is Ownable, IbetStandardTokenInterface {
         balances[owner] = balanceOf(owner).add(_value);
     }
 
-    // ファンクション：クーポン詳細を更新する
-    // オーナーのみ実行可能
-    function updateDetails(string _details) public onlyOwner() {
-        details = _details;
-    }
-
-    // ファンクション：メモ欄を更新する
-    // オーナーのみ実行可能
-    function updateMemo(string _memo) public onlyOwner() {
-        memo = _memo;
-    }
-
     // ファンクション：残高確認
     function balanceOf(address _owner) public view returns (uint256) {
         return balances[_owner];
@@ -161,6 +149,42 @@ contract IbetCoupon is Ownable, IbetStandardTokenInterface {
       tradableExchange = _exchange;
     }
 
+    // ファンクション：クーポン詳細を更新する
+    // オーナーのみ実行可能
+    function setDetails(string _details) public onlyOwner() {
+        details = _details;
+    }
+
+    // ファンクション：メモ欄を更新する
+    // オーナーのみ実行可能
+    function setMemo(string _memo) public onlyOwner() {
+        memo = _memo;
+    }
+
+    // ファンクション：有効期限更新
+    // オーナーのみ実行可能
+    function setExpirationDate(string _expirationDate)
+      public
+      onlyOwner()
+    {
+      expirationDate = _expirationDate;
+    }
+
+    // ファンクション：クーポンの有効・無効を更新する
+    // オーナーのみ実行可能
+    function setStatus(bool _isValid) public onlyOwner() {
+        isValid = _isValid;
+    }
+
+    // ファンクション：譲渡可能更新
+    // オーナーのみ実行可能
+    function setTransferable(bool _transferable)
+      public
+      onlyOwner()
+    {
+      transferable = _transferable;
+    }
+
     // ファンクション：商品の画像を設定する
     // オーナーのみ実行可能
     function setImageURL(uint8 _class, string _image_url) public onlyOwner() {
@@ -170,12 +194,6 @@ contract IbetCoupon is Ownable, IbetStandardTokenInterface {
     // ファンクション：商品の画像を取得する
     function getImageURL(uint8 _class) public view returns (string) {
         return image_urls[_class];
-    }
-
-    // ファンクション：クーポンの有効・無効を更新する
-    // オーナーのみ実行可能
-    function updateStatus(bool _isValid) public onlyOwner() {
-        isValid = _isValid;
     }
 
 }

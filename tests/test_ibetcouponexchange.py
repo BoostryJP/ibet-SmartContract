@@ -760,7 +760,7 @@ def test_createorder_error_6_2(web3, chain, users, coupon_exchange):
     # 取扱ステータス更新
     web3.eth.defaultAccount = issuer
     chain.wait.for_receipt(
-        coupon_token.transact().updateStatus(False)
+        coupon_token.transact().setStatus(False)
     )
 
     # Make注文（買）：エラー
@@ -877,7 +877,7 @@ def test_createorder_error_7_3(web3, chain, users, coupon_exchange):
     # 取扱ステータス更新
     web3.eth.defaultAccount = issuer
     chain.wait.for_receipt(
-        coupon_token.transact().updateStatus(False)
+        coupon_token.transact().setStatus(False)
     )
 
     # Make注文（売）：エラー
@@ -1886,7 +1886,7 @@ def test_executeOrder_error_5_5(web3, chain, users, coupon_exchange):
     # 取扱ステータス更新（Falseへ更新）
     web3.eth.defaultAccount = issuer
     chain.wait.for_receipt(
-        coupon_token.transact().updateStatus(False)
+        coupon_token.transact().setStatus(False)
     )
 
     # Take注文（買）：エラー
@@ -2206,7 +2206,7 @@ def test_executeOrder_error_6_5(web3, chain, users, coupon_exchange):
     # 取扱ステータス更新（Falseへ更新）
     web3.eth.defaultAccount = issuer
     chain.wait.for_receipt(
-        coupon_token.transact().updateStatus(False)
+        coupon_token.transact().setStatus(False)
     )
 
     # Take注文（売）：エラー
