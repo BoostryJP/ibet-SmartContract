@@ -43,7 +43,7 @@ RUN apt-get update && \
     apt-get install -y software-properties-common && \
     add-apt-repository -y ppa:ethereum/ethereum && \
     apt-get update -y && \
-    apt-get install -y solc=0.4.24-0ubuntu1~xenial
+    apt-get install -y solc=1:0.4.24-0ubuntu1~xenial
 
 # GO
 ENV GOREL go1.7.3.linux-amd64.tar.gz
