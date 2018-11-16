@@ -44,7 +44,7 @@ RUN apt-get update && \
 # Solidity
 USER root
 RUN wget -q https://github.com/ethereum/solidity/releases/download/v0.4.25/solidity-ubuntu-trusty.zip && \
-    unzip solidity-ubuntu-trusty-clang.zip && \
+    unzip solidity-ubuntu-trusty.zip && \
     cp solc /usr/bin && \
     chmod 755 /usr/bin/solc && \
     rm solc lllc
