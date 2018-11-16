@@ -42,9 +42,11 @@ RUN apt-get update && \
             libyaml-cpp-dev
 
 # Solidity
-RUN wget -q https://github.com/ethereum/solidity/releases/download/v0.4.25/solidity-ubuntu-trusty-clang.zip && \
+USER root
+RUN wget -q https://github.com/ethereum/solidity/releases/download/v0.4.25/solidity-ubuntu-trusty.zip && \
     unzip solidity-ubuntu-trusty-clang.zip && \
     cp solc /usr/bin && \
+    chmod 755 /usr/bin/solc && \
     rm solc lllc
 
 # GO
