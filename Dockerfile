@@ -44,7 +44,7 @@ RUN apt-get update && \
 # Solidity
 RUN wget -q https://github.com/ethereum/solidity/releases/download/v0.4.25/solidity-ubuntu-trusty-clang.zip && \
     unzip solidity-ubuntu-trusty-clang.zip && \
-    cp solc /user/locl/bin && \
+    cp solc /usr/bin && \
     rm solc lllc
 
 # GO
