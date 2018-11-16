@@ -44,7 +44,6 @@ RUN apt-get update && \
 # Solidity
 RUN git clone --recursive -b v0.4.25 https://github.com/ethereum/solidity.git && \
     cd solidity && \
-    ./scripts/install_deps.sh && \
     ./scripts/build.sh
 
 # GO
