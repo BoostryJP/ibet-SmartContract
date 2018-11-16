@@ -43,12 +43,12 @@ RUN apt-get update && \
             solc=1:0.4.25-0ubuntu1~xenial
 
 # Solidity
-USER root
-RUN wget -q https://github.com/ethereum/solidity/releases/download/v0.4.25/solidity-ubuntu-trusty.zip && \
-    unzip solidity-ubuntu-trusty.zip && \
-    cp solc /usr/bin && \
-    chmod 755 /usr/bin/solc && \
-    rm solc lllc
+#USER root
+#RUN wget -q https://github.com/ethereum/solidity/releases/download/v0.4.25/solidity-ubuntu-trusty.zip && \
+#    unzip solidity-ubuntu-trusty.zip && \
+#    cp solc /usr/bin && \
+#    chmod 755 /usr/bin/solc && \
+#    rm solc lllc
 
 # GO
 ENV GOREL go1.7.3.linux-amd64.tar.gz
