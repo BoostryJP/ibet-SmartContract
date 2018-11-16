@@ -39,20 +39,22 @@ RUN apt-get update && \
             libgmp-dev \
             language-pack-ja-base \
             language-pack-ja \
-            libyaml-cpp-dev
+            libyaml-cpp-dev \
+            libgcc1 \
+            libstdc++6 \
+            libz3-dev
 
 # Solidity
-RUN apt-get install -y software-properties-common && \
-    add-apt-repository ppa:ethereum/ethereum && \
-    apt-get update && \
-    apt-get install solc=1:0.4.25-develop-2018-06-21-32f2db78-0ubuntu1~artful
-
-#USER root
-#RUN wget -q https://github.com/ethereum/solidity/releases/download/v0.4.25/solidity-ubuntu-trusty.zip && \
-#    unzip solidity-ubuntu-trusty.zip && \
-#    cp solc /usr/bin && \
-#    chmod 755 /usr/bin/solc && \
-#    rm solc lllc
+#RUN apt-get install -y software-properties-common && \
+#    add-apt-repository ppa:ethereum/ethereum && \
+#    apt-get update && \
+#    apt-get install solc=1:0.4.25-0ubuntu1~xenial
+USER root
+RUN wget -q https://github.com/ethereum/solidity/releases/download/v0.4.25/solidity-ubuntu-trusty.zip && \
+    unzip solidity-ubuntu-trusty.zip && \
+    cp solc /usr/bin && \
+    chmod 755 /usr/bin/solc && \
+    rm solc lllc
 
 # GO
 ENV GOREL go1.7.3.linux-amd64.tar.gz
