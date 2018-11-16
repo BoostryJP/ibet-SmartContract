@@ -39,11 +39,13 @@ RUN apt-get update && \
             libgmp-dev \
             language-pack-ja-base \
             language-pack-ja \
-            libyaml-cpp-dev　\
-            npm
+            libyaml-cpp-dev
 
-# Solc
-RUN npm install -g solc@0.4.24
+# Solidity
+RUN git clone --recursive -b v0.4.25 https://github.com/ethereum/solidity.git && \
+    cd solidity && \
+    ./scripts/install_deps.sh && \
+    ./scripts/build.sh
 
 # GO
 ENV GOREL go1.7.3.linux-amd64.tar.gz
