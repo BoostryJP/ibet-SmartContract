@@ -39,7 +39,8 @@ RUN apt-get update && \
             libgmp-dev \
             language-pack-ja-base \
             language-pack-ja \
-            libyaml-cpp-dev
+            libyaml-cpp-dev \
+            cmake
 
 # Solidity
 RUN git clone --recursive -b v0.4.25 https://github.com/ethereum/solidity.git && \
