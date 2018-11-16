@@ -39,14 +39,13 @@ RUN apt-get update && \
             libgmp-dev \
             language-pack-ja-base \
             language-pack-ja \
-            libyaml-cpp-dev \
-            cmake \
-            libz3-dev
+            libyaml-cpp-dev
 
 # Solidity
-RUN git clone --recursive -b v0.4.25 https://github.com/ethereum/solidity.git && \
-    cd solidity && \
-    ./scripts/build.sh
+RUN wget -q https://github.com/ethereum/solidity/releases/download/v0.4.25/solidity-ubuntu-trusty-clang.zip && \
+    unzip solidity-ubuntu-trusty-clang.zip && \
+    cp solidity-ubuntu-trusty-clang/colc /user/locl/bin && \
+    rm -rf solidity-ubuntu-trusty-clang
 
 # GO
 ENV GOREL go1.7.3.linux-amd64.tar.gz
