@@ -42,7 +42,8 @@ RUN apt-get update && \
             libyaml-cpp-dev
 
 # Solidity
-RUN add-apt-repository ppa:ethereum/ethereum && \
+RUN apt-get install -y software-properties-common && \
+    add-apt-repository ppa:ethereum/ethereum && \
     apt-get update && \
     apt-get install solc=1:0.4.25-0ubuntu1~xenial
 
