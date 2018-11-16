@@ -45,7 +45,7 @@ RUN apt-get update && \
 RUN apt-get install -y software-properties-common && \
     add-apt-repository ppa:ethereum/ethereum && \
     apt-get update && \
-    apt-get install solc=1:0.4.25-0ubuntu1~xenial
+    apt-get install solc=1:0.4.25-develop-2018-06-21-32f2db78-0ubuntu1~artful
 
 #USER root
 #RUN wget -q https://github.com/ethereum/solidity/releases/download/v0.4.25/solidity-ubuntu-trusty.zip && \
