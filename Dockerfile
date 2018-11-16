@@ -45,10 +45,6 @@ RUN apt-get update && \
             libz3-dev
 
 # Solidity
-#RUN apt-get install -y software-properties-common && \
-#    add-apt-repository ppa:ethereum/ethereum && \
-#    apt-get update && \
-#    apt-get install solc=1:0.4.25-0ubuntu1~xenial
 USER root
 RUN wget -q https://github.com/ethereum/solidity/releases/download/v0.4.25/solidity-ubuntu-trusty.zip && \
     unzip solidity-ubuntu-trusty.zip && \

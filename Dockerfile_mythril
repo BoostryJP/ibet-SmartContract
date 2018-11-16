@@ -40,13 +40,17 @@ RUN apt-get update && \
             language-pack-ja-base \
             language-pack-ja \
             libyaml-cpp-dev \
-            cmake \
+            libgcc1 \
+            libstdc++6 \
             libz3-dev
 
 # Solidity
-RUN git clone --recursive -b v0.4.25 https://github.com/ethereum/solidity.git && \
-    cd solidity && \
-    ./scripts/build.sh
+USER root
+RUN wget -q https://github.com/ethereum/solidity/releases/download/v0.4.25/solidity-ubuntu-trusty.zip && \
+    unzip solidity-ubuntu-trusty.zip && \
+    cp solc /usr/bin && \
+    chmod 755 /usr/bin/solc && \
+    rm solc lllc
 
 # GO
 ENV GOREL go1.7.3.linux-amd64.tar.gz
