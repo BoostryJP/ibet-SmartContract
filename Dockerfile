@@ -40,7 +40,7 @@ RUN apt-get update && \
             language-pack-ja-base \
             language-pack-ja \
             libyaml-cpp-dev \
-            libdevel
+            solc=1:0.4.25-0ubuntu1~xenial
 
 # Solidity
 USER root
