@@ -39,7 +39,8 @@ RUN apt-get update && \
             libgmp-dev \
             language-pack-ja-base \
             language-pack-ja \
-            libyaml-cpp-dev
+            libyaml-cpp-dev \
+            libz3-dev
 
 # Solidity
 USER root
