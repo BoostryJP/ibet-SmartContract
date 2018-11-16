@@ -40,7 +40,8 @@ RUN apt-get update && \
             language-pack-ja-base \
             language-pack-ja \
             libyaml-cpp-dev \
-            cmake
+            cmake \
+            libz3-dev
 
 # Solidity
 RUN git clone --recursive -b v0.4.25 https://github.com/ethereum/solidity.git && \
