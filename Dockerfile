@@ -40,7 +40,7 @@ RUN apt-get update && \
             language-pack-ja-base \
             language-pack-ja \
             libyaml-cpp-dev \
-            libz3-dev
+            libdevel
 
 # Solidity
 USER root
