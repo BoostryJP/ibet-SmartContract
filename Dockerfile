@@ -39,10 +39,13 @@ RUN apt-get update && \
             libgmp-dev \
             language-pack-ja-base \
             language-pack-ja \
-            libyaml-cpp-dev \
-            solc=1:0.4.25-0ubuntu1~xenial
+            libyaml-cpp-dev
 
 # Solidity
+RUN add-apt-repository ppa:ethereum/ethereum && \
+    apt-get update && \
+    apt-get install solc=1:0.4.25-0ubuntu1~xenial
+
 #USER root
 #RUN wget -q https://github.com/ethereum/solidity/releases/download/v0.4.25/solidity-ubuntu-trusty.zip && \
 #    unzip solidity-ubuntu-trusty.zip && \
