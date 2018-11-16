@@ -44,10 +44,8 @@ RUN apt-get update && \
 # Solidity
 RUN wget -q https://github.com/ethereum/solidity/releases/download/v0.4.25/solidity-ubuntu-trusty-clang.zip && \
     unzip solidity-ubuntu-trusty-clang.zip && \
-    cd solidity-ubuntu-trusty-clang && \
     cp solc /user/locl/bin && \
-    cd .. && \
-    rm -rf solidity-ubuntu-trusty-clang
+    rm solc lllc
 
 # GO
 ENV GOREL go1.7.3.linux-amd64.tar.gz
