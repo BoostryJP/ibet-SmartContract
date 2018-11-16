@@ -40,9 +40,10 @@ RUN apt-get update && \
             language-pack-ja-base \
             language-pack-ja \
             libyaml-cpp-dev && \
-    apt-get install -y software-properties-common && \
-    add-apt-repository -y ppa:ethereum/ethereum && \
-    apt-get update -y && apt-get install -y solc
+            npm
+
+# Solc
+RUN npm install -g solc@0.4.24
 
 # GO
 ENV GOREL go1.7.3.linux-amd64.tar.gz
