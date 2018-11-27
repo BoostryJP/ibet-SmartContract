@@ -14,6 +14,9 @@ contract TokenList is Ownable {
     mapping(address => Token) tokens;
     Token[] token_list;
 
+    event Register(address indexed token_address, string token_template,
+        address owner_address);
+
     function register(address _token_address, string _token_template) public {
         require(tokens[_token_address].token_address == 0);
         require(IbetStandardTokenInterface(_token_address).owner() == msg.sender);
@@ -25,6 +28,7 @@ contract TokenList is Ownable {
             token_template: _token_template,
             owner_address: msg.sender
         }));
+        emit Register(_token_address, _token_template, msg.sender);
     }
 
     function changeOwner(address _token_address, address _new_owner_address) public {
