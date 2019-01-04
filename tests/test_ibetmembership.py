@@ -1426,3 +1426,144 @@ def test_setTradableExchange_error_2(web3, chain, users, membership_exchange):
 
     assert membership_contract.call().tradableExchange() == \
         to_checksum_address(membership_exchange.address)
+
+'''
+TEST14_新規募集ステータス更新（setInitialOfferingStatus）
+'''
+# 正常系1: 発行 -> 新規募集ステータス更新（False→True）
+def test_setInitialOfferingStatus_normal_1(web3, chain, users, membership_exchange):
+    issuer = users['issuer']
+
+    # トークン新規発行
+    web3.eth.defaultAccount = issuer
+    deploy_args = init_args(membership_exchange.address)
+    membership_contract = deploy(chain, deploy_args)
+
+    # 初期状態 == False
+    assert membership_contract.call().initialOfferingStatus() == False
+
+    # 新規募集ステータスの更新
+    web3.eth.defaultAccount = issuer
+    txn_hash = membership_contract.transact().setInitialOfferingStatus(True)
+    chain.wait.for_receipt(txn_hash)
+
+    assert membership_contract.call().initialOfferingStatus() == True
+
+# 正常系2:
+#   発行 -> 新規募集ステータス更新（False→True） -> 2回目更新（True→False）
+def test_setInitialOfferingStatus_normal_2(web3, chain, users, membership_exchange):
+    issuer = users['issuer']
+
+    # トークン新規発行
+    web3.eth.defaultAccount = issuer
+    deploy_args = init_args(membership_exchange.address)
+    membership_contract = deploy(chain, deploy_args)
+
+    # 新規募集ステータスの更新
+    web3.eth.defaultAccount = issuer
+    txn_hash = membership_contract.transact().setInitialOfferingStatus(True)
+    chain.wait.for_receipt(txn_hash)
+
+    # 新規募集ステータスの更新（2回目）
+    web3.eth.defaultAccount = issuer
+    txn_hash = membership_contract.transact().setInitialOfferingStatus(False)
+    chain.wait.for_receipt(txn_hash)
+
+    assert membership_contract.call().initialOfferingStatus() == False
+
+# エラー系1: 発行 -> 新規募集ステータス更新（入力値の型誤り）
+def test_setInitialOfferingStatus_error_1(web3, chain, users, membership_exchange):
+    issuer = users['issuer']
+
+    # トークン新規発行
+    web3.eth.defaultAccount = issuer
+    deploy_args = init_args(membership_exchange.address)
+    membership_contract = deploy(chain, deploy_args)
+
+    # 新規募集ステータスの更新
+    web3.eth.defaultAccount = issuer
+    with pytest.raises(TypeError):
+        membership_contract.transact().setInitialOfferingStatus('True')
+
+'''
+TEST15_募集申込（applyForOffering）
+'''
+# 正常系1
+#   発行：発行体 -> 投資家：募集申込
+def test_applyForOffering_normal_1(web3, chain, users, membership_exchange):
+    issuer = users['issuer']
+    trader = users['trader']
+
+    # トークン新規発行
+    web3.eth.defaultAccount = issuer
+    deploy_args = init_args(membership_exchange.address)
+    membership_contract = deploy(chain, deploy_args)
+
+    # 新規募集ステータスの更新
+    web3.eth.defaultAccount = issuer
+    txn_hash = membership_contract.transact().setInitialOfferingStatus(True)
+    chain.wait.for_receipt(txn_hash)
+
+    # 募集申込
+    web3.eth.defaultAccount = trader
+    txn_hash = membership_contract.transact().applyForOffering('abcdefgh')
+    chain.wait.for_receipt(txn_hash)
+
+    assert membership_contract.call().applications(trader) == 'abcdefgh'
+
+# 正常系2
+#   発行：発行体 -> （申込なし）初期データ参照
+def test_applyForOffering_normal_2(web3, chain, users, membership_exchange):
+    issuer = users['issuer']
+    trader = users['trader']
+
+    # トークン新規発行
+    web3.eth.defaultAccount = issuer
+    deploy_args = init_args(membership_exchange.address)
+    membership_contract = deploy(chain, deploy_args)
+
+    # 新規募集ステータスの更新
+    web3.eth.defaultAccount = issuer
+    txn_hash = membership_contract.transact().setInitialOfferingStatus(True)
+    chain.wait.for_receipt(txn_hash)
+
+    assert membership_contract.call().applications(trader) == ''
+
+# エラー系1:
+#   発行：発行体 -> 投資家：募集申込（入力値の型誤り）
+def test_applyForOffering_error_1(web3, chain, users, membership_exchange):
+    issuer = users['issuer']
+    trader = users['trader']
+
+    # トークン新規発行
+    web3.eth.defaultAccount = issuer
+    deploy_args = init_args(membership_exchange.address)
+    membership_contract = deploy(chain, deploy_args)
+
+    # 新規募集ステータスの更新
+    web3.eth.defaultAccount = issuer
+    txn_hash = membership_contract.transact().setInitialOfferingStatus(True)
+    chain.wait.for_receipt(txn_hash)
+
+    # 募集申込
+    web3.eth.defaultAccount = trader
+    with pytest.raises(TypeError):
+        txn_hash = membership_contract.transact().applyForOffering(1234)
+
+# エラー系2:
+#   発行：発行体 -> 投資家：募集申込（申込ステータスが停止中）
+def test_applyForOffering_error_2(web3, chain, users, membership_exchange):
+    issuer = users['issuer']
+    trader = users['trader']
+
+    # トークン新規発行
+    web3.eth.defaultAccount = issuer
+    deploy_args = init_args(membership_exchange.address)
+    membership_contract = deploy(chain, deploy_args)
+
+    # 募集申込
+    web3.eth.defaultAccount = trader
+    txn_hash = membership_contract.transact().applyForOffering('abcdefgh')
+    chain.wait.for_receipt(txn_hash)
+
+    assert membership_contract.call().applications(trader) == ''
