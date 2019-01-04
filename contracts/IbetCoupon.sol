@@ -14,6 +14,7 @@ contract IbetCoupon is Ownable, IbetStandardTokenInterface {
     string public expirationDate; // 有効期限
     bool public isValid; // 有効・無効フラグ
     bool public transferable; // 譲渡可能
+    bool public initialOfferingStatus; // 新規募集ステータス（True：募集中、False：停止中）
 
     // 残高数量
     // account_address => balance
@@ -27,11 +28,18 @@ contract IbetCoupon is Ownable, IbetStandardTokenInterface {
     // image class => url
     mapping (uint8 => string) public image_urls;
 
+    // 募集申込
+    // account_address => data
+    mapping (address => string) public applications;
+
     // イベント：振替
     event Transfer(address indexed from, address indexed to, uint value);
 
     // イベント:消費
     event Consume(address indexed consumer, uint balance, uint used, uint value);
+
+    // イベント：募集申込
+    event ApplyFor(address indexed accountAddress);
 
     // コンストラクタ
     constructor(string _name, string _symbol,
@@ -219,6 +227,25 @@ contract IbetCoupon is Ownable, IbetStandardTokenInterface {
     // ファンクション：商品の画像を取得する
     function getImageURL(uint8 _class) public view returns (string) {
         return image_urls[_class];
+    }
+
+    // ファンクション：新規募集ステータス更新
+    // オーナーのみ実行可能
+    function setInitialOfferingStatus(bool _status)
+      public
+      onlyOwner()
+    {
+      initialOfferingStatus = _status;
+    }
+
+    // ファンクション：募集申込
+    function applyForOffering(string _data)
+      public
+    {
+      // 申込ステータスが停止中の場合、エラーを返す
+      require(initialOfferingStatus == true);
+      applications[msg.sender] = _data;
+      emit ApplyFor(msg.sender);
     }
 
 }
