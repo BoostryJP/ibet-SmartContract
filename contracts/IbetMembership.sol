@@ -137,7 +137,7 @@ contract IbetMembership is Ownable, IbetStandardTokenInterface {
       balances[_from] = balanceOf(_from).sub(_value);
       balances[_to] = balanceOf(_to).add(_value);
       ContractReceiver receiver = ContractReceiver(_to);
-      receiver.tokenFallback(_from, _value, empty);
+      receiver.tokenFallback(msg.sender, _value, empty);
     } else { // 送信先アドレスがアカウントアドレスの場合
       balances[_from] = balanceOf(_from).sub(_value);
       balances[_to] = balanceOf(_to).add(_value);
