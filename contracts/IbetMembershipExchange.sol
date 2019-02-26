@@ -108,9 +108,11 @@ contract IbetMembershipExchange is Ownable {
             // <CHK>
             //  1) 注文数量が0の場合
             //  2) 取扱ステータスがFalseの場合
+            //  3) 買注文者がコントラクトアドレスの場合
             //   -> REVERT
             if (_amount == 0 ||
-                IbetMembership(_token).status() == false)
+                IbetMembership(_token).status() == false ||
+                isContract(msg.sender) == true)
             {
                 revert();
             }
@@ -203,13 +205,15 @@ contract IbetMembershipExchange is Ownable {
             //  1) 注文数量が0の場合
             //  2) 元注文と、発注する注文が同一の売買区分の場合
             //  3) 元注文の発注者と同一のアドレスからの発注の場合
-            //  4) 元注文がキャンセル済の場合
-            //  5) 取扱ステータスがFalseの場合
-            //  6) 数量が元注文の残数量を超過している場合
+            //  4) 買注文者がコントラクトアドレスの場合
+            //  5) 元注文がキャンセル済の場合
+            //  6) 取扱ステータスがFalseの場合
+            //  7) 数量が元注文の残数量を超過している場合
             //   -> REVERT
             if (_amount == 0 ||
                 order.isBuy == _isBuy ||
                 msg.sender == order.owner ||
+                isContract(msg.sender) == true ||
                 order.canceled == true ||
                 IbetMembership(order.token).status() == false ||
                 order.amount < _amount )
@@ -451,6 +455,19 @@ contract IbetMembershipExchange is Ownable {
     // ERC223 token deposit handler
     function tokenFallback(address _from, uint _value, bytes /*_data*/) public{
         balances[_from][msg.sender] = balances[_from][msg.sender].add(_value);
+    }
+
+    // ファンクション：アドレスフォーマットがコントラクトのものかを判断する
+    function isContract(address _addr)
+      private
+      view
+      returns (bool is_contract)
+    {
+      uint length;
+      assembly {
+        length := extcodesize(_addr)
+      }
+      return (length>0);
     }
 
 }
