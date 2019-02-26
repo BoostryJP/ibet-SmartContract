@@ -118,12 +118,14 @@ contract IbetStraightBondExchange is Ownable {
             //  1) 注文数量が0の場合
             //  2) 認可されたアドレスではない場合
             //  3) 名簿用個人情報が登録されていない場合
-            //  4) 償還済みフラグがTrueの場合
+            //  4) 買注文者がコントラクトアドレスの場合
+            //  5) 償還済みフラグがTrueの場合
             //   -> REVERT
             if (_amount == 0 ||
                 WhiteList(whiteListAddress).isRegistered(msg.sender,_agent) == false ||
                 PersonalInfo(personalInfoAddress).isRegistered(
                     msg.sender,IbetStraightBond(_token).owner()) == false ||
+                isContract(msg.sender) == true ||
                 IbetStraightBond(_token).isRedeemed() == true)
             {
                 revert();
@@ -225,8 +227,9 @@ contract IbetStraightBondExchange is Ownable {
             //  4) 元注文がキャンセル済の場合
             //  5) 認可されたアドレスではない場合
             //  6) 名簿用個人情報が登録されていない場合
-            //  7) 償還済みフラグがTrueの場合
-            //  8) 数量が元注文の残数量を超過している場合
+            //  7) 買注文者がコントラクトアドレスの場合
+            //  8) 償還済みフラグがTrueの場合
+            //  9) 数量が元注文の残数量を超過している場合
             //   -> REVERT
             if (_amount == 0 ||
                 order.isBuy == _isBuy ||
@@ -235,6 +238,7 @@ contract IbetStraightBondExchange is Ownable {
                 WhiteList(whiteListAddress).isRegistered(msg.sender,order.agent) == false ||
                 PersonalInfo(personalInfoAddress).isRegistered(
                     msg.sender,IbetStraightBond(order.token).owner()) == false ||
+                isContract(msg.sender) == true ||
                 IbetStraightBond(order.token).isRedeemed() == true ||
                 order.amount < _amount )
             {
@@ -480,6 +484,19 @@ contract IbetStraightBondExchange is Ownable {
     // ERC223 token deposit handler
     function tokenFallback(address _from, uint _value, bytes /*_data*/) public{
         balances[_from][msg.sender] = balances[_from][msg.sender].add(_value);
+    }
+
+    // ファンクション：アドレスフォーマットがコントラクトのものかを判断する
+    function isContract(address _addr)
+      private
+      view
+      returns (bool is_contract)
+    {
+      uint length;
+      assembly {
+        length := extcodesize(_addr)
+      }
+      return (length>0);
     }
 
 }
