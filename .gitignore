@@ -2,6 +2,7 @@
 tests/__pycache__/
 build/
 .vscode/
+.idea/
 
 #pyenv
 .python-version
