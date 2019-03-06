@@ -7,12 +7,13 @@
 * homebrewがインストールされている
 
 
-
 ### 1.1. Python3.6の実行環境を整備する
 * (参考：https://develtips.com/python/191)
 
+
 ### 1.2. geth をインストールする。
 * (参考：https://qiita.com/tmrex7/items/912ec05eff02f7f76d30)
+
 
 ### 1.3. solidity compiler (solc) をインストールする。
 * brew install すると0.5系が入ってしまう。
@@ -42,10 +43,12 @@ solc, the solidity compiler commandline interface
 Version: 0.4.25+commit.59dbf8f1.Darwin.appleclang
 ```
 
+
 ### 1.4. tmr-scをgit cloneする。
 ```
 $ git clone https://github.com/N-Village/tmr-sc.git
 ```
+
 
 ### 1.5. Pyenv (virtualenv)の環境を作る
 * （参考：https://qiita.com/its/items/24f8b20aa2106819dfb3）
@@ -72,6 +75,7 @@ $ pyenv versions
   3.6.4/envs/tmr-sc
 * tmr-sc (set by /Users/*/tmr-sc/.python-version)
 ```
+
 
 ### 1.6. 依存パッケージのインストール
 * 依存パッケージをpipでインストールする。
@@ -106,7 +110,6 @@ Commands:
 
 
 
-
 ### 1.7. AWS CLIの導入ならびにECRにログイン
 * ibet 開発AWSのECRのイメージを使うので、AWS CLIの導入ならびにECRにログインしておく
 * ※事前にAWS Access Key IDとAWS Secret Access Key等の情報を入手しておく
@@ -134,7 +137,7 @@ https://aws_account_id.dkr.ecr.us-east-1.amazonaws.com
 
 
 
-### 1.8. dockerを入れる
+### 1.8. dockerインストール
 * 公式サイトから Docker for Macをダウンロードしてインストールする(https://docs.docker.com/docker-for-mac/install/) 
 * 正しくインストールされているか確認する
 
@@ -199,34 +202,11 @@ Welcome to the Geth JavaScript console!
 ```
 
 
-
 ## 2. コントラクトコードのコンパイル
 * コントラクトコード（Solidityコード）自体は、好きなエディタで実装して良い。
 * 出来上がったコントラクトコードを `contracts/` ディレクトリ以下に格納していく。
 * コードのコンパイルは以下のコマンドを実行する。
 * 実行結果（abi, bytecode, bytecode_runtime など）は `build/contracts.json` に保存される。
-
-```
-$ populus compile
-> Found 7 contract source files
-  - contracts/IbetStraightBond.sol
-  - contracts/IbetStraightBondExchange.sol
-  - contracts/Ownable.sol
-  - contracts/PersonalInfo.sol
-  - contracts/SafeMath.sol
-  - contracts/TokenList.sol
-  - contracts/WhiteList.sol
-> Compiled 8 contracts
-  - contracts/IbetStraightBond.sol:ContractReceiver
-  - contracts/IbetStraightBond.sol:IbetStraightBond
-  - contracts/IbetStraightBondExchange.sol:IbetStraightBondExchange
-  - contracts/Ownable.sol:Ownable
-  - contracts/PersonalInfo.sol:PersonalInfo
-  - contracts/SafeMath.sol:SafeMath
-  - contracts/TokenList.sol:TokenList
-  - contracts/WhiteList.sol:WhiteList
-> Wrote compiled assets to: build/contracts.json
-```
 
 ## 3. テスト
 * テスト実行はpytestで実行する。

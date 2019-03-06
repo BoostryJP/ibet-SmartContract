@@ -3,14 +3,14 @@ pragma solidity ^0.4.24;
 import "./SafeMath.sol";
 import "./Ownable.sol";
 import "./IbetStraightBond.sol";
-import "./WhiteList.sol";
+import "./PaymentGateway.sol";
 import "./PersonalInfo.sol";
 
 contract IbetStraightBondExchange is Ownable {
     using SafeMath for uint256;
 
     address public personalInfoAddress;
-    address public whiteListAddress;
+    address public paymentGatewayAddress;
 
     // 約定明細の有効期限
     //  Note:
@@ -101,8 +101,8 @@ contract IbetStraightBondExchange is Ownable {
         address indexed to, uint256 value);
 
     // コンストラクタ
-    constructor(address _whiteListAddress, address _personalInfoAddress) public {
-        whiteListAddress = _whiteListAddress;
+    constructor(address _paymentGatewayAddress, address _personalInfoAddress) public {
+        paymentGatewayAddress = _paymentGatewayAddress;
         personalInfoAddress = _personalInfoAddress;
     }
 
@@ -120,13 +120,15 @@ contract IbetStraightBondExchange is Ownable {
             //  3) 名簿用個人情報が登録されていない場合
             //  4) 買注文者がコントラクトアドレスの場合
             //  5) 償還済みフラグがTrueの場合
+            //  6) 有効な収納代行業者（Agent）を指定していない場合
             //   -> REVERT
             if (_amount == 0 ||
-                WhiteList(whiteListAddress).isRegistered(msg.sender,_agent) == false ||
+                PaymentGateway(paymentGatewayAddress).accountApproved(msg.sender,_agent) == false ||
                 PersonalInfo(personalInfoAddress).isRegistered(
                     msg.sender,IbetStraightBond(_token).owner()) == false ||
                 isContract(msg.sender) == true ||
-                IbetStraightBond(_token).isRedeemed() == true)
+                IbetStraightBond(_token).isRedeemed() == true ||
+                validateAgent(_agent) == false)
             {
                 revert();
             }
@@ -139,13 +141,15 @@ contract IbetStraightBondExchange is Ownable {
             //  3) 認可されたアドレスではない場合
             //  4) 名簿用個人情報が登録されていない場合
             //  5) 償還済みフラグがTrueの場合
+            //  6) 有効な収納代行業者（Agent）を指定していない場合
             //   -> 更新処理：全ての残高を投資家のアカウントに戻し、falseを返す
             if (_amount == 0 ||
                 balances[msg.sender][_token] < _amount ||
-                WhiteList(whiteListAddress).isRegistered(msg.sender,_agent) == false ||
+                PaymentGateway(paymentGatewayAddress).accountApproved(msg.sender,_agent) == false ||
                 PersonalInfo(personalInfoAddress).isRegistered(
                     msg.sender,IbetStraightBond(_token).owner()) == false ||
-                IbetStraightBond(_token).isRedeemed() == true)
+                IbetStraightBond(_token).isRedeemed() == true ||
+                validateAgent(_agent) == false)
             {
                 IbetStraightBond(_token).transfer(msg.sender,balances[msg.sender][_token]);
                 balances[msg.sender][_token] = 0;
@@ -235,7 +239,7 @@ contract IbetStraightBondExchange is Ownable {
                 order.isBuy == _isBuy ||
                 msg.sender == order.owner ||
                 order.canceled == true ||
-                WhiteList(whiteListAddress).isRegistered(msg.sender,order.agent) == false ||
+                PaymentGateway(paymentGatewayAddress).accountApproved(msg.sender,order.agent) == false ||
                 PersonalInfo(personalInfoAddress).isRegistered(
                     msg.sender,IbetStraightBond(order.token).owner()) == false ||
                 isContract(msg.sender) == true ||
@@ -262,7 +266,7 @@ contract IbetStraightBondExchange is Ownable {
                 order.isBuy == _isBuy ||
                 msg.sender == order.owner ||
                 order.canceled == true ||
-                WhiteList(whiteListAddress).isRegistered(msg.sender,order.agent) == false ||
+                PaymentGateway(paymentGatewayAddress).accountApproved(msg.sender,order.agent) == false ||
                 PersonalInfo(personalInfoAddress).isRegistered(
                     msg.sender,IbetStraightBond(order.token).owner()) == false ||
                 IbetStraightBond(order.token).isRedeemed() == true ||
@@ -497,6 +501,21 @@ contract IbetStraightBondExchange is Ownable {
         length := extcodesize(_addr)
       }
       return (length>0);
+    }
+
+    // ファンクション：新規注文時に指定したagentアドレスが有効なアドレスであることをチェックする
+    function validateAgent(address _addr)
+        private
+        view
+        returns (bool)
+    {
+        address[30] memory agents = PaymentGateway(paymentGatewayAddress).getAgents();
+        for (uint i=0; i<30; i++) {
+            if (agents[i] == _addr) {
+                return true;
+            }
+        }
+        return false;
     }
 
 }

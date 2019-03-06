@@ -3,9 +3,12 @@ pragma solidity ^0.4.24;
 import "./SafeMath.sol";
 import "./Ownable.sol";
 import "./IbetMembership.sol";
+import "./PaymentGateway.sol";
 
 contract IbetMembershipExchange is Ownable {
     using SafeMath for uint256;
+
+    address public paymentGatewayAddress;
 
     // 約定明細の有効期限
     //  Note:
@@ -96,7 +99,9 @@ contract IbetMembershipExchange is Ownable {
         address indexed to, uint256 value);
 
     // コンストラクタ
-    constructor() public {}
+    constructor(address _paymentGatewayAddress) public {
+        paymentGatewayAddress = _paymentGatewayAddress;
+    }
 
     // ファンクション：（投資家）新規注文を作成する　Make注文
     function createOrder(address _token, uint256 _amount, uint256 _price,
@@ -109,10 +114,12 @@ contract IbetMembershipExchange is Ownable {
             //  1) 注文数量が0の場合
             //  2) 取扱ステータスがFalseの場合
             //  3) 買注文者がコントラクトアドレスの場合
+            //  4) 有効な収納代行業者（Agent）を指定していない場合
             //   -> REVERT
             if (_amount == 0 ||
                 IbetMembership(_token).status() == false ||
-                isContract(msg.sender) == true)
+                isContract(msg.sender) == true ||
+                validateAgent(_agent) == false)
             {
                 revert();
             }
@@ -123,10 +130,12 @@ contract IbetMembershipExchange is Ownable {
             //  1) 注文数量が0の場合
             //  2) 残高数量が発注数量に満たない場合
             //  3) 取扱ステータスがFalseの場合
+            //  4) 有効な収納代行業者（Agent）を指定していない場合
             //   -> 更新処理：全ての残高を投資家のアカウントに戻し、falseを返す
             if (_amount == 0 ||
                 balances[msg.sender][_token] < _amount ||
-                IbetMembership(_token).status() == false)
+                IbetMembership(_token).status() == false ||
+                validateAgent(_agent) == false)
             {
                 IbetMembership(_token).transfer(msg.sender,balances[msg.sender][_token]);
                 balances[msg.sender][_token] = 0;
@@ -468,6 +477,21 @@ contract IbetMembershipExchange is Ownable {
         length := extcodesize(_addr)
       }
       return (length>0);
+    }
+
+    // ファンクション：新規注文時に指定したagentアドレスが有効なアドレスであることをチェックする
+    function validateAgent(address _addr)
+        private
+        view
+        returns (bool)
+    {
+        address[30] memory agents = PaymentGateway(paymentGatewayAddress).getAgents();
+        for (uint i=0; i<30; i++) {
+            if (agents[i] == _addr) {
+                return true;
+            }
+        }
+        return false;
     }
 
 }
