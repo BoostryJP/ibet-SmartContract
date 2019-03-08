@@ -36,15 +36,17 @@ def personal_info(web3, chain, users):
     return personal_info
 
 @pytest.yield_fixture()
-def white_list(web3, chain, users):
+def payment_gateway(web3, chain, users):
     web3.eth.defaultAccount = users['admin']
-    white_list, _ = chain.provider.get_or_deploy_contract('WhiteList')
-    return white_list
+    payment_gateway, _ = chain.provider.get_or_deploy_contract('PaymentGateway')
+    txn_hash = payment_gateway.transact().addAgent(0, users['agent'])
+    chain.wait.for_receipt(txn_hash)
+    return payment_gateway
 
 @pytest.yield_fixture()
-def bond_exchange(web3, chain, users, personal_info, white_list):
+def bond_exchange(web3, chain, users, personal_info, payment_gateway):
     web3.eth.defaultAccount = users['admin']
-    deploy_args = [white_list.address, personal_info.address]
+    deploy_args = [payment_gateway.address, personal_info.address]
     bond_exchange, _ = chain.provider.get_or_deploy_contract(
         'IbetStraightBondExchange',
         deploy_args = deploy_args
@@ -52,9 +54,9 @@ def bond_exchange(web3, chain, users, personal_info, white_list):
     return bond_exchange
 
 @pytest.yield_fixture()
-def membership_exchange(web3, chain, users):
+def membership_exchange(web3, chain, users, payment_gateway):
     web3.eth.defaultAccount = users['admin']
-    deploy_args = []
+    deploy_args = [payment_gateway.address]
     membership_exchange, _ = chain.provider.get_or_deploy_contract(
         'IbetMembershipExchange',
         deploy_args = deploy_args
@@ -62,9 +64,9 @@ def membership_exchange(web3, chain, users):
     return membership_exchange
 
 @pytest.yield_fixture()
-def coupon_exchange(web3, chain, users):
+def coupon_exchange(web3, chain, users, payment_gateway):
     web3.eth.defaultAccount = users['admin']
-    deploy_args = []
+    deploy_args = [payment_gateway.address]
     coupon_exchange, _ = chain.provider.get_or_deploy_contract(
         'IbetCouponExchange',
         deploy_args = deploy_args

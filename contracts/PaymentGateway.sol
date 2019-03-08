@@ -1,29 +1,34 @@
 pragma solidity ^0.4.24;
 
-contract WhiteList {
+import "./Ownable.sol";
 
-    // 利用規約
+contract PaymentGateway is Ownable {
+
+    // 収納代行業者（Agent）のリスト
+    address[30] public agents;
+
+    // 収納代行利用規約
     struct Terms {
         string text; // 規約本文
         bool status; // 登録済：True、未登録：False
     }
 
-    // 利用規約同意
-    struct Agreement {
+    // 収納代行利用規約の同意状況
+    struct TermsAgreement {
         address account_address; // アカウントアドレス
-        address agent_address; // アカウントアドレス（決済業者）
+        address agent_address; // 収納代行業者（Agent）のアドレス
         bool status; // 同意状況（同意済:true）
     }
 
-    // 支払用口座
+    // 振込用銀行口座
     struct PaymentAccount {
         address account_address; // アカウントアドレス
-        address agent_address; // アカウントアドレス（決済業者）
+        address agent_address; // 収納代行業者（Agent）のアドレス
         string encrypted_info; // 銀行口座情報（暗号化済）
-        uint8 approval_status; // 承認状態（NONE(0)/NG(1)/OK(2)/WARN(3)/BAN(4)）
+        uint8 approval_status; // 認可状況（NONE(0)/NG(1)/OK(2)/WARN(3)/BAN(4)）
     }
 
-    // 利用規約情報
+    // 収納代行利用規約情報
     // agent_address => 版番 => 規約本文
     mapping(address => mapping(uint16 => Terms)) public terms;
 
@@ -33,9 +38,9 @@ contract WhiteList {
 
     // 利用規約同意情報
     // account_address => agent_address => 版番 => Agreement
-    mapping(address => mapping(address => mapping(uint16 => Agreement))) public agreements;
+    mapping(address => mapping(address => mapping(uint16 => TermsAgreement))) public terms_agreements;
 
-    // 支払用口座情報
+    // 振込用銀行口座情報
     // account_address => agent_address => PaymentAccount
     mapping(address => mapping(address => PaymentAccount)) public payment_accounts;
 
@@ -61,8 +66,23 @@ contract WhiteList {
     constructor() public {
     }
 
-    // ファンクション：（決済業者）利用規約登録
-    function register_terms(string _text) public returns (bool) {
+    // ファンクション：（管理者）収納代行業者（Agent）の追加
+    function addAgent(uint _agent_id, address _agent_address)
+        public
+        onlyOwner()
+        returns (uint)
+    {
+        require(_agent_id >= 0 && _agent_id <= 29);
+        agents[_agent_id] = _agent_address;
+        return _agent_id;
+    }
+
+    function getAgents() public view returns (address[30] memory) {
+        return agents;
+    }
+
+    // ファンクション：（収納代行業者）利用規約の追加
+    function addTerms(string _text) public returns (bool) {
         uint16 version = latest_terms_version[msg.sender]++;
         Terms storage new_terms = terms[msg.sender][version];
         new_terms.text = _text;
@@ -71,7 +91,7 @@ contract WhiteList {
     }
 
     // ファンクション：利用規約同意
-    function agree_terms(address _agent_address)
+    function agreeTerms(address _agent_address)
         public
         returns (bool)
     {
@@ -81,8 +101,8 @@ contract WhiteList {
             terms[_agent_address][latest_terms_version[_agent_address] - 1];
         require(latest_terms.status == true);
 
-        Agreement storage agreement =
-            agreements[msg.sender][_agent_address][latest_terms_version[_agent_address] - 1];
+        TermsAgreement storage agreement =
+            terms_agreements[msg.sender][_agent_address][latest_terms_version[_agent_address] - 1];
         agreement.account_address = msg.sender;
         agreement.agent_address = _agent_address;
         agreement.status = true;
@@ -92,7 +112,7 @@ contract WhiteList {
         return true;
     }
 
-    // ファンクション：（投資家）支払情報を登録する
+    // ファンクション：支払情報を登録する
     //  ２回目以降は上書き登録を行う
     function register(address _agent_address, string _encrypted_info)
         public
@@ -114,8 +134,8 @@ contract WhiteList {
         payment_account.approval_status = 1;
 
         // 利用規約同意
-        Agreement storage agreement =
-            agreements[msg.sender][_agent_address][latest_terms_version[_agent_address] - 1];
+        TermsAgreement storage agreement =
+            terms_agreements[msg.sender][_agent_address][latest_terms_version[_agent_address] - 1];
         agreement.account_address = msg.sender;
         agreement.agent_address = _agent_address;
         agreement.status = true;
@@ -126,7 +146,7 @@ contract WhiteList {
         return true;
     }
 
-    // ファンクション：（決済業者）支払情報を承認する
+    // ファンクション：（収納代行業者）口座情報を承認する
     function approve(address _account_address) public returns (bool) {
         PaymentAccount storage payment_account = payment_accounts[_account_address][msg.sender];
         require(payment_account.account_address != 0);
@@ -138,7 +158,7 @@ contract WhiteList {
         return true;
     }
 
-    // ファンクション：（決済業者）支払情報を警告状態にする
+    // ファンクション：（収納代行業者）口座情報を警告状態にする
     function warn(address _account_address) public returns (bool) {
         PaymentAccount storage payment_account = payment_accounts[_account_address][msg.sender];
         require(payment_account.account_address != 0);
@@ -150,7 +170,7 @@ contract WhiteList {
         return true;
     }
 
-    // ファンクション：（決済業者）支払情報を非承認にする
+    // ファンクション：（収納代行業者）口座情報を非承認にする
     function unapprove(address _account_address) public returns (bool) {
         PaymentAccount storage payment_account = payment_accounts[_account_address][msg.sender];
         require(payment_account.account_address != 0);
@@ -162,7 +182,7 @@ contract WhiteList {
         return true;
     }
 
-    // ファンクション：（決済業者）支払情報をアカウント停止（BAN）する。
+    // ファンクション：（収納代行業者）口座情報をアカウント停止（BAN）する。
     function ban(address _account_address) public returns (bool) {
         PaymentAccount storage payment_account = payment_accounts[_account_address][msg.sender];
         require(payment_account.account_address != 0);
@@ -174,19 +194,27 @@ contract WhiteList {
         return true;
     }
 
-    // ファンクション：直近の利用規約に同意していることを確認する
-    function isAgreed(address _account_address, address _agent_address) public view returns (bool) {
+    // ファンクション：直近の利用規約の同意状況を返却する
+    function termAgreementStatus(address _account_address, address _agent_address)
+        public
+        view
+        returns (bool)
+    {
         if (latest_terms_version[_agent_address] == 0) {
             return false;
         } else {
-            Agreement storage agreement =
-                agreements[_account_address][_agent_address][latest_terms_version[_agent_address] - 1];
+            TermsAgreement storage agreement =
+                terms_agreements[_account_address][_agent_address][latest_terms_version[_agent_address] - 1];
             return agreement.status;
         }
     }
 
-    // ファンクション：登録状況を確認する
-    function isRegistered(address _account_address, address _agent_address) public view returns (bool) {
+    // ファンクション：アカウントの承認状況を返却する
+    function accountApproved(address _account_address, address _agent_address)
+        public
+        view
+        returns (bool)
+    {
         PaymentAccount storage payment_account = payment_accounts[_account_address][_agent_address];
         // アカウントが登録済み、かつ承認済みである場合、trueを返す
         if (payment_account.account_address != 0 && payment_account.approval_status == 2) {

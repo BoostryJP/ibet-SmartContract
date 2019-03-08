@@ -71,9 +71,12 @@ def settlement_ng(web3, chain, token, exchange, account,
 TEST1_デプロイ
 '''
 # 正常系1: Deploy　→　正常
-def test_deploy_normal_1(users, membership_exchange):
+def test_deploy_normal_1(users, membership_exchange, payment_gateway):
     owner = membership_exchange.call().owner()
+    paymentGatewayAddress = membership_exchange.call().paymentGatewayAddress()
+
     assert owner == users['admin']
+    assert paymentGatewayAddress == to_checksum_address(payment_gateway.address)
 
 '''
 TEST2_Make注文（createOrder）
@@ -425,6 +428,39 @@ def test_createorder_error_6_2(web3, chain, users, membership_exchange):
     assert membership_token.call().balanceOf(trader) == 0
     assert order_id_before == order_id_after
 
+# エラー系6-3
+#   買注文に対するチェック
+#   3) 無効な収納代行業者（Agent）の指定
+def test_createorder_error_6_3(web3, chain, users, membership_exchange):
+    issuer = users['issuer']
+    trader = users['trader']
+
+    # 新規発行
+    web3.eth.defaultAccount = issuer
+    deploy_args = init_args(membership_exchange.address)
+    membership_token = deploy(chain, deploy_args)
+
+    # Make注文（買）：エラー
+    order_id_before = membership_exchange.call().latestOrderId()
+    _amount = 0
+    _price = 123
+    _isBuy = True
+    invalid_agent = users['trader']
+    make_order(
+        web3, chain,
+        membership_token, membership_exchange,
+        trader, _amount, _price, _isBuy, invalid_agent
+    ) # エラーになる
+
+    order_id_after = membership_exchange.call().latestOrderId()
+    trader_commitment = membership_exchange.call().\
+        commitments(trader, membership_token.address)
+
+    assert trader_commitment == 0
+    assert membership_token.call().balanceOf(issuer) == deploy_args[2]
+    assert membership_token.call().balanceOf(trader) == 0
+    assert order_id_before == order_id_after
+
 # エラー系7-1
 #   売注文に対するチェック
 #   1) 注文数量が0の場合
@@ -532,6 +568,42 @@ def test_createorder_error_7_3(web3, chain, users, membership_exchange):
         web3, chain,
         membership_token, membership_exchange,
         issuer, _amount, _price, _isBuy, agent
+    ) # エラーになる
+
+    issuer_commitment = membership_exchange.call().\
+        commitments(issuer, membership_token.address)
+    assert issuer_commitment == 0
+    assert membership_token.call().balanceOf(issuer) == deploy_args[2]
+
+# エラー系7-4
+#   売注文に対するチェック
+#   4) 無効な収納代行業者（Agent）の指定
+def test_createorder_error_7_4(web3, chain, users, membership_exchange):
+    issuer = users['issuer']
+
+    # 新規発行
+    web3.eth.defaultAccount = issuer
+    deploy_args = init_args(membership_exchange.address)
+    membership_token = deploy(chain, deploy_args)
+
+    # Exchangeへのデポジット
+    _amount = 100
+    deposit(
+        web3, chain,
+        membership_token, membership_exchange,
+        issuer, _amount
+    )
+
+    # Make注文（売）：エラー
+    web3.eth.defaultAccount = issuer
+    _amount = 100
+    _price = 123
+    _isBuy = False
+    invalid_agent = users['trader']
+    make_order(
+        web3, chain,
+        membership_token, membership_exchange,
+        issuer, _amount, _price, _isBuy, invalid_agent
     ) # エラーになる
 
     issuer_commitment = membership_exchange.call().\

@@ -12,24 +12,24 @@ def personalinfo_register(web3, chain, personalinfo, trader, issuer):
     txn_hash = personalinfo.transact().register(issuer, message)
     chain.wait.for_receipt(txn_hash)
 
-# 決済業者利用規約登録
-def register_terms(web3, chain, whitelist, agent):
+# 収納代行業者の利用規約登録
+def add_terms(web3, chain, payment_gateway, agent):
     web3.eth.defaultAccount = agent
     text = 'some_text'
-    txn_hash = whitelist.transact().register_terms(text)
+    txn_hash = payment_gateway.transact().addTerms(text)
     chain.wait.for_receipt(txn_hash)
 
-# WhiteList登録
-def whitelist_register(web3, chain, whitelist, trader, agent):
+# PaymentGatewayアカウント登録
+def payment_gateway_register(web3, chain, payment_gateway, trader, agent):
     web3.eth.defaultAccount = trader
     message = 'some_message'
-    txn_hash = whitelist.transact().register(agent, message)
+    txn_hash = payment_gateway.transact().register(agent, message)
     chain.wait.for_receipt(txn_hash)
 
-# WhiteList認可
-def whitelist_approve(web3, chain, whitelist, trader, agent):
+# PaymentGatewayアカウント認可
+def payment_gateway_approve(web3, chain, payment_gateway, trader, agent):
     web3.eth.defaultAccount = agent
-    txn_hash = whitelist.transact().approve(trader)
+    txn_hash = payment_gateway.transact().approve(trader)
     chain.wait.for_receipt(txn_hash)
 
 # Bondトークンを取引所にデポジット
@@ -44,18 +44,18 @@ TEST1_デプロイ
 '''
 # ＜正常系1＞
 # Deploy　→　正常
-def test_deploy_normal_1(users, bond_exchange, personal_info, white_list):
+def test_deploy_normal_1(users, bond_exchange, personal_info, payment_gateway):
     owner = bond_exchange.call().owner()
     personalInfoAddress = bond_exchange.call().personalInfoAddress()
-    whiteListAddress = bond_exchange.call().whiteListAddress()
+    paymentGatewayAddress = bond_exchange.call().paymentGatewayAddress()
 
     assert owner == users['admin']
     assert personalInfoAddress == to_checksum_address(personal_info.address)
-    assert whiteListAddress == to_checksum_address(white_list.address)
+    assert paymentGatewayAddress == to_checksum_address(payment_gateway.address)
 
 # ＜エラー系1＞
-# 入力値の型誤り（WhiteListアドレス）
-def test_deploy_error_1(web3, users, chain, white_list, personal_info):
+# 入力値の型誤り（PaymentGatewayアドレス）
+def test_deploy_error_1(web3, users, chain, personal_info):
     exchange_owner = users['admin']
     web3.eth.defaultAccount = exchange_owner
 
@@ -72,11 +72,11 @@ def test_deploy_error_1(web3, users, chain, white_list, personal_info):
 
 # ＜エラー系2＞
 # 入力値の型誤り（PersonalInfoアドレス）
-def test_deploy_error_2(web3, users, chain, white_list, personal_info):
+def test_deploy_error_2(web3, users, chain, payment_gateway):
     exchange_owner = users['admin']
     web3.eth.defaultAccount = exchange_owner
     deploy_args = [
-        white_list.address,
+        payment_gateway.address,
         1234
     ]
     with pytest.raises(TypeError):
@@ -88,15 +88,14 @@ TEST2_Make注文（createOrder）
 '''
 # 正常系１
 # ＜発行体＞新規発行 -> ＜投資家＞新規注文（買）
-def test_createorder_normal_1(web3, chain, users,
-    bond_exchange, personal_info, white_list):
+def test_createorder_normal_1(web3, chain, users, bond_exchange, personal_info, payment_gateway):
     issuer = users['issuer']
     agent = users['agent']
 
     personalinfo_register(web3, chain, personal_info, issuer, issuer)
-    register_terms(web3, chain, white_list, agent)
-    whitelist_register(web3, chain, white_list, issuer, agent)
-    whitelist_approve(web3, chain, white_list, issuer, agent)
+    add_terms(web3, chain, payment_gateway, agent)
+    payment_gateway_register(web3, chain, payment_gateway, issuer, agent)
+    payment_gateway_approve(web3, chain, payment_gateway, issuer, agent)
 
     # 新規発行
     web3.eth.defaultAccount = issuer
@@ -124,14 +123,14 @@ def test_createorder_normal_1(web3, chain, users,
 # 正常系2
 # ＜発行体＞新規発行 -> ＜発行体＞新規注文（売）
 def test_createorder_normal_2(web3, chain, users,
-    bond_exchange, personal_info, white_list):
+    bond_exchange, personal_info, payment_gateway):
     issuer = users['issuer']
     agent = users['agent']
 
     personalinfo_register(web3, chain, personal_info, issuer, issuer)
-    register_terms(web3, chain, white_list, agent)
-    whitelist_register(web3, chain, white_list, issuer, agent)
-    whitelist_approve(web3, chain, white_list, issuer, agent)
+    add_terms(web3, chain, payment_gateway, agent)
+    payment_gateway_register(web3, chain, payment_gateway, issuer, agent)
+    payment_gateway_approve(web3, chain, payment_gateway, issuer, agent)
 
     # 新規発行
     web3.eth.defaultAccount = issuer
@@ -166,8 +165,7 @@ def test_createorder_normal_2(web3, chain, users,
 
 # エラー系1
 # 入力値の型誤り（_token）
-def test_createorder_error_1(web3, chain, users,
-    bond_exchange, personal_info, white_list):
+def test_createorder_error_1(web3, users, bond_exchange):
     issuer = users['issuer']
     agent = users['agent']
 
@@ -185,8 +183,7 @@ def test_createorder_error_1(web3, chain, users,
 
 # エラー系2
 # 入力値の型誤り（_amount）
-def test_createorder_error_2(web3, chain, users,
-    bond_exchange, personal_info, white_list):
+def test_createorder_error_2(web3, chain, users, bond_exchange):
     issuer = users['issuer']
     agent = users['agent']
 
@@ -218,8 +215,7 @@ def test_createorder_error_2(web3, chain, users,
 
 # エラー系3
 # 入力値の型誤り（_price）
-def test_createorder_error_3(web3, chain, users,
-    bond_exchange, personal_info, white_list):
+def test_createorder_error_3(web3, chain, users, bond_exchange):
     issuer = users['issuer']
     agent = users['agent']
 
@@ -251,8 +247,7 @@ def test_createorder_error_3(web3, chain, users,
 
 # エラー系4
 # 入力値の型誤り（_isBuy）
-def test_createorder_error_4(web3, chain, users,
-    bond_exchange, personal_info, white_list):
+def test_createorder_error_4(web3, chain, users, bond_exchange):
     issuer = users['issuer']
     agent = users['agent']
 
@@ -276,8 +271,7 @@ def test_createorder_error_4(web3, chain, users,
 
 # エラー系5
 # 入力値の型誤り（_agent）
-def test_createorder_error_5(web3, chain, users,
-    bond_exchange, personal_info, white_list):
+def test_createorder_error_5(web3, chain, users, bond_exchange):
     issuer = users['issuer']
 
     # 新規発行
@@ -302,14 +296,14 @@ def test_createorder_error_5(web3, chain, users,
 # エラー系6-1
 # 買注文数量が0の場合
 def test_createorder_error_6_1(web3, chain, users,
-    bond_exchange, personal_info, white_list):
+    bond_exchange, personal_info, payment_gateway):
     issuer = users['issuer']
     agent = users['agent']
 
     personalinfo_register(web3, chain, personal_info, issuer, issuer)
-    register_terms(web3, chain, white_list, agent)
-    whitelist_register(web3, chain, white_list, issuer, agent)
-    whitelist_approve(web3, chain, white_list, issuer, agent)
+    add_terms(web3, chain, payment_gateway, agent)
+    payment_gateway_register(web3, chain, payment_gateway, issuer, agent)
+    payment_gateway_approve(web3, chain, payment_gateway, issuer, agent)
 
     # 新規発行
     web3.eth.defaultAccount = issuer
@@ -334,14 +328,14 @@ def test_createorder_error_6_1(web3, chain, users,
 # エラー系6-2
 # 売注文数量が0の場合
 def test_createorder_error_6_2(web3, chain, users,
-    bond_exchange, personal_info, white_list):
+    bond_exchange, personal_info, payment_gateway):
     issuer = users['issuer']
     agent = users['agent']
 
     personalinfo_register(web3, chain, personal_info, issuer, issuer)
-    register_terms(web3, chain, white_list, agent)
-    whitelist_register(web3, chain, white_list, issuer, agent)
-    whitelist_approve(web3, chain, white_list, issuer, agent)
+    add_terms(web3, chain, payment_gateway, agent)
+    payment_gateway_register(web3, chain, payment_gateway, issuer, agent)
+    payment_gateway_approve(web3, chain, payment_gateway, issuer, agent)
 
     # 新規発行
     web3.eth.defaultAccount = issuer
@@ -372,13 +366,13 @@ def test_createorder_error_6_2(web3, chain, users,
 # エラー系7-1
 # 未認可のアカウントアドレスからの注文（買）
 def test_createorder_error_7_1(web3, chain, users,
-    bond_exchange, personal_info, white_list):
+    bond_exchange, personal_info, payment_gateway):
     issuer = users['issuer']
     agent = users['agent']
 
     personalinfo_register(web3, chain, personal_info, issuer, issuer)
-    register_terms(web3, chain, white_list, agent)
-    whitelist_register(web3, chain, white_list, issuer, agent) # 未認可状態
+    add_terms(web3, chain, payment_gateway, agent)
+    payment_gateway_register(web3, chain, payment_gateway, issuer, agent) # 未認可状態
 
     # 新規発行
     web3.eth.defaultAccount = issuer
@@ -403,7 +397,7 @@ def test_createorder_error_7_1(web3, chain, users,
 # エラー系7-2
 # 未認可のアカウントアドレスからの注文（買）
 def test_createorder_error_7_2(web3, chain, users,
-    bond_exchange, personal_info, white_list):
+    bond_exchange, personal_info):
     issuer = users['issuer']
     agent = users['agent']
 
@@ -438,13 +432,13 @@ def test_createorder_error_7_2(web3, chain, users,
 # エラー系8-1
 # 名簿用個人情報が登録されていない場合（買注文）
 def test_createorder_error_8_1(web3, chain, users,
-    bond_exchange, personal_info, white_list):
+    bond_exchange, payment_gateway):
     issuer = users['issuer']
     agent = users['agent']
 
-    register_terms(web3, chain, white_list, agent)
-    whitelist_register(web3, chain, white_list, issuer, agent)
-    whitelist_approve(web3, chain, white_list, issuer, agent)
+    add_terms(web3, chain, payment_gateway, agent)
+    payment_gateway_register(web3, chain, payment_gateway, issuer, agent)
+    payment_gateway_approve(web3, chain, payment_gateway, issuer, agent)
 
     # 新規発行
     web3.eth.defaultAccount = issuer
@@ -469,13 +463,13 @@ def test_createorder_error_8_1(web3, chain, users,
 # エラー系8-2
 # 名簿用個人情報が登録されていない場合（売注文）
 def test_createorder_error_8_2(web3, chain, users,
-    bond_exchange, personal_info, white_list):
+    bond_exchange, payment_gateway):
     issuer = users['issuer']
     agent = users['agent']
 
-    register_terms(web3, chain, white_list, agent)
-    whitelist_register(web3, chain, white_list, issuer, agent)
-    whitelist_approve(web3, chain, white_list, issuer, agent)
+    add_terms(web3, chain, payment_gateway, agent)
+    payment_gateway_register(web3, chain, payment_gateway, issuer, agent)
+    payment_gateway_approve(web3, chain, payment_gateway, issuer, agent)
 
     # 新規発行
     web3.eth.defaultAccount = issuer
@@ -507,14 +501,14 @@ def test_createorder_error_8_2(web3, chain, users,
 # 償還済みフラグがTrueの場合
 # ＜発行体＞新規発行 -> ＜発行体＞償還設定 -> ＜発行体＞新規注文（買）
 def test_createorder_error_9_1(web3, chain, users,
-    bond_exchange, personal_info, white_list):
+    bond_exchange, personal_info, payment_gateway):
     issuer = users['issuer']
     agent = users['agent']
 
     personalinfo_register(web3, chain, personal_info, issuer, issuer)
-    register_terms(web3, chain, white_list, agent)
-    whitelist_register(web3, chain, white_list, issuer, agent)
-    whitelist_approve(web3, chain, white_list, issuer, agent)
+    add_terms(web3, chain, payment_gateway, agent)
+    payment_gateway_register(web3, chain, payment_gateway, issuer, agent)
+    payment_gateway_approve(web3, chain, payment_gateway, issuer, agent)
 
     # 新規発行
     web3.eth.defaultAccount = issuer
@@ -545,14 +539,14 @@ def test_createorder_error_9_1(web3, chain, users,
 # 償還済みフラグがTrueの場合
 # ＜発行体＞新規発行 -> ＜発行体＞償還設定 -> ＜発行体＞新規注文（売）
 def test_createorder_error_9_2(web3, chain, users,
-    bond_exchange, personal_info, white_list):
+    bond_exchange, personal_info, payment_gateway):
     issuer = users['issuer']
     agent = users['agent']
 
     personalinfo_register(web3, chain, personal_info, issuer, issuer)
-    register_terms(web3, chain, white_list, agent)
-    whitelist_register(web3, chain, white_list, issuer, agent)
-    whitelist_approve(web3, chain, white_list, issuer, agent)
+    add_terms(web3, chain, payment_gateway, agent)
+    payment_gateway_register(web3, chain, payment_gateway, issuer, agent)
+    payment_gateway_approve(web3, chain, payment_gateway, issuer, agent)
 
     # 新規発行
     web3.eth.defaultAccount = issuer
@@ -587,14 +581,14 @@ def test_createorder_error_9_2(web3, chain, users,
 # エラー系10
 # 残高不足
 def test_createorder_error_10(web3, chain, users,
-    bond_exchange, personal_info, white_list):
+    bond_exchange, personal_info, payment_gateway):
     issuer = users['issuer']
     agent = users['agent']
 
     personalinfo_register(web3, chain, personal_info, issuer, issuer)
-    register_terms(web3, chain, white_list, agent)
-    whitelist_register(web3, chain, white_list, issuer, agent)
-    whitelist_approve(web3, chain, white_list, issuer, agent)
+    add_terms(web3, chain, payment_gateway, agent)
+    payment_gateway_register(web3, chain, payment_gateway, issuer, agent)
+    payment_gateway_approve(web3, chain, payment_gateway, issuer, agent)
 
     # 新規発行
     web3.eth.defaultAccount = issuer
@@ -621,6 +615,76 @@ def test_createorder_error_10(web3, chain, users,
     assert balance == deploy_args[2]
     assert commitment == 0
 
+# エラー系11-1
+# 無効な収納代行業者（Agent）の指定（買）
+def test_createorder_error_11_1(web3, chain, users,
+    bond_exchange, personal_info, payment_gateway):
+    issuer = users['issuer']
+    agent = users['agent']
+
+    personalinfo_register(web3, chain, personal_info, issuer, issuer)
+    add_terms(web3, chain, payment_gateway, agent)
+    payment_gateway_register(web3, chain, payment_gateway, issuer, agent)
+    payment_gateway_approve(web3, chain, payment_gateway, issuer, agent)
+
+    # 新規発行
+    web3.eth.defaultAccount = issuer
+    bond_token, deploy_args = utils.\
+        issue_bond_token(web3, chain, users, bond_exchange.address)
+
+    # 新規注文（買）
+    web3.eth.defaultAccount = issuer
+    _amount = 100
+    _price = 123
+    _isBuy = True
+    invalid_agent = users['trader']
+    txn_hash = bond_exchange.transact().createOrder(
+        bond_token.address, _amount, _price, _isBuy, invalid_agent) # エラーになる
+    chain.wait.for_receipt(txn_hash)
+
+    commitment = bond_exchange.call().commitments(issuer, bond_token.address)
+    balance = bond_token.call().balanceOf(issuer)
+
+    assert balance == deploy_args[2]
+    assert commitment == 0
+
+# エラー系11-2
+# 無効な収納代行業者（Agent）の指定（売）
+def test_createorder_error_11_2(web3, chain, users,
+    bond_exchange, payment_gateway):
+    issuer = users['issuer']
+    agent = users['agent']
+
+    add_terms(web3, chain, payment_gateway, agent)
+    payment_gateway_register(web3, chain, payment_gateway, issuer, agent)
+    payment_gateway_approve(web3, chain, payment_gateway, issuer, agent)
+
+    # 新規発行
+    web3.eth.defaultAccount = issuer
+    bond_token, deploy_args = utils.\
+        issue_bond_token(web3, chain, users, bond_exchange.address)
+
+    # Exchangeへのデポジット
+    web3.eth.defaultAccount = issuer
+    _amount = 100
+    txn_hash = bond_token.transact().transfer(bond_exchange.address, _amount)
+    chain.wait.for_receipt(txn_hash)
+
+    # 新規注文（売）
+    web3.eth.defaultAccount = issuer
+    _amount = 100
+    _price = 123
+    _isBuy = False
+    txn_hash = bond_exchange.transact().createOrder(
+        bond_token.address, _amount, _price, _isBuy, agent) # エラーになる
+    chain.wait.for_receipt(txn_hash)
+
+    commitment = bond_exchange.call().commitments(issuer, bond_token.address)
+    balance = bond_token.call().balanceOf(issuer)
+
+    assert balance == deploy_args[2]
+    assert commitment == 0
+
 '''
 TEST3_注文キャンセル（cancelOrder）
 '''
@@ -628,14 +692,14 @@ TEST3_注文キャンセル（cancelOrder）
 # ＜発行体＞新規発行 -> ＜投資家（発行体）＞新規注文（買）
 #  -> ＜投資家（発行体）＞注文キャンセル
 def test_cancelOrder_normal_1(web3, chain, users,
-    bond_exchange, personal_info, white_list):
+    bond_exchange, personal_info, payment_gateway):
     issuer = users['issuer']
     agent = users['agent']
 
     personalinfo_register(web3, chain, personal_info, issuer, issuer)
-    register_terms(web3, chain, white_list, agent)
-    whitelist_register(web3, chain, white_list, issuer, agent)
-    whitelist_approve(web3, chain, white_list, issuer, agent)
+    add_terms(web3, chain, payment_gateway, agent)
+    payment_gateway_register(web3, chain, payment_gateway, issuer, agent)
+    payment_gateway_approve(web3, chain, payment_gateway, issuer, agent)
 
     # 新規発行
     web3.eth.defaultAccount = issuer
@@ -669,14 +733,14 @@ def test_cancelOrder_normal_1(web3, chain, users,
 # ＜発行体＞新規発行 -> ＜投資家（発行体）＞新規注文（売）
 #  -> ＜投資家（発行体）＞注文キャンセル
 def test_cancelOrder_normal_2(web3, chain, users,
-    bond_exchange, personal_info, white_list):
+    bond_exchange, personal_info, payment_gateway):
     issuer = users['issuer']
     agent = users['agent']
 
     personalinfo_register(web3, chain, personal_info, issuer, issuer)
-    register_terms(web3, chain, white_list, agent)
-    whitelist_register(web3, chain, white_list, issuer, agent)
-    whitelist_approve(web3, chain, white_list, issuer, agent)
+    add_terms(web3, chain, payment_gateway, agent)
+    payment_gateway_register(web3, chain, payment_gateway, issuer, agent)
+    payment_gateway_approve(web3, chain, payment_gateway, issuer, agent)
 
     # 新規発行
     web3.eth.defaultAccount = issuer
@@ -738,14 +802,14 @@ def test_cancelOrder_error_1(web3, users, bond_exchange):
 # エラー系2
 # 指定した注文IDが直近の注文IDを超えている場合
 def test_cancelOrder_error_2(web3, chain, users,
-    bond_exchange, personal_info, white_list):
+    bond_exchange, personal_info, payment_gateway):
     issuer = users['issuer']
     agent = users['agent']
 
     personalinfo_register(web3, chain, personal_info, issuer, issuer)
-    register_terms(web3, chain, white_list, agent)
-    whitelist_register(web3, chain, white_list, issuer, agent)
-    whitelist_approve(web3, chain, white_list, issuer, agent)
+    add_terms(web3, chain, payment_gateway, agent)
+    payment_gateway_register(web3, chain, payment_gateway, issuer, agent)
+    payment_gateway_approve(web3, chain, payment_gateway, issuer, agent)
 
     # 新規発行
     web3.eth.defaultAccount = issuer
@@ -778,14 +842,14 @@ def test_cancelOrder_error_2(web3, chain, users,
 # エラー系3-1
 # 注文がキャンセル済みの場合（買注文）
 def test_cancelOrder_error_3_1(web3, chain, users,
-    bond_exchange, personal_info, white_list):
+    bond_exchange, personal_info, payment_gateway):
     issuer = users['issuer']
     agent = users['agent']
 
     personalinfo_register(web3, chain, personal_info, issuer, issuer)
-    register_terms(web3, chain, white_list, agent)
-    whitelist_register(web3, chain, white_list, issuer, agent)
-    whitelist_approve(web3, chain, white_list, issuer, agent)
+    add_terms(web3, chain, payment_gateway, agent)
+    payment_gateway_register(web3, chain, payment_gateway, issuer, agent)
+    payment_gateway_approve(web3, chain, payment_gateway, issuer, agent)
 
     # 新規発行
     web3.eth.defaultAccount = issuer
@@ -823,14 +887,14 @@ def test_cancelOrder_error_3_1(web3, chain, users,
 # エラー系3-2
 # 注文がキャンセル済みの場合（売注文）
 def test_cancelOrder_error_3_2(web3, chain, users,
-    bond_exchange, personal_info, white_list):
+    bond_exchange, personal_info, payment_gateway):
     issuer = users['issuer']
     agent = users['agent']
 
     personalinfo_register(web3, chain, personal_info, issuer, issuer)
-    register_terms(web3, chain, white_list, agent)
-    whitelist_register(web3, chain, white_list, issuer, agent)
-    whitelist_approve(web3, chain, white_list, issuer, agent)
+    add_terms(web3, chain, payment_gateway, agent)
+    payment_gateway_register(web3, chain, payment_gateway, issuer, agent)
+    payment_gateway_approve(web3, chain, payment_gateway, issuer, agent)
 
     # 新規発行
     web3.eth.defaultAccount = issuer
@@ -873,15 +937,15 @@ def test_cancelOrder_error_3_2(web3, chain, users,
 # エラー系4-1
 # 元注文の発注者と、注文キャンセルの実施者が異なる場合（買注文）
 def test_cancelOrder_error_4_1(web3, chain, users,
-    bond_exchange, personal_info, white_list):
+    bond_exchange, personal_info, payment_gateway):
     issuer = users['issuer']
     other = users['trader']
     agent = users['agent']
 
     personalinfo_register(web3, chain, personal_info, issuer, issuer)
-    register_terms(web3, chain, white_list, agent)
-    whitelist_register(web3, chain, white_list, issuer, agent)
-    whitelist_approve(web3, chain, white_list, issuer, agent)
+    add_terms(web3, chain, payment_gateway, agent)
+    payment_gateway_register(web3, chain, payment_gateway, issuer, agent)
+    payment_gateway_approve(web3, chain, payment_gateway, issuer, agent)
 
     # 新規発行
     web3.eth.defaultAccount = issuer
@@ -914,15 +978,15 @@ def test_cancelOrder_error_4_1(web3, chain, users,
 # エラー系4-2
 # 元注文の発注者と、注文キャンセルの実施者が異なる場合（売注文）
 def test_cancelOrder_error_4_2(web3, chain, users,
-    bond_exchange, personal_info, white_list):
+    bond_exchange, personal_info, payment_gateway):
     issuer = users['issuer']
     other = users['trader']
     agent = users['agent']
 
     personalinfo_register(web3, chain, personal_info, issuer, issuer)
-    register_terms(web3, chain, white_list, agent)
-    whitelist_register(web3, chain, white_list, issuer, agent)
-    whitelist_approve(web3, chain, white_list, issuer, agent)
+    add_terms(web3, chain, payment_gateway, agent)
+    payment_gateway_register(web3, chain, payment_gateway, issuer, agent)
+    payment_gateway_approve(web3, chain, payment_gateway, issuer, agent)
 
     # 新規発行
     web3.eth.defaultAccount = issuer
@@ -966,20 +1030,20 @@ TEST4_Take注文（executeOrder）
 # 正常系1
 # ＜発行体＞新規発行 -> ＜発行体＞新規注文（売） -> ＜投資家＞Take注文（買）
 def test_executeOrder_normal_1(web3, chain, users,
-    bond_exchange, personal_info, white_list):
+    bond_exchange, personal_info, payment_gateway):
     _issuer = users['issuer']
     _trader = users['trader']
     _agent = users['agent']
 
-    register_terms(web3, chain, white_list, _agent)
+    add_terms(web3, chain, payment_gateway, _agent)
 
     personalinfo_register(web3, chain, personal_info, _issuer, _issuer)
-    whitelist_register(web3, chain, white_list, _issuer, _agent)
-    whitelist_approve(web3, chain, white_list, _issuer, _agent)
+    payment_gateway_register(web3, chain, payment_gateway, _issuer, _agent)
+    payment_gateway_approve(web3, chain, payment_gateway, _issuer, _agent)
 
     personalinfo_register(web3, chain, personal_info, _trader, _issuer)
-    whitelist_register(web3, chain, white_list, _trader, _agent)
-    whitelist_approve(web3, chain, white_list, _trader, _agent)
+    payment_gateway_register(web3, chain, payment_gateway, _trader, _agent)
+    payment_gateway_approve(web3, chain, payment_gateway, _trader, _agent)
 
     # 新規発行
     web3.eth.defaultAccount = _issuer
@@ -1029,20 +1093,20 @@ def test_executeOrder_normal_1(web3, chain, users,
 # 正常系2
 # ＜発行体＞新規発行 -> ＜投資家＞新規注文（買） -> ＜発行体＞Take注文（売）
 def test_executeOrder_normal_2(web3, chain, users,
-    bond_exchange, personal_info, white_list):
+    bond_exchange, personal_info, payment_gateway):
     _issuer = users['issuer']
     _trader = users['trader']
     _agent = users['agent']
 
-    register_terms(web3, chain, white_list, _agent)
+    add_terms(web3, chain, payment_gateway, _agent)
 
     personalinfo_register(web3, chain, personal_info, _issuer, _issuer)
-    whitelist_register(web3, chain, white_list, _issuer, _agent)
-    whitelist_approve(web3, chain, white_list, _issuer, _agent)
+    payment_gateway_register(web3, chain, payment_gateway, _issuer, _agent)
+    payment_gateway_approve(web3, chain, payment_gateway, _issuer, _agent)
 
     personalinfo_register(web3, chain, personal_info, _trader, _issuer)
-    whitelist_register(web3, chain, white_list, _trader, _agent)
-    whitelist_approve(web3, chain, white_list, _trader, _agent)
+    payment_gateway_register(web3, chain, payment_gateway, _trader, _agent)
+    payment_gateway_approve(web3, chain, payment_gateway, _trader, _agent)
 
     # 新規発行
     web3.eth.defaultAccount = _issuer
@@ -1159,20 +1223,20 @@ def test_executeOrder_error_3(web3, users, bond_exchange):
 # エラー系4
 # 指定した注文IDが直近の注文IDを超えている場合
 def test_executeOrder_error_4(web3, chain, users,
-    bond_exchange, personal_info, white_list):
+    bond_exchange, personal_info, payment_gateway):
     _issuer = users['issuer']
     _trader = users['trader']
     _agent = users['agent']
 
-    register_terms(web3, chain, white_list, _agent)
+    add_terms(web3, chain, payment_gateway, _agent)
 
     personalinfo_register(web3, chain, personal_info, _issuer, _issuer)
-    whitelist_register(web3, chain, white_list, _issuer, _agent)
-    whitelist_approve(web3, chain, white_list, _issuer, _agent)
+    payment_gateway_register(web3, chain, payment_gateway, _issuer, _agent)
+    payment_gateway_approve(web3, chain, payment_gateway, _issuer, _agent)
 
     personalinfo_register(web3, chain, personal_info, _trader, _issuer)
-    whitelist_register(web3, chain, white_list, _trader, _agent)
-    whitelist_approve(web3, chain, white_list, _trader, _agent)
+    payment_gateway_register(web3, chain, payment_gateway, _trader, _agent)
+    payment_gateway_approve(web3, chain, payment_gateway, _trader, _agent)
 
     # 新規発行
     web3.eth.defaultAccount = _issuer
@@ -1215,20 +1279,20 @@ def test_executeOrder_error_4(web3, chain, users,
 # 注文数量が0の場合
 # Take買注文
 def test_executeOrder_error_5_1(web3, chain, users,
-    bond_exchange, personal_info, white_list):
+    bond_exchange, personal_info, payment_gateway):
     _issuer = users['issuer']
     _trader = users['trader']
     _agent = users['agent']
 
-    register_terms(web3, chain, white_list, _agent)
+    add_terms(web3, chain, payment_gateway, _agent)
 
     personalinfo_register(web3, chain, personal_info, _issuer, _issuer)
-    whitelist_register(web3, chain, white_list, _issuer, _agent)
-    whitelist_approve(web3, chain, white_list, _issuer, _agent)
+    payment_gateway_register(web3, chain, payment_gateway, _issuer, _agent)
+    payment_gateway_approve(web3, chain, payment_gateway, _issuer, _agent)
 
     personalinfo_register(web3, chain, personal_info, _trader, _issuer)
-    whitelist_register(web3, chain, white_list, _trader, _agent)
-    whitelist_approve(web3, chain, white_list, _trader, _agent)
+    payment_gateway_register(web3, chain, payment_gateway, _trader, _agent)
+    payment_gateway_approve(web3, chain, payment_gateway, _trader, _agent)
 
     # 新規発行
     web3.eth.defaultAccount = _issuer
@@ -1273,20 +1337,20 @@ def test_executeOrder_error_5_1(web3, chain, users,
 # 注文数量が0の場合
 # Take売注文
 def test_executeOrder_error_5_2(web3, chain, users,
-    bond_exchange, personal_info, white_list):
+    bond_exchange, personal_info, payment_gateway):
     _issuer = users['issuer']
     _trader = users['trader']
     _agent = users['agent']
 
-    register_terms(web3, chain, white_list, _agent)
+    add_terms(web3, chain, payment_gateway, _agent)
 
     personalinfo_register(web3, chain, personal_info, _issuer, _issuer)
-    whitelist_register(web3, chain, white_list, _issuer, _agent)
-    whitelist_approve(web3, chain, white_list, _issuer, _agent)
+    payment_gateway_register(web3, chain, payment_gateway, _issuer, _agent)
+    payment_gateway_approve(web3, chain, payment_gateway, _issuer, _agent)
 
     personalinfo_register(web3, chain, personal_info, _trader, _issuer)
-    whitelist_register(web3, chain, white_list, _trader, _agent)
-    whitelist_approve(web3, chain, white_list, _trader, _agent)
+    payment_gateway_register(web3, chain, payment_gateway, _trader, _agent)
+    payment_gateway_approve(web3, chain, payment_gateway, _trader, _agent)
 
     # 新規発行
     web3.eth.defaultAccount = _issuer
@@ -1332,20 +1396,20 @@ def test_executeOrder_error_5_2(web3, chain, users,
 # 元注文と、発注する注文が同一の売買区分の場合
 # Take買注文
 def test_executeOrder_error_6_1(web3, chain, users,
-    bond_exchange, personal_info, white_list):
+    bond_exchange, personal_info, payment_gateway):
     _issuer = users['issuer']
     _trader = users['trader']
     _agent = users['agent']
 
-    register_terms(web3, chain, white_list, _agent)
+    add_terms(web3, chain, payment_gateway, _agent)
 
     personalinfo_register(web3, chain, personal_info, _issuer, _issuer)
-    whitelist_register(web3, chain, white_list, _issuer, _agent)
-    whitelist_approve(web3, chain, white_list, _issuer, _agent)
+    payment_gateway_register(web3, chain, payment_gateway, _issuer, _agent)
+    payment_gateway_approve(web3, chain, payment_gateway, _issuer, _agent)
 
     personalinfo_register(web3, chain, personal_info, _trader, _issuer)
-    whitelist_register(web3, chain, white_list, _trader, _agent)
-    whitelist_approve(web3, chain, white_list, _trader, _agent)
+    payment_gateway_register(web3, chain, payment_gateway, _trader, _agent)
+    payment_gateway_approve(web3, chain, payment_gateway, _trader, _agent)
 
     # 新規発行
     web3.eth.defaultAccount = _issuer
@@ -1392,20 +1456,20 @@ def test_executeOrder_error_6_1(web3, chain, users,
 # 元注文と、発注する注文が同一の売買区分の場合
 # Take売注文
 def test_executeOrder_error_6_2(web3, chain, users,
-    bond_exchange, personal_info, white_list):
+    bond_exchange, personal_info, payment_gateway):
     _issuer = users['issuer']
     _trader = users['trader']
     _agent = users['agent']
 
-    register_terms(web3, chain, white_list, _agent)
+    add_terms(web3, chain, payment_gateway, _agent)
 
     personalinfo_register(web3, chain, personal_info, _issuer, _issuer)
-    whitelist_register(web3, chain, white_list, _issuer, _agent)
-    whitelist_approve(web3, chain, white_list, _issuer, _agent)
+    payment_gateway_register(web3, chain, payment_gateway, _issuer, _agent)
+    payment_gateway_approve(web3, chain, payment_gateway, _issuer, _agent)
 
     personalinfo_register(web3, chain, personal_info, _trader, _issuer)
-    whitelist_register(web3, chain, white_list, _trader, _agent)
-    whitelist_approve(web3, chain, white_list, _trader, _agent)
+    payment_gateway_register(web3, chain, payment_gateway, _trader, _agent)
+    payment_gateway_approve(web3, chain, payment_gateway, _trader, _agent)
 
     # 新規発行
     web3.eth.defaultAccount = _issuer
@@ -1447,15 +1511,15 @@ def test_executeOrder_error_6_2(web3, chain, users,
 # 元注文の発注者と同一のアドレスからの発注の場合
 # Take買注文
 def test_executeOrder_error_7_1(web3, chain, users,
-    bond_exchange, personal_info, white_list):
+    bond_exchange, personal_info, payment_gateway):
     _issuer = users['issuer']
     _agent = users['agent']
 
-    register_terms(web3, chain, white_list, _agent)
+    add_terms(web3, chain, payment_gateway, _agent)
 
     personalinfo_register(web3, chain, personal_info, _issuer, _issuer)
-    whitelist_register(web3, chain, white_list, _issuer, _agent)
-    whitelist_approve(web3, chain, white_list, _issuer, _agent)
+    payment_gateway_register(web3, chain, payment_gateway, _issuer, _agent)
+    payment_gateway_approve(web3, chain, payment_gateway, _issuer, _agent)
 
     # 新規発行
     web3.eth.defaultAccount = _issuer
@@ -1500,20 +1564,20 @@ def test_executeOrder_error_7_1(web3, chain, users,
 # 元注文の発注者と同一のアドレスからの発注の場合
 # Take売注文
 def test_executeOrder_error_7_2(web3, chain, users,
-    bond_exchange, personal_info, white_list):
+    bond_exchange, personal_info, payment_gateway):
     _issuer = users['issuer']
     _trader = users['trader']
     _agent = users['agent']
 
-    register_terms(web3, chain, white_list, _agent)
+    add_terms(web3, chain, payment_gateway, _agent)
 
     personalinfo_register(web3, chain, personal_info, _issuer, _issuer)
-    whitelist_register(web3, chain, white_list, _issuer, _agent)
-    whitelist_approve(web3, chain, white_list, _issuer, _agent)
+    payment_gateway_register(web3, chain, payment_gateway, _issuer, _agent)
+    payment_gateway_approve(web3, chain, payment_gateway, _issuer, _agent)
 
     personalinfo_register(web3, chain, personal_info, _trader, _issuer)
-    whitelist_register(web3, chain, white_list, _trader, _agent)
-    whitelist_approve(web3, chain, white_list, _trader, _agent)
+    payment_gateway_register(web3, chain, payment_gateway, _trader, _agent)
+    payment_gateway_approve(web3, chain, payment_gateway, _trader, _agent)
 
     # 新規発行
     web3.eth.defaultAccount = _issuer
@@ -1557,20 +1621,20 @@ def test_executeOrder_error_7_2(web3, chain, users,
 # 元注文がキャンセル済の場合
 # Take買注文
 def test_executeOrder_error_8_1(web3, chain, users,
-    bond_exchange, personal_info, white_list):
+    bond_exchange, personal_info, payment_gateway):
     _issuer = users['issuer']
     _trader = users['trader']
     _agent = users['agent']
 
-    register_terms(web3, chain, white_list, _agent)
+    add_terms(web3, chain, payment_gateway, _agent)
 
     personalinfo_register(web3, chain, personal_info, _issuer, _issuer)
-    whitelist_register(web3, chain, white_list, _issuer, _agent)
-    whitelist_approve(web3, chain, white_list, _issuer, _agent)
+    payment_gateway_register(web3, chain, payment_gateway, _issuer, _agent)
+    payment_gateway_approve(web3, chain, payment_gateway, _issuer, _agent)
 
     personalinfo_register(web3, chain, personal_info, _trader, _issuer)
-    whitelist_register(web3, chain, white_list, _trader, _agent)
-    whitelist_approve(web3, chain, white_list, _trader, _agent)
+    payment_gateway_register(web3, chain, payment_gateway, _trader, _agent)
+    payment_gateway_approve(web3, chain, payment_gateway, _trader, _agent)
 
     # 新規発行
     web3.eth.defaultAccount = _issuer
@@ -1622,20 +1686,20 @@ def test_executeOrder_error_8_1(web3, chain, users,
 # 元注文の発注者と同一のアドレスからの発注の場合
 # Take売注文
 def test_executeOrder_error_8_2(web3, chain, users,
-    bond_exchange, personal_info, white_list):
+    bond_exchange, personal_info, payment_gateway):
     _issuer = users['issuer']
     _trader = users['trader']
     _agent = users['agent']
 
-    register_terms(web3, chain, white_list, _agent)
+    add_terms(web3, chain, payment_gateway, _agent)
 
     personalinfo_register(web3, chain, personal_info, _issuer, _issuer)
-    whitelist_register(web3, chain, white_list, _issuer, _agent)
-    whitelist_approve(web3, chain, white_list, _issuer, _agent)
+    payment_gateway_register(web3, chain, payment_gateway, _issuer, _agent)
+    payment_gateway_approve(web3, chain, payment_gateway, _issuer, _agent)
 
     personalinfo_register(web3, chain, personal_info, _trader, _issuer)
-    whitelist_register(web3, chain, white_list, _trader, _agent)
-    whitelist_approve(web3, chain, white_list, _trader, _agent)
+    payment_gateway_register(web3, chain, payment_gateway, _trader, _agent)
+    payment_gateway_approve(web3, chain, payment_gateway, _trader, _agent)
 
     # 新規発行
     web3.eth.defaultAccount = _issuer
@@ -1687,19 +1751,19 @@ def test_executeOrder_error_8_2(web3, chain, users,
 # 認可されたアドレスではない場合
 # Take買注文
 def test_executeOrder_error_9_1(web3, chain, users,
-    bond_exchange, personal_info, white_list):
+    bond_exchange, personal_info, payment_gateway):
     _issuer = users['issuer']
     _trader = users['trader']
     _agent = users['agent']
 
-    register_terms(web3, chain, white_list, _agent)
+    add_terms(web3, chain, payment_gateway, _agent)
 
     personalinfo_register(web3, chain, personal_info, _issuer, _issuer)
-    whitelist_register(web3, chain, white_list, _issuer, _agent)
-    whitelist_approve(web3, chain, white_list, _issuer, _agent)
+    payment_gateway_register(web3, chain, payment_gateway, _issuer, _agent)
+    payment_gateway_approve(web3, chain, payment_gateway, _issuer, _agent)
 
     personalinfo_register(web3, chain, personal_info, _trader, _issuer)
-    whitelist_register(web3, chain, white_list, _trader, _agent) # 未認可状態
+    payment_gateway_register(web3, chain, payment_gateway, _trader, _agent) # 未認可状態
 
     # 新規発行
     web3.eth.defaultAccount = _issuer
@@ -1746,19 +1810,19 @@ def test_executeOrder_error_9_1(web3, chain, users,
 # 認可されたアドレスではない場合
 # Take売注文
 def test_executeOrder_error_9_2(web3, chain, users,
-    bond_exchange, personal_info, white_list):
+    bond_exchange, personal_info, payment_gateway):
     _issuer = users['issuer']
     _trader = users['trader']
     _agent = users['agent']
 
-    register_terms(web3, chain, white_list, _agent)
+    add_terms(web3, chain, payment_gateway, _agent)
 
     personalinfo_register(web3, chain, personal_info, _issuer, _issuer)
-    whitelist_register(web3, chain, white_list, _issuer, _agent) # 未認可状態
+    payment_gateway_register(web3, chain, payment_gateway, _issuer, _agent) # 未認可状態
 
     personalinfo_register(web3, chain, personal_info, _trader, _issuer)
-    whitelist_register(web3, chain, white_list, _trader, _agent)
-    whitelist_approve(web3, chain, white_list, _trader, _agent)
+    payment_gateway_register(web3, chain, payment_gateway, _trader, _agent)
+    payment_gateway_approve(web3, chain, payment_gateway, _trader, _agent)
 
     # 新規発行
     web3.eth.defaultAccount = _issuer
@@ -1805,19 +1869,19 @@ def test_executeOrder_error_9_2(web3, chain, users,
 # 名簿用個人情報が登録されていない場合
 # Take買注文
 def test_executeOrder_error_10_1(web3, chain, users,
-    bond_exchange, personal_info, white_list):
+    bond_exchange, personal_info, payment_gateway):
     _issuer = users['issuer']
     _trader = users['trader']
     _agent = users['agent']
 
-    register_terms(web3, chain, white_list, _agent)
+    add_terms(web3, chain, payment_gateway, _agent)
 
     personalinfo_register(web3, chain, personal_info, _issuer, _issuer)
-    whitelist_register(web3, chain, white_list, _issuer, _agent)
-    whitelist_approve(web3, chain, white_list, _issuer, _agent)
+    payment_gateway_register(web3, chain, payment_gateway, _issuer, _agent)
+    payment_gateway_approve(web3, chain, payment_gateway, _issuer, _agent)
 
-    whitelist_register(web3, chain, white_list, _trader, _agent)
-    whitelist_approve(web3, chain, white_list, _trader, _agent)
+    payment_gateway_register(web3, chain, payment_gateway, _trader, _agent)
+    payment_gateway_approve(web3, chain, payment_gateway, _trader, _agent)
 
     # 新規発行
     web3.eth.defaultAccount = _issuer
@@ -1864,19 +1928,19 @@ def test_executeOrder_error_10_1(web3, chain, users,
 # 名簿用個人情報が登録されていない場合
 # Take売注文
 def test_executeOrder_error_10_2(web3, chain, users,
-    bond_exchange, personal_info, white_list):
+    bond_exchange, personal_info, payment_gateway):
     _issuer = users['issuer']
     _trader = users['trader']
     _agent = users['agent']
 
-    register_terms(web3, chain, white_list, _agent)
+    add_terms(web3, chain, payment_gateway, _agent)
 
-    whitelist_register(web3, chain, white_list, _issuer, _agent)
-    whitelist_approve(web3, chain, white_list, _issuer, _agent)
+    payment_gateway_register(web3, chain, payment_gateway, _issuer, _agent)
+    payment_gateway_approve(web3, chain, payment_gateway, _issuer, _agent)
 
     personalinfo_register(web3, chain, personal_info, _trader, _issuer)
-    whitelist_register(web3, chain, white_list, _trader, _agent)
-    whitelist_approve(web3, chain, white_list, _trader, _agent)
+    payment_gateway_register(web3, chain, payment_gateway, _trader, _agent)
+    payment_gateway_approve(web3, chain, payment_gateway, _trader, _agent)
 
     # 新規発行
     web3.eth.defaultAccount = _issuer
@@ -1923,20 +1987,20 @@ def test_executeOrder_error_10_2(web3, chain, users,
 # 償還済みフラグがTrueの場合
 # Take買注文
 def test_executeOrder_error_11_1(web3, chain, users,
-    bond_exchange, personal_info, white_list):
+    bond_exchange, personal_info, payment_gateway):
     _issuer = users['issuer']
     _trader = users['trader']
     _agent = users['agent']
 
-    register_terms(web3, chain, white_list, _agent)
+    add_terms(web3, chain, payment_gateway, _agent)
 
     personalinfo_register(web3, chain, personal_info, _issuer, _issuer)
-    whitelist_register(web3, chain, white_list, _issuer, _agent)
-    whitelist_approve(web3, chain, white_list, _issuer, _agent)
+    payment_gateway_register(web3, chain, payment_gateway, _issuer, _agent)
+    payment_gateway_approve(web3, chain, payment_gateway, _issuer, _agent)
 
     personalinfo_register(web3, chain, personal_info, _trader, _issuer)
-    whitelist_register(web3, chain, white_list, _trader, _agent)
-    whitelist_approve(web3, chain, white_list, _trader, _agent)
+    payment_gateway_register(web3, chain, payment_gateway, _trader, _agent)
+    payment_gateway_approve(web3, chain, payment_gateway, _trader, _agent)
 
     # 新規発行
     web3.eth.defaultAccount = _issuer
@@ -1988,20 +2052,20 @@ def test_executeOrder_error_11_1(web3, chain, users,
 # 償還済みフラグがTrueの場合
 # Take売注文
 def test_executeOrder_error_11_2(web3, chain, users,
-    bond_exchange, personal_info, white_list):
+    bond_exchange, personal_info, payment_gateway):
     _issuer = users['issuer']
     _trader = users['trader']
     _agent = users['agent']
 
-    register_terms(web3, chain, white_list, _agent)
+    add_terms(web3, chain, payment_gateway, _agent)
 
     personalinfo_register(web3, chain, personal_info, _issuer, _issuer)
-    whitelist_register(web3, chain, white_list, _issuer, _agent)
-    whitelist_approve(web3, chain, white_list, _issuer, _agent)
+    payment_gateway_register(web3, chain, payment_gateway, _issuer, _agent)
+    payment_gateway_approve(web3, chain, payment_gateway, _issuer, _agent)
 
     personalinfo_register(web3, chain, personal_info, _trader, _issuer)
-    whitelist_register(web3, chain, white_list, _trader, _agent)
-    whitelist_approve(web3, chain, white_list, _trader, _agent)
+    payment_gateway_register(web3, chain, payment_gateway, _trader, _agent)
+    payment_gateway_approve(web3, chain, payment_gateway, _trader, _agent)
 
     # 新規発行
     web3.eth.defaultAccount = _issuer
@@ -2053,20 +2117,20 @@ def test_executeOrder_error_11_2(web3, chain, users,
 # Take数量が元注文の残数量を超過している場合
 # Take買注文
 def test_executeOrder_error_12_1(web3, chain, users,
-    bond_exchange, personal_info, white_list):
+    bond_exchange, personal_info, payment_gateway):
     _issuer = users['issuer']
     _trader = users['trader']
     _agent = users['agent']
 
-    register_terms(web3, chain, white_list, _agent)
+    add_terms(web3, chain, payment_gateway, _agent)
 
     personalinfo_register(web3, chain, personal_info, _issuer, _issuer)
-    whitelist_register(web3, chain, white_list, _issuer, _agent)
-    whitelist_approve(web3, chain, white_list, _issuer, _agent)
+    payment_gateway_register(web3, chain, payment_gateway, _issuer, _agent)
+    payment_gateway_approve(web3, chain, payment_gateway, _issuer, _agent)
 
     personalinfo_register(web3, chain, personal_info, _trader, _issuer)
-    whitelist_register(web3, chain, white_list, _trader, _agent)
-    whitelist_approve(web3, chain, white_list, _trader, _agent)
+    payment_gateway_register(web3, chain, payment_gateway, _trader, _agent)
+    payment_gateway_approve(web3, chain, payment_gateway, _trader, _agent)
 
     # 新規発行
     web3.eth.defaultAccount = _issuer
@@ -2113,20 +2177,20 @@ def test_executeOrder_error_12_1(web3, chain, users,
 # Take数量が元注文の残数量を超過している場合
 # Take売注文
 def test_executeOrder_error_12_2(web3, chain, users,
-    bond_exchange, personal_info, white_list):
+    bond_exchange, personal_info, payment_gateway):
     _issuer = users['issuer']
     _trader = users['trader']
     _agent = users['agent']
 
-    register_terms(web3, chain, white_list, _agent)
+    add_terms(web3, chain, payment_gateway, _agent)
 
     personalinfo_register(web3, chain, personal_info, _issuer, _issuer)
-    whitelist_register(web3, chain, white_list, _issuer, _agent)
-    whitelist_approve(web3, chain, white_list, _issuer, _agent)
+    payment_gateway_register(web3, chain, payment_gateway, _issuer, _agent)
+    payment_gateway_approve(web3, chain, payment_gateway, _issuer, _agent)
 
     personalinfo_register(web3, chain, personal_info, _trader, _issuer)
-    whitelist_register(web3, chain, white_list, _trader, _agent)
-    whitelist_approve(web3, chain, white_list, _trader, _agent)
+    payment_gateway_register(web3, chain, payment_gateway, _trader, _agent)
+    payment_gateway_approve(web3, chain, payment_gateway, _trader, _agent)
 
     # 新規発行
     web3.eth.defaultAccount = _issuer
@@ -2172,20 +2236,20 @@ def test_executeOrder_error_12_2(web3, chain, users,
 # エラー系13
 # Take注文の発注者の残高が発注数量を下回っている場合
 def test_executeOrder_error_13(web3, chain, users,
-    bond_exchange, personal_info, white_list):
+    bond_exchange, personal_info, payment_gateway):
     _issuer = users['issuer']
     _trader = users['trader']
     _agent = users['agent']
 
-    register_terms(web3, chain, white_list, _agent)
+    add_terms(web3, chain, payment_gateway, _agent)
 
     personalinfo_register(web3, chain, personal_info, _issuer, _issuer)
-    whitelist_register(web3, chain, white_list, _issuer, _agent)
-    whitelist_approve(web3, chain, white_list, _issuer, _agent)
+    payment_gateway_register(web3, chain, payment_gateway, _issuer, _agent)
+    payment_gateway_approve(web3, chain, payment_gateway, _issuer, _agent)
 
     personalinfo_register(web3, chain, personal_info, _trader, _issuer)
-    whitelist_register(web3, chain, white_list, _trader, _agent)
-    whitelist_approve(web3, chain, white_list, _trader, _agent)
+    payment_gateway_register(web3, chain, payment_gateway, _trader, _agent)
+    payment_gateway_approve(web3, chain, payment_gateway, _trader, _agent)
 
     # 新規発行
     web3.eth.defaultAccount = _issuer
@@ -2236,20 +2300,20 @@ TEST5_決済承認（confirmAgreement）
 # ＜発行体＞新規発行 -> ＜発行体＞Make注文（売）
 #  -> ＜投資家＞Take注文（買） -> ＜決済業者＞決済処理
 def test_confirmAgreement_normal_1(web3, chain, users,
-    bond_exchange, personal_info, white_list):
+    bond_exchange, personal_info, payment_gateway):
     _issuer = users['issuer']
     _trader = users['trader']
     _agent = users['agent']
 
-    register_terms(web3, chain, white_list, _agent)
+    add_terms(web3, chain, payment_gateway, _agent)
 
     personalinfo_register(web3, chain, personal_info, _issuer, _issuer)
-    whitelist_register(web3, chain, white_list, _issuer, _agent)
-    whitelist_approve(web3, chain, white_list, _issuer, _agent)
+    payment_gateway_register(web3, chain, payment_gateway, _issuer, _agent)
+    payment_gateway_approve(web3, chain, payment_gateway, _issuer, _agent)
 
     personalinfo_register(web3, chain, personal_info, _trader, _issuer)
-    whitelist_register(web3, chain, white_list, _trader, _agent)
-    whitelist_approve(web3, chain, white_list, _trader, _agent)
+    payment_gateway_register(web3, chain, payment_gateway, _trader, _agent)
+    payment_gateway_approve(web3, chain, payment_gateway, _trader, _agent)
 
     # 新規発行
     web3.eth.defaultAccount = _issuer
@@ -2307,20 +2371,20 @@ def test_confirmAgreement_normal_1(web3, chain, users,
 # ＜発行体＞新規発行 -> ＜投資家＞Make注文（買）
 #  -> ＜発行体＞Take注文（売） -> ＜決済業者＞決済処理
 def test_confirmAgreement_normal_2(web3, chain, users,
-    bond_exchange, personal_info, white_list):
+    bond_exchange, personal_info, payment_gateway):
     _issuer = users['issuer']
     _trader = users['trader']
     _agent = users['agent']
 
-    register_terms(web3, chain, white_list, _agent)
+    add_terms(web3, chain, payment_gateway, _agent)
 
     personalinfo_register(web3, chain, personal_info, _issuer, _issuer)
-    whitelist_register(web3, chain, white_list, _issuer, _agent)
-    whitelist_approve(web3, chain, white_list, _issuer, _agent)
+    payment_gateway_register(web3, chain, payment_gateway, _issuer, _agent)
+    payment_gateway_approve(web3, chain, payment_gateway, _issuer, _agent)
 
     personalinfo_register(web3, chain, personal_info, _trader, _issuer)
-    whitelist_register(web3, chain, white_list, _trader, _agent)
-    whitelist_approve(web3, chain, white_list, _trader, _agent)
+    payment_gateway_register(web3, chain, payment_gateway, _trader, _agent)
+    payment_gateway_approve(web3, chain, payment_gateway, _trader, _agent)
 
     # 新規発行
     web3.eth.defaultAccount = _issuer
@@ -2415,20 +2479,20 @@ def test_confirmAgreement_error_2(web3, users, bond_exchange):
 # エラー系3
 # 指定した注文番号が、直近の注文ID以上の場合
 def test_confirmAgreement_error_3(web3, chain, users,
-    bond_exchange, personal_info, white_list):
+    bond_exchange, personal_info, payment_gateway):
     _issuer = users['issuer']
     _trader = users['trader']
     _agent = users['agent']
 
-    register_terms(web3, chain, white_list, _agent)
+    add_terms(web3, chain, payment_gateway, _agent)
 
     personalinfo_register(web3, chain, personal_info, _issuer, _issuer)
-    whitelist_register(web3, chain, white_list, _issuer, _agent)
-    whitelist_approve(web3, chain, white_list, _issuer, _agent)
+    payment_gateway_register(web3, chain, payment_gateway, _issuer, _agent)
+    payment_gateway_approve(web3, chain, payment_gateway, _issuer, _agent)
 
     personalinfo_register(web3, chain, personal_info, _trader, _issuer)
-    whitelist_register(web3, chain, white_list, _trader, _agent)
-    whitelist_approve(web3, chain, white_list, _trader, _agent)
+    payment_gateway_register(web3, chain, payment_gateway, _trader, _agent)
+    payment_gateway_approve(web3, chain, payment_gateway, _trader, _agent)
 
     # 新規発行
     web3.eth.defaultAccount = _issuer
@@ -2485,20 +2549,20 @@ def test_confirmAgreement_error_3(web3, chain, users,
 # エラー系4
 # 指定した約定IDが、直近の約定ID以上の場合
 def test_confirmAgreement_error_4(web3, chain, users,
-    bond_exchange, personal_info, white_list):
+    bond_exchange, personal_info, payment_gateway):
     _issuer = users['issuer']
     _trader = users['trader']
     _agent = users['agent']
 
-    register_terms(web3, chain, white_list, _agent)
+    add_terms(web3, chain, payment_gateway, _agent)
 
     personalinfo_register(web3, chain, personal_info, _issuer, _issuer)
-    whitelist_register(web3, chain, white_list, _issuer, _agent)
-    whitelist_approve(web3, chain, white_list, _issuer, _agent)
+    payment_gateway_register(web3, chain, payment_gateway, _issuer, _agent)
+    payment_gateway_approve(web3, chain, payment_gateway, _issuer, _agent)
 
     personalinfo_register(web3, chain, personal_info, _trader, _issuer)
-    whitelist_register(web3, chain, white_list, _trader, _agent)
-    whitelist_approve(web3, chain, white_list, _trader, _agent)
+    payment_gateway_register(web3, chain, payment_gateway, _trader, _agent)
+    payment_gateway_approve(web3, chain, payment_gateway, _trader, _agent)
 
     # 新規発行
     web3.eth.defaultAccount = _issuer
@@ -2555,20 +2619,20 @@ def test_confirmAgreement_error_4(web3, chain, users,
 # エラー系5
 # 指定した約定明細がすでに支払い済みの状態の場合
 def test_confirmAgreement_error_5(web3, chain, users,
-    bond_exchange, personal_info, white_list):
+    bond_exchange, personal_info, payment_gateway):
     _issuer = users['issuer']
     _trader = users['trader']
     _agent = users['agent']
 
-    register_terms(web3, chain, white_list, _agent)
+    add_terms(web3, chain, payment_gateway, _agent)
 
     personalinfo_register(web3, chain, personal_info, _issuer, _issuer)
-    whitelist_register(web3, chain, white_list, _issuer, _agent)
-    whitelist_approve(web3, chain, white_list, _issuer, _agent)
+    payment_gateway_register(web3, chain, payment_gateway, _issuer, _agent)
+    payment_gateway_approve(web3, chain, payment_gateway, _issuer, _agent)
 
     personalinfo_register(web3, chain, personal_info, _trader, _issuer)
-    whitelist_register(web3, chain, white_list, _trader, _agent)
-    whitelist_approve(web3, chain, white_list, _trader, _agent)
+    payment_gateway_register(web3, chain, payment_gateway, _trader, _agent)
+    payment_gateway_approve(web3, chain, payment_gateway, _trader, _agent)
 
     # 新規発行
     web3.eth.defaultAccount = _issuer
@@ -2629,20 +2693,20 @@ def test_confirmAgreement_error_5(web3, chain, users,
 # エラー系6
 # 元注文で指定した決済業者ではない場合
 def test_confirmAgreement_error_6(web3, chain, users,
-    bond_exchange, personal_info, white_list):
+    bond_exchange, personal_info, payment_gateway):
     _issuer = users['issuer']
     _trader = users['trader']
     _agent = users['agent']
 
-    register_terms(web3, chain, white_list, _agent)
+    add_terms(web3, chain, payment_gateway, _agent)
 
     personalinfo_register(web3, chain, personal_info, _issuer, _issuer)
-    whitelist_register(web3, chain, white_list, _issuer, _agent)
-    whitelist_approve(web3, chain, white_list, _issuer, _agent)
+    payment_gateway_register(web3, chain, payment_gateway, _issuer, _agent)
+    payment_gateway_approve(web3, chain, payment_gateway, _issuer, _agent)
 
     personalinfo_register(web3, chain, personal_info, _trader, _issuer)
-    whitelist_register(web3, chain, white_list, _trader, _agent)
-    whitelist_approve(web3, chain, white_list, _trader, _agent)
+    payment_gateway_register(web3, chain, payment_gateway, _trader, _agent)
+    payment_gateway_approve(web3, chain, payment_gateway, _trader, _agent)
 
     # 新規発行
     web3.eth.defaultAccount = _issuer
@@ -2698,20 +2762,20 @@ def test_confirmAgreement_error_6(web3, chain, users,
 # エラー系7
 # 既に決済非承認済み（キャンセル済み）の場合
 def test_confirmAgreement_error_7(web3, chain, users,
-    bond_exchange, personal_info, white_list):
+    bond_exchange, personal_info, payment_gateway):
     _issuer = users['issuer']
     _trader = users['trader']
     _agent = users['agent']
 
-    register_terms(web3, chain, white_list, _agent)
+    add_terms(web3, chain, payment_gateway, _agent)
 
     personalinfo_register(web3, chain, personal_info, _issuer, _issuer)
-    whitelist_register(web3, chain, white_list, _issuer, _agent)
-    whitelist_approve(web3, chain, white_list, _issuer, _agent)
+    payment_gateway_register(web3, chain, payment_gateway, _issuer, _agent)
+    payment_gateway_approve(web3, chain, payment_gateway, _issuer, _agent)
 
     personalinfo_register(web3, chain, personal_info, _trader, _issuer)
-    whitelist_register(web3, chain, white_list, _trader, _agent)
-    whitelist_approve(web3, chain, white_list, _trader, _agent)
+    payment_gateway_register(web3, chain, payment_gateway, _trader, _agent)
+    payment_gateway_approve(web3, chain, payment_gateway, _trader, _agent)
 
     # 新規発行
     web3.eth.defaultAccount = _issuer
@@ -2777,20 +2841,20 @@ TEST6_決済非承認（cancelAgreement）
 # ＜発行体＞新規発行 -> ＜発行体＞Make注文（売）
 #  -> ＜投資家＞Take注文（買） -> ＜決済業者＞決済非承認
 def test_cancelAgreement_normal_1(web3, chain, users,
-    bond_exchange, personal_info, white_list):
+    bond_exchange, personal_info, payment_gateway):
     _issuer = users['issuer']
     _trader = users['trader']
     _agent = users['agent']
 
-    register_terms(web3, chain, white_list, _agent)
+    add_terms(web3, chain, payment_gateway, _agent)
 
     personalinfo_register(web3, chain, personal_info, _issuer, _issuer)
-    whitelist_register(web3, chain, white_list, _issuer, _agent)
-    whitelist_approve(web3, chain, white_list, _issuer, _agent)
+    payment_gateway_register(web3, chain, payment_gateway, _issuer, _agent)
+    payment_gateway_approve(web3, chain, payment_gateway, _issuer, _agent)
 
     personalinfo_register(web3, chain, personal_info, _trader, _issuer)
-    whitelist_register(web3, chain, white_list, _trader, _agent)
-    whitelist_approve(web3, chain, white_list, _trader, _agent)
+    payment_gateway_register(web3, chain, payment_gateway, _trader, _agent)
+    payment_gateway_approve(web3, chain, payment_gateway, _trader, _agent)
 
     # 新規発行
     web3.eth.defaultAccount = _issuer
@@ -2847,20 +2911,20 @@ def test_cancelAgreement_normal_1(web3, chain, users,
 # ＜発行体＞新規発行 -> ＜投資家＞Make注文（買）
 #  -> ＜発行体＞Take注文（売） -> ＜決済業者＞決済非承認
 def test_cancelAgreement_normal_2(web3, chain, users,
-    bond_exchange, personal_info, white_list):
+    bond_exchange, personal_info, payment_gateway):
     _issuer = users['issuer']
     _trader = users['trader']
     _agent = users['agent']
 
-    register_terms(web3, chain, white_list, _agent)
+    add_terms(web3, chain, payment_gateway, _agent)
 
     personalinfo_register(web3, chain, personal_info, _issuer, _issuer)
-    whitelist_register(web3, chain, white_list, _issuer, _agent)
-    whitelist_approve(web3, chain, white_list, _issuer, _agent)
+    payment_gateway_register(web3, chain, payment_gateway, _issuer, _agent)
+    payment_gateway_approve(web3, chain, payment_gateway, _issuer, _agent)
 
     personalinfo_register(web3, chain, personal_info, _trader, _issuer)
-    whitelist_register(web3, chain, white_list, _trader, _agent)
-    whitelist_approve(web3, chain, white_list, _trader, _agent)
+    payment_gateway_register(web3, chain, payment_gateway, _trader, _agent)
+    payment_gateway_approve(web3, chain, payment_gateway, _trader, _agent)
 
     # 新規発行
     web3.eth.defaultAccount = _issuer
@@ -2955,20 +3019,20 @@ def test_cancelAgreement_error_2(web3, users, bond_exchange):
 # エラー系3
 # 指定した注文番号が、直近の注文ID以上の場合
 def test_cancelAgreement_error_3(web3, chain, users,
-    bond_exchange, personal_info, white_list):
+    bond_exchange, personal_info, payment_gateway):
     _issuer = users['issuer']
     _trader = users['trader']
     _agent = users['agent']
 
-    register_terms(web3, chain, white_list, _agent)
+    add_terms(web3, chain, payment_gateway, _agent)
 
     personalinfo_register(web3, chain, personal_info, _issuer, _issuer)
-    whitelist_register(web3, chain, white_list, _issuer, _agent)
-    whitelist_approve(web3, chain, white_list, _issuer, _agent)
+    payment_gateway_register(web3, chain, payment_gateway, _issuer, _agent)
+    payment_gateway_approve(web3, chain, payment_gateway, _issuer, _agent)
 
     personalinfo_register(web3, chain, personal_info, _trader, _issuer)
-    whitelist_register(web3, chain, white_list, _trader, _agent)
-    whitelist_approve(web3, chain, white_list, _trader, _agent)
+    payment_gateway_register(web3, chain, payment_gateway, _trader, _agent)
+    payment_gateway_approve(web3, chain, payment_gateway, _trader, _agent)
 
     # 新規発行
     web3.eth.defaultAccount = _issuer
@@ -3024,20 +3088,20 @@ def test_cancelAgreement_error_3(web3, chain, users,
 # エラー系4
 # 指定した約定IDが、直近の約定ID以上の場合
 def test_cancelAgreement_error_4(web3, chain, users,
-    bond_exchange, personal_info, white_list):
+    bond_exchange, personal_info, payment_gateway):
     _issuer = users['issuer']
     _trader = users['trader']
     _agent = users['agent']
 
-    register_terms(web3, chain, white_list, _agent)
+    add_terms(web3, chain, payment_gateway, _agent)
 
     personalinfo_register(web3, chain, personal_info, _issuer, _issuer)
-    whitelist_register(web3, chain, white_list, _issuer, _agent)
-    whitelist_approve(web3, chain, white_list, _issuer, _agent)
+    payment_gateway_register(web3, chain, payment_gateway, _issuer, _agent)
+    payment_gateway_approve(web3, chain, payment_gateway, _issuer, _agent)
 
     personalinfo_register(web3, chain, personal_info, _trader, _issuer)
-    whitelist_register(web3, chain, white_list, _trader, _agent)
-    whitelist_approve(web3, chain, white_list, _trader, _agent)
+    payment_gateway_register(web3, chain, payment_gateway, _trader, _agent)
+    payment_gateway_approve(web3, chain, payment_gateway, _trader, _agent)
 
     # 新規発行
     web3.eth.defaultAccount = _issuer
@@ -3093,20 +3157,20 @@ def test_cancelAgreement_error_4(web3, chain, users,
 # エラー系5
 # すでに決済承認済み（支払済み）の場合
 def test_cancelAgreement_error_5(web3, chain, users,
-    bond_exchange, personal_info, white_list):
+    bond_exchange, personal_info, payment_gateway):
     _issuer = users['issuer']
     _trader = users['trader']
     _agent = users['agent']
 
-    register_terms(web3, chain, white_list, _agent)
+    add_terms(web3, chain, payment_gateway, _agent)
 
     personalinfo_register(web3, chain, personal_info, _issuer, _issuer)
-    whitelist_register(web3, chain, white_list, _issuer, _agent)
-    whitelist_approve(web3, chain, white_list, _issuer, _agent)
+    payment_gateway_register(web3, chain, payment_gateway, _issuer, _agent)
+    payment_gateway_approve(web3, chain, payment_gateway, _issuer, _agent)
 
     personalinfo_register(web3, chain, personal_info, _trader, _issuer)
-    whitelist_register(web3, chain, white_list, _trader, _agent)
-    whitelist_approve(web3, chain, white_list, _trader, _agent)
+    payment_gateway_register(web3, chain, payment_gateway, _trader, _agent)
+    payment_gateway_approve(web3, chain, payment_gateway, _trader, _agent)
 
     # 新規発行
     web3.eth.defaultAccount = _issuer
@@ -3167,20 +3231,20 @@ def test_cancelAgreement_error_5(web3, chain, users,
 # エラー系6
 # msg.senderが、決済代行（agent）以外の場合
 def test_cancelAgreement_error_6(web3, chain, users,
-    bond_exchange, personal_info, white_list):
+    bond_exchange, personal_info, payment_gateway):
     _issuer = users['issuer']
     _trader = users['trader']
     _agent = users['agent']
 
-    register_terms(web3, chain, white_list, _agent)
+    add_terms(web3, chain, payment_gateway, _agent)
 
     personalinfo_register(web3, chain, personal_info, _issuer, _issuer)
-    whitelist_register(web3, chain, white_list, _issuer, _agent)
-    whitelist_approve(web3, chain, white_list, _issuer, _agent)
+    payment_gateway_register(web3, chain, payment_gateway, _issuer, _agent)
+    payment_gateway_approve(web3, chain, payment_gateway, _issuer, _agent)
 
     personalinfo_register(web3, chain, personal_info, _trader, _issuer)
-    whitelist_register(web3, chain, white_list, _trader, _agent)
-    whitelist_approve(web3, chain, white_list, _trader, _agent)
+    payment_gateway_register(web3, chain, payment_gateway, _trader, _agent)
+    payment_gateway_approve(web3, chain, payment_gateway, _trader, _agent)
 
     # 新規発行
     web3.eth.defaultAccount = _issuer
@@ -3235,20 +3299,20 @@ def test_cancelAgreement_error_6(web3, chain, users,
 # エラー系5
 # すでに決済非承認済み（キャンセル済み）の場合
 def test_cancelAgreement_error_7(web3, chain, users,
-    bond_exchange, personal_info, white_list):
+    bond_exchange, personal_info, payment_gateway):
     _issuer = users['issuer']
     _trader = users['trader']
     _agent = users['agent']
 
-    register_terms(web3, chain, white_list, _agent)
+    add_terms(web3, chain, payment_gateway, _agent)
 
     personalinfo_register(web3, chain, personal_info, _issuer, _issuer)
-    whitelist_register(web3, chain, white_list, _issuer, _agent)
-    whitelist_approve(web3, chain, white_list, _issuer, _agent)
+    payment_gateway_register(web3, chain, payment_gateway, _issuer, _agent)
+    payment_gateway_approve(web3, chain, payment_gateway, _issuer, _agent)
 
     personalinfo_register(web3, chain, personal_info, _trader, _issuer)
-    whitelist_register(web3, chain, white_list, _trader, _agent)
-    whitelist_approve(web3, chain, white_list, _trader, _agent)
+    payment_gateway_register(web3, chain, payment_gateway, _trader, _agent)
+    payment_gateway_approve(web3, chain, payment_gateway, _trader, _agent)
 
     # 新規発行
     web3.eth.defaultAccount = _issuer
@@ -3373,16 +3437,16 @@ def test_withdrawAll_normal_2(web3, chain, users, bond_exchange):
 # ＜発行体＞新規発行 -> ＜発行体＞Make注文（売） ※売注文中状態
 #  -> ＜発行体＞引き出し
 def test_withdrawAll_normal_3(web3, chain, users,
-    bond_exchange, personal_info, white_list):
+    bond_exchange, personal_info, payment_gateway):
     _issuer = users['issuer']
     _trader = users['trader']
     _agent = users['agent']
 
-    register_terms(web3, chain, white_list, _agent)
+    add_terms(web3, chain, payment_gateway, _agent)
 
     personalinfo_register(web3, chain, personal_info, _issuer, _issuer)
-    whitelist_register(web3, chain, white_list, _issuer, _agent)
-    whitelist_approve(web3, chain, white_list, _issuer, _agent)
+    payment_gateway_register(web3, chain, payment_gateway, _issuer, _agent)
+    payment_gateway_approve(web3, chain, payment_gateway, _issuer, _agent)
 
     # 新規発行
     web3.eth.defaultAccount = _issuer
@@ -3420,20 +3484,20 @@ def test_withdrawAll_normal_3(web3, chain, users,
 # ＜発行体＞新規発行 -> ＜発行体＞Make注文（売） -> ＜投資家＞Take注文（買）
 #  -> ＜発行体＞引き出し
 def test_withdrawAll_normal_4(web3, chain, users,
-    bond_exchange, personal_info, white_list):
+    bond_exchange, personal_info, payment_gateway):
     _issuer = users['issuer']
     _trader = users['trader']
     _agent = users['agent']
 
-    register_terms(web3, chain, white_list, _agent)
+    add_terms(web3, chain, payment_gateway, _agent)
 
     personalinfo_register(web3, chain, personal_info, _issuer, _issuer)
-    whitelist_register(web3, chain, white_list, _issuer, _agent)
-    whitelist_approve(web3, chain, white_list, _issuer, _agent)
+    payment_gateway_register(web3, chain, payment_gateway, _issuer, _agent)
+    payment_gateway_approve(web3, chain, payment_gateway, _issuer, _agent)
 
     personalinfo_register(web3, chain, personal_info, _trader, _issuer)
-    whitelist_register(web3, chain, white_list, _trader, _agent)
-    whitelist_approve(web3, chain, white_list, _trader, _agent)
+    payment_gateway_register(web3, chain, payment_gateway, _trader, _agent)
+    payment_gateway_approve(web3, chain, payment_gateway, _trader, _agent)
 
     # 新規発行
     web3.eth.defaultAccount = _issuer
@@ -3481,20 +3545,20 @@ def test_withdrawAll_normal_4(web3, chain, users,
 # ＜発行体＞新規発行 -> ＜発行体＞Make注文（売） -> ＜投資家＞Take注文（買）
 #  -> ＜決済業者＞決済承認 -> ＜発行体＞引き出し
 def test_withdrawAll_normal_5(web3, chain, users,
-    bond_exchange, personal_info, white_list):
+    bond_exchange, personal_info, payment_gateway):
     _issuer = users['issuer']
     _trader = users['trader']
     _agent = users['agent']
 
-    register_terms(web3, chain, white_list, _agent)
+    add_terms(web3, chain, payment_gateway, _agent)
 
     personalinfo_register(web3, chain, personal_info, _issuer, _issuer)
-    whitelist_register(web3, chain, white_list, _issuer, _agent)
-    whitelist_approve(web3, chain, white_list, _issuer, _agent)
+    payment_gateway_register(web3, chain, payment_gateway, _issuer, _agent)
+    payment_gateway_approve(web3, chain, payment_gateway, _issuer, _agent)
 
     personalinfo_register(web3, chain, personal_info, _trader, _issuer)
-    whitelist_register(web3, chain, white_list, _trader, _agent)
-    whitelist_approve(web3, chain, white_list, _trader, _agent)
+    payment_gateway_register(web3, chain, payment_gateway, _trader, _agent)
+    payment_gateway_approve(web3, chain, payment_gateway, _trader, _agent)
 
     # 新規発行
     web3.eth.defaultAccount = _issuer
