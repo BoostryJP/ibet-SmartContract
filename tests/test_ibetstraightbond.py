@@ -1,5 +1,4 @@
 import pytest
-from ethereum.tester import TransactionFailed
 import utils
 from eth_utils import to_checksum_address
 
@@ -275,7 +274,7 @@ def test_transfer_error_4(web3, chain, users, bond_exchange):
         bond_token.transact().transferToContract(to_address, transfer_amount, data)
 
 # エラー系5: 取引不可Exchangeへの振替
-def test_transfer_error_5(web3,chain, users, bond_exchange):
+def test_transfer_error_5(web3,chain, users, bond_exchange, payment_gateway):
     from_address = users['issuer']
     transfer_amount = 100
 
@@ -288,7 +287,7 @@ def test_transfer_error_5(web3,chain, users, bond_exchange):
     web3.eth.defaultAccount = users['admin']
     dummy_exchange, _ = chain.provider.get_or_deploy_contract(
         'IbetCouponExchange', # IbetStraightBondExchange以外を読み込む必要がある
-        deploy_args = []
+        deploy_args = [payment_gateway.address]
     )
 
     to_address = dummy_exchange.address
@@ -924,7 +923,7 @@ def test_transferFrom_error_5(web3, chain, users, bond_exchange):
 TEST11_取引可能Exchangeの更新（setTradableExchange）
 '''
 # 正常系1: 発行 -> Exchangeの更新
-def test_setTradableExchange_normal_1(web3, chain, users, bond_exchange):
+def test_setTradableExchange_normal_1(web3, chain, users, bond_exchange, payment_gateway):
     issuer = users['issuer']
 
     # 債券トークン新規発行
@@ -936,7 +935,7 @@ def test_setTradableExchange_normal_1(web3, chain, users, bond_exchange):
     web3.eth.defaultAccount = users['admin']
     other_exchange, _ = chain.provider.get_or_deploy_contract(
         'IbetCouponExchange', # IbetStraightBondExchange以外を読み込む必要がある
-        deploy_args = []
+        deploy_args = [payment_gateway.address]
     )
 
     # Exchangeの更新
@@ -962,7 +961,7 @@ def test_setTradableExchange_error_1(web3, chain, users, bond_exchange):
         bond_token.transact().setTradableExchange('0xaaaa')
 
 # エラー系2: 発行 -> Exchangeの更新（権限エラー）
-def test_setTradableExchange_error_2(web3, chain, users, bond_exchange):
+def test_setTradableExchange_error_2(web3, chain, users, bond_exchange, payment_gateway):
     issuer = users['issuer']
     trader = users['trader']
 
@@ -975,7 +974,7 @@ def test_setTradableExchange_error_2(web3, chain, users, bond_exchange):
     web3.eth.defaultAccount = users['admin']
     other_exchange, _ = chain.provider.get_or_deploy_contract(
         'IbetCouponExchange', # IbetStraightBondExchange以外を読み込む必要がある
-        deploy_args = []
+        deploy_args = [payment_gateway.address]
     )
 
     # Exchangeの更新

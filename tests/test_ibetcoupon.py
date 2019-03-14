@@ -388,7 +388,7 @@ def test_transfer_error_4(web3, chain, users, coupon_exchange):
     assert coupon.call().balanceOf(_to) == 0
 
 # エラー系5: 取引不可Exchangeへの振替
-def test_transfer_error_5(web3, chain, users, coupon_exchange):
+def test_transfer_error_5(web3, chain, users, coupon_exchange, payment_gateway):
     _issuer = users['issuer']
 
     # 新規発行
@@ -400,7 +400,7 @@ def test_transfer_error_5(web3, chain, users, coupon_exchange):
     web3.eth.defaultAccount = users['admin']
     dummy_exchange, _ = chain.provider.get_or_deploy_contract(
         'IbetMembershipExchange', # IbetCouponExchange以外を読み込む必要がある
-        deploy_args = []
+        deploy_args = [payment_gateway.address]
     )
 
     # 譲渡
@@ -1025,7 +1025,7 @@ def test_setStatus_error_2(web3, chain, users, coupon_exchange):
 TEST12_取引可能Exchangeの更新（setTradableExchange）
 '''
 # 正常系1: 発行 -> Exchangeの更新
-def test_setTradableExchange_normal_1(web3, chain, users, coupon_exchange):
+def test_setTradableExchange_normal_1(web3, chain, users, coupon_exchange, payment_gateway):
     issuer = users['issuer']
 
     # 新規発行
@@ -1037,7 +1037,7 @@ def test_setTradableExchange_normal_1(web3, chain, users, coupon_exchange):
     web3.eth.defaultAccount = users['admin']
     other_exchange, _ = chain.provider.get_or_deploy_contract(
         'IbetMembershipExchange', # IbetCouponExchange以外を読み込む必要がある
-        deploy_args = []
+        deploy_args = [payment_gateway.address]
     )
 
     # Exchangeの更新
