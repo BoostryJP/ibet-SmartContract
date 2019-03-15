@@ -2,9 +2,14 @@
 import os
 from populus import Project
 
+APP_ENV = os.environ.get('APP_ENV') or 'local'
+if APP_ENV == 'local':
+    chain_env = 'local_chain'
+else:
+    chain_env = 'dev_chain'
 
 project = Project()
-with project.get_chain('dev_chain') as chain:
+with project.get_chain(chain_env) as chain:
     web3 = chain.web3
     web3.eth.defaultAccount = web3.eth.accounts[0]
     web3.personal.unlockAccount(web3.eth.defaultAccount, os.environ.get('ETH_ACCOUNT_PASSWORD'), 1000)
