@@ -17,7 +17,7 @@ contract_address : str
 agent_id : str
     収納代行業者のID。
     重複しないように割り振る。
-    スクリプト無いで str -> int 変換を行っている。
+    スクリプト内で str -> int 変換を行っている。
 agent_address : str
     収納代行業者のアカウントアドレス。
 
