@@ -6,5 +6,5 @@ cd /app/tmr-sc
 # コントラクトコードのコンパイル
 populus compile
 
-# deploy実施
-python deploy/contract_deploy.py
+# 収納代行業者（Agent）アドレス登録
+python scripts/PaymentGateway_addAgent.py $1 $2 $3
