@@ -10,10 +10,11 @@ contract IbetCoupon is Ownable, IbetStandardTokenInterface {
 
     // 属性情報
     string public details; // クーポン詳細
-    string public memo; // メモ欄
+    string public returnDetails; // リターン詳細
     string public expirationDate; // 有効期限
-    bool public isValid; // 有効・無効フラグ
+    string public memo; // メモ欄
     bool public transferable; // 譲渡可能
+    bool public status; // 取扱ステータス(True：有効、False：無効)
     bool public initialOfferingStatus; // 新規募集ステータス（True：募集中、False：停止中）
 
     // 残高数量
@@ -35,6 +36,9 @@ contract IbetCoupon is Ownable, IbetStandardTokenInterface {
     // イベント：振替
     event Transfer(address indexed from, address indexed to, uint value);
 
+    // イベント：ステータス変更
+    event ChangeStatus(bool indexed status);
+
     // イベント:消費
     event Consume(address indexed consumer, uint balance, uint used, uint value);
 
@@ -45,7 +49,9 @@ contract IbetCoupon is Ownable, IbetStandardTokenInterface {
     constructor(string _name, string _symbol,
         uint256 _totalSupply, address _tradableExchange,
         string _details, string _memo, string _expirationDate,
-        bool _transferable) public {
+        bool _transferable)
+        public
+    {
         owner = msg.sender;
         name = _name;
         symbol = _symbol;
@@ -55,8 +61,8 @@ contract IbetCoupon is Ownable, IbetStandardTokenInterface {
         memo = _memo;
         expirationDate = _expirationDate;
         balances[owner] = totalSupply;
-        isValid = true;
         transferable = _transferable;
+        status = true;
     }
 
     // ファンクション：アドレスフォーマットがコントラクトアドレスかを判断する
@@ -147,7 +153,7 @@ contract IbetCoupon is Ownable, IbetStandardTokenInterface {
         // 消費しようとしている数量が残高を超えている場合、エラーを返す
         if (balanceOf(msg.sender) < _value) revert();
         // 無効化されている場合、エラーを返す
-        if (isValid == false) revert();
+        if (status == false) revert();
 
         // 残高数量を更新する
         balances[msg.sender] = balanceOf(msg.sender).sub(_value);
@@ -205,8 +211,9 @@ contract IbetCoupon is Ownable, IbetStandardTokenInterface {
 
     // ファンクション：クーポンの有効・無効を更新する
     // オーナーのみ実行可能
-    function setStatus(bool _isValid) public onlyOwner() {
-        isValid = _isValid;
+    function setStatus(bool _status) public onlyOwner() {
+        status = _status;
+        emit ChangeStatus(status);
     }
 
     // ファンクション：譲渡可能更新

@@ -7,7 +7,7 @@
 * homebrewがインストールされている
 
 
-### 1.1. Python3.6の実行環境を整備する
+### 1.1. Python3.7.2の実行環境を整備する
 * (参考：https://develtips.com/python/191)
 
 

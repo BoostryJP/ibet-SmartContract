@@ -44,7 +44,7 @@ def test_deploy_normal_1(web3, chain, users, coupon_exchange):
     details = coupon.call().details()
     memo = coupon.call().memo()
     expirationDate = coupon.call().expirationDate()
-    is_valid = coupon.call().isValid()
+    is_valid = coupon.call().status()
     transferable = coupon.call().transferable()
 
     assert owner_address == issuer
@@ -988,7 +988,7 @@ def test_setStatus_normal_1(web3, chain, users, coupon_exchange):
     txn_hash = coupon.transact().setStatus(False)
     chain.wait.for_receipt(txn_hash)
 
-    assert coupon.call().isValid() == False
+    assert coupon.call().status() == False
 
 # エラー系1: 入力値の型誤り
 def test_setStatus_error_1(web3, chain, users, coupon_exchange):
@@ -1019,7 +1019,7 @@ def test_setStatus_error_2(web3, chain, users, coupon_exchange):
     txn_hash = coupon.transact().setStatus(False)
     chain.wait.for_receipt(txn_hash)
 
-    assert coupon.call().isValid() == True
+    assert coupon.call().status() == True
 
 '''
 TEST12_取引可能Exchangeの更新（setTradableExchange）
