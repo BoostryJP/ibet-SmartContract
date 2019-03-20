@@ -115,7 +115,7 @@ contract IbetCouponExchange is Ownable {
             //  3) 有効な収納代行業者（Agent）を指定していない場合
             //   -> REVERT
             if (_amount == 0 ||
-                IbetCoupon(_token).isValid() == false ||
+                IbetCoupon(_token).status() == false ||
                 isContract(msg.sender) == true ||
                 validateAgent(_agent) == false)
             {
@@ -132,7 +132,7 @@ contract IbetCouponExchange is Ownable {
             //   -> 更新処理：全ての残高を投資家のアカウントに戻し、falseを返す
             if (_amount == 0 ||
                 balances[msg.sender][_token] < _amount ||
-                IbetCoupon(_token).isValid() == false ||
+                IbetCoupon(_token).status() == false ||
                 validateAgent(_agent) == false)
             {
                 IbetCoupon(_token).transfer(msg.sender,balances[msg.sender][_token]);
@@ -222,7 +222,7 @@ contract IbetCouponExchange is Ownable {
                 msg.sender == order.owner ||
                 isContract(msg.sender) == true ||
                 order.canceled == true ||
-                IbetCoupon(order.token).isValid() == false ||
+                IbetCoupon(order.token).status() == false ||
                 order.amount < _amount )
             {
                 revert();
@@ -243,7 +243,7 @@ contract IbetCouponExchange is Ownable {
                 order.isBuy == _isBuy ||
                 msg.sender == order.owner ||
                 order.canceled == true ||
-                IbetCoupon(order.token).isValid() == false ||
+                IbetCoupon(order.token).status() == false ||
                 balances[msg.sender][order.token] < _amount ||
                 order.amount < _amount )
             {
