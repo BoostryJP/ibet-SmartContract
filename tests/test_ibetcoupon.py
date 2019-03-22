@@ -8,15 +8,17 @@ def init_args(exchange_address):
     name = 'test_coupon'
     symbol = 'CPN'
     total_supply = 1000000
-    tradableExchange = exchange_address
+    tradable_exchange = exchange_address
     details = 'some_details'
+    return_details = 'some_return_details'
     memo = 'some_memo'
-    expirationDate = '20201231'
+    expiration_date = '20201231'
     transferable = True
 
     deploy_args = [
-        name, symbol, total_supply, tradableExchange, details,
-        memo, expirationDate, transferable
+        name, symbol, total_supply, tradable_exchange,
+        details, return_details,
+        memo, expiration_date, transferable
     ]
     return deploy_args
 
@@ -42,6 +44,7 @@ def test_deploy_normal_1(web3, chain, users, coupon_exchange):
     total_supply = coupon.call().totalSupply()
     tradable_exchange = coupon.call().tradableExchange()
     details = coupon.call().details()
+    return_details = coupon.call().returnDetails()
     memo = coupon.call().memo()
     expirationDate = coupon.call().expirationDate()
     is_valid = coupon.call().status()
@@ -53,10 +56,11 @@ def test_deploy_normal_1(web3, chain, users, coupon_exchange):
     assert total_supply == deploy_args[2]
     assert tradable_exchange == to_checksum_address(deploy_args[3])
     assert details == deploy_args[4]
-    assert memo == deploy_args[5]
-    assert expirationDate == deploy_args[6]
+    assert return_details == deploy_args[5]
+    assert memo == deploy_args[6]
+    assert expirationDate == deploy_args[7]
     assert is_valid == True
-    assert transferable == deploy_args[7]
+    assert transferable == deploy_args[8]
 
 # エラー系1: 入力値の型誤り（name）
 def test_deploy_error_1(chain, coupon_exchange):
@@ -85,8 +89,17 @@ def test_deploy_error_3(chain, coupon_exchange):
         chain.provider.get_or_deploy_contract(
             'IbetCoupon', deploy_args = deploy_args)
 
-# エラー系4: 入力値の型誤り（details）
+# エラー系4: 入力値の型誤り（tradableExchange）
 def test_deploy_error_4(chain, coupon_exchange):
+    deploy_args = init_args(coupon_exchange.address)
+    deploy_args[3] = '0xaaa'
+
+    with pytest.raises(TypeError):
+        chain.provider.get_or_deploy_contract(
+            'IbetCoupon', deploy_args = deploy_args)
+
+# エラー系5: 入力値の型誤り（details）
+def test_deploy_error_5(chain, coupon_exchange):
     deploy_args = init_args(coupon_exchange.address)
     deploy_args[4] = 1234
 
@@ -94,8 +107,8 @@ def test_deploy_error_4(chain, coupon_exchange):
         chain.provider.get_or_deploy_contract(
             'IbetCoupon', deploy_args = deploy_args)
 
-# エラー系5: 入力値の型誤り（memo）
-def test_deploy_error_5(chain, coupon_exchange):
+# エラー系6: 入力値の型誤り（returnDetails）
+def test_deploy_error_6(chain, coupon_exchange):
     deploy_args = init_args(coupon_exchange.address)
     deploy_args[5] = 1234
 
@@ -103,8 +116,8 @@ def test_deploy_error_5(chain, coupon_exchange):
         chain.provider.get_or_deploy_contract(
             'IbetCoupon', deploy_args = deploy_args)
 
-# エラー系6: 入力値の型誤り（expirationDate）
-def test_deploy_error_6(chain, coupon_exchange):
+# エラー系7: 入力値の型誤り（memo）
+def test_deploy_error_7(chain, coupon_exchange):
     deploy_args = init_args(coupon_exchange.address)
     deploy_args[6] = 1234
 
@@ -112,19 +125,19 @@ def test_deploy_error_6(chain, coupon_exchange):
         chain.provider.get_or_deploy_contract(
             'IbetCoupon', deploy_args = deploy_args)
 
-# エラー系7: 入力値の型誤り（transferable）
-def test_deploy_error_7(chain, coupon_exchange):
+# エラー系8: 入力値の型誤り（expirationDate）
+def test_deploy_error_8(chain, coupon_exchange):
     deploy_args = init_args(coupon_exchange.address)
-    deploy_args[7] = 'True'
+    deploy_args[7] = 1234
 
     with pytest.raises(TypeError):
         chain.provider.get_or_deploy_contract(
             'IbetCoupon', deploy_args = deploy_args)
 
-# エラー系8: 入力値の型誤り（tradableExchange）
-def test_deploy_error_8(chain, coupon_exchange):
+# エラー系9: 入力値の型誤り（transferable）
+def test_deploy_error_9(chain, coupon_exchange):
     deploy_args = init_args(coupon_exchange.address)
-    deploy_args[3] = '0xaaa'
+    deploy_args[8] = 'True'
 
     with pytest.raises(TypeError):
         chain.provider.get_or_deploy_contract(
@@ -189,7 +202,7 @@ def test_allocate_normal_2_2(web3, chain, users, coupon_exchange):
     # 新規発行
     web3.eth.defaultAccount = _from
     deploy_args = init_args(coupon_exchange.address)
-    deploy_args[7] = False # 譲渡不可
+    deploy_args[8] = False # 譲渡不可
     coupon = deploy(chain, deploy_args)
 
     # 割当（Exchangeへ）
@@ -375,7 +388,7 @@ def test_transfer_error_4(web3, chain, users, coupon_exchange):
     # 新規発行（譲渡不可クーポン）
     web3.eth.defaultAccount = _from
     deploy_args = init_args(coupon_exchange.address)
-    deploy_args[7] = False
+    deploy_args[8] = False
     coupon = deploy(chain, deploy_args)
 
     # 譲渡（譲渡不可）
@@ -1141,7 +1154,7 @@ def test_setExpirationDate_error_2(web3, chain, users, coupon_exchange):
     chain.wait.for_receipt(txn_hash)
 
     expiration_date = coupon.call().expirationDate()
-    assert expiration_date == deploy_args[6]
+    assert expiration_date == deploy_args[7]
 
 '''
 TEST14_譲渡可能更新（setTransferable）
@@ -1196,7 +1209,7 @@ def test_setTransferable_error_2(web3, chain, users, coupon_exchange):
     chain.wait.for_receipt(txn_hash)
 
     transferable = coupon.call().transferable()
-    assert transferable == deploy_args[7]
+    assert transferable == deploy_args[8]
 
 '''
 TEST15_新規募集ステータス更新（setInitialOfferingStatus）
@@ -1338,3 +1351,57 @@ def test_applyForOffering_error_2(web3, chain, users, coupon_exchange):
     chain.wait.for_receipt(txn_hash)
 
     assert coupon.call().applications(trader) == ''
+
+'''
+TEST17_リターン詳細更新（setReturnDetails）
+'''
+# 正常系1: 発行 -> 詳細更新
+def test_setReturnDetails_normal_1(web3, chain, users, coupon_exchange):
+    issuer = users['issuer']
+    after_return_details = 'after_return_details'
+
+    # 新規発行
+    web3.eth.defaultAccount = issuer
+    deploy_args = init_args(coupon_exchange.address)
+    coupon = deploy(chain, deploy_args)
+
+    # リターン詳細更新
+    web3.eth.defaultAccount = issuer
+    txn_hash = coupon.transact().setReturnDetails(after_return_details)
+    chain.wait.for_receipt(txn_hash)
+
+    return_details = coupon.call().returnDetails()
+    assert after_return_details == return_details
+
+# エラー系1: 入力値の型誤り
+def test_setReturnDetails_error_1(web3, chain, users, coupon_exchange):
+    issuer = users['issuer']
+
+    # 新規発行
+    web3.eth.defaultAccount = issuer
+    deploy_args = init_args(coupon_exchange.address)
+    coupon = deploy(chain, deploy_args)
+
+    # 型誤り
+    web3.eth.defaultAccount = issuer
+    with pytest.raises(TypeError):
+        coupon.transact().setReturnDetails(1234)
+
+# エラー系2: 権限エラー
+def test_setReturnDetails_error_2(web3, chain, users, coupon_exchange):
+    issuer = users['issuer']
+    attacker = users['trader']
+    after_return_details = 'after_return_details'
+
+    # 新規発行
+    web3.eth.defaultAccount = issuer
+    deploy_args = init_args(coupon_exchange.address)
+    coupon = deploy(chain, deploy_args)
+
+    # リターン詳細更新：権限エラー
+    web3.eth.defaultAccount = attacker
+    txn_hash = coupon.transact().setReturnDetails(after_return_details) # エラーになる
+    chain.wait.for_receipt(txn_hash)
+
+    return_details = coupon.call().returnDetails()
+    assert return_details == deploy_args[5]

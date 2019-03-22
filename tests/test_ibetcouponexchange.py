@@ -8,15 +8,17 @@ def init_args(exchange_address):
     name = 'test_coupon'
     symbol = 'CPN'
     total_supply = 1000000
-    tradableExchange = exchange_address
+    tradable_exchange = exchange_address
     details = 'some_details'
+    return_details = 'some_return_details'
     memo = 'some_memo'
-    expirationDate = '20201231'
+    expiration_date = '20201231'
     transferable = True
 
     deploy_args = [
-        name, symbol, total_supply, tradableExchange, details,
-        memo, expirationDate, transferable
+        name, symbol, total_supply, tradable_exchange,
+        details, return_details,
+        memo, expiration_date, transferable
     ]
     return deploy_args
 

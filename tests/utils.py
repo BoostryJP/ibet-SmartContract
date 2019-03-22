@@ -83,12 +83,14 @@ def issue_transferable_coupon(web3,chain,exchange_address):
     total_supply = 1000000
     tradableExchange = exchange_address
     details = 'some_details'
+    return_details = 'some_return'
     memo = 'some_memo'
     expirationDate = '20201231'
     transferable = True
 
     deploy_args = [
-        name, symbol, total_supply, tradableExchange, details,
+        name, symbol, total_supply, tradableExchange,
+        details, return_details,
         memo, expirationDate, transferable
     ]
 
@@ -105,12 +107,14 @@ def issue_non_transferable_coupon(web3,chain,exchange_address):
     total_supply = 1000000
     tradableExchange = exchange_address
     details = 'some_details'
+    return_details = 'some_return'
     memo = 'some_memo'
     expirationDate = '20201231'
     transferable = False
 
     deploy_args = [
-        name, symbol, total_supply, tradableExchange, details,
+        name, symbol, total_supply, tradableExchange,
+        details, return_details,
         memo, expirationDate, transferable
     ]
 
