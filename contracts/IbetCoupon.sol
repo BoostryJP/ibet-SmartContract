@@ -48,7 +48,8 @@ contract IbetCoupon is Ownable, IbetStandardTokenInterface {
     // コンストラクタ
     constructor(string _name, string _symbol,
         uint256 _totalSupply, address _tradableExchange,
-        string _details, string _memo, string _expirationDate,
+        string _details, string _returnDetails,
+        string _memo, string _expirationDate,
         bool _transferable)
         public
     {
@@ -58,6 +59,7 @@ contract IbetCoupon is Ownable, IbetStandardTokenInterface {
         totalSupply = _totalSupply;
         tradableExchange = _tradableExchange;
         details = _details;
+        returnDetails = _returnDetails;
         memo = _memo;
         expirationDate = _expirationDate;
         balances[owner] = totalSupply;
@@ -192,6 +194,15 @@ contract IbetCoupon is Ownable, IbetStandardTokenInterface {
     // オーナーのみ実行可能
     function setDetails(string _details) public onlyOwner() {
         details = _details;
+    }
+
+    // ファンクション：リターン詳細更新
+    // オーナーのみ実行可能
+    function setReturnDetails(string _returnDetails)
+        public
+        onlyOwner()
+    {
+        returnDetails = _returnDetails;
     }
 
     // ファンクション：メモ欄を更新する
