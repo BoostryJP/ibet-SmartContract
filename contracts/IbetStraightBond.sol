@@ -47,12 +47,12 @@ contract IbetStraightBond is Ownable, IbetStandardTokenInterface {
     event Redeem();
 
     // コンストラクタ
-    constructor(string _name, string _symbol,
+    constructor(string memory _name, string memory _symbol,
         uint256 _totalSupply, address _tradableExchange,
-        uint256 _faceValue, uint256 _interestRate, string _interestPaymentDate,
-        string _redemptionDate, uint256 _redemptionAmount,
-        string _returnDate, string _returnAmount,
-        string _purpose, string _memo) public {
+        uint256 _faceValue, uint256 _interestRate, string memory _interestPaymentDate,
+        string memory _redemptionDate, uint256 _redemptionAmount,
+        string memory _returnDate, string memory _returnAmount,
+        string memory _purpose, string memory _memo) public {
         owner = msg.sender;
         name = _name;
         symbol = _symbol;
@@ -81,7 +81,7 @@ contract IbetStraightBond is Ownable, IbetStandardTokenInterface {
     }
 
     // ファンクション：アドレスへの振替
-    function transferToAddress(address _to, uint _value, bytes /*_data*/)
+    function transferToAddress(address _to, uint _value, bytes memory /*_data*/)
         private
         returns (bool success)
     {
@@ -95,7 +95,7 @@ contract IbetStraightBond is Ownable, IbetStandardTokenInterface {
     }
 
     // ファンクション：コントラクトへの振替
-    function transferToContract(address _to, uint _value, bytes _data)
+    function transferToContract(address _to, uint _value, bytes memory _data)
         private
         returns (bool success)
     {
@@ -191,17 +191,17 @@ contract IbetStraightBond is Ownable, IbetStandardTokenInterface {
     }
 
     // ファンクション：商品の画像を設定する
-    function setImageURL(uint8 _class, string _image_url) public onlyOwner() {
+    function setImageURL(uint8 _class, string memory _image_url) public onlyOwner() {
         image_urls[_class] = _image_url;
     }
 
     // ファンクション：商品の画像を取得する
-    function getImageURL(uint8 _class) public view returns (string) {
+    function getImageURL(uint8 _class) public view returns (string memory) {
         return image_urls[_class];
     }
 
     // メモ欄を更新する
-    function updateMemo(string _memo) public onlyOwner() {
+    function updateMemo(string memory _memo) public onlyOwner() {
         memo = _memo;
     }
 

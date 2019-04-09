@@ -1,5 +1,4 @@
 import pytest
-from ethereum.tester import TransactionFailed
 from eth_utils import to_checksum_address
 import utils
 
@@ -8,6 +7,8 @@ token_template = 'some_template'
 '''
 TEST1_トークン情報を登録（register）
 '''
+
+
 # 正常系1: 新規登録(普通社債Token)
 def test_register_normal_1(web3, chain, users, bond_exchange):
     admin = users['admin']
@@ -46,6 +47,7 @@ def test_register_normal_1(web3, chain, users, bond_exchange):
     assert token_by_num[0] == to_checksum_address(token_address)
     assert token_by_num[1] == token_template
     assert token_by_num[2] == to_checksum_address(issuer)
+
 
 # 正常系2: 新規登録（クーポンToken）
 def test_register_normal_2(web3, chain, users, coupon_exchange):
@@ -86,6 +88,7 @@ def test_register_normal_2(web3, chain, users, coupon_exchange):
     assert token_by_num[1] == token_template
     assert token_by_num[2] == to_checksum_address(issuer)
 
+
 # エラー系1: トークンアドレスの型（address）が正しくない場合
 def test_register_error_1(web3, chain, users):
     admin = users['admin']
@@ -100,6 +103,7 @@ def test_register_error_1(web3, chain, users):
     token_address = 'some_token_address'
     with pytest.raises(TypeError):
         tokenlist_contract.transact().register(token_address, token_template)
+
 
 # エラー系2: トークンテンプレートの型（string）が正しくない場合
 def test_register_error_2(web3, chain, users, bond_exchange):
@@ -118,9 +122,9 @@ def test_register_error_2(web3, chain, users, bond_exchange):
 
     # 新規登録 -> Failure
     web3.eth.defaultAccount = issuer
-    token_template = 1234
     with pytest.raises(TypeError):
-        tokenlist_contract.transact().register(token_address, token_template)
+        tokenlist_contract.transact().register(token_address, 1234)
+
 
 # エラー系3: 同一トークンを複数回登録
 def test_register_error_3(web3, chain, users, bond_exchange):
@@ -162,6 +166,7 @@ def test_register_error_3(web3, chain, users, bond_exchange):
     assert token_by_num[0] == to_checksum_address(token_address)
     assert token_by_num[1] == token_template
     assert token_by_num[2] == to_checksum_address(issuer)
+
 
 # エラー系4: 異なるアドレスから同一トークンを登録
 def test_register_error_4(web3, chain, users, bond_exchange):
@@ -208,6 +213,8 @@ def test_register_error_4(web3, chain, users, bond_exchange):
 '''
 TEST2_オーナーを変更（changeOwner）
 '''
+
+
 # 正常系1: オーナー変更
 def test_changeOwner_normal_1(web3, chain, users, bond_exchange):
     admin = users['admin']
@@ -254,10 +261,10 @@ def test_changeOwner_normal_1(web3, chain, users, bond_exchange):
     assert token_by_num[1] == token_template
     assert token_by_num[2] == to_checksum_address(new_owner_address)
 
+
 # エラー系1: トークンアドレスの型（address）が正しくない場合
 def test_changeOwner_error_1(web3, chain, users):
     admin = users['admin']
-    issuer = users['issuer']
     new_owner_address = admin
 
     # TokenListコントラクト作成
@@ -270,11 +277,11 @@ def test_changeOwner_error_1(web3, chain, users):
     with pytest.raises(TypeError):
         tokenlist_contract.transact().changeOwner(token_address, new_owner_address)
 
+
 # エラー系2: オーナーアドレスの型（address）が正しくない場合
 def test_changeOwner_error_2(web3, chain, users, bond_exchange):
     admin = users['admin']
     issuer = users['issuer']
-    new_owner_address = admin
 
     # TokenListコントラクト作成
     web3.eth.defaultAccount = admin
@@ -291,6 +298,7 @@ def test_changeOwner_error_2(web3, chain, users, bond_exchange):
     # 新規登録 -> Failure
     with pytest.raises(TypeError):
         tokenlist_contract.transact().changeOwner(token_address, new_owner_address)
+
 
 # エラー系3: 登録なし -> オーナー変更
 def test_changeOwner_error_3(web3, chain, users, bond_exchange):
@@ -315,6 +323,7 @@ def test_changeOwner_error_3(web3, chain, users, bond_exchange):
 
     owner_address = tokenlist_contract.call().getOwnerAddress(token_address)
     assert owner_address == '0x0000000000000000000000000000000000000000'
+
 
 # エラー系4: オーナー権限のないアドレスでオーナー変更を実施した場合
 def test_changeOwner_error_4(web3, chain, users, bond_exchange):
