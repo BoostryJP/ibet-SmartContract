@@ -17,8 +17,8 @@ contract TokenList is Ownable {
     event Register(address indexed token_address, string token_template,
         address owner_address);
 
-    function register(address _token_address, string _token_template) public {
-        require(tokens[_token_address].token_address == 0);
+    function register(address _token_address, string memory _token_template) public {
+        require(tokens[_token_address].token_address == 0x0000000000000000000000000000000000000000);
         require(IbetStandardTokenInterface(_token_address).owner() == msg.sender);
         tokens[_token_address].token_address = _token_address;
         tokens[_token_address].token_template = _token_template;
@@ -32,7 +32,7 @@ contract TokenList is Ownable {
     }
 
     function changeOwner(address _token_address, address _new_owner_address) public {
-        require(tokens[_token_address].token_address != 0);
+        require(tokens[_token_address].token_address != 0x0000000000000000000000000000000000000000);
         require(tokens[_token_address].owner_address == msg.sender);
         tokens[_token_address].owner_address = _new_owner_address;
         for (uint i = 0; i < token_list.length; i++) {
@@ -55,7 +55,7 @@ contract TokenList is Ownable {
         }
 
     function getTokenByNum(uint _num) public view
-        returns (address token_address, string token_template, address owner_address)
+        returns (address token_address, string memory token_template, address owner_address)
         {
             token_address = token_list[_num].token_address;
             token_template = token_list[_num].token_template;
@@ -63,7 +63,7 @@ contract TokenList is Ownable {
         }
 
     function getTokenByAddress(address _token_address) public view
-        returns (address token_address, string token_template, address owner_address)
+        returns (address token_address, string memory token_template, address owner_address)
         {
             token_address = tokens[_token_address].token_address;
             token_template = tokens[_token_address].token_template;

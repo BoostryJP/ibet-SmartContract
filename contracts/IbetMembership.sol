@@ -39,10 +39,10 @@ contract IbetMembership is Ownable, IbetStandardTokenInterface {
   event ApplyFor(address indexed accountAddress);
 
   // コンストラクタ
-  constructor(string _name, string _symbol,
+  constructor(string memory _name, string memory _symbol,
     uint256 _initialSupply, address _tradableExchange,
-    string _details, string _returnDetails,
-    string _expirationDate, string _memo,
+    string memory _details, string memory _returnDetails,
+    string memory _expirationDate, string memory _memo,
     bool _transferable)
     public
   {
@@ -74,7 +74,7 @@ contract IbetMembership is Ownable, IbetStandardTokenInterface {
   }
 
   // ファンクション：アドレスへの振替
-  function transferToAddress(address _to, uint _value, bytes /*_data*/)
+  function transferToAddress(address _to, uint _value, bytes memory /*_data*/)
     private
     returns (bool success)
   {
@@ -88,7 +88,7 @@ contract IbetMembership is Ownable, IbetStandardTokenInterface {
   }
 
   // ファンクション：コントラクトへの振替
-  function transferToContract(address _to, uint _value, bytes _data)
+  function transferToContract(address _to, uint _value, bytes memory _data)
     private
     returns (bool success)
   {
@@ -165,7 +165,7 @@ contract IbetMembership is Ownable, IbetStandardTokenInterface {
 
   // ファンクション：会員権詳細更新
   // オーナーのみ実行可能
-  function setDetails(string _details)
+  function setDetails(string memory _details)
     public
     onlyOwner()
   {
@@ -174,7 +174,7 @@ contract IbetMembership is Ownable, IbetStandardTokenInterface {
 
   // ファンクション：リターン詳細更新
   // オーナーのみ実行可能
-  function setReturnDetails(string _returnDetails)
+  function setReturnDetails(string memory _returnDetails)
     public
     onlyOwner()
   {
@@ -183,7 +183,7 @@ contract IbetMembership is Ownable, IbetStandardTokenInterface {
 
   // ファンクション：有効期限更新
   // オーナーのみ実行可能
-  function setExpirationDate(string _expirationDate)
+  function setExpirationDate(string memory _expirationDate)
     public
     onlyOwner()
   {
@@ -192,7 +192,7 @@ contract IbetMembership is Ownable, IbetStandardTokenInterface {
 
   // ファンクション：メモ欄更新
   // オーナーのみ実行可能
-  function setMemo(string _memo)
+  function setMemo(string memory _memo)
     public
     onlyOwner()
   {
@@ -220,7 +220,7 @@ contract IbetMembership is Ownable, IbetStandardTokenInterface {
 
   // ファンクション：商品画像更新
   // オーナーのみ実行可能
-  function setImageURL(uint8 _class, string _image_url)
+  function setImageURL(uint8 _class, string memory _image_url)
     public
     onlyOwner()
   {
@@ -231,7 +231,7 @@ contract IbetMembership is Ownable, IbetStandardTokenInterface {
   function getImageURL(uint8 _class)
     public
     view
-    returns (string)
+    returns (string memory)
   {
     return image_urls[_class];
   }
@@ -256,7 +256,7 @@ contract IbetMembership is Ownable, IbetStandardTokenInterface {
   }
 
   // ファンクション：募集申込
-  function applyForOffering(string _data)
+  function applyForOffering(string memory _data)
     public
   {
     // 申込ステータスが停止中の場合、エラーを返す

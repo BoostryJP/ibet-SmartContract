@@ -46,10 +46,10 @@ contract IbetCoupon is Ownable, IbetStandardTokenInterface {
     event ApplyFor(address indexed accountAddress);
 
     // コンストラクタ
-    constructor(string _name, string _symbol,
+    constructor(string memory _name, string memory _symbol,
         uint256 _totalSupply, address _tradableExchange,
-        string _details, string _returnDetails,
-        string _memo, string _expirationDate,
+        string memory _details, string memory _returnDetails,
+        string memory _memo, string memory _expirationDate,
         bool _transferable)
         public
     {
@@ -77,7 +77,7 @@ contract IbetCoupon is Ownable, IbetStandardTokenInterface {
     }
 
     // ファンクション：アカウントアドレスへの振替
-    function transferToAddress(address _to, uint _value, bytes /*_data*/) private returns (bool success) {
+    function transferToAddress(address _to, uint _value, bytes memory /*_data*/) private returns (bool success) {
         balances[msg.sender] = balanceOf(msg.sender).sub(_value);
         balances[_to] = balanceOf(_to).add(_value);
         emit Transfer(msg.sender, _to, _value);
@@ -85,7 +85,7 @@ contract IbetCoupon is Ownable, IbetStandardTokenInterface {
     }
 
     // ファンクション：コントラクトアドレスへの振替
-    function transferToContract(address _to, uint _value, bytes _data) private returns (bool success) {
+    function transferToContract(address _to, uint _value, bytes memory _data) private returns (bool success) {
         require(_to == tradableExchange);
         balances[msg.sender] = balanceOf(msg.sender).sub(_value);
         balances[_to] = balanceOf(_to).add(_value);
@@ -192,13 +192,13 @@ contract IbetCoupon is Ownable, IbetStandardTokenInterface {
 
     // ファンクション：クーポン詳細を更新する
     // オーナーのみ実行可能
-    function setDetails(string _details) public onlyOwner() {
+    function setDetails(string memory _details) public onlyOwner() {
         details = _details;
     }
 
     // ファンクション：リターン詳細更新
     // オーナーのみ実行可能
-    function setReturnDetails(string _returnDetails)
+    function setReturnDetails(string memory _returnDetails)
         public
         onlyOwner()
     {
@@ -207,13 +207,13 @@ contract IbetCoupon is Ownable, IbetStandardTokenInterface {
 
     // ファンクション：メモ欄を更新する
     // オーナーのみ実行可能
-    function setMemo(string _memo) public onlyOwner() {
+    function setMemo(string memory _memo) public onlyOwner() {
         memo = _memo;
     }
 
     // ファンクション：有効期限更新
     // オーナーのみ実行可能
-    function setExpirationDate(string _expirationDate)
+    function setExpirationDate(string memory _expirationDate)
       public
       onlyOwner()
     {
@@ -238,12 +238,12 @@ contract IbetCoupon is Ownable, IbetStandardTokenInterface {
 
     // ファンクション：商品の画像を設定する
     // オーナーのみ実行可能
-    function setImageURL(uint8 _class, string _image_url) public onlyOwner() {
+    function setImageURL(uint8 _class, string memory _image_url) public onlyOwner() {
         image_urls[_class] = _image_url;
     }
 
     // ファンクション：商品の画像を取得する
-    function getImageURL(uint8 _class) public view returns (string) {
+    function getImageURL(uint8 _class) public view returns (string memory) {
         return image_urls[_class];
     }
 
@@ -257,7 +257,7 @@ contract IbetCoupon is Ownable, IbetStandardTokenInterface {
     }
 
     // ファンクション：募集申込
-    function applyForOffering(string _data)
+    function applyForOffering(string memory _data)
       public
     {
       // 申込ステータスが停止中の場合、エラーを返す
