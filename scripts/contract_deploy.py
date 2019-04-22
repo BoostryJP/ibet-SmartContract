@@ -40,6 +40,9 @@ with project.get_chain(chain_env) as chain:
         deploy_args=deploy_args
     )
 
+    # Upgrade Version
+    bond_exchange_storage.transact().upgradeVersion(bond_exchange.address)
+
     # ------------------------------------
     # IbetCoupon
     # ------------------------------------
@@ -56,6 +59,9 @@ with project.get_chain(chain_env) as chain:
         deploy_args=deploy_args
     )
 
+    # Upgrade Version
+    coupon_exchange_storage.transact().upgradeVersion(coupon_exchange.address)
+
     # ------------------------------------
     # IbetMembership
     # ------------------------------------
@@ -71,6 +77,9 @@ with project.get_chain(chain_env) as chain:
         'IbetMembershipExchange',
         deploy_args=deploy_args
     )
+
+    # Upgrade Version
+    membership_exchange_storage.transact().upgradeVersion(membership_exchange.address)
 
     print('TokenList : ' + token_list.address)
     print('PersonalInfo : ' + personal_info.address)
