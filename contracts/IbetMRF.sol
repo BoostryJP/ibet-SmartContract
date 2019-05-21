@@ -38,9 +38,7 @@ contract IbetMRF is Ownable, IbetStandardTokenInterface {
     // ---------------------------------------------------------------
     constructor(string memory _name, string memory _symbol,
         uint256 _totalSupply, address _tradableExchange,
-        string memory _details, string memory _returnDetails,
-        string memory _memo, string memory _expirationDate,
-        bool _transferable)
+        string memory _details, string memory _memo)
         public
     {
         owner = msg.sender;
