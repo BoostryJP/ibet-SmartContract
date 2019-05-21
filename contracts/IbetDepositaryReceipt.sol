@@ -5,7 +5,7 @@ import "./Ownable.sol";
 import "./ContractReceiver.sol";
 import "./IbetStandardTokenInterface.sol";
 
-contract IbetMRF is Ownable, IbetStandardTokenInterface {
+contract IbetDepositaryReceipt is Ownable, IbetStandardTokenInterface {
     using SafeMath for uint;
 
     // 商品固有属性
