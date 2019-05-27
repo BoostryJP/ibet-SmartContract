@@ -277,15 +277,13 @@ contract IbetSwap is Ownable{
         isMRFEnabled()
         returns (bool)
     {
-        uint MRFAmount = _amount.mul(_price);
-
         if (_isBuy) { // 買注文の場合
             // <CHK>
             //  1) 注文数量が0の場合
             //  2) MRF残高が不足している場合
             //  -> REVERT
             if (_amount == 0 ||
-                balanceOf(msg.sender, MRFTokenAddress) < MRFAmount)
+                balanceOf(msg.sender, MRFTokenAddress) < _amount.mul(_price))
             {
                 revert();
             }
@@ -304,24 +302,40 @@ contract IbetSwap is Ownable{
         }
 
         // 更新処理：注文情報
-        uint256 orderId = latestOrderId() + 1;
-        setLatestOrderId(orderId);
-        address _agent = 0x0000000000000000000000000000000000000000;
-        setOrder(orderId, msg.sender, _token, _amount, _price, _isBuy, _agent, false);
+        setLatestOrderId(latestOrderId() + 1);
+        setOrder(latestOrderId(), msg.sender, _token, _amount, _price, _isBuy,
+            0x0000000000000000000000000000000000000000, false);
 
         // 更新処理：残高、拘束数量
         if (_isBuy) { // 買注文の場合
             // MRF残高、拘束数量の更新
-            setBalance(msg.sender, MRFTokenAddress, balanceOf(msg.sender, MRFTokenAddress).sub(MRFAmount));
-            setCommitment(msg.sender, MRFTokenAddress, commitmentOf(msg.sender, MRFTokenAddress).add(MRFAmount));
+            setBalance(
+                msg.sender,
+                MRFTokenAddress,
+                balanceOf(msg.sender, MRFTokenAddress).sub(_amount.mul(_price))
+            );
+            setCommitment(
+                msg.sender,
+                MRFTokenAddress,
+                commitmentOf(msg.sender, MRFTokenAddress).add(_amount.mul(_price))
+            );
         } else { // 売注文の場合
             // DepositaryReceipt残高、拘束数量の更新
-            setBalance(msg.sender, _token, balanceOf(msg.sender, _token).sub(_amount));
-            setCommitment(msg.sender, _token, commitmentOf(msg.sender, _token).add(_amount));
+            setBalance(
+                msg.sender,
+                _token,
+                balanceOf(msg.sender, _token).sub(_amount)
+            );
+            setCommitment(
+                msg.sender,
+                _token,
+                commitmentOf(msg.sender, _token).add(_amount)
+            );
         }
 
         // イベント登録：Make注文
-        emit MakeOrder(_token, MRFTokenAddress, msg.sender, orderId, _isBuy, _price, _amount);
+        emit MakeOrder(_token, MRFTokenAddress, msg.sender, latestOrderId(),
+            _isBuy, _price, _amount);
 
         return true;
     }
@@ -359,21 +373,40 @@ contract IbetSwap is Ownable{
             revert();
         }
 
-        uint MRFAmount = order.amount.mul(order.price);
-
         // 更新処理：残高、拘束数量
         if (order.isBuy) { // 買注文の場合
             // MRF残高、拘束数量の更新
-            setBalance(msg.sender, MRFTokenAddress, balanceOf(msg.sender, MRFTokenAddress).add(MRFAmount));
-            setCommitment(msg.sender, MRFTokenAddress, commitmentOf(msg.sender, MRFTokenAddress).sub(MRFAmount));
+            setBalance(
+                msg.sender,
+                MRFTokenAddress,
+                balanceOf(msg.sender, MRFTokenAddress).add(order.amount.mul(order.price))
+            );
+            setCommitment(
+                msg.sender,
+                MRFTokenAddress,
+                commitmentOf(msg.sender, MRFTokenAddress).sub(order.amount.mul(order.price))
+            );
         } else { // 売注文の場合
             // DepositaryReceipt残高、拘束数量の更新
-            setBalance(msg.sender, order.token, balanceOf(msg.sender, order.token).add(order.amount));
-            setCommitment(msg.sender, order.token, commitmentOf(msg.sender, order.token).sub(order.amount));
+            setBalance(
+                msg.sender,
+                order.token,
+                balanceOf(msg.sender, order.token).add(order.amount)
+            );
+            setCommitment(
+                msg.sender,
+                order.token,
+                commitmentOf(msg.sender, order.token).sub(order.amount)
+            );
         }
 
         // 更新処理：注文状態をキャンセル済みに更新
-        setOrder(_orderId, order.owner, order.token, order.amount, order.price, order.isBuy, order.agent, true);
+        setOrder(
+            _orderId, order.owner, order.token,
+            order.amount, order.price, order.isBuy,
+            order.agent,
+            true
+        );
 
         // イベント登録：注文キャンセル
         emit CancelOrder(order.token, MRFTokenAddress, msg.sender, _orderId, order.isBuy, order.price, order.amount);
@@ -406,8 +439,6 @@ contract IbetSwap is Ownable{
         (order.owner, order.token, order.amount, order.price, order.isBuy, order.agent, order.canceled) =
             getOrder(_orderId);
 
-        uint MRFAmount = _amount.mul(order.price);
-
         if (_isBuy) { // Take買注文の場合（Make注文は売）
             // <CHK>
             //  1) Take注文数量が0の場合
@@ -424,7 +455,7 @@ contract IbetSwap is Ownable{
                 order.canceled == true ||
                 IbetDepositaryReceipt(order.token).status() == false ||
                 order.amount < _amount ||
-                balanceOf(msg.sender, MRFTokenAddress) < MRFAmount)
+                balanceOf(msg.sender, MRFTokenAddress) < _amount.mul(order.price))
             {
                 IbetMRF(MRFTokenAddress).transfer(msg.sender, balanceOf(msg.sender, MRFTokenAddress));
                 setBalance(msg.sender, MRFTokenAddress, 0);
@@ -457,10 +488,8 @@ contract IbetSwap is Ownable{
         }
 
         // 更新処理：約定情報
-        uint256 agreementId = latestAgreementId(_orderId) + 1;
-        setLatestAgreementId(_orderId, agreementId);
-        uint256 expiry = 0;
-        setAgreement(_orderId, agreementId, msg.sender, _amount, order.price, false, false, expiry);
+        setLatestAgreementId(_orderId, latestAgreementId(_orderId) + 1);
+        setAgreement(_orderId, latestAgreementId(_orderId), msg.sender, _amount, order.price, false, false, 0);
 
         // 更新処理：Make注文の数量を減らす
         setOrder(_orderId, order.owner, order.token, order.amount.sub(_amount),
@@ -478,7 +507,7 @@ contract IbetSwap is Ownable{
             setBalance(
                 marketMaker[order.token],
                 MRFTokenAddress,
-                balanceOf(marketMaker[order.token], MRFTokenAddress).add(MRFAmount)
+                balanceOf(marketMaker[order.token], MRFTokenAddress).add(_amount.mul(order.price))
             );
 
             // Takerデータ更新
@@ -487,12 +516,12 @@ contract IbetSwap is Ownable{
             setBalance(
                 msg.sender,
                 MRFTokenAddress,
-                balanceOf(msg.sender, MRFTokenAddress).sub(MRFAmount)
+                balanceOf(msg.sender, MRFTokenAddress).sub(_amount.mul(order.price))
             );
             IbetDepositaryReceipt(order.token).transfer(msg.sender, _amount);
 
             // イベント登録：約定
-            emit Agree(order.token, MRFTokenAddress, _orderId, agreementId,
+            emit Agree(order.token, MRFTokenAddress, _orderId, latestAgreementId(_orderId),
                 msg.sender, order.owner, order.price, _amount);
 
         } else { // Take売注文の場合（Make注文は買）
@@ -507,7 +536,7 @@ contract IbetSwap is Ownable{
             setBalance(
                 marketMaker[order.token],
                 MRFTokenAddress,
-                balanceOf(marketMaker[order.token], MRFTokenAddress).sub(MRFAmount)
+                balanceOf(marketMaker[order.token], MRFTokenAddress).sub(_amount.mul(order.price))
             );
 
             // Takerデータ更新
@@ -518,10 +547,10 @@ contract IbetSwap is Ownable{
                 order.token,
                 commitmentOf(msg.sender, order.token).sub(_amount)
             );
-            IbetMRF(MRFTokenAddress).transfer(msg.sender, MRFAmount);
+            IbetMRF(MRFTokenAddress).transfer(msg.sender, _amount.mul(order.price));
 
             // イベント登録：約定
-            emit Agree(order.token, MRFTokenAddress, _orderId, agreementId,
+            emit Agree(order.token, MRFTokenAddress, _orderId, latestAgreementId(_orderId),
                 order.owner, msg.sender, order.price, _amount);
         }
 
@@ -532,14 +561,14 @@ contract IbetSwap is Ownable{
      * @notice アドレスフォーマットチェック
      * @notice アドレスフォーマットがコントラクトのものかを判断する。
      */
-    function isContract(address _addr)
+    function isContract(address _address)
       private
       view
-      returns (bool is_contract)
+      returns (bool)
     {
       uint length;
       assembly {
-        length := extcodesize(_addr)
+        length := extcodesize(_address)
       }
       return (length>0);
     }
