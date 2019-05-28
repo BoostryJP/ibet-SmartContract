@@ -16,11 +16,14 @@ def init_args(exchange_address):
     expiration_date = '20191231'
     memo = 'some_memo'
     transferable = True
+    contact_information = 'some_contact_information'
+    privacy_policy = 'some_privacy_policy'
 
     deploy_args = [
         name, symbol, initial_supply, tradable_exchange,
         details, return_details,
-        expiration_date, memo, transferable
+        expiration_date, memo, transferable,
+        contact_information, privacy_policy
     ]
     return deploy_args
 

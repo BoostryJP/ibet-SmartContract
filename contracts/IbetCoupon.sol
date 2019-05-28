@@ -50,7 +50,7 @@ contract IbetCoupon is Ownable, IbetStandardTokenInterface {
         uint256 _totalSupply, address _tradableExchange,
         string memory _details, string memory _returnDetails,
         string memory _memo, string memory _expirationDate,
-        bool _transferable)
+        bool _transferable, string _contactInformation, string _privacyPolicy)
         public
     {
         owner = msg.sender;
@@ -65,6 +65,8 @@ contract IbetCoupon is Ownable, IbetStandardTokenInterface {
         balances[owner] = totalSupply;
         transferable = _transferable;
         status = true;
+        contactInformation = _contactInformation;
+        privacyPolicy = _privacyPolicy;
     }
 
     // ファンクション：アドレスフォーマットがコントラクトアドレスかを判断する
@@ -188,6 +190,22 @@ contract IbetCoupon is Ownable, IbetStandardTokenInterface {
       onlyOwner()
     {
       tradableExchange = _exchange;
+    }
+
+    // ファンクション：問い合わせ先情報更新
+    function setContactInformation(string _contactInformation)
+        public
+        onlyOwner()
+    {
+        contactInformation = _contactInformation;
+    }
+
+    // ファンクション：プライバシーポリシー更新
+    function setPrivatePolicy(string _privacyPolicy)
+        public
+        onlyOwner()
+    {
+        privacyPolicy = _privacyPolicy;
     }
 
     // ファンクション：クーポン詳細を更新する

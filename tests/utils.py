@@ -13,12 +13,15 @@ def issue_bond_token(web3,chain,users,exchange_address):
     return_amount = 'some_return'
     purpose = 'some_purpose'
     memo = 'some_memo'
+    contact_information = 'some_contact_information'
+    privacy_policy = 'some_privacy_policy'
 
     deploy_args = [
         name, symbol, total_supply, tradable_exchange, face_value,
         interest_rate, interest_payment_date, redemption_date,
         redemption_amount, return_date, return_amount,
-        purpose, memo
+        purpose, memo,
+        contact_information, privacy_policy
     ]
 
     web3.eth.defaultAccount = users['issuer']
@@ -39,11 +42,14 @@ def issue_transferable_membership(web3,chain,exchange_address):
     expiration_date = '20191231'
     memo = 'some_memo'
     transferable = True
+    contact_information = 'some_contact_information'
+    privacy_policy = 'some_privacy_policy'
 
     deploy_args = [
         name, symbol, initial_supply, tradableExchange,
         details, return_details,
-        expiration_date, memo, transferable
+        expiration_date, memo, transferable,
+        contact_information, privacy_policy
     ]
 
     membership, _ = chain.provider.get_or_deploy_contract(
@@ -63,11 +69,14 @@ def issue_non_transferable_membership(web3,chain,exchange_address):
     expiration_date = '20191231'
     memo = 'some_memo'
     transferable = False
+    contact_information = 'some_contact_information'
+    privacy_policy = 'some_privacy_policy'
 
     deploy_args = [
         name, symbol, initial_supply, tradableExchange,
         details, return_details,
-        expiration_date, memo, transferable
+        expiration_date, memo, transferable,
+        contact_information, privacy_policy
     ]
 
     membership, _ = chain.provider.get_or_deploy_contract(
@@ -87,11 +96,14 @@ def issue_transferable_coupon(web3,chain,exchange_address):
     memo = 'some_memo'
     expirationDate = '20201231'
     transferable = True
+    contact_information = 'some_contact_information'
+    privacy_policy = 'some_privacy_policy'
 
     deploy_args = [
         name, symbol, total_supply, tradableExchange,
         details, return_details,
-        memo, expirationDate, transferable
+        memo, expirationDate, transferable,
+        contact_information, privacy_policy
     ]
 
     coupon, _ = chain.provider.get_or_deploy_contract(
@@ -111,11 +123,14 @@ def issue_non_transferable_coupon(web3,chain,exchange_address):
     memo = 'some_memo'
     expirationDate = '20201231'
     transferable = False
+    contact_information = 'some_contact_information'
+    privacy_policy = 'some_privacy_policy'
 
     deploy_args = [
         name, symbol, total_supply, tradableExchange,
         details, return_details,
-        memo, expirationDate, transferable
+        memo, expirationDate, transferable,
+        contact_information, privacy_policy
     ]
 
     coupon, _ = chain.provider.get_or_deploy_contract(
