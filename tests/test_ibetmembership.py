@@ -12,11 +12,14 @@ def init_args(exchange_address):
     expiration_date = '20191231'
     memo = 'some_memo'
     transferable = True
+    contact_information = 'some_contact_information'
+    privacy_policy = 'some_privacy_policy'
 
     deploy_args = [
         name, symbol, initial_supply, tradable_exchange,
         details, return_details,
-        expiration_date, memo, transferable
+        expiration_date, memo, transferable,
+        contact_information, privacy_policy
     ]
     return deploy_args
 
@@ -55,6 +58,8 @@ def test_deploy_normal_1(web3, chain, users, membership_exchange):
     transferable = membership_contract.call().transferable()
     status = membership_contract.call().status()
     balance = membership_contract.call().balanceOf(issuer)
+    contact_information = membership_contract.call().contactInformation()
+    privacy_policy = membership_contract.call().privacyPolicy()
 
     assert owner_address == issuer
     assert name == deploy_args[0]
@@ -68,6 +73,8 @@ def test_deploy_normal_1(web3, chain, users, membership_exchange):
     assert transferable == deploy_args[8]
     assert status is True
     assert balance == deploy_args[2]
+    assert contact_information == deploy_args[9]
+    assert privacy_policy == deploy_args[10]
 
 
 # エラー系1: 入力値の型誤り（name）
@@ -166,7 +173,7 @@ def test_deploy_error_8(chain, membership_exchange):
         )
 
 
-# エラー系8: 入力値の型誤り（tradableExchange）
+# エラー系9: 入力値の型誤り（tradableExchange）
 def test_deploy_error_9(chain, membership_exchange):
     deploy_args = init_args(membership_exchange.address)
     deploy_args[3] = '0xaaaa'
@@ -176,6 +183,26 @@ def test_deploy_error_9(chain, membership_exchange):
             'IbetMembership',
             deploy_args=deploy_args
         )
+
+
+# エラー系10: 入力値の型誤り（contactInformation）
+def test_deploy_error_10(chain, membership_exchange):
+    deploy_args = init_args(membership_exchange.address)
+    deploy_args[9] = 1234
+
+    with pytest.raises(TypeError):
+        chain.provider.get_or_deploy_contract(
+            'IbetMembership', deploy_args=deploy_args)
+
+
+# エラー系10: 入力値の型誤り（privacyPolicy）
+def test_deploy_error_11(chain, membership_exchange):
+    deploy_args = init_args(membership_exchange.address)
+    deploy_args[10] = 1234
+
+    with pytest.raises(TypeError):
+        chain.provider.get_or_deploy_contract(
+            'IbetMembership', deploy_args=deploy_args)
 
 
 '''
@@ -1674,3 +1701,119 @@ def test_applyForOffering_error_2(web3, chain, users, membership_exchange):
     chain.wait.for_receipt(txn_hash)
 
     assert membership_contract.call().applications(trader) == ''
+
+
+'''
+TEST16_問い合わせ先情報の更新（setContactInformation）
+'''
+
+
+# 正常系1
+# ＜発行者＞発行 -> ＜発行者＞問い合わせ先情報の修正
+def test_setContactInformation_normal_1(web3, chain, users, membership_exchange):
+    issuer = users['issuer']
+
+    # 新規発行
+    web3.eth.defaultAccount = issuer
+    deploy_args = init_args(membership_exchange.address)
+    membership_contract = deploy(chain, deploy_args)
+
+    # 修正
+    web3.eth.defaultAccount = issuer
+    txn_hash = membership_contract.transact().setContactInformation('updated contact information')
+    chain.wait.for_receipt(txn_hash)
+
+    contact_information = membership_contract.call().contactInformation()
+    assert contact_information == 'updated contact information'
+
+
+# エラー系1: 入力値の型誤り
+def test_setContactInformation_error_1(web3, chain, users, membership_exchange):
+    issuer = users['issuer']
+
+    # 新規発行
+    web3.eth.defaultAccount = issuer
+    deploy_args = init_args(membership_exchange.address)
+    membership_contract = deploy(chain, deploy_args)
+
+    # 修正
+    web3.eth.defaultAccount = issuer
+    with pytest.raises(TypeError):
+        membership_contract.transact().setContactInformation(1234)
+
+
+# エラー系2: 権限エラー
+def test_setContactInformation_error_2(web3, chain, users, membership_exchange):
+    issuer = users['issuer']
+    other = users['trader']
+
+    # 新規発行
+    web3.eth.defaultAccount = issuer
+    deploy_args = init_args(membership_exchange.address)
+    membership_contract = deploy(chain, deploy_args)
+
+    # 修正
+    web3.eth.defaultAccount = other
+    txn_hash = membership_contract.transact().setContactInformation('updated contact information')
+    chain.wait.for_receipt(txn_hash)
+
+    contact_information = membership_contract.call().contactInformation()
+    assert contact_information == 'some_contact_information'
+
+
+'''
+TEST17_プライバシーポリシーの更新（setPrivatePolicy）
+'''
+
+
+# 正常系1
+# ＜発行者＞発行 -> ＜発行者＞プライバシーポリシーの修正
+def test_setPrivatePolicy_normal_1(web3, chain, users, membership_exchange):
+    issuer = users['issuer']
+
+    # 新規発行
+    web3.eth.defaultAccount = issuer
+    deploy_args = init_args(membership_exchange.address)
+    membership_contract = deploy(chain, deploy_args)
+
+    # 修正
+    web3.eth.defaultAccount = issuer
+    txn_hash = membership_contract.transact().setPrivatePolicy('updated privacy policy')
+    chain.wait.for_receipt(txn_hash)
+
+    privacy_policy = membership_contract.call().privacyPolicy()
+    assert privacy_policy == 'updated privacy policy'
+
+
+# エラー系1: 入力値の型誤り
+def test_setPrivatePolicy_error_1(web3, chain, users, membership_exchange):
+    issuer = users['issuer']
+
+    # 新規発行
+    web3.eth.defaultAccount = issuer
+    deploy_args = init_args(membership_exchange.address)
+    membership_contract = deploy(chain, deploy_args)
+
+    # 修正
+    web3.eth.defaultAccount = issuer
+    with pytest.raises(TypeError):
+        membership_contract.transact().setPrivatePolicy(1234)
+
+
+# エラー系2: 権限エラー
+def test_setPrivatePolicy_error_2(web3, chain, users, membership_exchange):
+    issuer = users['issuer']
+    other = users['trader']
+
+    # 新規発行
+    web3.eth.defaultAccount = issuer
+    deploy_args = init_args(membership_exchange.address)
+    membership_contract = deploy(chain, deploy_args)
+
+    # 修正
+    web3.eth.defaultAccount = other
+    txn_hash = membership_contract.transact().setPrivatePolicy('updated privacy policy')
+    chain.wait.for_receipt(txn_hash)
+
+    privacy_policy = membership_contract.call().privacyPolicy()
+    assert privacy_policy == 'some_privacy_policy'

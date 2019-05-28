@@ -52,7 +52,10 @@ contract IbetStraightBond is Ownable, IbetStandardTokenInterface {
         uint256 _faceValue, uint256 _interestRate, string memory _interestPaymentDate,
         string memory _redemptionDate, uint256 _redemptionAmount,
         string memory _returnDate, string memory _returnAmount,
-        string memory _purpose, string memory _memo) public {
+        string memory _purpose, string memory _memo,
+        string _contactInformation, string _privacyPolicy)
+        public
+    {
         owner = msg.sender;
         name = _name;
         symbol = _symbol;
@@ -69,6 +72,8 @@ contract IbetStraightBond is Ownable, IbetStandardTokenInterface {
         memo = _memo;
         balances[owner] = totalSupply;
         isRedeemed = false;
+        contactInformation = _contactInformation;
+        privacyPolicy = _privacyPolicy;
     }
 
     // ファンクション：アドレスフォーマットがコントラクトのものかを判断する
@@ -160,6 +165,22 @@ contract IbetStraightBond is Ownable, IbetStandardTokenInterface {
     // ファンクション：取引可能Exchangeの更新
     function setTradableExchange(address _exchange) public onlyOwner() {
         tradableExchange = _exchange;
+    }
+
+    // ファンクション：問い合わせ先情報更新
+    function setContactInformation(string _contactInformation)
+        public
+        onlyOwner()
+    {
+        contactInformation = _contactInformation;
+    }
+
+    // ファンクション：プライバシーポリシー更新
+    function setPrivatePolicy(string _privacyPolicy)
+        public
+        onlyOwner()
+    {
+        privacyPolicy = _privacyPolicy;
     }
 
     // ファンクション：商品の認定をリクエストする

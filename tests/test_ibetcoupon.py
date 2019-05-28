@@ -1,10 +1,6 @@
 import pytest
 from eth_utils import to_checksum_address
 
-'''
-TEST1_デプロイ
-'''
-
 
 def init_args(exchange_address):
     name = 'test_coupon'
@@ -16,11 +12,14 @@ def init_args(exchange_address):
     memo = 'some_memo'
     expiration_date = '20201231'
     transferable = True
+    contact_information = 'some_contact_information'
+    privacy_policy = 'some_privacy_policy'
 
     deploy_args = [
         name, symbol, total_supply, tradable_exchange,
         details, return_details,
-        memo, expiration_date, transferable
+        memo, expiration_date, transferable,
+        contact_information, privacy_policy
     ]
     return deploy_args
 
@@ -31,6 +30,11 @@ def deploy(chain, deploy_args):
         deploy_args=deploy_args
     )
     return coupon_contract
+
+
+'''
+TEST1_デプロイ
+'''
 
 
 # 正常系1: deploy
@@ -53,6 +57,8 @@ def test_deploy_normal_1(web3, chain, users, coupon_exchange):
     expiration_date = coupon.call().expirationDate()
     is_valid = coupon.call().status()
     transferable = coupon.call().transferable()
+    contact_information = coupon.call().contactInformation()
+    privacy_policy = coupon.call().privacyPolicy()
 
     assert owner_address == issuer
     assert name == deploy_args[0]
@@ -65,6 +71,8 @@ def test_deploy_normal_1(web3, chain, users, coupon_exchange):
     assert expiration_date == deploy_args[7]
     assert is_valid is True
     assert transferable == deploy_args[8]
+    assert contact_information == deploy_args[9]
+    assert privacy_policy == deploy_args[10]
 
 
 # エラー系1: 入力値の型誤り（name）
@@ -151,6 +159,26 @@ def test_deploy_error_8(chain, coupon_exchange):
 def test_deploy_error_9(chain, coupon_exchange):
     deploy_args = init_args(coupon_exchange.address)
     deploy_args[8] = 'True'
+
+    with pytest.raises(TypeError):
+        chain.provider.get_or_deploy_contract(
+            'IbetCoupon', deploy_args=deploy_args)
+
+
+# エラー系10: 入力値の型誤り（contactInformation）
+def test_deploy_error_10(chain, coupon_exchange):
+    deploy_args = init_args(coupon_exchange.address)
+    deploy_args[9] = 1234
+
+    with pytest.raises(TypeError):
+        chain.provider.get_or_deploy_contract(
+            'IbetCoupon', deploy_args=deploy_args)
+
+
+# エラー系11: 入力値の型誤り（privacyPolicy）
+def test_deploy_error_11(chain, coupon_exchange):
+    deploy_args = init_args(coupon_exchange.address)
+    deploy_args[10] = 1234
 
     with pytest.raises(TypeError):
         chain.provider.get_or_deploy_contract(
@@ -1511,3 +1539,119 @@ def test_setReturnDetails_error_2(web3, chain, users, coupon_exchange):
 
     return_details = coupon.call().returnDetails()
     assert return_details == deploy_args[5]
+
+
+'''
+TEST18_問い合わせ先情報の更新（setContactInformation）
+'''
+
+
+# 正常系1
+# ＜発行者＞発行 -> ＜発行者＞問い合わせ先情報の修正
+def test_setContactInformation_normal_1(web3, chain, users, coupon_exchange):
+    issuer = users['issuer']
+
+    # 新規発行
+    web3.eth.defaultAccount = issuer
+    deploy_args = init_args(coupon_exchange.address)
+    coupon = deploy(chain, deploy_args)
+
+    # 修正
+    web3.eth.defaultAccount = issuer
+    txn_hash = coupon.transact().setContactInformation('updated contact information')
+    chain.wait.for_receipt(txn_hash)
+
+    contact_information = coupon.call().contactInformation()
+    assert contact_information == 'updated contact information'
+
+
+# エラー系1: 入力値の型誤り
+def test_setContactInformation_error_1(web3, chain, users, coupon_exchange):
+    issuer = users['issuer']
+
+    # 新規発行
+    web3.eth.defaultAccount = issuer
+    deploy_args = init_args(coupon_exchange.address)
+    coupon = deploy(chain, deploy_args)
+
+    # 修正
+    web3.eth.defaultAccount = issuer
+    with pytest.raises(TypeError):
+        coupon.transact().setContactInformation(1234)
+
+
+# エラー系2: 権限エラー
+def test_setContactInformation_error_2(web3, chain, users, coupon_exchange):
+    issuer = users['issuer']
+    other = users['trader']
+
+    # 新規発行
+    web3.eth.defaultAccount = issuer
+    deploy_args = init_args(coupon_exchange.address)
+    coupon = deploy(chain, deploy_args)
+
+    # 修正
+    web3.eth.defaultAccount = other
+    txn_hash = coupon.transact().setContactInformation('updated contact information')
+    chain.wait.for_receipt(txn_hash)
+
+    contact_information = coupon.call().contactInformation()
+    assert contact_information == 'some_contact_information'
+
+
+'''
+TEST19_プライバシーポリシーの更新（setPrivatePolicy）
+'''
+
+
+# 正常系1
+# ＜発行者＞発行 -> ＜発行者＞プライバシーポリシーの修正
+def test_setPrivatePolicy_normal_1(web3, chain, users, coupon_exchange):
+    issuer = users['issuer']
+
+    # 新規発行
+    web3.eth.defaultAccount = issuer
+    deploy_args = init_args(coupon_exchange.address)
+    coupon = deploy(chain, deploy_args)
+
+    # 修正
+    web3.eth.defaultAccount = issuer
+    txn_hash = coupon.transact().setPrivatePolicy('updated privacy policy')
+    chain.wait.for_receipt(txn_hash)
+
+    privacy_policy = coupon.call().privacyPolicy()
+    assert privacy_policy == 'updated privacy policy'
+
+
+# エラー系1: 入力値の型誤り
+def test_setPrivatePolicy_error_1(web3, chain, users, coupon_exchange):
+    issuer = users['issuer']
+
+    # 新規発行
+    web3.eth.defaultAccount = issuer
+    deploy_args = init_args(coupon_exchange.address)
+    coupon = deploy(chain, deploy_args)
+
+    # 修正
+    web3.eth.defaultAccount = issuer
+    with pytest.raises(TypeError):
+        coupon.transact().setPrivatePolicy(1234)
+
+
+# エラー系2: 権限エラー
+def test_setPrivatePolicy_error_2(web3, chain, users, coupon_exchange):
+    issuer = users['issuer']
+    other = users['trader']
+
+    # 新規発行
+    web3.eth.defaultAccount = issuer
+    deploy_args = init_args(coupon_exchange.address)
+    coupon = deploy(chain, deploy_args)
+
+    # 修正
+    web3.eth.defaultAccount = other
+    txn_hash = coupon.transact().setPrivatePolicy('updated privacy policy')
+    chain.wait.for_receipt(txn_hash)
+
+    privacy_policy = coupon.call().privacyPolicy()
+    assert privacy_policy == 'some_privacy_policy'

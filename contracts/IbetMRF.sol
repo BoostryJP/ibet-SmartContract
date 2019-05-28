@@ -38,7 +38,8 @@ contract IbetMRF is Ownable, IbetStandardTokenInterface {
     // ---------------------------------------------------------------
     constructor(string memory _name, string memory _symbol,
         uint256 _totalSupply, address _tradableExchange,
-        string memory _details, string memory _memo)
+        string memory _details, string memory _memo,
+        string _contactInformation, string _privacyPolicy)
         public
     {
         owner = msg.sender;
@@ -50,6 +51,8 @@ contract IbetMRF is Ownable, IbetStandardTokenInterface {
         memo = _memo;
         balances[owner] = totalSupply;
         status = true;
+        contactInformation = _contactInformation;
+        privacyPolicy = _privacyPolicy;
     }
 
 
@@ -170,6 +173,22 @@ contract IbetMRF is Ownable, IbetStandardTokenInterface {
         onlyOwner()
     {
       tradableExchange = _exchange;
+    }
+
+    // Function：問い合わせ先情報更新
+    function setContactInformation(string _contactInformation)
+        public
+        onlyOwner()
+    {
+        contactInformation = _contactInformation;
+    }
+
+    // Function：プライバシーポリシー更新
+    function setPrivatePolicy(string _privacyPolicy)
+        public
+        onlyOwner()
+    {
+        privacyPolicy = _privacyPolicy;
     }
 
     // Function：詳細を更新する

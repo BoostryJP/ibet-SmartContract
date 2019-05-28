@@ -17,12 +17,15 @@ def init_args(exchange_address):
     return_amount = 'some_return'
     purpose = 'some_purpose'
     memo = 'some_memo'
+    contact_information = 'some_contact_information'
+    privacy_policy = 'some_privacy_policy'
 
     deploy_args = [
         name, symbol, total_supply, tradable_exchange, face_value,
         interest_rate, interest_payment_date, redemption_date,
         redemption_amount, return_date, return_amount,
-        purpose, memo
+        purpose, memo,
+        contact_information, privacy_policy
     ]
     return deploy_args
 
@@ -57,6 +60,8 @@ def test_deploy_normal_1(web3, chain, users, bond_exchange):
     return_amount = bond_contract.call().returnAmount()
     purpose = bond_contract.call().purpose()
     memo = bond_contract.call().memo()
+    contact_information = bond_contract.call().contactInformation()
+    privacy_policy = bond_contract.call().privacyPolicy()
 
     assert owner_address == account_address
     assert name == deploy_args[0]
@@ -72,6 +77,8 @@ def test_deploy_normal_1(web3, chain, users, bond_exchange):
     assert return_amount == deploy_args[10]
     assert purpose == deploy_args[11]
     assert memo == deploy_args[12]
+    assert contact_information == deploy_args[13]
+    assert privacy_policy == deploy_args[14]
 
 
 # エラー系1: 入力値の型誤り（name）
@@ -174,6 +181,22 @@ def test_deploy_error_12(chain, bond_exchange):
 def test_deploy_error_13(chain, bond_exchange):
     deploy_args = init_args(bond_exchange.address)
     deploy_args[3] = '0xaaaa'
+    with pytest.raises(TypeError):
+        chain.provider.get_or_deploy_contract('IbetStraightBond', deploy_args=deploy_args)
+
+
+# エラー系14: 入力値の型誤り（contactInformation）
+def test_deploy_error_14(chain, bond_exchange):
+    deploy_args = init_args(bond_exchange.address)
+    deploy_args[13] = 1234
+    with pytest.raises(TypeError):
+        chain.provider.get_or_deploy_contract('IbetStraightBond', deploy_args=deploy_args)
+
+
+# エラー系15: 入力値の型誤り（privacyPolicy）
+def test_deploy_error_15(chain, bond_exchange):
+    deploy_args = init_args(bond_exchange.address)
+    deploy_args[14] = 1234
     with pytest.raises(TypeError):
         chain.provider.get_or_deploy_contract('IbetStraightBond', deploy_args=deploy_args)
 
@@ -1069,3 +1092,113 @@ def test_setTradableExchange_error_2(web3, chain, users, bond_exchange,
     chain.wait.for_receipt(txn_hash)
 
     assert bond_token.call().tradableExchange() == to_checksum_address(bond_exchange.address)
+
+
+'''
+TEST12_問い合わせ先情報の更新（setContactInformation）
+'''
+
+
+# 正常系1: 発行（デプロイ） -> 修正
+def test_setContactInformation_normal_1(web3, chain, users, bond_exchange):
+    issuer = users['issuer']
+
+    # 債券トークン新規発行
+    web3.eth.defaultAccount = issuer
+    bond_token, deploy_args = utils. \
+        issue_bond_token(web3, chain, users, bond_exchange.address)
+
+    # 修正 -> Success
+    web3.eth.defaultAccount = issuer
+    txn_hash = bond_token.transact().setContactInformation('updated contact information')
+    chain.wait.for_receipt(txn_hash)
+
+    contact_information = bond_token.call().contactInformation()
+    assert contact_information == 'updated contact information'
+
+
+# エラー系1: 入力値の型誤り
+def test_setContactInformation_error_1(web3, chain, users, bond_exchange):
+    issuer = users['issuer']
+
+    # 債券トークン新規発行
+    web3.eth.defaultAccount = issuer
+    bond_token, deploy_args = utils. \
+        issue_bond_token(web3, chain, users, bond_exchange.address)
+
+    web3.eth.defaultAccount = issuer
+    with pytest.raises(TypeError):
+        bond_token.transact().setContactInformation(1234)
+
+
+# エラー系2: 権限エラー
+def test_setContactInformation_error_2(web3, chain, users, bond_exchange):
+    issuer = users['issuer']
+    other = users['admin']
+
+    # 債券トークン新規発行
+    web3.eth.defaultAccount = issuer
+    bond_token, deploy_args = utils. \
+        issue_bond_token(web3, chain, users, bond_exchange.address)
+
+    # Owner以外のアドレスから更新 -> Failure
+    web3.eth.defaultAccount = other
+    bond_token.transact().setContactInformation('updated contact information')
+
+    contact_information = bond_token.call().contactInformation()
+    assert contact_information == 'some_contact_information'
+
+
+'''
+TEST13_プライバシーポリシーの更新（setPrivatePolicy）
+'''
+
+
+# 正常系1: 発行（デプロイ） -> 修正
+def test_setPrivatePolicy_normal_1(web3, chain, users, bond_exchange):
+    issuer = users['issuer']
+
+    # 債券トークン新規発行
+    web3.eth.defaultAccount = issuer
+    bond_token, deploy_args = utils. \
+        issue_bond_token(web3, chain, users, bond_exchange.address)
+
+    # 修正 -> Success
+    web3.eth.defaultAccount = issuer
+    txn_hash = bond_token.transact().setPrivatePolicy('updated privacy policy')
+    chain.wait.for_receipt(txn_hash)
+
+    privacy_policy = bond_token.call().privacyPolicy()
+    assert privacy_policy == 'updated privacy policy'
+
+
+# エラー系1: 入力値の型誤り
+def test_setPrivatePolicy_error_1(web3, chain, users, bond_exchange):
+    issuer = users['issuer']
+
+    # 債券トークン新規発行
+    web3.eth.defaultAccount = issuer
+    bond_token, deploy_args = utils. \
+        issue_bond_token(web3, chain, users, bond_exchange.address)
+
+    web3.eth.defaultAccount = issuer
+    with pytest.raises(TypeError):
+        bond_token.transact().setPrivatePolicy(1234)
+
+
+# エラー系2: 権限エラー
+def test_setPrivatePolicy_error_2(web3, chain, users, bond_exchange):
+    issuer = users['issuer']
+    other = users['admin']
+
+    # 債券トークン新規発行
+    web3.eth.defaultAccount = issuer
+    bond_token, deploy_args = utils. \
+        issue_bond_token(web3, chain, users, bond_exchange.address)
+
+    # Owner以外のアドレスから更新 -> Failure
+    web3.eth.defaultAccount = other
+    bond_token.transact().setPrivatePolicy('updated privacy policy')
+
+    privacy_policy = bond_token.call().privacyPolicy()
+    assert privacy_policy == 'some_privacy_policy'
