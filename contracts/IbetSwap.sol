@@ -489,7 +489,7 @@ contract IbetSwap is Ownable{
 
         // 更新処理：約定情報
         setLatestAgreementId(_orderId, latestAgreementId(_orderId) + 1);
-        setAgreement(_orderId, latestAgreementId(_orderId), msg.sender, _amount, order.price, false, false, 0);
+        setAgreement(_orderId, latestAgreementId(_orderId), msg.sender, _amount, order.price, false, true, 0);
 
         // 更新処理：Make注文の数量を減らす
         setOrder(_orderId, order.owner, order.token, order.amount.sub(_amount),
