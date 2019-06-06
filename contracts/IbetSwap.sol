@@ -33,7 +33,7 @@ contract IbetSwap is Ownable{
     // Event：約定
     event Agree(address tokenAddress, address MRFTokenAddress,
         uint256 orderId, uint256 agreementId,
-        address indexed buyerAddress, address indexed selleerAddress,
+        address indexed buyerAddress, address indexed sellerAddress,
         uint256 price, uint256 amount);
 
     // Event：全引き出し
