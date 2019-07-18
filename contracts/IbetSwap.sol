@@ -540,12 +540,12 @@ contract IbetSwap is Ownable{
             );
 
             // Takerデータ更新
-            //  1) DepositaryReceipt拘束数量の更新(-)
+            //  1) DepositaryReceipt残高数量の更新(-)
             //  2) MRFの割当(+)
-            setCommitment(
+            setBalance(
                 msg.sender,
                 order.token,
-                commitmentOf(msg.sender, order.token).sub(_amount)
+                balanceOf(msg.sender, order.token).sub(_amount)
             );
             IbetMRF(MRFTokenAddress).transfer(msg.sender, _amount.mul(order.price));
 
