@@ -3,7 +3,7 @@ name: Feature request
 about: プロダクトの改善提案
 title: "[FEATURE]"
 labels: feature
-assignees: YoshihitoAso
+assignees: YoshihitoAso, horsewin, OnePoke2, r-kozu
 
 ---
 
