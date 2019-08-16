@@ -2,13 +2,12 @@ pragma solidity ^0.4.24;
 
 import "./SafeMath.sol";
 import "./Ownable.sol";
-import "./IbetMRF.sol";
-import "./IbetDepositaryReceipt.sol";
+import "./IbetStandardTokenInterface.sol";
 import "./ExchangeStorage.sol";
 
 /**
  * @title IbetSwap
- * @notice MRFトークンとDepositaryReceiptトークンの交換所機能を提供
+ * @notice SettlementトークンとDepositaryReceiptトークンの交換所機能を提供
  * @dev DepositaryReceiptトークン同士の交換は不可
  */
 contract IbetSwap is Ownable{
@@ -23,15 +22,15 @@ contract IbetSwap is Ownable{
     // ---------------------------------------------------------------
 
     // Event：Make注文
-    event MakeOrder(address indexed tokenAddress, address indexed MRFTokenAddress, address indexed accountAddress,
+    event MakeOrder(address indexed tokenAddress, address indexed SettlementTokenAddress, address indexed accountAddress,
         uint256 orderId, bool isBuy, uint256 price, uint256 amount);
 
     // Event：注文取消
-    event CancelOrder(address indexed tokenAddress, address indexed MRFTokenAddress, address indexed accountAddress,
+    event CancelOrder(address indexed tokenAddress, address indexed SettlementTokenAddress, address indexed accountAddress,
         uint256 orderId, bool isBuy, uint256 price, uint256 amount);
 
     // Event：約定
-    event Agree(address tokenAddress, address MRFTokenAddress,
+    event Agree(address tokenAddress, address SettlementTokenAddress,
         uint256 orderId, uint256 agreementId,
         address indexed buyerAddress, address indexed sellerAddress,
         uint256 price, uint256 amount);
@@ -47,13 +46,13 @@ contract IbetSwap is Ownable{
     // Constructor
     // ---------------------------------------------------------------
     address public storageAddress;
-    address public MRFTokenAddress;
+    address public settlementTokenAddress;
 
-    constructor(address _storageAddress, address _MRFTokenAddress)
+    constructor(address _storageAddress, address _settlementTokenAddress)
         public
     {
         storageAddress = _storageAddress;
-        MRFTokenAddress =_MRFTokenAddress;
+        settlementTokenAddress =_settlementTokenAddress;
     }
 
 
@@ -227,24 +226,24 @@ contract IbetSwap is Ownable{
     }
 
     /**
-     * @notice MRFトークン更新
-     * @notice MRFトークンのアドレス情報を更新する。
+     * @notice Settlementトークン更新
+     * @notice Settlementトークンのアドレス情報を更新する。
      * @dev Ownerのみ実行が可能。
      */
-    function setMRFToken(address _MRFTokenAddress)
+    function setSettlementToken(address _settlementTokenAddress)
         public
         onlyOwner()
     {
-        MRFTokenAddress = _MRFTokenAddress;
+        settlementTokenAddress = _settlementTokenAddress;
     }
 
     /**
-     * @notice MRFトークン利用可否チェック
-     * @notice MRFトークンが利用可能なステータスであることをチェックする。
+     * @notice Settlementトークン利用可否チェック
+     * @notice Settlementトークンが利用可能なステータスであることをチェックする。
      */
-    modifier isMRFEnabled()
+    modifier isSettlementTokenEnabled()
     {
-        require(IbetMRF(MRFTokenAddress).status() == true);
+        require(IbetStandardTokenInterface(settlementTokenAddress).status() == true);
         _;
     }
 
@@ -254,7 +253,7 @@ contract IbetSwap is Ownable{
      */
     modifier isTokenEnabled(address _token)
     {
-        require(IbetDepositaryReceipt(_token).status() == true);
+        require(IbetStandardTokenInterface(_token).status() == true);
         _;
     }
 
@@ -262,11 +261,11 @@ contract IbetSwap is Ownable{
      * @notice 新規注文作成（Make注文）
      * @notice 流動性供給のための注文を作成する。
      * @dev MarketMakerのみ実行が可能。
-     * @dev _isBuy == true : DepositaryReceiptの買い（MRFの売り）
-     * @dev _isBuy == false : DepositaryReceiptの売り（MRFの買い）
+     * @dev _isBuy == true : DepositaryReceiptの買い（SettlementTokenの売り）
+     * @dev _isBuy == false : DepositaryReceiptの売り（SettlementTokenの買い）
      * @param _token DepositaryReceiptトークンのアドレス
      * @param _amount 注文数量
-     * @param _price 単価（MRFの数量）
+     * @param _price 単価（SettlementTokenの数量）
      * @param _isBuy 売/買（true:買）
      */
     function makeOrder(address _token, uint256 _amount, uint256 _price, bool _isBuy)
@@ -274,16 +273,16 @@ contract IbetSwap is Ownable{
         onlyEOA(msg.sender)
         onlyMarketMaker(_token)
         isTokenEnabled(_token)
-        isMRFEnabled()
+        isSettlementTokenEnabled()
         returns (bool)
     {
         if (_isBuy) { // 買注文の場合
             // <CHK>
             //  1) 注文数量が0の場合
-            //  2) MRF残高が不足している場合
+            //  2) SettlementToken残高が不足している場合
             //  -> REVERT
             if (_amount == 0 ||
-                balanceOf(msg.sender, MRFTokenAddress) < _amount.mul(_price))
+                balanceOf(msg.sender, settlementTokenAddress) < _amount.mul(_price))
             {
                 revert();
             }
@@ -308,16 +307,16 @@ contract IbetSwap is Ownable{
 
         // 更新処理：残高、拘束数量
         if (_isBuy) { // 買注文の場合
-            // MRF残高、拘束数量の更新
+            // SettlementToken残高、拘束数量の更新
             setBalance(
                 msg.sender,
-                MRFTokenAddress,
-                balanceOf(msg.sender, MRFTokenAddress).sub(_amount.mul(_price))
+                settlementTokenAddress,
+                balanceOf(msg.sender, settlementTokenAddress).sub(_amount.mul(_price))
             );
             setCommitment(
                 msg.sender,
-                MRFTokenAddress,
-                commitmentOf(msg.sender, MRFTokenAddress).add(_amount.mul(_price))
+                settlementTokenAddress,
+                commitmentOf(msg.sender, settlementTokenAddress).add(_amount.mul(_price))
             );
         } else { // 売注文の場合
             // DepositaryReceipt残高、拘束数量の更新
@@ -334,7 +333,7 @@ contract IbetSwap is Ownable{
         }
 
         // イベント登録：Make注文
-        emit MakeOrder(_token, MRFTokenAddress, msg.sender, latestOrderId(),
+        emit MakeOrder(_token, settlementTokenAddress, msg.sender, latestOrderId(),
             _isBuy, _price, _amount);
 
         return true;
@@ -349,7 +348,7 @@ contract IbetSwap is Ownable{
     function cancelOrder(uint256 _orderId)
         public
         onlyEOA(msg.sender)
-        isMRFEnabled()
+        isSettlementTokenEnabled()
         returns (bool)
     {
         // <CHK>
@@ -375,16 +374,16 @@ contract IbetSwap is Ownable{
 
         // 更新処理：残高、拘束数量
         if (order.isBuy) { // 買注文の場合
-            // MRF残高、拘束数量の更新
+            // SettlementToken残高、拘束数量の更新
             setBalance(
                 msg.sender,
-                MRFTokenAddress,
-                balanceOf(msg.sender, MRFTokenAddress).add(order.amount.mul(order.price))
+                settlementTokenAddress,
+                balanceOf(msg.sender, settlementTokenAddress).add(order.amount.mul(order.price))
             );
             setCommitment(
                 msg.sender,
-                MRFTokenAddress,
-                commitmentOf(msg.sender, MRFTokenAddress).sub(order.amount.mul(order.price))
+                settlementTokenAddress,
+                commitmentOf(msg.sender, settlementTokenAddress).sub(order.amount.mul(order.price))
             );
         } else { // 売注文の場合
             // DepositaryReceipt残高、拘束数量の更新
@@ -409,7 +408,7 @@ contract IbetSwap is Ownable{
         );
 
         // イベント登録：注文キャンセル
-        emit CancelOrder(order.token, MRFTokenAddress, msg.sender, _orderId, order.isBuy, order.price, order.amount);
+        emit CancelOrder(order.token, settlementTokenAddress, msg.sender, _orderId, order.isBuy, order.price, order.amount);
 
         return true;
     }
@@ -417,8 +416,8 @@ contract IbetSwap is Ownable{
     /**
      * @notice Take注文
      * @notice 一般ユーザから反対注文（Take注文）を実行する。
-     * @dev _isBuy == true : DepositaryReceiptの買い（MRFの売り）
-     * @dev _isBuy == false : DepositaryReceiptの売り（MRFの買い）
+     * @dev _isBuy == true : DepositaryReceiptの買い（SettlementTokenの売り）
+     * @dev _isBuy == false : DepositaryReceiptの売り（SettlementTokenの買い）
      * @dev 業務チェックエラー時は、SWAPコントラクトにデポジットしたユーザの預かりを即時でトークンコントラクトに戻す。
      * @param _orderId 注文ID
      * @param _amount 注文数量（DepositaryReceiptの数量）
@@ -427,7 +426,7 @@ contract IbetSwap is Ownable{
     function takeOrder(uint256 _orderId, uint256 _amount, bool _isBuy)
         public
         onlyEOA(msg.sender)
-        isMRFEnabled()
+        isSettlementTokenEnabled()
         returns (bool)
     {
         // <CHK>
@@ -447,18 +446,18 @@ contract IbetSwap is Ownable{
             //  4) Make注文がキャンセル済の場合
             //  5) トークンの取扱状態が無効（False）の場合
             //  6) Take注文数量がMake注文数量を超えている場合
-            //  7) 約定価格（MRF数量）がユーザのMRF残高を超過している場合
-            //  -> 更新処理：MRF残高をユーザのアカウントに全て戻し、falseを返す
+            //  7) 約定価格（SettlementToken数量）がユーザのSettlementToken残高を超過している場合
+            //  -> 更新処理：SettlementToken残高をユーザのアカウントに全て戻し、falseを返す
             if (_amount == 0 ||
                 order.isBuy == _isBuy ||
                 msg.sender == order.owner ||
                 order.canceled == true ||
-                IbetDepositaryReceipt(order.token).status() == false ||
+                IbetStandardTokenInterface(order.token).status() == false ||
                 order.amount < _amount ||
-                balanceOf(msg.sender, MRFTokenAddress) < _amount.mul(order.price))
+                balanceOf(msg.sender, settlementTokenAddress) < _amount.mul(order.price))
             {
-                IbetMRF(MRFTokenAddress).transfer(msg.sender, balanceOf(msg.sender, MRFTokenAddress));
-                setBalance(msg.sender, MRFTokenAddress, 0);
+                IbetStandardTokenInterface(settlementTokenAddress).transfer(msg.sender, balanceOf(msg.sender, settlementTokenAddress));
+                setBalance(msg.sender, settlementTokenAddress, 0);
                 return false;
             }
         }
@@ -477,11 +476,11 @@ contract IbetSwap is Ownable{
                 order.isBuy == _isBuy ||
                 msg.sender == order.owner ||
                 order.canceled == true ||
-                IbetDepositaryReceipt(order.token).status() == false ||
+                IbetStandardTokenInterface(order.token).status() == false ||
                 order.amount < _amount ||
                 balanceOf(msg.sender, order.token) < _amount)
             {
-                IbetDepositaryReceipt(order.token).transfer(msg.sender, balanceOf(msg.sender, order.token));
+                IbetStandardTokenInterface(order.token).transfer(msg.sender, balanceOf(msg.sender, order.token));
                 setBalance(msg.sender, order.token, 0);
                 return false;
             }
@@ -498,7 +497,7 @@ contract IbetSwap is Ownable{
         if (_isBuy) { // Take買注文の場合（Make注文は売）
             // Makerデータ更新
             //  1) DepositaryReceipt拘束数量の更新(-)
-            //  2) MRF残高の更新(+)
+            //  2) SettlementToken残高の更新(+)
             setCommitment(
                 marketMaker[order.token],
                 order.token,
@@ -506,28 +505,28 @@ contract IbetSwap is Ownable{
             );
             setBalance(
                 marketMaker[order.token],
-                MRFTokenAddress,
-                balanceOf(marketMaker[order.token], MRFTokenAddress).add(_amount.mul(order.price))
+                settlementTokenAddress,
+                balanceOf(marketMaker[order.token], settlementTokenAddress).add(_amount.mul(order.price))
             );
 
             // Takerデータ更新
-            //  1) MRF残高の更新(-)
+            //  1) SettlementToken残高の更新(-)
             //  2) DepositaryReceiptの割当(+)
             setBalance(
                 msg.sender,
-                MRFTokenAddress,
-                balanceOf(msg.sender, MRFTokenAddress).sub(_amount.mul(order.price))
+                settlementTokenAddress,
+                balanceOf(msg.sender, settlementTokenAddress).sub(_amount.mul(order.price))
             );
-            IbetDepositaryReceipt(order.token).transfer(msg.sender, _amount);
+            IbetStandardTokenInterface(order.token).transfer(msg.sender, _amount);
 
             // イベント登録：約定
-            emit Agree(order.token, MRFTokenAddress, _orderId, latestAgreementId(_orderId),
+            emit Agree(order.token, settlementTokenAddress, _orderId, latestAgreementId(_orderId),
                 msg.sender, order.owner, order.price, _amount);
 
         } else { // Take売注文の場合（Make注文は買）
             // Makerデータ更新
             //  1) DepositaryReceipt拘束数量の更新(+)
-            //  2) MRF残高の更新(-)
+            //  2) SettlementToken残高の更新(-)
             setCommitment(
                 marketMaker[order.token],
                 order.token,
@@ -535,22 +534,22 @@ contract IbetSwap is Ownable{
             );
             setBalance(
                 marketMaker[order.token],
-                MRFTokenAddress,
-                balanceOf(marketMaker[order.token], MRFTokenAddress).sub(_amount.mul(order.price))
+                settlementTokenAddress,
+                balanceOf(marketMaker[order.token], settlementTokenAddress).sub(_amount.mul(order.price))
             );
 
             // Takerデータ更新
             //  1) DepositaryReceipt残高数量の更新(-)
-            //  2) MRFの割当(+)
+            //  2) SettlementTokenの割当(+)
             setBalance(
                 msg.sender,
                 order.token,
                 balanceOf(msg.sender, order.token).sub(_amount)
             );
-            IbetMRF(MRFTokenAddress).transfer(msg.sender, _amount.mul(order.price));
+            IbetStandardTokenInterface(settlementTokenAddress).transfer(msg.sender, _amount.mul(order.price));
 
             // イベント登録：約定
-            emit Agree(order.token, MRFTokenAddress, _orderId, latestAgreementId(_orderId),
+            emit Agree(order.token, settlementTokenAddress, _orderId, latestAgreementId(_orderId),
                 order.owner, msg.sender, order.price, _amount);
         }
 
