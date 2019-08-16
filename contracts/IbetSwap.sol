@@ -7,8 +7,8 @@ import "./ExchangeStorage.sol";
 
 /**
  * @title IbetSwap
- * @notice SettlementトークンとDepositaryReceiptトークンの交換所機能を提供
- * @dev DepositaryReceiptトークン同士の交換は不可
+ * @notice SettlementトークンとIbetStandardTokenInterface準拠トークン（ISToken）の交換所機能を提供
+ * @dev ISToken同士の交換は不可
  */
 contract IbetSwap is Ownable{
     using SafeMath for uint256;
@@ -37,9 +37,6 @@ contract IbetSwap is Ownable{
 
     // Event：全引き出し
     event Withdrawal(address indexed tokenAddress, address indexed accountAddress);
-
-    // Event：送信
-    event Transfer(address indexed tokenAddress, address indexed from, address indexed to, uint256 value);
 
 
     // ---------------------------------------------------------------
@@ -249,7 +246,7 @@ contract IbetSwap is Ownable{
 
     /**
      * @notice トークン利用可否チェック
-     * @notice DepositaryReceiptトークンが利用可能なステータスであることをチェックする。
+     * @notice ISTokenトークンが利用可能なステータスであることをチェックする。
      */
     modifier isTokenEnabled(address _token)
     {
@@ -261,9 +258,9 @@ contract IbetSwap is Ownable{
      * @notice 新規注文作成（Make注文）
      * @notice 流動性供給のための注文を作成する。
      * @dev MarketMakerのみ実行が可能。
-     * @dev _isBuy == true : DepositaryReceiptの買い（SettlementTokenの売り）
-     * @dev _isBuy == false : DepositaryReceiptの売り（SettlementTokenの買い）
-     * @param _token DepositaryReceiptトークンのアドレス
+     * @dev _isBuy == true : ISTokenの買い（SettlementTokenの売り）
+     * @dev _isBuy == false : ISTokenの売り（SettlementTokenの買い）
+     * @param _token ISTokenのアドレス
      * @param _amount 注文数量
      * @param _price 単価（SettlementTokenの数量）
      * @param _isBuy 売/買（true:買）
@@ -291,7 +288,7 @@ contract IbetSwap is Ownable{
         if (!_isBuy) { // 売注文の場合
             // <CHK>
             //  1) 注文数量が0の場合
-            //  2) DepositaryReceipt残高が発注数量に満たない場合
+            //  2) ISToken残高が発注数量に満たない場合
             //  -> REVERT
             if (_amount == 0 ||
                 balanceOf(msg.sender, _token) < _amount)
@@ -319,7 +316,7 @@ contract IbetSwap is Ownable{
                 commitmentOf(msg.sender, settlementTokenAddress).add(_amount.mul(_price))
             );
         } else { // 売注文の場合
-            // DepositaryReceipt残高、拘束数量の更新
+            // ISToken残高、拘束数量の更新
             setBalance(
                 msg.sender,
                 _token,
@@ -365,8 +362,7 @@ contract IbetSwap is Ownable{
         //  2) 注文がキャンセル済みの場合
         //  3) 元注文の発注者と、注文キャンセルの実施者が異なる場合
         //  -> REVERT
-        if (order.amount == 0 ||
-            order.canceled == true ||
+        if (order.canceled == true ||
             order.owner != msg.sender)
         {
             revert();
@@ -386,7 +382,7 @@ contract IbetSwap is Ownable{
                 commitmentOf(msg.sender, settlementTokenAddress).sub(order.amount.mul(order.price))
             );
         } else { // 売注文の場合
-            // DepositaryReceipt残高、拘束数量の更新
+            // ISToken残高、拘束数量の更新
             setBalance(
                 msg.sender,
                 order.token,
@@ -416,11 +412,11 @@ contract IbetSwap is Ownable{
     /**
      * @notice Take注文
      * @notice 一般ユーザから反対注文（Take注文）を実行する。
-     * @dev _isBuy == true : DepositaryReceiptの買い（SettlementTokenの売り）
-     * @dev _isBuy == false : DepositaryReceiptの売り（SettlementTokenの買い）
+     * @dev _isBuy == true : ISTokenの買い（SettlementTokenの売り）
+     * @dev _isBuy == false : ISTokenの売り（SettlementTokenの買い）
      * @dev 業務チェックエラー時は、SWAPコントラクトにデポジットしたユーザの預かりを即時でトークンコントラクトに戻す。
      * @param _orderId 注文ID
-     * @param _amount 注文数量（DepositaryReceiptの数量）
+     * @param _amount 注文数量（ISTokenの数量）
      * @param _isBuy 売/買（true:買）
      */
     function takeOrder(uint256 _orderId, uint256 _amount, bool _isBuy)
@@ -496,7 +492,7 @@ contract IbetSwap is Ownable{
 
         if (_isBuy) { // Take買注文の場合（Make注文は売）
             // Makerデータ更新
-            //  1) DepositaryReceipt拘束数量の更新(-)
+            //  1) ISToken拘束数量の更新(-)
             //  2) SettlementToken残高の更新(+)
             setCommitment(
                 marketMaker[order.token],
@@ -511,7 +507,7 @@ contract IbetSwap is Ownable{
 
             // Takerデータ更新
             //  1) SettlementToken残高の更新(-)
-            //  2) DepositaryReceiptの割当(+)
+            //  2) ISTokenの割当(+)
             setBalance(
                 msg.sender,
                 settlementTokenAddress,
@@ -525,7 +521,7 @@ contract IbetSwap is Ownable{
 
         } else { // Take売注文の場合（Make注文は買）
             // Makerデータ更新
-            //  1) DepositaryReceipt拘束数量の更新(+)
+            //  1) ISToken拘束数量の更新(+)
             //  2) SettlementToken残高の更新(-)
             setCommitment(
                 marketMaker[order.token],
@@ -539,7 +535,7 @@ contract IbetSwap is Ownable{
             );
 
             // Takerデータ更新
-            //  1) DepositaryReceipt残高数量の更新(-)
+            //  1) ISToken残高数量の更新(-)
             //  2) SettlementTokenの割当(+)
             setBalance(
                 msg.sender,
@@ -552,6 +548,32 @@ contract IbetSwap is Ownable{
             emit Agree(order.token, settlementTokenAddress, _orderId, latestAgreementId(_orderId),
                 order.owner, msg.sender, order.price, _amount);
         }
+
+        return true;
+    }
+
+    /**
+     * @notice 全残高の引き出し
+     * @dev 未注文の預かりに対してのみ引き出しをおこなう。
+     * @param _token トークンアドレス
+     */
+    function withdrawAll(address _token)
+        public
+        onlyEOA(msg.sender)
+        onlyMarketMaker(_token)
+        returns (bool)
+    {
+        uint256 balance = balanceOf(msg.sender, _token);
+
+        // <CHK>
+        //  残高がゼロの場合、REVERT
+        if (balance == 0 ) { revert(); }
+
+        // 更新処理：トークン引き出し（送信）
+        IbetStandardTokenInterface(_token).transfer(msg.sender, balance);
+        setBalance(msg.sender, _token, 0);
+
+        emit Withdrawal(_token, msg.sender);
 
         return true;
     }
