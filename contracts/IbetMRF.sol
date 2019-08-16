@@ -98,13 +98,16 @@ contract IbetMRF is Ownable, IbetStandardTokenInterface {
         return true;
     }
 
-    // Function：クーポンを譲渡する
+    // Function：トークンを譲渡する
     function transfer(address _to, uint _value)
         public
         returns (bool success)
     {
         // 譲渡しようとしている数量が残高を超えている場合、エラーを返す
         if (balanceOf(msg.sender) < _value) revert();
+        // 宛先アドレスがゼロアドレスの場合、エラーを返す
+        if (_to == address(0)) revert();
+
         bytes memory empty;
         if(isContract(_to)) {
             return transferToContract(_to, _value, empty);
@@ -122,6 +125,8 @@ contract IbetMRF is Ownable, IbetStandardTokenInterface {
     {
         //  数量が送信元アドレス（from）の残高を超えている場合、エラーを返す
         if (balanceOf(_from) < _value) revert();
+        // 宛先アドレスがゼロアドレスの場合、エラーを返す
+        if (_to == address(0)) revert();
 
         bytes memory empty;
         if(isContract(_to)) { // 送信先アドレスがコントラクトアドレスの場合
