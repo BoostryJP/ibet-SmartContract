@@ -26,6 +26,10 @@ contract IbetSwap is Ownable{
         uint256 orderId, bool isBuy, uint256 price, uint256 amount);
 
     // Event：注文取消
+    event ChangeOrder(address indexed tokenAddress, address indexed SettlementTokenAddress, address indexed accountAddress,
+        uint256 orderId, bool isBuy, uint256 price, uint256 amount);
+
+    // Event：注文取消
     event CancelOrder(address indexed tokenAddress, address indexed SettlementTokenAddress, address indexed accountAddress,
         uint256 orderId, bool isBuy, uint256 price, uint256 amount);
 
@@ -299,8 +303,7 @@ contract IbetSwap is Ownable{
 
         // 更新処理：注文情報
         setLatestOrderId(latestOrderId() + 1);
-        setOrder(latestOrderId(), msg.sender, _token, _amount, _price, _isBuy,
-            0x0000000000000000000000000000000000000000, false);
+        setOrder(latestOrderId(), msg.sender, _token, _amount, _price, _isBuy, address(0), false);
 
         // 更新処理：残高、拘束数量
         if (_isBuy) { // 買注文の場合
@@ -337,6 +340,127 @@ contract IbetSwap is Ownable{
     }
 
     /**
+     * @notice 注文訂正
+     * @notice Make注文の訂正を行う。
+     * @dev MarketMakerのみ実行が可能。
+     * @dev 訂正可能な項目は、注文数量（amount）と単価（price）
+     * @param _orderId 注文ID
+     * @param _amount 注文数量（訂正後の数量）
+     * @param _price 単価（SettlementTokenの数量、訂正後の単価）
+     */
+    function changeOrder(uint256 _orderId, uint256 _amount, uint256 _price)
+        public
+        onlyEOA(msg.sender)
+        isSettlementTokenEnabled()
+        returns (bool)
+    {
+        // <CHK>
+        //  1) 指定した注文番号が、直近の注文ID以上の場合
+        //  2) 数量（amount）がゼロの場合
+        //  -> REVERT
+        require(_orderId <= latestOrderId());
+        if (_amount == 0) revert();
+
+        // 注文情報参照
+        Order memory order;
+        (order.owner, order.token, order.amount, order.price, order.isBuy, order.agent, order.canceled) =
+            getOrder(_orderId);
+
+        // <CHK>
+        //  1) 注文がキャンセル済みの場合
+        //  2) 元注文の発注者と、注文キャンセルの実施者が異なる場合
+        //  -> REVERT
+        if (order.canceled == true ||
+            order.owner != msg.sender)
+        {
+            revert();
+        }
+
+        // Make買注文に対するCHK処理
+        if (order.isBuy) {
+            // <CHK>
+            //  SettlementToken残高が不足している場合
+            //  -> REVERT
+            if (balanceOf(msg.sender, settlementTokenAddress).add((order.amount).mul(order.price)) <
+                _amount.mul(_price))
+            {
+                revert();
+            }
+        }
+
+        // Make売注文に対するCHK処理
+        if (!order.isBuy) {
+            // <CHK>
+            //  ISToken残高が不足している場合
+            //  -> REVERT
+            if (balanceOf(msg.sender, order.token).add(order.amount) < _amount)
+            {
+                revert();
+            }
+        }
+
+        // 更新処理：残高、拘束数量
+        if (order.isBuy) { // 買注文の場合
+            // SettlementToken残高、拘束数量の更新
+            if ((order.amount).mul(order.price) < _amount.mul(_price)) { // 注文総額が増額の場合
+                setBalance(
+                    msg.sender, settlementTokenAddress,
+                    balanceOf(msg.sender, settlementTokenAddress).
+                        sub((_amount.mul(_price)).sub((order.amount).mul(order.price)))
+                );
+                setCommitment(
+                    msg.sender, settlementTokenAddress,
+                    commitmentOf(msg.sender, settlementTokenAddress).
+                        add((_amount.mul(_price)).sub((order.amount).mul(order.price)))
+                );
+            } else { // 注文総額が減額の場合
+                setBalance(
+                    msg.sender, settlementTokenAddress,
+                    balanceOf(msg.sender, settlementTokenAddress).
+                        add(((order.amount).mul(order.price)).sub(_amount.mul(_price)))
+                );
+                setCommitment(
+                    msg.sender, settlementTokenAddress,
+                    commitmentOf(msg.sender, settlementTokenAddress).
+                        sub(((order.amount).mul(order.price)).sub(_amount.mul(_price)))
+                );
+            }
+        } else { // 売注文の場合
+            // ISToken残高、拘束数量の更新
+            if (order.amount < _amount) { // 注文数量が増加している場合
+                setBalance(
+                    msg.sender, order.token,
+                    balanceOf(msg.sender, order.token).sub(_amount.sub(order.amount))
+                );
+                setCommitment(
+                    msg.sender, order.token,
+                    commitmentOf(msg.sender, order.token).add(_amount.sub(order.amount))
+                );
+            } else { // 注文数量が減少している場合
+                setBalance(
+                    msg.sender, order.token,
+                    balanceOf(msg.sender, order.token).add((order.amount).sub(_amount))
+                );
+                setCommitment(
+                    msg.sender, order.token,
+                    commitmentOf(msg.sender, order.token).sub((order.amount).sub(_amount))
+                );
+            }
+        }
+
+        // 更新処理：注文状態を更新
+        setOrder(_orderId, order.owner, order.token,
+            _amount, _price, order.isBuy, order.agent, order.canceled
+        );
+
+        // イベント登録：注文キャンセル
+        emit ChangeOrder(order.token, settlementTokenAddress, msg.sender,
+            _orderId, order.isBuy, order.price, order.amount);
+
+        return true;
+    }
+
+    /**
      * @notice 注文キャンセル
      * @notice Make注文のキャンセルを行う。
      * @dev MarketMakerのみ実行が可能。
@@ -349,7 +473,7 @@ contract IbetSwap is Ownable{
         returns (bool)
     {
         // <CHK>
-        //  1) 指定した注文番号が、直近の注文ID以上の場合
+        //  指定した注文番号が、直近の注文ID以上の場合
         //  -> REVERT
         require(_orderId <= latestOrderId());
 
@@ -358,9 +482,8 @@ contract IbetSwap is Ownable{
             getOrder(_orderId);
 
         // <CHK>
-        //  1) 元注文の残注文数量が0の場合
-        //  2) 注文がキャンセル済みの場合
-        //  3) 元注文の発注者と、注文キャンセルの実施者が異なる場合
+        //  1) 注文がキャンセル済みの場合
+        //  2) 元注文の発注者と、注文キャンセルの実施者が異なる場合
         //  -> REVERT
         if (order.canceled == true ||
             order.owner != msg.sender)
