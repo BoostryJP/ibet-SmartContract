@@ -389,7 +389,7 @@ contract IbetSwap is Ownable{
         }
 
         // Make売注文に対するCHK処理
-        if (order.isBuy) {
+        if (!order.isBuy) {
             // <CHK>
             //  ISToken残高が不足している場合
             //  -> REVERT
@@ -417,12 +417,12 @@ contract IbetSwap is Ownable{
                 setBalance(
                     msg.sender, settlementTokenAddress,
                     balanceOf(msg.sender, settlementTokenAddress).
-                        add((order.amount).mul(order.price)).sub(_amount.mul(_price))
+                        add(((order.amount).mul(order.price)).sub(_amount.mul(_price)))
                 );
                 setCommitment(
                     msg.sender, settlementTokenAddress,
                     commitmentOf(msg.sender, settlementTokenAddress).
-                        sub((order.amount).mul(order.price)).sub(_amount.mul(_price))
+                        sub(((order.amount).mul(order.price)).sub(_amount.mul(_price)))
                 );
             }
         } else { // 売注文の場合
