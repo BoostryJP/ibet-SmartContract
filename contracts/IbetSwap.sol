@@ -618,22 +618,19 @@ contract IbetSwap is Ownable{
             //  1) ISToken拘束数量の更新(-)
             //  2) SettlementToken残高の更新(+)
             setCommitment(
-                marketMaker[order.token],
-                order.token,
-                commitmentOf(marketMaker[order.token], order.token).sub(_amount)
+                order.owner, order.token,
+                commitmentOf(order.owner, order.token).sub(_amount)
             );
             setBalance(
-                marketMaker[order.token],
-                settlementTokenAddress,
-                balanceOf(marketMaker[order.token], settlementTokenAddress).add(_amount.mul(order.price))
+                order.owner, settlementTokenAddress,
+                balanceOf(order.owner, settlementTokenAddress).add(_amount.mul(order.price))
             );
 
             // Takerデータ更新
             //  1) SettlementToken残高の更新(-)
-            //  2) ISTokenの割当(+)
+            //  2) ISTokenの引出し(残高+)
             setBalance(
-                msg.sender,
-                settlementTokenAddress,
+                msg.sender, settlementTokenAddress,
                 balanceOf(msg.sender, settlementTokenAddress).sub(_amount.mul(order.price))
             );
             IbetStandardTokenInterface(order.token).transfer(msg.sender, _amount);
@@ -644,25 +641,22 @@ contract IbetSwap is Ownable{
 
         } else { // Take売注文の場合（Make注文は買）
             // Makerデータ更新
-            //  1) ISToken拘束数量の更新(+)
-            //  2) SettlementToken残高の更新(-)
+            //  1) Settlement拘束数量の更新(-)
+            //  2) ISToken残高の更新(+)
             setCommitment(
-                marketMaker[order.token],
-                order.token,
-                commitmentOf(marketMaker[order.token], order.token).add(_amount)
+                order.owner, settlementTokenAddress,
+                commitmentOf(order.owner, settlementTokenAddress).sub(_amount.mul(order.price))
             );
             setBalance(
-                marketMaker[order.token],
-                settlementTokenAddress,
-                balanceOf(marketMaker[order.token], settlementTokenAddress).sub(_amount.mul(order.price))
+                order.owner, order.token,
+                balanceOf(order.owner, order.token).add(_amount)
             );
 
             // Takerデータ更新
             //  1) ISToken残高数量の更新(-)
-            //  2) SettlementTokenの割当(+)
+            //  2) SettlementTokenの引出し(残高+)
             setBalance(
-                msg.sender,
-                order.token,
+                msg.sender, order.token,
                 balanceOf(msg.sender, order.token).sub(_amount)
             );
             IbetStandardTokenInterface(settlementTokenAddress).transfer(msg.sender, _amount.mul(order.price));
@@ -683,7 +677,6 @@ contract IbetSwap is Ownable{
     function withdrawAll(address _token)
         public
         onlyEOA(msg.sender)
-        onlyMarketMaker(_token)
         returns (bool)
     {
         uint256 balance = balanceOf(msg.sender, _token);
