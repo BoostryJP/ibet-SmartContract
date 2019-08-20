@@ -18,6 +18,7 @@ contract IbetStraightBond is Ownable, IbetStandardTokenInterface {
     string public returnAmount; // リターン内容
     string public purpose; // 発行目的
     string public memo; //メモ欄
+    bool public status; // 取扱ステータス(True：有効、False：無効)
 
     // 償還状況
     bool public isRedeemed;
@@ -45,6 +46,9 @@ contract IbetStraightBond is Ownable, IbetStandardTokenInterface {
 
     // イベント：償還
     event Redeem();
+
+    // イベント：ステータス変更
+    event ChangeStatus(bool indexed status);
 
     // コンストラクタ
     constructor(string memory _name, string memory _symbol,
@@ -221,9 +225,16 @@ contract IbetStraightBond is Ownable, IbetStandardTokenInterface {
         return image_urls[_class];
     }
 
-    // メモ欄を更新する
+    // ファンクション：メモ欄を更新する
     function updateMemo(string memory _memo) public onlyOwner() {
         memo = _memo;
+    }
+
+    // ファンクション：ステータスの有効・無効を更新する
+    // オーナーのみ実行可能
+    function setStatus(bool _status) public onlyOwner() {
+        status = _status;
+        emit ChangeStatus(status);
     }
 
 }
