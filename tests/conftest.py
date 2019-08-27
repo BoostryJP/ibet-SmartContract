@@ -56,7 +56,7 @@ def bond_exchange_storage(web3, chain, users):
 
 @pytest.yield_fixture()
 def bond_exchange(web3, chain, users, personal_info, payment_gateway, bond_exchange_storage):
-    web3.eth.defaultAccount = users['admin']
+    web3.eth.defaultAccount = usKers['admin']
     deploy_args = [
         payment_gateway.address,
         personal_info.address,
