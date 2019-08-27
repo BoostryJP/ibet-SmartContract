@@ -36,6 +36,7 @@ with project.get_chain(chain_env) as chain:
     ]
     swap, _ = chain.provider.deploy_contract(
         'IbetSwap',
+        deploy_transaction={'from': web3.eth.accounts[0], 'gas': 5000000},
         deploy_args=deploy_args
     )
 
