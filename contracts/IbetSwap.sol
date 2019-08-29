@@ -455,7 +455,7 @@ contract IbetSwap is Ownable{
 
         // イベント登録：注文キャンセル
         emit ChangeOrder(order.token, settlementTokenAddress, msg.sender,
-            _orderId, order.isBuy, order.price, order.amount);
+            _orderId, order.isBuy, _price, _amount);
 
         return true;
     }
