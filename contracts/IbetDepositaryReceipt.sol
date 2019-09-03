@@ -133,6 +133,7 @@ contract IbetDepositaryReceipt is Ownable, IbetStandardTokenInterface {
             balances[_to] = balanceOf(_to).add(_value);
         }
 
+        emit Transfer(_from, _to, _value);
         return true;
     }
 
