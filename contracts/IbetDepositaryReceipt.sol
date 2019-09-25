@@ -185,7 +185,7 @@ contract IbetDepositaryReceipt is Ownable, IbetStandardTokenInterface {
     }
 
     // ファンクション：プライバシーポリシー更新
-    function setPrivacyPolicy(string _privacyPolicy)
+    function setPrivatePolicy(string _privacyPolicy)
         public
         onlyOwner()
     {

@@ -191,7 +191,7 @@ contract IbetMRF is Ownable, IbetStandardTokenInterface {
     }
 
     // Function：プライバシーポリシー更新
-    function setPrivacyPolicy(string _privacyPolicy)
+    function setPrivatePolicy(string _privacyPolicy)
         public
         onlyOwner()
     {
