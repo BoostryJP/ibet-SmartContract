@@ -1762,13 +1762,13 @@ def test_setContactInformation_error_2(web3, chain, users, membership_exchange):
 
 
 '''
-TEST17_プライバシーポリシーの更新（setPrivatePolicy）
+TEST17_プライバシーポリシーの更新（setPrivacyPolicy）
 '''
 
 
 # 正常系1
 # ＜発行者＞発行 -> ＜発行者＞プライバシーポリシーの修正
-def test_setPrivatePolicy_normal_1(web3, chain, users, membership_exchange):
+def test_setPrivacyPolicy_normal_1(web3, chain, users, membership_exchange):
     issuer = users['issuer']
 
     # 新規発行
@@ -1778,7 +1778,7 @@ def test_setPrivatePolicy_normal_1(web3, chain, users, membership_exchange):
 
     # 修正
     web3.eth.defaultAccount = issuer
-    txn_hash = membership_contract.transact().setPrivatePolicy('updated privacy policy')
+    txn_hash = membership_contract.transact().setPrivacyPolicy('updated privacy policy')
     chain.wait.for_receipt(txn_hash)
 
     privacy_policy = membership_contract.call().privacyPolicy()
@@ -1786,7 +1786,7 @@ def test_setPrivatePolicy_normal_1(web3, chain, users, membership_exchange):
 
 
 # エラー系1: 入力値の型誤り
-def test_setPrivatePolicy_error_1(web3, chain, users, membership_exchange):
+def test_setPrivacyPolicy_error_1(web3, chain, users, membership_exchange):
     issuer = users['issuer']
 
     # 新規発行
@@ -1797,11 +1797,11 @@ def test_setPrivatePolicy_error_1(web3, chain, users, membership_exchange):
     # 修正
     web3.eth.defaultAccount = issuer
     with pytest.raises(TypeError):
-        membership_contract.transact().setPrivatePolicy(1234)
+        membership_contract.transact().setPrivacyPolicy(1234)
 
 
 # エラー系2: 権限エラー
-def test_setPrivatePolicy_error_2(web3, chain, users, membership_exchange):
+def test_setPrivacyPolicy_error_2(web3, chain, users, membership_exchange):
     issuer = users['issuer']
     other = users['trader']
 
@@ -1812,7 +1812,7 @@ def test_setPrivatePolicy_error_2(web3, chain, users, membership_exchange):
 
     # 修正
     web3.eth.defaultAccount = other
-    txn_hash = membership_contract.transact().setPrivatePolicy('updated privacy policy')
+    txn_hash = membership_contract.transact().setPrivacyPolicy('updated privacy policy')
     chain.wait.for_receipt(txn_hash)
 
     privacy_policy = membership_contract.call().privacyPolicy()
