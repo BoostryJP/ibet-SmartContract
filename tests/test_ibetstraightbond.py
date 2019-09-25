@@ -1150,12 +1150,12 @@ def test_setContactInformation_error_2(web3, chain, users, bond_exchange):
 
 
 '''
-TEST13_プライバシーポリシーの更新（setPrivatePolicy）
+TEST13_プライバシーポリシーの更新（setPrivacyPolicy）
 '''
 
 
 # 正常系1: 発行（デプロイ） -> 修正
-def test_setPrivatePolicy_normal_1(web3, chain, users, bond_exchange):
+def test_setPrivacyPolicy_normal_1(web3, chain, users, bond_exchange):
     issuer = users['issuer']
 
     # 債券トークン新規発行
@@ -1165,7 +1165,7 @@ def test_setPrivatePolicy_normal_1(web3, chain, users, bond_exchange):
 
     # 修正 -> Success
     web3.eth.defaultAccount = issuer
-    txn_hash = bond_token.transact().setPrivatePolicy('updated privacy policy')
+    txn_hash = bond_token.transact().setPrivacyPolicy('updated privacy policy')
     chain.wait.for_receipt(txn_hash)
 
     privacy_policy = bond_token.call().privacyPolicy()
@@ -1173,7 +1173,7 @@ def test_setPrivatePolicy_normal_1(web3, chain, users, bond_exchange):
 
 
 # エラー系1: 入力値の型誤り
-def test_setPrivatePolicy_error_1(web3, chain, users, bond_exchange):
+def test_setPrivacyPolicy_error_1(web3, chain, users, bond_exchange):
     issuer = users['issuer']
 
     # 債券トークン新規発行
@@ -1183,11 +1183,11 @@ def test_setPrivatePolicy_error_1(web3, chain, users, bond_exchange):
 
     web3.eth.defaultAccount = issuer
     with pytest.raises(TypeError):
-        bond_token.transact().setPrivatePolicy(1234)
+        bond_token.transact().setPrivacyPolicy(1234)
 
 
 # エラー系2: 権限エラー
-def test_setPrivatePolicy_error_2(web3, chain, users, bond_exchange):
+def test_setPrivacyPolicy_error_2(web3, chain, users, bond_exchange):
     issuer = users['issuer']
     other = users['admin']
 
@@ -1198,7 +1198,7 @@ def test_setPrivatePolicy_error_2(web3, chain, users, bond_exchange):
 
     # Owner以外のアドレスから更新 -> Failure
     web3.eth.defaultAccount = other
-    bond_token.transact().setPrivatePolicy('updated privacy policy')
+    bond_token.transact().setPrivacyPolicy('updated privacy policy')
 
     privacy_policy = bond_token.call().privacyPolicy()
     assert privacy_policy == 'some_privacy_policy'

@@ -16,7 +16,7 @@ contract IbetStandardTokenInterface {
   function balanceOf(address _owner) public view returns (uint256);
   function setTradableExchange(address _exchange) public;
   function setContactInformation(string _contactInformation) public;
-  function setPrivatePolicy(string _privacyPolicy) public;
+  function setPrivacyPolicy(string _privacyPolicy) public;
   function transfer(address _to, uint _value) public returns (bool);
   function setStatus(bool _status) public;
 

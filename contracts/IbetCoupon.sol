@@ -201,7 +201,7 @@ contract IbetCoupon is Ownable, IbetStandardTokenInterface {
     }
 
     // ファンクション：プライバシーポリシー更新
-    function setPrivatePolicy(string _privacyPolicy)
+    function setPrivacyPolicy(string _privacyPolicy)
         public
         onlyOwner()
     {
