@@ -6,7 +6,7 @@ import "./IbetStandardTokenInterface.sol";
 
 contract TokenRegulatorService is RegulatorService, Ownable {
 
-    /// @dev 取引参加者の登録情報
+    // @dev 取引参加者の登録情報
     struct Participant {
         address token;
         address participant;
@@ -22,8 +22,8 @@ contract TokenRegulatorService is RegulatorService, Ownable {
     // @dev Check error reason : アカウント未登録
     uint8 constant private CHECK_NOT_REGISTERD = 2;
 
-    // 購入可能者情報
-    //  whitelist[tokenAddress][participantAddress]
+    // @dev 購入可能者情報
+    //      whitelist[tokenAddress][participantAddress]
     mapping(address => mapping(address => Participant)) whitelist;
 
     event Register(address indexed token, address indexed participant, bool locked);
@@ -80,12 +80,28 @@ contract TokenRegulatorService is RegulatorService, Ownable {
     }
 
     /**
+     * @notice 取引参加者参照
+     * @param _token トークンのアドレス
+     * @param _participant 取引参加者のアドレス（EOA）
+     */
+    function getWhitelist(address _token, address _participant)
+        public
+        view
+        returns (address token, address participant, bool locked)
+    {
+        token = whitelist[_token][_participant].token;
+        participant = whitelist[_token][_participant].participant;
+        locked = whitelist[_token][_participant].locked;
+    }
+
+    /**
      * @notice 取引可否チェック
      * @param _token トークンのアドレス
      * @param _participant 取引参加者のアドレス（EOA）
      */
     function check(address _token, address _participant)
         public
+        view
         returns (uint8)
     {
         if (whitelist[_token][_participant].locked) {

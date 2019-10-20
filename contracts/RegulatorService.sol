@@ -13,6 +13,7 @@ contract RegulatorService {
     */
     function check(address _token, address _participant)
         public
+        view
         returns (uint8);
 
 }
