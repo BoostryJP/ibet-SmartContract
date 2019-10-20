@@ -1,7 +1,7 @@
 #!/bin/bash
 source ~/.bash_profile
 
-cd /app/tmr-sc
+cd /app/ibet-SmartContract
 
 # 脆弱性チェック実施
 myth -x IbetCoupon.sol SafeMath.sol Ownable.sol ContractReceiver.sol

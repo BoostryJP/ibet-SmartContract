@@ -1,4 +1,4 @@
-# tmr-sc
+# ibet-SmartContract
 
 ## 1. 環境構築 (Mac)
 
@@ -7,7 +7,7 @@
 * homebrewがインストールされている
 
 
-### 1.1. Python3.7.2の実行環境を整備する
+### 1.1. Python3.6.4の実行環境を整備する
 * (参考：https://develtips.com/python/191)
 
 
@@ -17,7 +17,7 @@
 
 ### 1.3. solidity compiler (solc) をインストールする。
 * brew install すると0.5系が入ってしまう。
-* 対策として、ビルド済みsolc v0.4.25がtmr-scのリポジトリのbin配下に入っているので、実行権限付与の上、PATHを通して使う。（ex: /usr/local/bin/solc）
+* 対策として、ビルド済みsolc v0.4.25がibet-SmartContractのリポジトリのbin配下に入っているので、実行権限付与の上、PATHを通して使う。（ex: /usr/local/bin/solc）
 * (参考：https://solidity.readthedocs.io/en/v0.4.21/installing-solidity.html)
 
 ```
@@ -44,26 +44,26 @@ Version: 0.4.25+commit.59dbf8f1.Darwin.appleclang
 ```
 
 
-### 1.4. tmr-scをgit cloneする。
+### 1.4. ibet-SmartContractをgit cloneする。
 ```
-$ git clone https://github.com/N-Village/tmr-sc.git
+$ git clone https://github.com/N-Village/ibet-SmartContract.git
 ```
 
 
 ### 1.5. Pyenv (virtualenv)の環境を作る
 * （参考：https://qiita.com/its/items/24f8b20aa2106819dfb3）
-* 開発を行うディレクトリ(ex: tmr-sc) の上位ディレクトリで以下のコマンドを実行する
+* 開発を行うディレクトリ(ex: ibet-SmartContract) の上位ディレクトリで以下のコマンドを実行する
 
 ```
 $ pyenv install 3.6.4
-$ pyenv virtualenv 3.6.4 tmr-sc
+$ pyenv virtualenv 3.6.4 ibet-SmartContract
 ```
 
 * 開発を行うディレクトリで以下のコマンドを実行し、localの設定を行う
 * これにより真っ新な環境になるので、そこで 手順1.6を行うとクリーンなインストールができる
 
 ```
-$ pyenv local tmr-sc
+$ pyenv local ibet-SmartContract
 ``` 
 
 * 環境の確認
@@ -72,8 +72,8 @@ $ pyenv local tmr-sc
 $ pyenv versions
   system
   3.6.4
-  3.6.4/envs/tmr-sc
-* tmr-sc (set by /Users/*/tmr-sc/.python-version)
+  3.6.4/envs/ibet-SmartContract
+* ibet-SmartContract (set by /Users/*/ibet-SmartContract/.python-version)
 ```
 
 
