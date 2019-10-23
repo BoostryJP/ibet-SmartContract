@@ -14,12 +14,15 @@ def init_args(exchange_address):
     transferable = True
     contact_information = 'some_contact_information'
     privacy_policy = 'some_privacy_policy'
+    regulated = False
+    regulator_service = '0x0000000000000000000000000000000000000000'
 
     deploy_args = [
         name, symbol, initial_supply, tradable_exchange,
         details, return_details,
         expiration_date, memo, transferable,
-        contact_information, privacy_policy
+        contact_information, privacy_policy,
+        regulated, regulator_service
     ]
     return deploy_args
 
@@ -60,6 +63,8 @@ def test_deploy_normal_1(web3, chain, users, membership_exchange):
     balance = membership_contract.call().balanceOf(issuer)
     contact_information = membership_contract.call().contactInformation()
     privacy_policy = membership_contract.call().privacyPolicy()
+    regulated = membership_contract.call().regulated()
+    regulator_service = membership_contract.call().regulatorService()
 
     assert owner_address == issuer
     assert name == deploy_args[0]
@@ -75,6 +80,8 @@ def test_deploy_normal_1(web3, chain, users, membership_exchange):
     assert balance == deploy_args[2]
     assert contact_information == deploy_args[9]
     assert privacy_policy == deploy_args[10]
+    assert regulated == deploy_args[11]
+    assert regulator_service == deploy_args[12]
 
 
 # エラー系1: 入力値の型誤り（name）
@@ -197,6 +204,26 @@ def test_deploy_error_10(chain, membership_exchange):
 
 # エラー系10: 入力値の型誤り（privacyPolicy）
 def test_deploy_error_11(chain, membership_exchange):
+    deploy_args = init_args(membership_exchange.address)
+    deploy_args[10] = 1234
+
+    with pytest.raises(TypeError):
+        chain.provider.get_or_deploy_contract(
+            'IbetMembership', deploy_args=deploy_args)
+
+
+# エラー系11: 入力値の型誤り（regulated）
+def test_deploy_error_12(chain, membership_exchange):
+    deploy_args = init_args(membership_exchange.address)
+    deploy_args[11] = 'True'
+
+    with pytest.raises(TypeError):
+        chain.provider.get_or_deploy_contract(
+            'IbetMembership', deploy_args=deploy_args)
+
+
+# エラー系12: 入力値の型誤り（regulatorService）
+def test_deploy_error_13(chain, membership_exchange):
     deploy_args = init_args(membership_exchange.address)
     deploy_args[10] = 1234
 
@@ -342,6 +369,42 @@ def test_transfer_normal_3_4(web3, chain, users, membership_exchange):
 
     assert membership_contract.call().balanceOf(issuer) == 0
     assert membership_contract.call().balanceOf(exchange_address) == 0
+
+
+# 正常系4: 私募トークン
+def test_transfer_normal_4(web3, chain, users, membership_exchange):
+    admin = users['admin']
+    issuer = users['issuer']
+    trader = users['trader']
+
+    # TokenRegulatorServiceコントラクト作成
+    web3.eth.defaultAccount = admin
+    token_regulator_service, _ = chain.provider.get_or_deploy_contract('TokenRegulatorService')
+
+    # 私募トークンの新規発行
+    web3.eth.defaultAccount = issuer
+    deploy_args = init_args(membership_exchange.address)
+    deploy_args[11] = True  # NOTE:regulated
+    deploy_args[12] = token_regulator_service.address
+    membership = deploy(chain, deploy_args)
+    token_address = membership.address
+
+    # 宛先アドレスを購入可能者リストに登録
+    web3.eth.defaultAccount = issuer
+    txn_hash = token_regulator_service.transact().register(token_address, trader, False)
+    chain.wait.for_receipt(txn_hash)
+
+    # 振替
+    web3.eth.defaultAccount = issuer
+    txn_hash = membership.transact().transfer(trader, 100)
+    chain.wait.for_receipt(txn_hash)
+
+    # 振替後の残高取得
+    issuer_balance = membership.call().balanceOf(issuer)
+    trader_balance = membership.call().balanceOf(trader)
+
+    assert issuer_balance == deploy_args[2] - 100
+    assert trader_balance == 100
 
 
 # エラー系1-1: 入力値の型誤り（to）
@@ -493,6 +556,74 @@ def test_transfer_error_6(web3, chain, users, membership_exchange,
 
     assert membership_contract.call().balanceOf(issuer) == deploy_args[2]
     assert membership_contract.call().balanceOf(dummy_exchange.address) == 0
+
+
+# エラー系7_1: （私募トークン）購入可能者リストに未登録
+def test_transfer_error_7_1(web3, chain, users, membership_exchange):
+    admin = users['admin']
+    issuer = users['issuer']
+    trader = users['trader']
+
+    # TokenRegulatorServiceコントラクト作成
+    web3.eth.defaultAccount = admin
+    token_regulator_service, _ = chain.provider.get_or_deploy_contract('TokenRegulatorService')
+
+    # 私募トークンの新規発行
+    web3.eth.defaultAccount = issuer
+    deploy_args = init_args(membership_exchange.address)
+    deploy_args[11] = True  # NOTE:regulated
+    deploy_args[12] = token_regulator_service.address
+    membership = deploy(chain, deploy_args)
+
+    # 振替 -> 失敗
+    web3.eth.defaultAccount = issuer
+    txn_hash = membership.transact().transfer(trader, 100)
+    chain.wait.for_receipt(txn_hash)
+
+    # 残高取得
+    issuer_balance = membership.call().balanceOf(issuer)
+    trader_balance = membership.call().balanceOf(trader)
+
+    # 検証
+    assert issuer_balance == deploy_args[2]
+    assert trader_balance == 0
+
+
+# エラー系7_2: （私募トークン）宛先アドレスがロック中
+def test_transfer_error_7_2(web3, chain, users, membership_exchange):
+    admin = users['admin']
+    issuer = users['issuer']
+    trader = users['trader']
+
+    # TokenRegulatorServiceコントラクト作成
+    web3.eth.defaultAccount = admin
+    token_regulator_service, _ = chain.provider.get_or_deploy_contract('TokenRegulatorService')
+
+    # 私募トークンの新規発行
+    web3.eth.defaultAccount = issuer
+    deploy_args = init_args(membership_exchange.address)
+    deploy_args[11] = True  # NOTE:regulated
+    deploy_args[12] = token_regulator_service.address
+    membership = deploy(chain, deploy_args)
+    token_address = membership.address
+
+    # to_address をロック状態に設定
+    web3.eth.defaultAccount = issuer
+    txn_hash = token_regulator_service.transact().register(token_address, trader, True)
+    chain.wait.for_receipt(txn_hash)
+
+    # 振替 -> 失敗
+    web3.eth.defaultAccount = issuer
+    txn_hash = membership.transact().transfer(trader, 100)
+    chain.wait.for_receipt(txn_hash)
+
+    # 残高取得
+    issuer_balance = membership.call().balanceOf(issuer)
+    trader_balance = membership.call().balanceOf(trader)
+
+    # 検証
+    assert issuer_balance == deploy_args[2]
+    assert trader_balance == 0
 
 
 '''
@@ -720,6 +851,56 @@ def test_transferFrom_normal_3_4(web3, chain, users, membership_exchange):
     assert to_balance == 0
 
 
+# 正常系4: 私募トークン
+def test_transferFrom_normal_4(web3, chain, users, membership_exchange):
+    issuer = users['issuer']
+    admin = users['admin']
+    from_address = users['admin']  # 'admin' を 送信元アカウントに設定
+    to_address = users['trader']  # 'trader' を 送信先アカウントに設定
+
+    # TokenRegulatorServiceコントラクト作成
+    web3.eth.defaultAccount = admin
+    token_regulator_service, _ = chain.provider.get_or_deploy_contract('TokenRegulatorService')
+
+    # 私募トークンの新規発行
+    web3.eth.defaultAccount = issuer
+    deploy_args = init_args(membership_exchange.address)
+    deploy_args[11] = True  # NOTE:regulated
+    deploy_args[12] = token_regulator_service.address
+    membership = deploy(chain, deploy_args)
+    token_address = membership.address
+
+    # from_address を購入可能者リストに登録
+    web3.eth.defaultAccount = issuer
+    txn_hash = token_regulator_service.transact().register(token_address, from_address, False)
+    chain.wait.for_receipt(txn_hash)
+
+    # 譲渡（issuer -> from_address）
+    web3.eth.defaultAccount = issuer
+    txn_hash = membership.transact().transfer(from_address, 100)
+    chain.wait.for_receipt(txn_hash)
+
+    # to_address を購入可能者リストに登録
+    web3.eth.defaultAccount = issuer
+    txn_hash = token_regulator_service.transact().register(token_address, to_address, False)
+    chain.wait.for_receipt(txn_hash)
+
+    # 移転（_from -> _to）
+    web3.eth.defaultAccount = issuer
+    txn_hash = membership.transact().transferFrom(from_address, to_address, 100)
+    chain.wait.for_receipt(txn_hash)
+
+    # 移転後の残高参照
+    issuer_balance = membership.call().balanceOf(issuer)
+    from_address_balance = membership.call().balanceOf(from_address)
+    to_address_balance = membership.call().balanceOf(to_address)
+
+    # 検証
+    assert issuer_balance == deploy_args[2] - 100
+    assert from_address_balance == 0
+    assert to_address_balance == 100
+
+
 # エラー系1-1: 入力値の型誤り（from_address）
 def test_transferFrom_error_1_1(web3, chain, users, membership_exchange):
     issuer = users['issuer']
@@ -860,6 +1041,103 @@ def test_transferFrom_error_4(web3, chain, users, membership_exchange):
 
     assert membership_contract.call().balanceOf(issuer) == deploy_args[2]
     assert membership_contract.call().balanceOf(to_address) == 0
+
+
+# エラー系5_1: （私募トークン）購入可能者リストに未登録
+def test_transferFrom_error_5_1(web3, chain, users, membership_exchange):
+    issuer = users['issuer']
+    admin = users['admin']
+    from_address = users['admin']  # 'admin' を 送信元アカウントに設定
+    to_address = users['trader']  # 'trader' を 送信先アカウントに設定
+
+    # TokenRegulatorServiceコントラクト作成
+    web3.eth.defaultAccount = admin
+    token_regulator_service, _ = chain.provider.get_or_deploy_contract('TokenRegulatorService')
+
+    # 私募トークンの新規発行
+    web3.eth.defaultAccount = issuer
+    deploy_args = init_args(membership_exchange.address)
+    deploy_args[11] = True  # NOTE:regulated
+    deploy_args[12] = token_regulator_service.address
+    membership = deploy(chain, deploy_args)
+    token_address = membership.address
+
+    # from_address を購入可能者リストに登録
+    web3.eth.defaultAccount = issuer
+    txn_hash = token_regulator_service.transact().register(token_address, from_address, False)
+    chain.wait.for_receipt(txn_hash)
+
+    # 譲渡（issuer -> from_address）
+    web3.eth.defaultAccount = issuer
+    txn_hash = membership.transact().transfer(from_address, 100)
+    chain.wait.for_receipt(txn_hash)
+
+    # 移転（_from -> _to）
+    # NOTE:to_address が購入可能者リストに未登録 -> 失敗
+    web3.eth.defaultAccount = issuer
+    txn_hash = membership.transact().transferFrom(from_address, to_address, 100)
+    chain.wait.for_receipt(txn_hash)
+
+    # 移転後の残高参照
+    issuer_balance = membership.call().balanceOf(issuer)
+    from_address_balance = membership.call().balanceOf(from_address)
+    to_address_balance = membership.call().balanceOf(to_address)
+
+    # 検証
+    assert issuer_balance == deploy_args[2] - 100
+    assert from_address_balance == 100
+    assert to_address_balance == 0
+
+
+# エラー系5_2: （私募トークン）宛先アドレスがロック中
+def test_transferFrom_error_5_2(web3, chain, users, membership_exchange):
+    issuer = users['issuer']
+    admin = users['admin']
+    from_address = users['admin']  # 'admin' を 送信元アカウントに設定
+    to_address = users['trader']  # 'trader' を 送信先アカウントに設定
+
+    # TokenRegulatorServiceコントラクト作成
+    web3.eth.defaultAccount = admin
+    token_regulator_service, _ = chain.provider.get_or_deploy_contract('TokenRegulatorService')
+
+    # 私募トークンの新規発行
+    web3.eth.defaultAccount = issuer
+    deploy_args = init_args(membership_exchange.address)
+    deploy_args[11] = True  # NOTE:regulated
+    deploy_args[12] = token_regulator_service.address
+    membership = deploy(chain, deploy_args)
+    token_address = membership.address
+
+    # from_address を購入可能者リストに登録
+    web3.eth.defaultAccount = issuer
+    txn_hash = token_regulator_service.transact().register(token_address, from_address, False)
+    chain.wait.for_receipt(txn_hash)
+
+    # 譲渡（issuer -> from_address）
+    web3.eth.defaultAccount = issuer
+    txn_hash = membership.transact().transfer(from_address, 100)
+    chain.wait.for_receipt(txn_hash)
+
+    # to_address をロック状態に設定
+    web3.eth.defaultAccount = issuer
+    txn_hash = token_regulator_service.transact().register(token_address, to_address, True)
+    chain.wait.for_receipt(txn_hash)
+
+    # 移転（_from -> _to）
+    # NOTE:to_address がロック中 -> 失敗
+    web3.eth.defaultAccount = issuer
+    txn_hash = membership.transact().transferFrom(from_address, to_address, 100)
+    chain.wait.for_receipt(txn_hash)
+
+    # 移転後の残高参照
+    issuer_balance = membership.call().balanceOf(issuer)
+    from_address_balance = membership.call().balanceOf(from_address)
+    to_address_balance = membership.call().balanceOf(to_address)
+
+    # 検証
+    assert issuer_balance == deploy_args[2] - 100
+    assert from_address_balance == 100
+    assert to_address_balance == 0
 
 
 '''
@@ -1817,3 +2095,75 @@ def test_setPrivacyPolicy_error_2(web3, chain, users, membership_exchange):
 
     privacy_policy = membership_contract.call().privacyPolicy()
     assert privacy_policy == 'some_privacy_policy'
+
+
+'''
+TEST18_RegulatorServiceの更新（setRegulatorService）
+'''
+
+
+# 正常系1: 発行 -> RegulatorServiceの更新
+def test_setRegulatorService_normal_1(web3, chain, users, membership_exchange):
+    admin = users['admin']
+    issuer = users['issuer']
+
+    # トークン新規発行
+    web3.eth.defaultAccount = issuer
+    deploy_args = init_args(membership_exchange.address)
+    membership = deploy(chain, deploy_args)
+
+    # TokenRegulatorServiceコントラクト作成
+    web3.eth.defaultAccount = admin
+    token_regulator_service, _ = chain.provider.get_or_deploy_contract('TokenRegulatorService')
+
+    # RegulatorServiceの更新
+    web3.eth.defaultAccount = issuer
+    txn_hash = membership.transact().setRegulatorService(token_regulator_service.address)
+    chain.wait.for_receipt(txn_hash)
+
+    assert membership.call().regulatorService() == to_checksum_address(token_regulator_service.address)
+
+
+# エラー系1: 発行 -> RegulatorServiceの更新（入力値の型誤り）
+def test_setRegulatorService_error_1(web3, chain, users, membership_exchange):
+    admin = users['admin']
+    issuer = users['issuer']
+
+    # トークン新規発行
+    web3.eth.defaultAccount = issuer
+    deploy_args = init_args(membership_exchange.address)
+    membership = deploy(chain, deploy_args)
+
+    # TokenRegulatorServiceコントラクト作成
+    web3.eth.defaultAccount = admin
+    token_regulator_service, _ = chain.provider.get_or_deploy_contract('TokenRegulatorService')
+
+    # RegulatorServiceの更新 -> 失敗
+    web3.eth.defaultAccount = issuer
+    with pytest.raises(TypeError):
+        membership.transact().setRegulatorService('0xaaaa')
+
+
+# エラー系2: 発行 -> RegulatorServiceの更新（権限エラー）
+def test_setRegulatorService_error_2(web3, chain, users, membership_exchange):
+    admin = users['admin']
+    issuer = users['issuer']
+    user = users['trader']
+
+    # トークン新規発行
+    web3.eth.defaultAccount = issuer
+    deploy_args = init_args(membership_exchange.address)
+    membership = deploy(chain, deploy_args)
+
+    # TokenRegulatorServiceコントラクト作成
+    web3.eth.defaultAccount = admin
+    token_regulator_service, _ = chain.provider.get_or_deploy_contract('TokenRegulatorService')
+
+    # RegulatorServiceの更新 -> 失敗
+    web3.eth.defaultAccount = user
+    txn_hash = membership.transact().setRegulatorService(token_regulator_service.address)
+    chain.wait.for_receipt(txn_hash)
+
+    assert membership.call().regulatorService() == \
+           to_checksum_address('0x0000000000000000000000000000000000000000')
+

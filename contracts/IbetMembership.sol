@@ -4,6 +4,7 @@ import "./SafeMath.sol";
 import "./Ownable.sol";
 import "./ContractReceiver.sol";
 import "./IbetStandardTokenInterface.sol";
+import "./RegulatorService.sol";
 
 contract IbetMembership is Ownable, IbetStandardTokenInterface {
   using SafeMath for uint256;
@@ -16,6 +17,8 @@ contract IbetMembership is Ownable, IbetStandardTokenInterface {
   bool public transferable; // 譲渡可能
   bool public status; // 取扱ステータス(True：有効、False：無効)
   bool public initialOfferingStatus; // 新規募集ステータス（True：募集中、False：停止中）
+  bool public regulated; // 保有者制限付トークン（True：制限あり）
+  address public regulatorService; // RegulatorServiceアドレス
 
   // 残高数量
   // account_address => balance
@@ -43,7 +46,8 @@ contract IbetMembership is Ownable, IbetStandardTokenInterface {
     uint256 _initialSupply, address _tradableExchange,
     string memory _details, string memory _returnDetails,
     string memory _expirationDate, string memory _memo,
-    bool _transferable, string _contactInformation, string _privacyPolicy)
+    bool _transferable, string _contactInformation, string _privacyPolicy,
+    bool _regulated, address _regulatorService)
     public
   {
     owner = msg.sender;
@@ -57,9 +61,11 @@ contract IbetMembership is Ownable, IbetStandardTokenInterface {
     memo = _memo;
     balances[owner] = totalSupply;
     transferable = _transferable;
-    status = true;
     contactInformation = _contactInformation;
     privacyPolicy = _privacyPolicy;
+    regulated = _regulated;
+    regulatorService = _regulatorService;
+    status = true;
   }
 
   // ファンクション：アドレスフォーマットがコントラクトのものかを判断する
@@ -82,9 +88,6 @@ contract IbetMembership is Ownable, IbetStandardTokenInterface {
   {
     balances[msg.sender] = balanceOf(msg.sender).sub(_value);
     balances[_to] = balanceOf(_to).add(_value);
-
-    // イベント登録
-    emit Transfer(msg.sender, _to, _value);
 
     return true;
   }
@@ -111,17 +114,22 @@ contract IbetMembership is Ownable, IbetStandardTokenInterface {
   {
     //  数量が残高を超えている場合、エラーを返す
     if (balanceOf(msg.sender) < _value) revert();
-    if (msg.sender != tradableExchange) {
-      // 譲渡可能ではない場合、エラーを返す
-      require(transferable == true);
-    }
+
+    // 譲渡可能ではない場合、エラーを返す
+    require(transferable == true);
 
     bytes memory empty;
     if(isContract(_to)) {
       return transferToContract(_to, _value, empty);
     } else {
+      // 私募トークンの場合、送信先アドレスが購入可能リストに登録されていることをチェック
+      if (regulated) {
+        if (RegulatorService(regulatorService).check(this, _to) != 0) revert();
+      }
       return transferToAddress(_to, _value, empty);
     }
+
+    emit Transfer(msg.sender, _to, _value);
   }
 
   // ファンクション：トークンの移転
@@ -141,10 +149,15 @@ contract IbetMembership is Ownable, IbetStandardTokenInterface {
       ContractReceiver receiver = ContractReceiver(_to);
       receiver.tokenFallback(msg.sender, _value, empty);
     } else { // 送信先アドレスがアカウントアドレスの場合
+      // 私募トークンの場合、送信先アドレスが購入可能リストに登録されていることをチェック
+      if (regulated) {
+        if (RegulatorService(regulatorService).check(this, _to) != 0) revert();
+      }
       balances[_from] = balanceOf(_from).sub(_value);
       balances[_to] = balanceOf(_to).add(_value);
     }
 
+    emit Transfer(_from, _to, _value);
     return true;
   }
 
@@ -163,6 +176,14 @@ contract IbetMembership is Ownable, IbetStandardTokenInterface {
     onlyOwner()
   {
     tradableExchange = _exchange;
+  }
+
+  // ファンクション：RegulatorServiceの更新
+  function setRegulatorService(address _regulatorService)
+    public
+    onlyOwner()
+  {
+    regulatorService = _regulatorService;
   }
 
   // ファンクション：問い合わせ先情報更新
