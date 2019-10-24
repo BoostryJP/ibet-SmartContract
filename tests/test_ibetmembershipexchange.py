@@ -256,6 +256,52 @@ def test_createorder_normal_3_2(web3, chain, users, membership_exchange):
     assert issuer_commitment == _amount
 
 
+# 正常系4
+#   私募トークン
+def test_createorder_normal_4(web3, chain, users, membership_exchange):
+    admin = users['admin']
+    issuer = users['issuer']
+    trader = users['trader']
+    agent = users['agent']
+
+    # TokenRegulatorServiceコントラクト作成
+    web3.eth.defaultAccount = admin
+    token_regulator_service, _ = chain.provider.get_or_deploy_contract('TokenRegulatorService')
+
+    # 新規発行
+    web3.eth.defaultAccount = issuer
+    deploy_args = init_args(membership_exchange.address)
+    deploy_args[11] = True  # NOTE:regulated
+    deploy_args[12] = token_regulator_service.address
+    membership = deploy(chain, deploy_args)
+    token_address = membership.address
+
+    # 注文者（trader）のアドレスを購入可能者リストに登録
+    web3.eth.defaultAccount = issuer
+    txn_hash = token_regulator_service.transact().register(token_address, trader, False)
+    chain.wait.for_receipt(txn_hash)
+
+    # Make注文（買）
+    _amount = 100
+    _price = 123
+    _isBuy = True
+    make_order(
+        web3, chain,
+        membership, membership_exchange,
+        trader, _amount, _price, _isBuy, agent
+    )
+
+    # 検証
+    order_id = membership_exchange.call().latestOrderId()
+    orderbook = membership_exchange.call().getOrder(order_id)
+    assert orderbook == [
+        trader, to_checksum_address(membership.address),
+        _amount, _price, _isBuy, agent, False
+    ]
+    assert membership.call().balanceOf(issuer) == deploy_args[2]
+    assert membership.call().balanceOf(trader) == 0
+
+
 # エラー系1
 #   入力値の型誤り（_token）
 def test_createorder_error_1(web3, users, membership_exchange):
@@ -647,6 +693,45 @@ def test_createorder_error_7_4(web3, chain, users, membership_exchange):
         commitmentOf(issuer, membership_token.address)
     assert issuer_commitment == 0
     assert membership_token.call().balanceOf(issuer) == deploy_args[2]
+
+
+# エラー系8
+#   （私募トークン）購入可能者チェックでエラー
+def test_createorder_error_8(web3, chain, users, membership_exchange):
+    admin = users['admin']
+    issuer = users['issuer']
+    trader = users['trader']
+    agent = users['agent']
+
+    # TokenRegulatorServiceコントラクト作成
+    web3.eth.defaultAccount = admin
+    token_regulator_service, _ = chain.provider.get_or_deploy_contract('TokenRegulatorService')
+
+    # 新規発行
+    web3.eth.defaultAccount = issuer
+    deploy_args = init_args(membership_exchange.address)
+    deploy_args[11] = True  # NOTE:regulated
+    deploy_args[12] = token_regulator_service.address
+    membership = deploy(chain, deploy_args)
+
+    latest_order_id_bf = membership_exchange.call().latestOrderId()
+
+    # Make注文（買）
+    # NOTE:Trader（購入者リストに登録なし）が実行
+    _amount = 100
+    _price = 123
+    _isBuy = True
+    make_order(
+        web3, chain,
+        membership, membership_exchange,
+        trader, _amount, _price, _isBuy, agent
+    )
+    latest_order_id_af = membership_exchange.call().latestOrderId()
+
+    # 検証
+    assert latest_order_id_bf == latest_order_id_af
+    assert membership.call().balanceOf(issuer) == deploy_args[2]
+    assert membership.call().balanceOf(trader) == 0
 
 
 '''
@@ -1296,6 +1381,81 @@ def test_executeOrder_normal_3_2(web3, chain, users, membership_exchange):
 
     # Assert: last_price
     assert membership_exchange.call().lastPrice(membership_token.address) == 2 ** 256 - 1
+
+
+# 正常系4
+#   私募トークン
+def test_executeOrder_normal_4(web3, chain, users, membership_exchange):
+    admin = users['admin']
+    issuer = users['issuer']
+    trader = users['trader']
+    agent = users['agent']
+
+    # TokenRegulatorServiceコントラクト作成
+    web3.eth.defaultAccount = admin
+    token_regulator_service, _ = chain.provider.get_or_deploy_contract('TokenRegulatorService')
+
+    # 私募トークンの新規発行
+    web3.eth.defaultAccount = issuer
+    deploy_args = init_args(membership_exchange.address)
+    deploy_args[11] = True  # NOTE:regulated
+    deploy_args[12] = token_regulator_service.address
+    membership = deploy(chain, deploy_args)
+    token_address = membership.address
+
+    # Make注文者（Issuer）のアドレスを購入可能者リストに登録
+    web3.eth.defaultAccount = issuer
+    txn_hash = token_regulator_service.transact().register(token_address, issuer, False)
+    chain.wait.for_receipt(txn_hash)
+
+    # Make注文（売）
+    # NOTE:Issuerが実行
+    deposit(
+        web3, chain,
+        membership, membership_exchange, issuer, 100
+    )
+    make_order(
+        web3, chain,
+        membership, membership_exchange, issuer, 100, 123, False, agent
+    )
+
+    # Take注文者（Trader）のアドレスを購入可能者リストに登録
+    web3.eth.defaultAccount = issuer
+    txn_hash = token_regulator_service.transact().register(token_address, trader, False)
+    chain.wait.for_receipt(txn_hash)
+
+    # Take注文（買）
+    # NOTE:Trader（購入者リストに登録なし）が実行
+    order_id = membership_exchange.call().latestOrderId()
+    take_order(
+        web3, chain,
+        membership, membership_exchange,
+        trader, order_id, 30, True
+    )
+
+    # Assert: orderbook
+    orderbook = membership_exchange.call().getOrder(order_id)
+    assert orderbook == [
+        issuer, to_checksum_address(token_address),
+        70, 123, False, agent, False
+    ]
+
+    # Assert: balance
+    assert membership.call().balanceOf(issuer) == deploy_args[2] - 100
+    assert membership.call().balanceOf(trader) == 0
+
+    # Assert: commitment
+    assert membership_exchange.call().commitmentOf(issuer, token_address) == 100
+
+    # Assert: agreement
+    agreement_id = membership_exchange.call().latestAgreementId(order_id)
+    agreement = membership_exchange.call().getAgreement(order_id, agreement_id)
+    assert agreement[0:5] == [
+        trader, 30, 123, False, False
+    ]
+
+    # Assert: last_price
+    assert membership_exchange.call().lastPrice(token_address) == 123
 
 
 # エラー系1
@@ -2089,6 +2249,59 @@ def test_executeOrder_error_6_7(web3, chain, users, membership_exchange):
 
     # Assert: last_price
     assert membership_exchange.call().lastPrice(membership_token.address) == 0
+
+
+# エラー系7
+#   （私募トークン）購入可能者チェックでエラー
+def test_executeOrder_error_7(web3, chain, users, membership_exchange):
+    admin = users['admin']
+    issuer = users['issuer']
+    trader = users['trader']
+    agent = users['agent']
+
+    # TokenRegulatorServiceコントラクト作成
+    web3.eth.defaultAccount = admin
+    token_regulator_service, _ = chain.provider.get_or_deploy_contract('TokenRegulatorService')
+
+    # 私募トークンの新規発行
+    web3.eth.defaultAccount = issuer
+    deploy_args = init_args(membership_exchange.address)
+    deploy_args[11] = True  # NOTE:regulated
+    deploy_args[12] = token_regulator_service.address
+    membership = deploy(chain, deploy_args)
+    token_address = membership.address
+
+    # Make注文者（Issuer）のアドレスを購入可能者リストに登録
+    web3.eth.defaultAccount = issuer
+    txn_hash = token_regulator_service.transact().register(token_address, issuer, False)
+    chain.wait.for_receipt(txn_hash)
+
+    # Make注文（売）
+    # NOTE:Issuerが実行
+    deposit(
+        web3, chain,
+        membership, membership_exchange, issuer, 100
+    )
+    make_order(
+        web3, chain,
+        membership, membership_exchange, issuer, 100, 123, False, agent
+    )
+
+    # Take注文（買） -> 失敗
+    # NOTE:Trader（購入者リストに登録なし）が実行
+    latest_order_id_bf = membership_exchange.call().latestOrderId()
+    take_order(
+        web3, chain,
+        membership, membership_exchange,
+        trader, latest_order_id_bf, 30, True
+    )
+    latest_order_id_af = membership_exchange.call().latestOrderId()
+
+    # 検証
+    assert latest_order_id_bf == latest_order_id_af
+    assert membership.call().balanceOf(issuer) == deploy_args[2] - 100
+    assert membership.call().balanceOf(trader) == 0
+    assert membership_exchange.call().commitmentOf(issuer, membership.address) == 100
 
 
 '''

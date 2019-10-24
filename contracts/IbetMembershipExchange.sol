@@ -5,6 +5,7 @@ import "./Ownable.sol";
 import "./IbetMembership.sol";
 import "./ExchangeStorage.sol";
 import "./PaymentGateway.sol";
+import "./RegulatorService.sol";
 
 contract IbetMembershipExchange is Ownable {
     using SafeMath for uint256;
@@ -225,6 +226,12 @@ contract IbetMembershipExchange is Ownable {
         public
         returns (bool)
     {
+        // 保有者制限付トークンの場合、購入可能者チェックを行う
+        if (IbetMembership(_token).regulated()) {
+            if (RegulatorService(IbetMembership(_token).regulatorService()).
+                check(_token, msg.sender) != 0) revert();
+        }
+
         if (_isBuy == true) { // 買注文の場合
             // <CHK>
             //  1) 注文数量が0の場合
@@ -322,8 +329,7 @@ contract IbetMembershipExchange is Ownable {
         public
         returns (bool)
     {
-        // <CHK>
-        //  指定した注文IDが直近の注文IDを超えている場合
+        //  指定した注文IDが直近の注文IDを超えていないことを確認
         require(_orderId <= latestOrderId());
 
         Order memory order;
@@ -331,6 +337,12 @@ contract IbetMembershipExchange is Ownable {
             getOrder(_orderId);
 
         require(order.owner != 0x0000000000000000000000000000000000000000);
+
+        // 保有者制限付トークンの場合、購入可能者チェックを行う
+        if (IbetMembership(order.token).regulated()) {
+            if (RegulatorService(IbetMembership(order.token).regulatorService()).
+                check(order.token, msg.sender) != 0) revert();
+        }
 
         if (_isBuy == true) { // 買注文の場合
             // <CHK>
