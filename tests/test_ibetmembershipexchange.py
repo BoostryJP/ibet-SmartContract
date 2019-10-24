@@ -18,12 +18,15 @@ def init_args(exchange_address):
     transferable = True
     contact_information = 'some_contact_information'
     privacy_policy = 'some_privacy_policy'
+    regulated = False
+    regulator_service = '0x0000000000000000000000000000000000000000'
 
     deploy_args = [
         name, symbol, initial_supply, tradable_exchange,
         details, return_details,
         expiration_date, memo, transferable,
-        contact_information, privacy_policy
+        contact_information, privacy_policy,
+        regulated, regulator_service
     ]
     return deploy_args
 
