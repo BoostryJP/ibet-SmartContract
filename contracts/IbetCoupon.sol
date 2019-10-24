@@ -115,10 +115,12 @@ contract IbetCoupon is Ownable, IbetStandardTokenInterface {
     function transfer(address _to, uint _value) public returns (bool success) {
         // 譲渡しようとしている数量が残高を超えている場合、エラーを返す
         if (balanceOf(msg.sender) < _value) revert();
-        if (msg.sender != tradableExchange) {
-          // 譲渡可能なクーポンではない場合、エラーを返す
-          require(transferable == true);
+
+        // 譲渡可能ではない場合、エラーを返す
+        if(isContract(msg.sender) == false) {
+            require(transferable == true);
         }
+
         bytes memory empty;
         if(isContract(_to)) {
             return transferToContract(_to, _value, empty);

@@ -116,7 +116,9 @@ contract IbetMembership is Ownable, IbetStandardTokenInterface {
     if (balanceOf(msg.sender) < _value) revert();
 
     // 譲渡可能ではない場合、エラーを返す
-    require(transferable == true);
+    if(isContract(msg.sender) == false) {
+      require(transferable == true);
+    }
 
     bytes memory empty;
     if(isContract(_to)) {
