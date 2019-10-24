@@ -44,12 +44,15 @@ def issue_transferable_membership(web3,chain,exchange_address):
     transferable = True
     contact_information = 'some_contact_information'
     privacy_policy = 'some_privacy_policy'
+    regulated = False
+    regulator_service = '0x0000000000000000000000000000000000000000'
 
     deploy_args = [
         name, symbol, initial_supply, tradableExchange,
         details, return_details,
         expiration_date, memo, transferable,
-        contact_information, privacy_policy
+        contact_information, privacy_policy,
+        regulated, regulator_service
     ]
 
     membership, _ = chain.provider.get_or_deploy_contract(
@@ -71,12 +74,15 @@ def issue_non_transferable_membership(web3,chain,exchange_address):
     transferable = False
     contact_information = 'some_contact_information'
     privacy_policy = 'some_privacy_policy'
+    regulated = False
+    regulator_service = '0x0000000000000000000000000000000000000000'
 
     deploy_args = [
         name, symbol, initial_supply, tradableExchange,
         details, return_details,
         expiration_date, memo, transferable,
-        contact_information, privacy_policy
+        contact_information, privacy_policy,
+        regulated, regulator_service
     ]
 
     membership, _ = chain.provider.get_or_deploy_contract(
