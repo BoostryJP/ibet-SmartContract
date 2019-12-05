@@ -24,7 +24,7 @@ def init_args(exchange_address):
         name, symbol, total_supply, tradable_exchange, face_value,
         interest_rate, interest_payment_date, redemption_date,
         redemption_amount, return_date, return_amount,
-        purpose, memo,
+        purpose, memo, 
         contact_information, privacy_policy
     ]
     return deploy_args
@@ -60,6 +60,7 @@ def test_deploy_normal_1(web3, chain, users, bond_exchange):
     return_amount = bond_contract.call().returnAmount()
     purpose = bond_contract.call().purpose()
     memo = bond_contract.call().memo()
+    transferable = bond_contract.call().transferable()
     contact_information = bond_contract.call().contactInformation()
     privacy_policy = bond_contract.call().privacyPolicy()
 
@@ -200,9 +201,70 @@ def test_deploy_error_15(chain, bond_exchange):
     with pytest.raises(TypeError):
         chain.provider.get_or_deploy_contract('IbetStraightBond', deploy_args=deploy_args)
 
+'''
+TEST2_譲渡可能更新（setTransferable）
+'''
+
+
+# 正常系1: 発行 -> 譲渡可能更新
+def test_setTransferable_normal_1(web3, chain, users, bond_exchange):
+    issuer = users['issuer']
+    after_transferable = True
+
+    # 新規発行
+    web3.eth.defaultAccount = issuer
+    deploy_args = init_args(bond_exchange.address)
+    bond_contract, deploy_args = utils. \
+        issue_bond_token(web3, chain, users, bond_exchange.address)
+
+    # 譲渡可能更新
+    web3.eth.defaultAccount = issuer
+    txn_hash = bond_contract.transact().setTransferable(after_transferable)
+    chain.wait.for_receipt(txn_hash)
+
+    transferable = bond_contract.call().transferable()
+    assert after_transferable == transferable
+
+
+# エラー系1: 入力値の型誤り
+def test_setTransferable_error_1(web3, chain, users, bond_exchange):
+    issuer = users['issuer']
+
+    # 新規発行
+    web3.eth.defaultAccount = issuer
+    deploy_args = init_args(bond_exchange.address)
+    bond_contract, deploy_args = utils. \
+        issue_bond_token(web3, chain, users, bond_exchange.address)
+
+    # 型誤り
+    web3.eth.defaultAccount = issuer
+    with pytest.raises(TypeError):
+        bond_contract.transact().setTransferable('False')
+
+
+# エラー系2: 権限エラー
+def test_setTransferable_error_2(web3, chain, users, bond_exchange):
+    issuer = users['issuer']
+    attacker = users['trader']
+    after_transferable = True
+
+    # 新規発行
+    web3.eth.defaultAccount = issuer
+    deploy_args = init_args(bond_exchange.address)
+    bond_contract, deploy_args = utils. \
+        issue_bond_token(web3, chain, users, bond_exchange.address)
+
+    # 譲渡可能更新
+    web3.eth.defaultAccount = attacker
+    txn_hash = bond_contract.transact(). \
+        setTransferable(after_transferable)  # エラーになる
+    chain.wait.for_receipt(txn_hash)
+
+    transferable = bond_contract.call().transferable()
+    assert transferable == False
 
 '''
-TEST2_トークンの振替（transfer）
+TEST3_トークンの振替（transfer）
 '''
 
 
@@ -215,7 +277,7 @@ def test_transfer_normal_1(web3, chain, users, bond_exchange):
     # 債券トークン新規発行
     web3.eth.defaultAccount = from_address
     bond_contract, deploy_args = utils. \
-        issue_bond_token(web3, chain, users, bond_exchange.address)
+        issue_transferable_bond_token(web3, chain, users, bond_exchange.address)
 
     txn_hash = bond_contract.transact().transfer(to_address, transfer_amount)
     chain.wait.for_receipt(txn_hash)
@@ -235,7 +297,7 @@ def test_transfer_normal_2(web3, chain, users, bond_exchange):
     # 債券トークン新規発行
     web3.eth.defaultAccount = from_address
     bond_contract, deploy_args = utils. \
-        issue_bond_token(web3, chain, users, bond_exchange.address)
+        issue_transferable_bond_token(web3, chain, users, bond_exchange.address)
 
     to_address = bond_exchange.address
     txn_hash = bond_contract.transact().transfer(to_address, transfer_amount)
@@ -257,7 +319,7 @@ def test_transfer_error_1(web3, chain, users, bond_exchange):
     # 債券トークン新規発行
     web3.eth.defaultAccount = from_address
     bond_contract, deploy_args = utils. \
-        issue_bond_token(web3, chain, users, bond_exchange.address)
+        issue_transferable_bond_token(web3, chain, users, bond_exchange.address)
 
     with pytest.raises(TypeError):
         bond_contract.transact().transfer(to_address, transfer_amount)
@@ -272,7 +334,7 @@ def test_transfer_error_2(web3, chain, users, bond_exchange):
     # 債券トークン新規発行
     web3.eth.defaultAccount = from_address
     bond_contract, deploy_args = utils. \
-        issue_bond_token(web3, chain, users, bond_exchange.address)
+        issue_transferable_bond_token(web3, chain, users, bond_exchange.address)
 
     with pytest.raises(TypeError):
         bond_contract.transact().transfer(to_address, transfer_amount)
@@ -286,16 +348,16 @@ def test_transfer_error_3(web3, chain, users, bond_exchange):
 
     # 債券トークン新規発行
     web3.eth.defaultAccount = from_address
-    bond_token, deploy_args = utils. \
-        issue_bond_token(web3, chain, users, bond_exchange.address)
+    bond_contract, deploy_args = utils. \
+        issue_transferable_bond_token(web3, chain, users, bond_exchange.address)
 
     # 債券トークン振替（残高超）
     web3.eth.defaultAccount = issuer
     transfer_amount = 10000000000
-    bond_token.transact().transfer(to_address, transfer_amount)
+    bond_contract.transact().transfer(to_address, transfer_amount)
 
-    assert bond_token.call().balanceOf(issuer) == 10000
-    assert bond_token.call().balanceOf(to_address) == 0
+    assert bond_contract.call().balanceOf(issuer) == 10000
+    assert bond_contract.call().balanceOf(to_address) == 0
 
 
 # エラー系4: private functionにアクセスできない
@@ -309,17 +371,17 @@ def test_transfer_error_4(web3, chain, users, bond_exchange):
 
     # 債券トークン新規発行
     web3.eth.defaultAccount = from_address
-    bond_token, deploy_args = utils. \
-        issue_bond_token(web3, chain, users, bond_exchange.address)
+    bond_contract, deploy_args = utils. \
+        issue_transferable_bond_token(web3, chain, users, bond_exchange.address)
 
     with pytest.raises(ValueError):
-        bond_token.call().isContract(to_address)
+        bond_contract.call().isContract(to_address)
 
     with pytest.raises(ValueError):
-        bond_token.transact().transferToAddress(to_address, transfer_amount, data)
+        bond_contract.transact().transferToAddress(to_address, transfer_amount, data)
 
     with pytest.raises(ValueError):
-        bond_token.transact().transferToContract(to_address, transfer_amount, data)
+        bond_contract.transact().transferToContract(to_address, transfer_amount, data)
 
 
 # エラー系5: 取引不可Exchangeへの振替
@@ -331,7 +393,7 @@ def test_transfer_error_5(web3, chain, users, bond_exchange,
     # 債券トークン新規発行
     web3.eth.defaultAccount = from_address
     bond_contract, deploy_args = utils. \
-        issue_bond_token(web3, chain, users, bond_exchange.address)
+        issue_transferable_bond_token(web3, chain, users, bond_exchange.address)
 
     # 取引不可Exchange
     web3.eth.defaultAccount = users['admin']
@@ -353,9 +415,28 @@ def test_transfer_error_5(web3, chain, users, bond_exchange,
     assert from_balance == deploy_args[2]
     assert to_balance == 0
 
+# エラー系6: 譲渡不可トークンの振替
+def test_transfer_error_5(web3, chain, users, bond_exchange):
+    from_address = users['issuer']
+    to_address = users['trader']
+    transfer_amount = 100
+
+    # 債券トークン新規発行
+    web3.eth.defaultAccount = from_address
+    bond_contract, deploy_args = utils. \
+        issue_bond_token(web3, chain, users, bond_exchange.address)
+
+    txn_hash = bond_contract.transact().transfer(to_address, transfer_amount) # エラーとなる
+    chain.wait.for_receipt(txn_hash)
+
+    from_balance = bond_contract.call().balanceOf(from_address)
+    to_balance = bond_contract.call().balanceOf(to_address)
+
+    assert from_balance == deploy_args[2]
+    assert to_balance == 0
 
 '''
-TEST3_残高確認（balanceOf）
+TEST4_残高確認（balanceOf）
 '''
 
 
@@ -388,7 +469,7 @@ def test_balanceOf_error_1(web3, chain, users, bond_exchange):
 
 
 '''
-TEST4_認定リクエスト（requestSignature）
+TEST5_認定リクエスト（requestSignature）
 '''
 
 
@@ -438,7 +519,7 @@ def test_requestSignature_error_1(web3, chain, users, bond_exchange):
 
 
 '''
-TEST5_認定（sign）
+TEST6_認定（sign）
 '''
 
 
@@ -510,7 +591,7 @@ def test_sign_error_2(web3, chain, users, bond_exchange):
 
 
 '''
-TEST6_認定取消（unsign）
+TEST7_認定取消（unsign）
 '''
 
 
@@ -617,7 +698,7 @@ def test_unsign_error_3(web3, chain, users, bond_exchange):
 
 
 '''
-TEST7_償還（redeem）
+TEST8_償還（redeem）
 '''
 
 
@@ -657,7 +738,7 @@ def test_redeem_error_1(web3, chain, users, bond_exchange):
 
 
 '''
-TEST8_商品画像の設定（setImageURL, getImageURL）
+TEST9_商品画像の設定（setImageURL, getImageURL）
 '''
 
 
@@ -795,7 +876,7 @@ def test_setImageURL_error_3(web3, chain, users, bond_exchange):
 
 
 '''
-TEST9_メモの更新（updateMemo）
+TEST10_メモの更新（updateMemo）
 '''
 
 
@@ -850,7 +931,7 @@ def test_updateMemo_error_2(web3, chain, users, bond_exchange):
 
 
 '''
-TEST10_トークンの移転（transferFrom）
+TEST11_トークンの移転（transferFrom）
 '''
 
 
@@ -864,7 +945,7 @@ def test_transferFrom_normal_1(web3, chain, users, bond_exchange):
     # 債券トークン新規発行
     web3.eth.defaultAccount = _issuer
     bond_contract, deploy_args = utils. \
-        issue_bond_token(web3, chain, users, bond_exchange.address)
+        issue_transferable_bond_token(web3, chain, users, bond_exchange.address)
 
     # 譲渡（issuer -> _from）
     web3.eth.defaultAccount = _issuer
@@ -964,7 +1045,7 @@ def test_transferFrom_error_4(web3, chain, users, bond_exchange):
     # 債券トークン新規発行
     web3.eth.defaultAccount = _issuer
     bond_contract, deploy_args = utils. \
-        issue_bond_token(web3, chain, users, bond_exchange.address)
+        issue_transferable_bond_token(web3, chain, users, bond_exchange.address)
 
     # 譲渡（issuer -> _from）
     web3.eth.defaultAccount = _issuer
@@ -995,7 +1076,7 @@ def test_transferFrom_error_5(web3, chain, users, bond_exchange):
     # 債券トークン新規発行
     web3.eth.defaultAccount = _issuer
     bond_contract, deploy_args = utils. \
-        issue_bond_token(web3, chain, users, bond_exchange.address)
+        issue_transferable_bond_token(web3, chain, users, bond_exchange.address)
 
     # 譲渡（issuer -> _from）
     web3.eth.defaultAccount = _issuer
@@ -1015,9 +1096,8 @@ def test_transferFrom_error_5(web3, chain, users, bond_exchange):
     assert from_balance == _value
     assert to_balance == 0
 
-
 '''
-TEST11_取引可能Exchangeの更新（setTradableExchange）
+TEST12_取引可能Exchangeの更新（setTradableExchange）
 '''
 
 
@@ -1095,7 +1175,7 @@ def test_setTradableExchange_error_2(web3, chain, users, bond_exchange,
 
 
 '''
-TEST12_問い合わせ先情報の更新（setContactInformation）
+TEST13_問い合わせ先情報の更新（setContactInformation）
 '''
 
 
@@ -1150,7 +1230,7 @@ def test_setContactInformation_error_2(web3, chain, users, bond_exchange):
 
 
 '''
-TEST13_プライバシーポリシーの更新（setPrivacyPolicy）
+TEST14_プライバシーポリシーの更新（setPrivacyPolicy）
 '''
 
 
