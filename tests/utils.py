@@ -31,6 +31,45 @@ def issue_bond_token(web3,chain,users,exchange_address):
     )
     return bond_token, deploy_args
 
+# 普通社債新規発行（譲渡可能）
+def issue_transferable_bond_token(web3,chain,users,exchange_address):
+    name = 'test_bond'
+    symbol = 'BND'
+    total_supply = 10000
+    tradable_exchange = exchange_address
+    face_value = 10000
+    interest_rate = 1000
+    interest_payment_date = '{"interestPaymentDate1":"0331","interestPaymentDate2":"0930"}'
+    redemption_date = '20191231'
+    redemption_amount = 100
+    return_date = '20191231'
+    return_amount = 'some_return'
+    purpose = 'some_purpose'
+    memo = 'some_memo'
+    contact_information = 'some_contact_information'
+    privacy_policy = 'some_privacy_policy'
+
+    deploy_args = [
+        name, symbol, total_supply, tradable_exchange, face_value,
+        interest_rate, interest_payment_date, redemption_date,
+        redemption_amount, return_date, return_amount,
+        purpose, memo,
+        contact_information, privacy_policy
+    ]
+
+    web3.eth.defaultAccount = users['issuer']
+    bond_token, _ = chain.provider.get_or_deploy_contract(
+        'IbetStraightBond',
+        deploy_args = deploy_args
+    )
+
+    # 譲渡可能更新
+    web3.eth.defaultAccount = users['issuer']
+    txn_hash = bond_token.transact().setTransferable(True)
+    chain.wait.for_receipt(txn_hash)
+
+    return bond_token, deploy_args
+
 # 会員権（譲渡可能）新規発行
 def issue_transferable_membership(web3,chain,exchange_address):
     name = 'test_membership'
