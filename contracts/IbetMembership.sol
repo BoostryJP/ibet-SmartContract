@@ -101,6 +101,9 @@ contract IbetMembership is Ownable, IbetStandardTokenInterface {
     ContractReceiver receiver = ContractReceiver(_to);
     receiver.tokenFallback(msg.sender, _value, _data);
 
+    // イベント登録
+    emit Transfer(msg.sender, _to, _value);
+    
     return true;
   }
 

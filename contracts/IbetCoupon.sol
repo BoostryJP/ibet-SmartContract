@@ -93,6 +93,7 @@ contract IbetCoupon is Ownable, IbetStandardTokenInterface {
         balances[_to] = balanceOf(_to).add(_value);
         ContractReceiver receiver = ContractReceiver(_to);
         receiver.tokenFallback(msg.sender, _value, _data);
+        emit Transfer(msg.sender, _to, _value);
         return true;
     }
 
