@@ -3,7 +3,7 @@ name: Release
 about: リリース作業内容の連携
 title: "[RELEASE]"
 labels: release
-assignees: YoshihitoAso, horsewin, kyken, OnePoke2, r-kozu
+assignees: YoshihitoAso, horsewin, kyken, r-kozu
 
 ---
 
