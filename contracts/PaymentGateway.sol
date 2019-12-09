@@ -7,19 +7,6 @@ contract PaymentGateway is Ownable {
     // 収納代行業者（Agent）のリスト
     address[30] public agents;
 
-    // 収納代行利用規約
-    struct Terms {
-        string text; // 規約本文
-        bool status; // 登録済：True、未登録：False
-    }
-
-    // 収納代行利用規約の同意状況
-    struct TermsAgreement {
-        address account_address; // アカウントアドレス
-        address agent_address; // 収納代行業者（Agent）のアドレス
-        bool status; // 同意状況（同意済:true）
-    }
-
     // 振込用銀行口座
     struct PaymentAccount {
         address account_address; // アカウントアドレス
@@ -28,24 +15,13 @@ contract PaymentGateway is Ownable {
         uint8 approval_status; // 認可状況（NONE(0)/NG(1)/OK(2)/WARN(3)/BAN(4)）
     }
 
-    // 収納代行利用規約情報
-    // agent_address => 版番 => 規約本文
-    mapping(address => mapping(uint16 => Terms)) public terms;
-
     // 最新の版番
     // agent_address => 版番
     mapping(address => uint16) public latest_terms_version;
 
-    // 利用規約同意情報
-    // account_address => agent_address => 版番 => Agreement
-    mapping(address => mapping(address => mapping(uint16 => TermsAgreement))) public terms_agreements;
-
     // 振込用銀行口座情報
     // account_address => agent_address => PaymentAccount
     mapping(address => mapping(address => PaymentAccount)) public payment_accounts;
-
-    // イベント：規約同意
-    event Agree(address indexed account_address, address indexed agent_address);
 
     // イベント：登録
     event Register(address indexed account_address, address indexed agent_address);
@@ -81,37 +57,6 @@ contract PaymentGateway is Ownable {
         return agents;
     }
 
-    // ファンクション：（収納代行業者）利用規約の追加
-    function addTerms(string memory _text) public returns (bool) {
-        uint16 version = latest_terms_version[msg.sender]++;
-        Terms storage new_terms = terms[msg.sender][version];
-        new_terms.text = _text;
-        new_terms.status = true;
-        return true;
-    }
-
-    // ファンクション：利用規約同意
-    function agreeTerms(address _agent_address)
-        public
-        returns (bool)
-    {
-        // 利用規約が登録済であることを確認
-        require(latest_terms_version[_agent_address] > 0);
-        Terms storage latest_terms =
-            terms[_agent_address][latest_terms_version[_agent_address] - 1];
-        require(latest_terms.status == true);
-
-        TermsAgreement storage agreement =
-            terms_agreements[msg.sender][_agent_address][latest_terms_version[_agent_address] - 1];
-        agreement.account_address = msg.sender;
-        agreement.agent_address = _agent_address;
-        agreement.status = true;
-
-        emit Agree(msg.sender, _agent_address);
-
-        return true;
-    }
-
     // ファンクション：支払情報を登録する
     //  ２回目以降は上書き登録を行う
     function register(address _agent_address, string memory _encrypted_info)
@@ -121,28 +66,13 @@ contract PaymentGateway is Ownable {
         PaymentAccount storage payment_account = payment_accounts[msg.sender][_agent_address];
         require(payment_account.approval_status != 4);
 
-        // 利用規約が登録済であることを確認
-        require(latest_terms_version[_agent_address] > 0);
-        Terms storage latest_terms =
-            terms[_agent_address][latest_terms_version[_agent_address] - 1];
-        require(latest_terms.status == true);
-
         // 口座情報の登録
         payment_account.account_address = msg.sender;
         payment_account.agent_address = _agent_address;
         payment_account.encrypted_info = _encrypted_info;
         payment_account.approval_status = 1;
 
-        // 利用規約同意
-        TermsAgreement storage agreement =
-            terms_agreements[msg.sender][_agent_address][latest_terms_version[_agent_address] - 1];
-        agreement.account_address = msg.sender;
-        agreement.agent_address = _agent_address;
-        agreement.status = true;
-
-        emit Agree(msg.sender, _agent_address);
         emit Register(msg.sender, _agent_address);
-
         return true;
     }
 
@@ -154,7 +84,6 @@ contract PaymentGateway is Ownable {
         payment_account.approval_status = 2;
 
         emit Approve(_account_address, msg.sender);
-
         return true;
     }
 
@@ -166,7 +95,6 @@ contract PaymentGateway is Ownable {
         payment_account.approval_status = 3;
 
         emit Warn(_account_address, msg.sender);
-
         return true;
     }
 
@@ -178,7 +106,6 @@ contract PaymentGateway is Ownable {
         payment_account.approval_status = 1;
 
         emit Unapprove(_account_address, msg.sender);
-
         return true;
     }
 
@@ -190,23 +117,7 @@ contract PaymentGateway is Ownable {
         payment_account.approval_status = 4;
 
         emit Ban(_account_address, msg.sender);
-
         return true;
-    }
-
-    // ファンクション：直近の利用規約の同意状況を返却する
-    function termAgreementStatus(address _account_address, address _agent_address)
-        public
-        view
-        returns (bool)
-    {
-        if (latest_terms_version[_agent_address] == 0) {
-            return false;
-        } else {
-            TermsAgreement storage agreement =
-                terms_agreements[_account_address][_agent_address][latest_terms_version[_agent_address] - 1];
-            return agreement.status;
-        }
     }
 
     // ファンクション：アカウントの承認状況を返却する
