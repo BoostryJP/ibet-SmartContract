@@ -21,10 +21,7 @@ def test_deploy_normal_1(web3, chain, users):
     pg_contract, _ = chain.provider.get_or_deploy_contract('PaymentGateway')
 
     payment_account = pg_contract.call().payment_accounts(trader, agent)
-    agreement = pg_contract.call().terms_agreements(trader, agent, 0)
     account_approved = pg_contract.call().accountApproved(trader, agent)
-    term_agreement_status = pg_contract.call().termAgreementStatus(trader, agent)
-    latest_terms_version = pg_contract.call().latest_terms_version(agent)
 
     # デフォルトの登録情報の内容が正しいことを確認
     assert payment_account[0] == '0x0000000000000000000000000000000000000000'
@@ -32,19 +29,8 @@ def test_deploy_normal_1(web3, chain, users):
     assert payment_account[2] == ''
     assert payment_account[3] == 0
 
-    # デフォルトの規約同意情報の内容が正しいことを確認
-    assert agreement[0] == '0x0000000000000000000000000000000000000000'
-    assert agreement[1] == '0x0000000000000000000000000000000000000000'
-    assert agreement[2] is False
-
     # 認可状態が未認可の状態であることを確認
     assert account_approved is False
-
-    # 利用規約同意状態が未同意であることを確認
-    assert term_agreement_status is False
-
-    # 最新の版番がゼロであることを確認
-    assert latest_terms_version == 0
 
 
 '''
@@ -62,22 +48,13 @@ def test_register_normal_1(web3, chain, users):
     web3.eth.defaultAccount = admin
     pg_contract, _ = chain.provider.get_or_deploy_contract('PaymentGateway')
 
-    # 利用規約登録
-    web3.eth.defaultAccount = agent
-    txn_hash = pg_contract.transact().addTerms(terms_text)
-    chain.wait.for_receipt(txn_hash)
-
     # PaymentGateway登録
     web3.eth.defaultAccount = trader
     txn_hash = pg_contract.transact().register(agent, encrypted_message)
     chain.wait.for_receipt(txn_hash)
 
-    latest_terms_version = pg_contract.call().latest_terms_version(agent)
     payment_account = pg_contract.call().payment_accounts(trader, agent)
-    agreement = pg_contract.call().terms_agreements(
-        trader, agent, latest_terms_version - 1)
     account_approved = pg_contract.call().accountApproved(trader, agent)
-    term_agreement_status = pg_contract.call().termAgreementStatus(trader, agent)
 
     # 登録情報の内容が正しいことを確認
     assert payment_account[0] == trader
@@ -85,19 +62,8 @@ def test_register_normal_1(web3, chain, users):
     assert payment_account[2] == encrypted_message
     assert payment_account[3] == 1
 
-    # 規約同意情報の内容が正しいことを確認
-    assert agreement[0] == trader
-    assert agreement[1] == agent
-    assert agreement[2] is True
-
     # 認可状態が未認可の状態であることを確認
     assert account_approved is False
-
-    # 利用規約同意状態（最新版）が同意済であることを確認
-    assert term_agreement_status is True
-
-    # 最新の版番の確認
-    assert latest_terms_version == 1
 
 
 # 正常系2: 新規登録 -> 更新
@@ -110,11 +76,6 @@ def test_register_normal_2(web3, chain, users):
     web3.eth.defaultAccount = admin
     pg_contract, _ = chain.provider.get_or_deploy_contract('PaymentGateway')
 
-    # 利用規約登録
-    web3.eth.defaultAccount = agent
-    txn_hash = pg_contract.transact().addTerms(terms_text)
-    chain.wait.for_receipt(txn_hash)
-
     # 登録 -> Success
     web3.eth.defaultAccount = trader
     txn_hash_1 = pg_contract.transact().register(agent, encrypted_message)
@@ -125,12 +86,8 @@ def test_register_normal_2(web3, chain, users):
     txn_hash_2 = pg_contract.transact().register(agent, encrypted_message_after)
     chain.wait.for_receipt(txn_hash_2)
 
-    latest_terms_version = pg_contract.call().latest_terms_version(agent)
     payment_account = pg_contract.call().payment_accounts(trader, agent)
-    agreement = pg_contract.call().terms_agreements(
-        trader, agent, latest_terms_version - 1)
     account_approved = pg_contract.call().accountApproved(trader, agent)
-    term_agreement_status = pg_contract.call().termAgreementStatus(trader, agent)
 
     # 登録情報の内容が正しいことを確認
     assert payment_account[0] == trader
@@ -138,19 +95,8 @@ def test_register_normal_2(web3, chain, users):
     assert payment_account[2] == encrypted_message_after
     assert payment_account[3] == 1
 
-    # 規約同意情報の内容が正しいことを確認
-    assert agreement[0] == trader
-    assert agreement[1] == agent
-    assert agreement[2] is True
-
     # 認可状態が未認可の状態であることを確認
     assert account_approved is False
-
-    # 利用規約同意状態（最新版）が同意済であることを確認
-    assert term_agreement_status is True
-
-    # 最新の版番の確認
-    assert latest_terms_version == 1
 
 
 # エラー系1:入力値の型誤り（agent address）
@@ -195,11 +141,6 @@ def test_register_error_3(web3, chain, users):
     web3.eth.defaultAccount = admin
     pg_contract, _ = chain.provider.get_or_deploy_contract('PaymentGateway')
 
-    # 利用規約登録
-    web3.eth.defaultAccount = agent
-    txn_hash = pg_contract.transact().addTerms(terms_text)
-    chain.wait.for_receipt(txn_hash)
-
     # 新規登録 -> Success
     web3.eth.defaultAccount = trader
     txn_hash_1 = pg_contract.transact().register(agent, encrypted_message)
@@ -228,34 +169,6 @@ def test_register_error_3(web3, chain, users):
     assert account_approved is False
 
 
-# エラー系4: 利用規約未登録 -> 口座登録
-def test_register_error_4(web3, chain, users):
-    admin = users['admin']
-    trader = users['trader']
-    agent = users['agent']
-
-    # PaymentGatewayデプロイ
-    web3.eth.defaultAccount = admin
-    pg_contract, _ = chain.provider.get_or_deploy_contract('PaymentGateway')
-
-    # 新規登録 -> Failure
-    web3.eth.defaultAccount = trader
-    txn_hash_1 = pg_contract.transact().register(agent, encrypted_message)
-    chain.wait.for_receipt(txn_hash_1)
-
-    payment_account = pg_contract.call().payment_accounts(trader, agent)
-    account_approved = pg_contract.call().accountApproved(trader, agent)
-
-    # 登録情報の内容が正しいことを確認
-    assert payment_account[0] == '0x0000000000000000000000000000000000000000'
-    assert payment_account[1] == '0x0000000000000000000000000000000000000000'
-    assert payment_account[2] == ''
-    assert payment_account[3] == 0
-
-    # 認可状態が未認可の状態であることを確認
-    assert account_approved is False
-
-
 '''
 TEST2_支払情報を承認する(approve)
 '''
@@ -270,11 +183,6 @@ def test_approve_normal_1(web3, chain, users):
     # PaymentGatewayデプロイ
     web3.eth.defaultAccount = admin
     pg_contract, _ = chain.provider.get_or_deploy_contract('PaymentGateway')
-
-    # 利用規約登録
-    web3.eth.defaultAccount = agent
-    txn_hash = pg_contract.transact().addTerms(terms_text)
-    chain.wait.for_receipt(txn_hash)
 
     # 新規登録 -> Success
     web3.eth.defaultAccount = trader
@@ -349,11 +257,6 @@ def test_warn_normal_1(web3, chain, users):
     web3.eth.defaultAccount = admin
     pg_contract, _ = chain.provider.get_or_deploy_contract('PaymentGateway')
 
-    # 利用規約登録
-    web3.eth.defaultAccount = agent
-    txn_hash = pg_contract.transact().addTerms(terms_text)
-    chain.wait.for_receipt(txn_hash)
-
     # 新規登録 -> Success
     web3.eth.defaultAccount = trader
     txn_hash_1 = pg_contract.transact().register(agent, encrypted_message)
@@ -427,11 +330,6 @@ def test_unapprove_normal_1(web3, chain, users):
     web3.eth.defaultAccount = admin
     pg_contract, _ = chain.provider.get_or_deploy_contract('PaymentGateway')
 
-    # 利用規約登録
-    web3.eth.defaultAccount = agent
-    txn_hash = pg_contract.transact().addTerms(terms_text)
-    chain.wait.for_receipt(txn_hash)
-
     # 新規登録 -> Success
     web3.eth.defaultAccount = trader
     txn_hash_1 = pg_contract.transact().register(agent, encrypted_message)
@@ -465,11 +363,6 @@ def test_unapprove_normal_2(web3, chain, users):
     # PaymentGatewayデプロイ
     web3.eth.defaultAccount = admin
     pg_contract, _ = chain.provider.get_or_deploy_contract('PaymentGateway')
-
-    # 利用規約登録
-    web3.eth.defaultAccount = agent
-    txn_hash = pg_contract.transact().addTerms(terms_text)
-    chain.wait.for_receipt(txn_hash)
 
     # 新規登録 -> Success
     web3.eth.defaultAccount = trader
@@ -548,11 +441,6 @@ def test_ban_normal_1(web3, chain, users):
     # PaymentGatewayデプロイ
     web3.eth.defaultAccount = admin
     pg_contract, _ = chain.provider.get_or_deploy_contract('PaymentGateway')
-
-    # 利用規約登録
-    web3.eth.defaultAccount = agent
-    txn_hash = pg_contract.transact().addTerms(terms_text)
-    chain.wait.for_receipt(txn_hash)
 
     # 新規登録 -> Success
     web3.eth.defaultAccount = trader
@@ -708,161 +596,3 @@ def test_addAgent_error_3(web3, chain, users):
     for agent_address in agents:
         assert agent_address == '0x0000000000000000000000000000000000000000'
     assert len(agents) == 30
-
-
-'''
-TEST7_利用規約登録（addTerms）
-'''
-
-
-# 正常系1: 新規登録
-def test_addTerms_normal_1(web3, chain, users):
-    admin = users['admin']
-    agent = users['agent']
-
-    # PaymentGatewayデプロイ
-    web3.eth.defaultAccount = admin
-    pg_contract, _ = chain.provider.get_or_deploy_contract('PaymentGateway')
-
-    # 利用規約登録
-    web3.eth.defaultAccount = agent
-    txn_hash = pg_contract.transact().addTerms(terms_text)
-    chain.wait.for_receipt(txn_hash)
-
-    latest_terms_version = pg_contract.call().latest_terms_version(agent)
-    terms = pg_contract.call().terms(agent, latest_terms_version - 1)
-
-    assert terms[0] == terms_text
-    assert terms[1] is True
-    assert latest_terms_version == 1
-
-
-# 正常系2: 登録２回
-def test_addTerms_normal_2(web3, chain, users):
-    admin = users['admin']
-    agent = users['agent']
-
-    # PaymentGatewayデプロイ
-    web3.eth.defaultAccount = admin
-    pg_contract, _ = chain.provider.get_or_deploy_contract('PaymentGateway')
-
-    # 利用規約登録
-    web3.eth.defaultAccount = agent
-    txn_hash_1 = pg_contract.transact().addTerms(terms_text)
-    chain.wait.for_receipt(txn_hash_1)
-
-    # 利用規約登録（２回目）
-    web3.eth.defaultAccount = agent
-    txn_hash_2 = pg_contract.transact().addTerms(terms_text_after)
-    chain.wait.for_receipt(txn_hash_2)
-
-    latest_terms_version = pg_contract.call().latest_terms_version(agent)
-    terms1 = pg_contract.call().terms(agent, latest_terms_version - 2)
-    terms2 = pg_contract.call().terms(agent, latest_terms_version - 1)
-
-    assert terms1[0] == terms_text
-    assert terms1[1] is True
-
-    assert terms2[0] == terms_text_after
-    assert terms2[1] is True
-
-    assert latest_terms_version == 2
-
-
-# エラー系1: 入力値の型誤り
-def test_addTerms_error_1(web3, chain, users):
-    admin = users['admin']
-    agent = users['agent']
-
-    # PaymentGatewayデプロイ
-    web3.eth.defaultAccount = admin
-    pg_contract, _ = chain.provider.get_or_deploy_contract('PaymentGateway')
-
-    # 利用規約登録
-    web3.eth.defaultAccount = agent
-    with pytest.raises(TypeError):
-        pg_contract.transact().addTerms(1234)
-
-
-'''
-TEST8_利用規約同意（agreeTerms）
-'''
-
-
-# 正常系1: 同意
-def test_agreeTerms_normal_1(web3, chain, users):
-    admin = users['admin']
-    agent = users['agent']
-    trader = users['trader']
-
-    # PaymentGatewayデプロイ
-    web3.eth.defaultAccount = admin
-    pg_contract, _ = chain.provider.get_or_deploy_contract('PaymentGateway')
-
-    # 利用規約登録
-    web3.eth.defaultAccount = agent
-    txn_hash = pg_contract.transact().addTerms(terms_text)
-    chain.wait.for_receipt(txn_hash)
-
-    # 利用規約同意
-    web3.eth.defaultAccount = trader
-    txn_hash = pg_contract.transact().agreeTerms(agent)
-    chain.wait.for_receipt(txn_hash)
-
-    latest_terms_version = pg_contract.call().latest_terms_version(agent)
-    agreement = pg_contract.call().terms_agreements(
-        trader, agent, latest_terms_version - 1)
-    is_agreed = pg_contract.call().termAgreementStatus(trader, agent)
-
-    # 最新の版番の確認
-    assert latest_terms_version == 1
-
-    # 規約同意情報の内容が正しいことを確認
-    assert agreement[0] == trader
-    assert agreement[1] == agent
-    assert agreement[2] is True
-
-    # 利用規約同意状態（最新版）が同意済であることを確認
-    assert is_agreed is True
-
-
-# エラー系1: 入力値の型誤り
-def test_agreeTerms_error_1(web3, chain, users):
-    admin = users['admin']
-    trader = users['trader']
-
-    # PaymentGatewayデプロイ
-    web3.eth.defaultAccount = admin
-    pg_contract, _ = chain.provider.get_or_deploy_contract('PaymentGateway')
-
-    # 利用規約同意
-    web3.eth.defaultAccount = trader
-    with pytest.raises(TypeError):
-        pg_contract.transact().agreeTerms(1234)
-
-
-# エラー系2: 利用規約未登録 => 利用規約同意
-def test_agreeTerms_error_2(web3, chain, users):
-    admin = users['admin']
-    agent = users['agent']
-    trader = users['trader']
-
-    # PaymentGatewayデプロイ
-    web3.eth.defaultAccount = admin
-    pg_contract, _ = chain.provider.get_or_deploy_contract('PaymentGateway')
-
-    # 利用規約同意
-    web3.eth.defaultAccount = trader
-    txn_hash = pg_contract.transact().agreeTerms(agent)
-    chain.wait.for_receipt(txn_hash)
-
-    agreement = pg_contract.call().terms_agreements(trader, agent, 0)
-    is_agreed = pg_contract.call().termAgreementStatus(trader, agent)
-
-    # 規約同意情報の内容が正しいことを確認
-    assert agreement[0] == '0x0000000000000000000000000000000000000000'
-    assert agreement[1] == '0x0000000000000000000000000000000000000000'
-    assert agreement[2] is False
-
-    # 利用規約同意状態（最新版）が未同意であることを確認
-    assert is_agreed is False
