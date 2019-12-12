@@ -96,10 +96,10 @@ RUN . ~/.bash_profile \
 
 # app
 USER root
-COPY . /app/tmr-sc/
-RUN chown -R apl:apl /app/tmr-sc && \
-    chmod 755 /app/tmr-sc
+COPY . /app/ibet-SmartContract/
+RUN chown -R apl:apl /app/ibet-SmartContract && \
+    chmod 755 /app/ibet-SmartContract
 USER apl
-COPY qa.sh /app/tmr-sc/
+COPY qa.sh /app/ibet-SmartContract/
 
-CMD /app/tmr-sc/qa.sh
+CMD /app/ibet-SmartContract/qa.sh
