@@ -1,7 +1,7 @@
 #!/bin/bash
 source ~/.bash_profile
 
-cd /app/tmr-sc
+cd /app/ibet-SmartContract
 
 # コントラクトコードのコンパイル
 populus compile
