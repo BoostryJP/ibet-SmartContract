@@ -55,7 +55,7 @@ def test_deploy_normal_1(web3, chain, users, bond_exchange):
     interest_rate = bond_contract.call().interestRate()
     interest_payment_date = bond_contract.call().interestPaymentDate()
     redemption_date = bond_contract.call().redemptionDate()
-    redemption_amount = bond_contract.call().redemptionAmount()
+    redemption_amount = bond_contract.call().redemptionValue()
     return_date = bond_contract.call().returnDate()
     return_amount = bond_contract.call().returnAmount()
     purpose = bond_contract.call().purpose()
@@ -139,7 +139,7 @@ def test_deploy_error_7(chain, bond_exchange):
         chain.provider.get_or_deploy_contract('IbetStraightBond', deploy_args=deploy_args)
 
 
-# エラー系8: 入力値の型誤り（redemptionAmount）
+# エラー系8: 入力値の型誤り（redemptionValue）
 def test_deploy_error_8(chain, bond_exchange):
     deploy_args = init_args(bond_exchange.address)
     deploy_args[8] = "100"
