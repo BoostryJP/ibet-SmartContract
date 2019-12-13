@@ -77,7 +77,7 @@ contract IbetStraightBond is Ownable, IbetStandardTokenInterface {
     returnAmount = _returnAmount;
     purpose = _purpose;
     memo = _memo;
-    transferable = false;
+    transferable = true;
     balances[owner] = totalSupply;
     isRedeemed = false;
     contactInformation = _contactInformation;
