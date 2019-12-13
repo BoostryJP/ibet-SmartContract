@@ -63,11 +63,6 @@ def issue_transferable_bond_token(web3,chain,users,exchange_address):
         deploy_args = deploy_args
     )
 
-    # 譲渡可能更新
-    web3.eth.defaultAccount = users['issuer']
-    txn_hash = bond_token.transact().setTransferable(True)
-    chain.wait.for_receipt(txn_hash)
-
     return bond_token, deploy_args
 
 # 会員権（譲渡可能）新規発行

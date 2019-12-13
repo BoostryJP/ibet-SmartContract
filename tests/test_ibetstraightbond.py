@@ -24,7 +24,7 @@ def init_args(exchange_address):
         name, symbol, total_supply, tradable_exchange, face_value,
         interest_rate, interest_payment_date, redemption_date,
         redemption_amount, return_date, return_amount,
-        purpose, memo, 
+        purpose, memo,
         contact_information, privacy_policy
     ]
     return deploy_args
@@ -80,6 +80,7 @@ def test_deploy_normal_1(web3, chain, users, bond_exchange):
     assert memo == deploy_args[12]
     assert contact_information == deploy_args[13]
     assert privacy_policy == deploy_args[14]
+    assert transferable == True
 
 
 # エラー系1: 入力値の型誤り（name）
@@ -201,6 +202,7 @@ def test_deploy_error_15(chain, bond_exchange):
     with pytest.raises(TypeError):
         chain.provider.get_or_deploy_contract('IbetStraightBond', deploy_args=deploy_args)
 
+
 '''
 TEST2_譲渡可能更新（setTransferable）
 '''
@@ -213,9 +215,7 @@ def test_setTransferable_normal_1(web3, chain, users, bond_exchange):
 
     # 新規発行
     web3.eth.defaultAccount = issuer
-    deploy_args = init_args(bond_exchange.address)
-    bond_contract, deploy_args = utils. \
-        issue_bond_token(web3, chain, users, bond_exchange.address)
+    bond_contract, deploy_args = utils.issue_bond_token(web3, chain, users, bond_exchange.address)
 
     # 譲渡可能更新
     web3.eth.defaultAccount = issuer
@@ -232,9 +232,7 @@ def test_setTransferable_error_1(web3, chain, users, bond_exchange):
 
     # 新規発行
     web3.eth.defaultAccount = issuer
-    deploy_args = init_args(bond_exchange.address)
-    bond_contract, deploy_args = utils. \
-        issue_bond_token(web3, chain, users, bond_exchange.address)
+    bond_contract, deploy_args = utils.issue_bond_token(web3, chain, users, bond_exchange.address)
 
     # 型誤り
     web3.eth.defaultAccount = issuer
@@ -246,22 +244,20 @@ def test_setTransferable_error_1(web3, chain, users, bond_exchange):
 def test_setTransferable_error_2(web3, chain, users, bond_exchange):
     issuer = users['issuer']
     attacker = users['trader']
-    after_transferable = True
+    after_transferable = False
 
     # 新規発行
     web3.eth.defaultAccount = issuer
-    deploy_args = init_args(bond_exchange.address)
-    bond_contract, deploy_args = utils. \
-        issue_bond_token(web3, chain, users, bond_exchange.address)
+    bond_contract, deploy_args = utils.issue_bond_token(web3, chain, users, bond_exchange.address)
 
     # 譲渡可能更新
     web3.eth.defaultAccount = attacker
-    txn_hash = bond_contract.transact(). \
-        setTransferable(after_transferable)  # エラーになる
+    txn_hash = bond_contract.transact().setTransferable(after_transferable)  # エラーになる
     chain.wait.for_receipt(txn_hash)
 
     transferable = bond_contract.call().transferable()
-    assert transferable == False
+    assert transferable == True
+
 
 '''
 TEST3_トークンの振替（transfer）
@@ -415,25 +411,32 @@ def test_transfer_error_5(web3, chain, users, bond_exchange,
     assert from_balance == deploy_args[2]
     assert to_balance == 0
 
+
 # エラー系6: 譲渡不可トークンの振替
-def test_transfer_error_5(web3, chain, users, bond_exchange):
-    from_address = users['issuer']
+def test_transfer_error_6(web3, chain, users, bond_exchange):
+    issuer = users['issuer']
     to_address = users['trader']
     transfer_amount = 100
 
     # 債券トークン新規発行
-    web3.eth.defaultAccount = from_address
-    bond_contract, deploy_args = utils. \
-        issue_bond_token(web3, chain, users, bond_exchange.address)
+    web3.eth.defaultAccount = issuer
+    bond_contract, deploy_args = utils.issue_bond_token(web3, chain, users, bond_exchange.address)
 
-    txn_hash = bond_contract.transact().transfer(to_address, transfer_amount) # エラーとなる
+    # 譲渡不可設定
+    web3.eth.defaultAccount = issuer
+    txn_hash = bond_contract.transact().setTransferable(False)
     chain.wait.for_receipt(txn_hash)
 
-    from_balance = bond_contract.call().balanceOf(from_address)
+    # 譲渡実行
+    txn_hash = bond_contract.transact().transfer(to_address, transfer_amount)  # エラーとなる
+    chain.wait.for_receipt(txn_hash)
+
+    from_balance = bond_contract.call().balanceOf(issuer)
     to_balance = bond_contract.call().balanceOf(to_address)
 
     assert from_balance == deploy_args[2]
     assert to_balance == 0
+
 
 '''
 TEST4_残高確認（balanceOf）
@@ -1095,6 +1098,7 @@ def test_transferFrom_error_5(web3, chain, users, bond_exchange):
     assert issuer_balance == deploy_args[2] - _value
     assert from_balance == _value
     assert to_balance == 0
+
 
 '''
 TEST12_取引可能Exchangeの更新（setTradableExchange）
