@@ -4,6 +4,7 @@ import "./SafeMath.sol";
 import "./Ownable.sol";
 import "./ContractReceiver.sol";
 import "./IbetStandardTokenInterface.sol";
+import "./PersonalInfo.sol";
 
 contract IbetStraightBond is Ownable, IbetStandardTokenInterface {
   using SafeMath for uint256;
@@ -25,6 +26,9 @@ contract IbetStraightBond is Ownable, IbetStandardTokenInterface {
 
   // 譲渡可能
   bool public transferable;
+
+  // 個人情報記帳コントラクト
+  address public personalInfoAddress;
 
   // 残高数量
   // account_address => balance
@@ -60,7 +64,8 @@ contract IbetStraightBond is Ownable, IbetStandardTokenInterface {
     string memory _redemptionDate, uint256 _redemptionValue,
     string memory _returnDate, string memory _returnAmount,
     string memory _purpose, string memory _memo,
-    string _contactInformation, string _privacyPolicy)
+    string _contactInformation, string _privacyPolicy,
+    address _personalInfoAddress)
     public
   {
     owner = msg.sender;
@@ -82,6 +87,7 @@ contract IbetStraightBond is Ownable, IbetStandardTokenInterface {
     isRedeemed = false;
     contactInformation = _contactInformation;
     privacyPolicy = _privacyPolicy;
+    personalInfoAddress = _personalInfoAddress;
   }
 
   // ファンクション：アドレスフォーマットがコントラクトのものかを判断する
@@ -98,6 +104,9 @@ contract IbetStraightBond is Ownable, IbetStandardTokenInterface {
     private
     returns (bool success)
   {
+    if (msg.sender != tradableExchange) {
+      require(PersonalInfo(personalInfoAddress).isRegistered(_to, owner) == true);
+    }
     balances[msg.sender] = balanceOf(msg.sender).sub(_value);
     balances[_to] = balanceOf(_to).add(_value);
 
@@ -251,6 +260,11 @@ contract IbetStraightBond is Ownable, IbetStandardTokenInterface {
   function setStatus(bool _status) public onlyOwner() {
     status = _status;
     emit ChangeStatus(status);
+  }
+
+  // ファンクション：取引可能Exchangeの更新
+  function setPersonalInfoAddress(address _address) public onlyOwner() {
+    personalInfoAddress = _address;
   }
 
 }

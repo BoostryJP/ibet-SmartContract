@@ -108,7 +108,7 @@ def test_createorder_normal_1(web3, chain, users, bond_exchange, personal_info, 
     # 新規発行
     web3.eth.defaultAccount = issuer
     bond_token, deploy_args = utils. \
-        issue_transferable_bond_token(web3, chain, users, bond_exchange.address)
+        issue_bond_token(web3, chain, users, bond_exchange.address, personal_info.address)
 
     # 新規注文（買）
     web3.eth.defaultAccount = issuer
@@ -143,7 +143,7 @@ def test_createorder_normal_2(web3, chain, users,
     # 新規発行
     web3.eth.defaultAccount = issuer
     bond_token, deploy_args = utils. \
-        issue_transferable_bond_token(web3, chain, users, bond_exchange.address)
+        issue_bond_token(web3, chain, users, bond_exchange.address, personal_info.address)
 
     # Exchangeへのデポジット
     web3.eth.defaultAccount = issuer
@@ -193,14 +193,14 @@ def test_createorder_error_1(web3, users, bond_exchange):
 
 # エラー系2
 # 入力値の型誤り（_amount）
-def test_createorder_error_2(web3, chain, users, bond_exchange):
+def test_createorder_error_2(web3, chain, users, bond_exchange, personal_info):
     issuer = users['issuer']
     agent = users['agent']
 
     # 新規発行
     web3.eth.defaultAccount = issuer
     bond_token, deploy_args = utils. \
-        issue_transferable_bond_token(web3, chain, users, bond_exchange.address)
+        issue_bond_token(web3, chain, users, bond_exchange.address, personal_info.address)
 
     # 新規注文
     web3.eth.defaultAccount = issuer
@@ -226,14 +226,14 @@ def test_createorder_error_2(web3, chain, users, bond_exchange):
 
 # エラー系3
 # 入力値の型誤り（_price）
-def test_createorder_error_3(web3, chain, users, bond_exchange):
+def test_createorder_error_3(web3, chain, users, bond_exchange, personal_info):
     issuer = users['issuer']
     agent = users['agent']
 
     # 新規発行
     web3.eth.defaultAccount = issuer
     bond_token, deploy_args = utils. \
-        issue_transferable_bond_token(web3, chain, users, bond_exchange.address)
+        issue_bond_token(web3, chain, users, bond_exchange.address, personal_info.address)
 
     # 新規注文
     web3.eth.defaultAccount = issuer
@@ -259,14 +259,14 @@ def test_createorder_error_3(web3, chain, users, bond_exchange):
 
 # エラー系4
 # 入力値の型誤り（_isBuy）
-def test_createorder_error_4(web3, chain, users, bond_exchange):
+def test_createorder_error_4(web3, chain, users, bond_exchange, personal_info):
     issuer = users['issuer']
     agent = users['agent']
 
     # 新規発行
     web3.eth.defaultAccount = issuer
     bond_token, deploy_args = utils. \
-        issue_transferable_bond_token(web3, chain, users, bond_exchange.address)
+        issue_bond_token(web3, chain, users, bond_exchange.address, personal_info.address)
 
     # 新規注文
     web3.eth.defaultAccount = issuer
@@ -284,13 +284,13 @@ def test_createorder_error_4(web3, chain, users, bond_exchange):
 
 # エラー系5
 # 入力値の型誤り（_agent）
-def test_createorder_error_5(web3, chain, users, bond_exchange):
+def test_createorder_error_5(web3, chain, users, bond_exchange, personal_info):
     issuer = users['issuer']
 
     # 新規発行
     web3.eth.defaultAccount = issuer
     bond_token, deploy_args = utils. \
-        issue_transferable_bond_token(web3, chain, users, bond_exchange.address)
+        issue_bond_token(web3, chain, users, bond_exchange.address, personal_info.address)
 
     # 新規注文
     web3.eth.defaultAccount = issuer
@@ -321,7 +321,7 @@ def test_createorder_error_6_1(web3, chain, users,
     # 新規発行
     web3.eth.defaultAccount = issuer
     bond_token, deploy_args = utils. \
-        issue_transferable_bond_token(web3, chain, users, bond_exchange.address)
+        issue_bond_token(web3, chain, users, bond_exchange.address, personal_info.address)
 
     # 新規注文（買）
     web3.eth.defaultAccount = issuer
@@ -353,7 +353,7 @@ def test_createorder_error_6_2(web3, chain, users,
     # 新規発行
     web3.eth.defaultAccount = issuer
     bond_token, deploy_args = utils. \
-        issue_transferable_bond_token(web3, chain, users, bond_exchange.address)
+        issue_bond_token(web3, chain, users, bond_exchange.address, personal_info.address)
 
     # Exchangeへのデポジット
     web3.eth.defaultAccount = issuer
@@ -390,7 +390,7 @@ def test_createorder_error_7_1(web3, chain, users,
     # 新規発行
     web3.eth.defaultAccount = issuer
     bond_token, deploy_args = utils. \
-        issue_transferable_bond_token(web3, chain, users, bond_exchange.address)
+        issue_bond_token(web3, chain, users, bond_exchange.address, personal_info.address)
 
     # 新規注文（買）
     web3.eth.defaultAccount = issuer
@@ -420,7 +420,7 @@ def test_createorder_error_7_2(web3, chain, users,
     # 新規発行
     web3.eth.defaultAccount = issuer
     bond_token, deploy_args = utils. \
-        issue_transferable_bond_token(web3, chain, users, bond_exchange.address)
+        issue_bond_token(web3, chain, users, bond_exchange.address, personal_info.address)
 
     # Exchangeへのデポジット
     web3.eth.defaultAccount = issuer
@@ -447,7 +447,7 @@ def test_createorder_error_7_2(web3, chain, users,
 # エラー系8-1
 # 名簿用個人情報が登録されていない場合（買注文）
 def test_createorder_error_8_1(web3, chain, users,
-                               bond_exchange, payment_gateway):
+                               bond_exchange, payment_gateway, personal_info):
     issuer = users['issuer']
     agent = users['agent']
 
@@ -457,7 +457,7 @@ def test_createorder_error_8_1(web3, chain, users,
     # 新規発行
     web3.eth.defaultAccount = issuer
     bond_token, deploy_args = utils. \
-        issue_transferable_bond_token(web3, chain, users, bond_exchange.address)
+        issue_bond_token(web3, chain, users, bond_exchange.address, personal_info.address)
 
     # 新規注文（買）
     web3.eth.defaultAccount = issuer
@@ -478,7 +478,7 @@ def test_createorder_error_8_1(web3, chain, users,
 # エラー系8-2
 # 名簿用個人情報が登録されていない場合（売注文）
 def test_createorder_error_8_2(web3, chain, users,
-                               bond_exchange, payment_gateway):
+                               bond_exchange, payment_gateway, personal_info):
     issuer = users['issuer']
     agent = users['agent']
 
@@ -488,7 +488,7 @@ def test_createorder_error_8_2(web3, chain, users,
     # 新規発行
     web3.eth.defaultAccount = issuer
     bond_token, deploy_args = utils. \
-        issue_transferable_bond_token(web3, chain, users, bond_exchange.address)
+        issue_bond_token(web3, chain, users, bond_exchange.address, personal_info.address)
 
     # Exchangeへのデポジット
     web3.eth.defaultAccount = issuer
@@ -527,7 +527,7 @@ def test_createorder_error_9_1(web3, chain, users,
     # 新規発行
     web3.eth.defaultAccount = issuer
     bond_token, deploy_args = utils. \
-        issue_transferable_bond_token(web3, chain, users, bond_exchange.address)
+        issue_bond_token(web3, chain, users, bond_exchange.address, personal_info.address)
 
     # 償還設定
     web3.eth.defaultAccount = issuer
@@ -565,7 +565,7 @@ def test_createorder_error_9_2(web3, chain, users,
     # 新規発行
     web3.eth.defaultAccount = issuer
     bond_token, deploy_args = utils. \
-        issue_transferable_bond_token(web3, chain, users, bond_exchange.address)
+        issue_bond_token(web3, chain, users, bond_exchange.address, personal_info.address)
 
     # Exchangeへのデポジット
     web3.eth.defaultAccount = issuer
@@ -607,7 +607,7 @@ def test_createorder_error_10(web3, chain, users,
     # 新規発行
     web3.eth.defaultAccount = issuer
     bond_token, deploy_args = utils. \
-        issue_transferable_bond_token(web3, chain, users, bond_exchange.address)
+        issue_bond_token(web3, chain, users, bond_exchange.address, personal_info.address)
 
     # Exchangeへのデポジット
     web3.eth.defaultAccount = issuer
@@ -644,7 +644,7 @@ def test_createorder_error_11_1(web3, chain, users,
     # 新規発行
     web3.eth.defaultAccount = issuer
     bond_token, deploy_args = utils. \
-        issue_transferable_bond_token(web3, chain, users, bond_exchange.address)
+        issue_bond_token(web3, chain, users, bond_exchange.address, personal_info.address)
 
     # 新規注文（買）
     web3.eth.defaultAccount = issuer
@@ -666,7 +666,7 @@ def test_createorder_error_11_1(web3, chain, users,
 # エラー系11-2
 # 無効な収納代行業者（Agent）の指定（売）
 def test_createorder_error_11_2(web3, chain, users,
-                                bond_exchange, payment_gateway):
+                                bond_exchange, payment_gateway, personal_info):
     issuer = users['issuer']
     agent = users['agent']
 
@@ -676,7 +676,7 @@ def test_createorder_error_11_2(web3, chain, users,
     # 新規発行
     web3.eth.defaultAccount = issuer
     bond_token, deploy_args = utils. \
-        issue_transferable_bond_token(web3, chain, users, bond_exchange.address)
+        issue_bond_token(web3, chain, users, bond_exchange.address, personal_info.address)
 
     # Exchangeへのデポジット
     web3.eth.defaultAccount = issuer
@@ -720,7 +720,7 @@ def test_cancelOrder_normal_1(web3, chain, users,
     # 新規発行
     web3.eth.defaultAccount = issuer
     bond_token, deploy_args = utils. \
-        issue_transferable_bond_token(web3, chain, users, bond_exchange.address)
+        issue_bond_token(web3, chain, users, bond_exchange.address, personal_info.address)
 
     # 新規注文（買）
     web3.eth.defaultAccount = issuer
@@ -761,7 +761,7 @@ def test_cancelOrder_normal_2(web3, chain, users,
     # 新規発行
     web3.eth.defaultAccount = issuer
     bond_token, deploy_args = utils. \
-        issue_transferable_bond_token(web3, chain, users, bond_exchange.address)
+        issue_bond_token(web3, chain, users, bond_exchange.address, personal_info.address)
 
     # Exchangeへのデポジット
     web3.eth.defaultAccount = issuer
@@ -829,7 +829,7 @@ def test_cancelOrder_error_2(web3, chain, users,
     # 新規発行
     web3.eth.defaultAccount = issuer
     bond_token, deploy_args = utils. \
-        issue_transferable_bond_token(web3, chain, users, bond_exchange.address)
+        issue_bond_token(web3, chain, users, bond_exchange.address, personal_info.address)
 
     # 新規注文（買）
     web3.eth.defaultAccount = issuer
@@ -869,7 +869,7 @@ def test_cancelOrder_error_3_1(web3, chain, users,
     # 新規発行
     web3.eth.defaultAccount = issuer
     bond_token, deploy_args = utils. \
-        issue_transferable_bond_token(web3, chain, users, bond_exchange.address)
+        issue_bond_token(web3, chain, users, bond_exchange.address, personal_info.address)
 
     # 新規注文（買）
     web3.eth.defaultAccount = issuer
@@ -914,7 +914,7 @@ def test_cancelOrder_error_3_2(web3, chain, users,
     # 新規発行
     web3.eth.defaultAccount = issuer
     bond_token, deploy_args = utils. \
-        issue_transferable_bond_token(web3, chain, users, bond_exchange.address)
+        issue_bond_token(web3, chain, users, bond_exchange.address, personal_info.address)
 
     # Exchangeへのデポジット
     web3.eth.defaultAccount = issuer
@@ -965,7 +965,7 @@ def test_cancelOrder_error_4_1(web3, chain, users,
     # 新規発行
     web3.eth.defaultAccount = issuer
     bond_token, deploy_args = utils. \
-        issue_transferable_bond_token(web3, chain, users, bond_exchange.address)
+        issue_bond_token(web3, chain, users, bond_exchange.address, personal_info.address)
 
     # 新規注文（買）
     web3.eth.defaultAccount = issuer
@@ -1006,7 +1006,7 @@ def test_cancelOrder_error_4_2(web3, chain, users,
     # 新規発行
     web3.eth.defaultAccount = issuer
     bond_token, deploy_args = utils. \
-        issue_transferable_bond_token(web3, chain, users, bond_exchange.address)
+        issue_bond_token(web3, chain, users, bond_exchange.address, personal_info.address)
 
     # Exchangeへのデポジット
     web3.eth.defaultAccount = issuer
@@ -1064,7 +1064,7 @@ def test_executeOrder_normal_1(web3, chain, users,
     # 新規発行
     web3.eth.defaultAccount = _issuer
     bond_token, deploy_args = utils. \
-        issue_transferable_bond_token(web3, chain, users, bond_exchange.address)
+        issue_bond_token(web3, chain, users, bond_exchange.address, personal_info.address)
 
     # Exchangeへのデポジット
     web3.eth.defaultAccount = _issuer
@@ -1126,7 +1126,7 @@ def test_executeOrder_normal_2(web3, chain, users,
     # 新規発行
     web3.eth.defaultAccount = _issuer
     bond_token, deploy_args = utils. \
-        issue_transferable_bond_token(web3, chain, users, bond_exchange.address)
+        issue_bond_token(web3, chain, users, bond_exchange.address, personal_info.address)
 
     # 新規注文（買）：投資家
     web3.eth.defaultAccount = _trader
@@ -1248,7 +1248,7 @@ def test_executeOrder_error_4(web3, chain, users,
     # 新規発行
     web3.eth.defaultAccount = _issuer
     bond_token, deploy_args = utils. \
-        issue_transferable_bond_token(web3, chain, users, bond_exchange.address)
+        issue_bond_token(web3, chain, users, bond_exchange.address, personal_info.address)
 
     # Make注文（買）：投資家
     web3.eth.defaultAccount = _trader
@@ -1302,7 +1302,7 @@ def test_executeOrder_error_5_1(web3, chain, users,
     # 新規発行
     web3.eth.defaultAccount = _issuer
     bond_token, deploy_args = utils. \
-        issue_transferable_bond_token(web3, chain, users, bond_exchange.address)
+        issue_bond_token(web3, chain, users, bond_exchange.address, personal_info.address)
 
     # 預かりをExchangeへのデポジット：発行体
     web3.eth.defaultAccount = _issuer
@@ -1359,7 +1359,7 @@ def test_executeOrder_error_5_2(web3, chain, users,
     # 新規発行
     web3.eth.defaultAccount = _issuer
     bond_token, deploy_args = utils. \
-        issue_transferable_bond_token(web3, chain, users, bond_exchange.address)
+        issue_bond_token(web3, chain, users, bond_exchange.address, personal_info.address)
 
     # 新規注文（買）：投資家
     web3.eth.defaultAccount = _trader
@@ -1417,7 +1417,7 @@ def test_executeOrder_error_6_1(web3, chain, users,
     # 新規発行
     web3.eth.defaultAccount = _issuer
     bond_token, deploy_args = utils. \
-        issue_transferable_bond_token(web3, chain, users, bond_exchange.address)
+        issue_bond_token(web3, chain, users, bond_exchange.address, personal_info.address)
 
     # 預かりをExchangeへのデポジット：発行体
     web3.eth.defaultAccount = _issuer
@@ -1476,7 +1476,7 @@ def test_executeOrder_error_6_2(web3, chain, users,
     # 新規発行
     web3.eth.defaultAccount = _issuer
     bond_token, deploy_args = utils. \
-        issue_transferable_bond_token(web3, chain, users, bond_exchange.address)
+        issue_bond_token(web3, chain, users, bond_exchange.address, personal_info.address)
 
     # 新規注文（買）：投資家
     web3.eth.defaultAccount = _trader
@@ -1525,7 +1525,7 @@ def test_executeOrder_error_7_1(web3, chain, users,
     # 新規発行
     web3.eth.defaultAccount = _issuer
     bond_token, deploy_args = utils. \
-        issue_transferable_bond_token(web3, chain, users, bond_exchange.address)
+        issue_bond_token(web3, chain, users, bond_exchange.address, personal_info.address)
 
     # 預かりをExchangeへのデポジット：発行体
     web3.eth.defaultAccount = _issuer
@@ -1582,7 +1582,7 @@ def test_executeOrder_error_7_2(web3, chain, users,
     # 新規発行
     web3.eth.defaultAccount = _issuer
     bond_token, deploy_args = utils. \
-        issue_transferable_bond_token(web3, chain, users, bond_exchange.address)
+        issue_bond_token(web3, chain, users, bond_exchange.address, personal_info.address)
 
     # 新規注文（買）：発行体
     web3.eth.defaultAccount = _issuer
@@ -1638,7 +1638,7 @@ def test_executeOrder_error_8_1(web3, chain, users,
     # 新規発行
     web3.eth.defaultAccount = _issuer
     bond_token, deploy_args = utils. \
-        issue_transferable_bond_token(web3, chain, users, bond_exchange.address)
+        issue_bond_token(web3, chain, users, bond_exchange.address, personal_info.address)
 
     # 預かりをExchangeへのデポジット：発行体
     web3.eth.defaultAccount = _issuer
@@ -1702,7 +1702,7 @@ def test_executeOrder_error_8_2(web3, chain, users,
     # 新規発行
     web3.eth.defaultAccount = _issuer
     bond_token, deploy_args = utils. \
-        issue_transferable_bond_token(web3, chain, users, bond_exchange.address)
+        issue_bond_token(web3, chain, users, bond_exchange.address, personal_info.address)
 
     # Make注文（買）：投資家
     web3.eth.defaultAccount = _trader
@@ -1765,7 +1765,7 @@ def test_executeOrder_error_9_1(web3, chain, users,
     # 新規発行
     web3.eth.defaultAccount = _issuer
     bond_token, deploy_args = utils. \
-        issue_transferable_bond_token(web3, chain, users, bond_exchange.address)
+        issue_bond_token(web3, chain, users, bond_exchange.address, personal_info.address)
 
     # 預かりをExchangeへのデポジット：発行体
     web3.eth.defaultAccount = _issuer
@@ -1823,7 +1823,7 @@ def test_executeOrder_error_9_2(web3, chain, users,
     # 新規発行
     web3.eth.defaultAccount = _issuer
     bond_token, deploy_args = utils. \
-        issue_transferable_bond_token(web3, chain, users, bond_exchange.address)
+        issue_bond_token(web3, chain, users, bond_exchange.address, personal_info.address)
 
     # Make注文（買）：投資家
     web3.eth.defaultAccount = _trader
@@ -1881,7 +1881,7 @@ def test_executeOrder_error_10_1(web3, chain, users,
     # 新規発行
     web3.eth.defaultAccount = _issuer
     bond_token, deploy_args = utils. \
-        issue_transferable_bond_token(web3, chain, users, bond_exchange.address)
+        issue_bond_token(web3, chain, users, bond_exchange.address, personal_info.address)
 
     # 預かりをExchangeへのデポジット：発行体
     web3.eth.defaultAccount = _issuer
@@ -1939,7 +1939,7 @@ def test_executeOrder_error_10_2(web3, chain, users,
     # 新規発行
     web3.eth.defaultAccount = _issuer
     bond_token, deploy_args = utils. \
-        issue_transferable_bond_token(web3, chain, users, bond_exchange.address)
+        issue_bond_token(web3, chain, users, bond_exchange.address, personal_info.address)
 
     # Make注文（買）：投資家
     web3.eth.defaultAccount = _trader
@@ -1998,7 +1998,7 @@ def test_executeOrder_error_11_1(web3, chain, users,
     # 新規発行
     web3.eth.defaultAccount = _issuer
     bond_token, deploy_args = utils. \
-        issue_transferable_bond_token(web3, chain, users, bond_exchange.address)
+        issue_bond_token(web3, chain, users, bond_exchange.address, personal_info.address)
 
     # 預かりをExchangeへのデポジット：発行体
     web3.eth.defaultAccount = _issuer
@@ -2062,7 +2062,7 @@ def test_executeOrder_error_11_2(web3, chain, users,
     # 新規発行
     web3.eth.defaultAccount = _issuer
     bond_token, deploy_args = utils. \
-        issue_transferable_bond_token(web3, chain, users, bond_exchange.address)
+        issue_bond_token(web3, chain, users, bond_exchange.address, personal_info.address)
 
     # Make注文（買）：投資家
     web3.eth.defaultAccount = _trader
@@ -2126,7 +2126,7 @@ def test_executeOrder_error_12_1(web3, chain, users,
     # 新規発行
     web3.eth.defaultAccount = _issuer
     bond_token, deploy_args = utils. \
-        issue_transferable_bond_token(web3, chain, users, bond_exchange.address)
+        issue_bond_token(web3, chain, users, bond_exchange.address, personal_info.address)
 
     # 預かりをExchangeへのデポジット：発行体
     web3.eth.defaultAccount = _issuer
@@ -2185,7 +2185,7 @@ def test_executeOrder_error_12_2(web3, chain, users,
     # 新規発行
     web3.eth.defaultAccount = _issuer
     bond_token, deploy_args = utils. \
-        issue_transferable_bond_token(web3, chain, users, bond_exchange.address)
+        issue_bond_token(web3, chain, users, bond_exchange.address, personal_info.address)
 
     # Make注文（買）：投資家
     web3.eth.defaultAccount = _trader
@@ -2243,7 +2243,7 @@ def test_executeOrder_error_13(web3, chain, users,
     # 新規発行
     web3.eth.defaultAccount = _issuer
     bond_token, deploy_args = utils. \
-        issue_transferable_bond_token(web3, chain, users, bond_exchange.address)
+        issue_bond_token(web3, chain, users, bond_exchange.address, personal_info.address)
 
     # Make注文（買）：投資家
     web3.eth.defaultAccount = _trader
@@ -2308,7 +2308,7 @@ def test_confirmAgreement_normal_1(web3, chain, users,
     # 新規発行
     web3.eth.defaultAccount = _issuer
     bond_token, deploy_args = utils. \
-        issue_transferable_bond_token(web3, chain, users, bond_exchange.address)
+        issue_bond_token(web3, chain, users, bond_exchange.address, personal_info.address)
 
     # Exchangeへのデポジット：発行体
     web3.eth.defaultAccount = _issuer
@@ -2378,7 +2378,7 @@ def test_confirmAgreement_normal_2(web3, chain, users,
     # 新規発行
     web3.eth.defaultAccount = _issuer
     bond_token, deploy_args = utils. \
-        issue_transferable_bond_token(web3, chain, users, bond_exchange.address)
+        issue_bond_token(web3, chain, users, bond_exchange.address, personal_info.address)
 
     # 新規注文（買）：投資家
     web3.eth.defaultAccount = _trader
@@ -2487,7 +2487,7 @@ def test_confirmAgreement_error_3(web3, chain, users,
     # 新規発行
     web3.eth.defaultAccount = _issuer
     bond_token, deploy_args = utils. \
-        issue_transferable_bond_token(web3, chain, users, bond_exchange.address)
+        issue_bond_token(web3, chain, users, bond_exchange.address, personal_info.address)
 
     # Exchangeへのデポジット：発行体
     web3.eth.defaultAccount = _issuer
@@ -2556,7 +2556,7 @@ def test_confirmAgreement_error_4(web3, chain, users,
     # 新規発行
     web3.eth.defaultAccount = _issuer
     bond_token, deploy_args = utils. \
-        issue_transferable_bond_token(web3, chain, users, bond_exchange.address)
+        issue_bond_token(web3, chain, users, bond_exchange.address, personal_info.address)
 
     # Exchangeへのデポジット：発行体
     web3.eth.defaultAccount = _issuer
@@ -2625,7 +2625,7 @@ def test_confirmAgreement_error_5(web3, chain, users,
     # 新規発行
     web3.eth.defaultAccount = _issuer
     bond_token, deploy_args = utils. \
-        issue_transferable_bond_token(web3, chain, users, bond_exchange.address)
+        issue_bond_token(web3, chain, users, bond_exchange.address, personal_info.address)
 
     # Exchangeへのデポジット：発行体
     web3.eth.defaultAccount = _issuer
@@ -2698,7 +2698,7 @@ def test_confirmAgreement_error_6(web3, chain, users,
     # 新規発行
     web3.eth.defaultAccount = _issuer
     bond_token, deploy_args = utils. \
-        issue_transferable_bond_token(web3, chain, users, bond_exchange.address)
+        issue_bond_token(web3, chain, users, bond_exchange.address, personal_info.address)
 
     # Exchangeへのデポジット：発行体
     web3.eth.defaultAccount = _issuer
@@ -2766,7 +2766,7 @@ def test_confirmAgreement_error_7(web3, chain, users,
     # 新規発行
     web3.eth.defaultAccount = _issuer
     bond_token, deploy_args = utils. \
-        issue_transferable_bond_token(web3, chain, users, bond_exchange.address)
+        issue_bond_token(web3, chain, users, bond_exchange.address, personal_info.address)
 
     # Exchangeへのデポジット：発行体
     web3.eth.defaultAccount = _issuer
@@ -2846,7 +2846,7 @@ def test_cancelAgreement_normal_1(web3, chain, users,
     # 新規発行
     web3.eth.defaultAccount = _issuer
     bond_token, deploy_args = utils. \
-        issue_transferable_bond_token(web3, chain, users, bond_exchange.address)
+        issue_bond_token(web3, chain, users, bond_exchange.address, personal_info.address)
 
     # Exchangeへのデポジット：発行体
     web3.eth.defaultAccount = _issuer
@@ -2915,7 +2915,7 @@ def test_cancelAgreement_normal_2(web3, chain, users,
     # 新規発行
     web3.eth.defaultAccount = _issuer
     bond_token, deploy_args = utils. \
-        issue_transferable_bond_token(web3, chain, users, bond_exchange.address)
+        issue_bond_token(web3, chain, users, bond_exchange.address, personal_info.address)
 
     # 新規注文（買）：投資家
     web3.eth.defaultAccount = _trader
@@ -3024,7 +3024,7 @@ def test_cancelAgreement_error_3(web3, chain, users,
     # 新規発行
     web3.eth.defaultAccount = _issuer
     bond_token, deploy_args = utils. \
-        issue_transferable_bond_token(web3, chain, users, bond_exchange.address)
+        issue_bond_token(web3, chain, users, bond_exchange.address, personal_info.address)
 
     # Exchangeへのデポジット：発行体
     web3.eth.defaultAccount = _issuer
@@ -3092,7 +3092,7 @@ def test_cancelAgreement_error_4(web3, chain, users,
     # 新規発行
     web3.eth.defaultAccount = _issuer
     bond_token, deploy_args = utils. \
-        issue_transferable_bond_token(web3, chain, users, bond_exchange.address)
+        issue_bond_token(web3, chain, users, bond_exchange.address, personal_info.address)
 
     # Exchangeへのデポジット：発行体
     web3.eth.defaultAccount = _issuer
@@ -3160,7 +3160,7 @@ def test_cancelAgreement_error_5(web3, chain, users,
     # 新規発行
     web3.eth.defaultAccount = _issuer
     bond_token, deploy_args = utils. \
-        issue_transferable_bond_token(web3, chain, users, bond_exchange.address)
+        issue_bond_token(web3, chain, users, bond_exchange.address, personal_info.address)
 
     # Exchangeへのデポジット：発行体
     web3.eth.defaultAccount = _issuer
@@ -3233,7 +3233,7 @@ def test_cancelAgreement_error_6(web3, chain, users,
     # 新規発行
     web3.eth.defaultAccount = _issuer
     bond_token, deploy_args = utils. \
-        issue_transferable_bond_token(web3, chain, users, bond_exchange.address)
+        issue_bond_token(web3, chain, users, bond_exchange.address, personal_info.address)
 
     # Exchangeへのデポジット：発行体
     web3.eth.defaultAccount = _issuer
@@ -3300,7 +3300,7 @@ def test_cancelAgreement_error_7(web3, chain, users,
     # 新規発行
     web3.eth.defaultAccount = _issuer
     bond_token, deploy_args = utils. \
-        issue_transferable_bond_token(web3, chain, users, bond_exchange.address)
+        issue_bond_token(web3, chain, users, bond_exchange.address, personal_info.address)
 
     # Exchangeへのデポジット：発行体
     web3.eth.defaultAccount = _issuer
@@ -3361,13 +3361,13 @@ TEST7_引き出し（withdrawAll）
 
 # 正常系1
 # ＜発行体＞新規発行 -> ＜発行体＞デポジット -> ＜発行体＞引き出し
-def test_withdrawAll_normal_1(web3, chain, users, bond_exchange):
+def test_withdrawAll_normal_1(web3, chain, users, bond_exchange, personal_info):
     _issuer = users['issuer']
 
     # 新規発行
     web3.eth.defaultAccount = _issuer
     bond_token, deploy_args = utils. \
-        issue_transferable_bond_token(web3, chain, users, bond_exchange.address)
+        issue_bond_token(web3, chain, users, bond_exchange.address, personal_info.address)
 
     # Exchangeへのデポジット：発行体
     web3.eth.defaultAccount = _issuer
@@ -3389,13 +3389,13 @@ def test_withdrawAll_normal_1(web3, chain, users, bond_exchange):
 
 # 正常系2
 # ＜発行体＞新規発行 -> ＜発行体＞デポジット（2回） -> ＜発行体＞引き出し
-def test_withdrawAll_normal_2(web3, chain, users, bond_exchange):
+def test_withdrawAll_normal_2(web3, chain, users, bond_exchange, personal_info):
     _issuer = users['issuer']
 
     # 新規発行
     web3.eth.defaultAccount = _issuer
     bond_token, deploy_args = utils. \
-        issue_transferable_bond_token(web3, chain, users, bond_exchange.address)
+        issue_bond_token(web3, chain, users, bond_exchange.address, personal_info.address)
 
     # Exchangeへのデポジット：発行体
     web3.eth.defaultAccount = _issuer
@@ -3437,7 +3437,7 @@ def test_withdrawAll_normal_3(web3, chain, users,
     # 新規発行
     web3.eth.defaultAccount = _issuer
     bond_token, deploy_args = utils. \
-        issue_transferable_bond_token(web3, chain, users, bond_exchange.address)
+        issue_bond_token(web3, chain, users, bond_exchange.address, personal_info.address)
 
     # Exchangeへのデポジット：発行体
     web3.eth.defaultAccount = _issuer
@@ -3487,7 +3487,7 @@ def test_withdrawAll_normal_4(web3, chain, users,
     # 新規発行
     web3.eth.defaultAccount = _issuer
     bond_token, deploy_args = utils. \
-        issue_transferable_bond_token(web3, chain, users, bond_exchange.address)
+        issue_bond_token(web3, chain, users, bond_exchange.address, personal_info.address)
 
     # Exchangeへのデポジット：発行体
     web3.eth.defaultAccount = _issuer
@@ -3545,7 +3545,7 @@ def test_withdrawAll_normal_5(web3, chain, users,
     # 新規発行
     web3.eth.defaultAccount = _issuer
     bond_token, deploy_args = utils. \
-        issue_transferable_bond_token(web3, chain, users, bond_exchange.address)
+        issue_bond_token(web3, chain, users, bond_exchange.address, personal_info.address)
 
     # Exchangeへのデポジット：発行体
     web3.eth.defaultAccount = _issuer
@@ -3613,13 +3613,13 @@ def test_withdrawAll_error_1(web3, users, bond_exchange):
 # エラー系2-1
 # 残高がゼロの場合
 # ＜発行体＞新規発行 -> ＜発行体＞デポジット -> ＜発行体＞引き出し（2回）
-def test_withdrawAll_error_2_1(web3, chain, users, bond_exchange):
+def test_withdrawAll_error_2_1(web3, chain, users, bond_exchange, personal_info):
     _issuer = users['issuer']
 
     # 新規発行
     web3.eth.defaultAccount = _issuer
     bond_token, deploy_args = utils. \
-        issue_transferable_bond_token(web3, chain, users, bond_exchange.address)
+        issue_bond_token(web3, chain, users, bond_exchange.address, personal_info.address)
 
     # Exchangeへのデポジット：発行体
     web3.eth.defaultAccount = _issuer
@@ -3647,14 +3647,14 @@ def test_withdrawAll_error_2_1(web3, chain, users, bond_exchange):
 # エラー系2-2
 # 残高がゼロの場合
 # ＜発行体＞新規発行 -> ＜発行体＞デポジット -> 異なるアドレスからの引き出し
-def test_withdrawAll_error_2_2(web3, chain, users, bond_exchange):
+def test_withdrawAll_error_2_2(web3, chain, users, bond_exchange, personal_info):
     _issuer = users['issuer']
     _trader = users['trader']
 
     # 新規発行
     web3.eth.defaultAccount = _issuer
     bond_token, deploy_args = utils. \
-        issue_transferable_bond_token(web3, chain, users, bond_exchange.address)
+        issue_bond_token(web3, chain, users, bond_exchange.address, personal_info.address)
 
     # Exchangeへのデポジット：発行体
     web3.eth.defaultAccount = _issuer
@@ -3676,181 +3676,7 @@ def test_withdrawAll_error_2_2(web3, chain, users, bond_exchange):
 
 
 '''
-TEST8_送信（transfer）
-'''
-
-
-# 正常系1
-# ＜発行体＞新規発行 -> ＜発行体＞デポジット
-#  -> ＜発行体＞送信（投資家向け)
-def test_transfer_normal_1(web3, chain, users, bond_exchange):
-    _issuer = users['issuer']
-    _trader = users['trader']
-
-    # 新規発行
-    web3.eth.defaultAccount = _issuer
-    bond_token, deploy_args = utils. \
-        issue_transferable_bond_token(web3, chain, users, bond_exchange.address)
-
-    # Exchangeへのデポジット：発行体
-    web3.eth.defaultAccount = _issuer
-    _amount_deposit = 100
-    txn_hash = bond_token.transact().transfer(bond_exchange.address, _amount_deposit)
-    chain.wait.for_receipt(txn_hash)
-
-    # トークン送信：発行体 -> 投資家
-    web3.eth.defaultAccount = _issuer
-    _amount_transfer = 30  # 100のうち30を送信
-    txn_hash = bond_exchange.transact().transfer(
-        bond_token.address, _trader, _amount_transfer)
-    chain.wait.for_receipt(txn_hash)
-
-    balance_issuer_exchange = bond_exchange.call().balanceOf(_issuer, bond_token.address)
-    balance_trader_exchange = bond_exchange.call().balanceOf(_trader, bond_token.address)
-    balance_issuer_token = bond_token.call().balanceOf(_issuer)
-    balance_trader_token = bond_token.call().balanceOf(_trader)
-
-    assert balance_issuer_exchange == _amount_deposit - _amount_transfer
-    assert balance_trader_exchange == 0
-    assert balance_issuer_token == deploy_args[2] - _amount_deposit
-    assert balance_trader_token == _amount_transfer
-
-
-# エラー系１
-# 入力値の型誤り（_token）
-def test_transfer_error_1(web3, users, bond_exchange):
-    _issuer = users['issuer']
-    _trader = users['trader']
-
-    # 送信：発行体
-    web3.eth.defaultAccount = _issuer
-
-    with pytest.raises(TypeError):
-        bond_exchange.transact().transfer(1234, _trader, 100)
-
-    with pytest.raises(TypeError):
-        bond_exchange.transact().transfer('1234', _trader, 100)
-
-
-# エラー系2
-# 入力値の型誤り（_to）
-def test_transfer_error_2(web3, chain, users, bond_exchange):
-    _issuer = users['issuer']
-
-    # 新規発行
-    web3.eth.defaultAccount = _issuer
-    bond_token, deploy_args = utils. \
-        issue_transferable_bond_token(web3, chain, users, bond_exchange.address)
-
-    # 送信：発行体
-    web3.eth.defaultAccount = _issuer
-
-    with pytest.raises(TypeError):
-        bond_exchange.transact().transfer(bond_token.address, 1234, 100)
-
-    with pytest.raises(TypeError):
-        bond_exchange.transact().transfer(bond_token.address, '1234', 100)
-
-
-# エラー系3
-# 入力値の型誤り（_value）
-def test_transfer_error_3(web3, chain, users, bond_exchange):
-    _issuer = users['issuer']
-    _trader = users['trader']
-
-    # 新規発行
-    web3.eth.defaultAccount = _issuer
-    bond_token, deploy_args = utils. \
-        issue_transferable_bond_token(web3, chain, users, bond_exchange.address)
-
-    # 送信：発行体
-    web3.eth.defaultAccount = _issuer
-
-    with pytest.raises(TypeError):
-        bond_exchange.transact().transfer(bond_token.address, _trader, -1)
-
-    with pytest.raises(TypeError):
-        bond_exchange.transact().transfer(bond_token.address, _trader, 2 ** 256)
-
-    with pytest.raises(TypeError):
-        bond_exchange.transact().transfer(bond_token.address, _trader, '0')
-
-    with pytest.raises(TypeError):
-        bond_exchange.transact().transfer(bond_token.address, _trader, 0.1)
-
-
-# エラー系4
-# 残高超過
-def test_transfer_error_4(web3, chain, users, bond_exchange):
-    _issuer = users['issuer']
-    _trader = users['trader']
-
-    # 新規発行
-    web3.eth.defaultAccount = _issuer
-    bond_token, deploy_args = utils. \
-        issue_transferable_bond_token(web3, chain, users, bond_exchange.address)
-
-    # Exchangeへのデポジット：発行体
-    web3.eth.defaultAccount = _issuer
-    _amount_deposit = 100
-    txn_hash = bond_token.transact().transfer(bond_exchange.address, _amount_deposit)
-    chain.wait.for_receipt(txn_hash)
-
-    # トークン送信：発行体 -> 投資家
-    web3.eth.defaultAccount = _issuer
-    _amount_transfer = 101
-    txn_hash = bond_exchange.transact().transfer(
-        bond_token.address, _trader, _amount_transfer)  # エラーになる
-    chain.wait.for_receipt(txn_hash)
-
-    balance_issuer_exchange = bond_exchange.call().balanceOf(_issuer, bond_token.address)
-    balance_trader_exchange = bond_exchange.call().balanceOf(_trader, bond_token.address)
-    balance_issuer_token = bond_token.call().balanceOf(_issuer)
-    balance_trader_token = bond_token.call().balanceOf(_trader)
-
-    assert balance_issuer_exchange == 0
-    assert balance_trader_exchange == 0
-    assert balance_issuer_token == deploy_args[2]
-    assert balance_trader_token == 0
-
-
-# エラー系5
-# 送信数量がゼロ
-def test_transfer_error_5(web3, chain, users, bond_exchange):
-    _issuer = users['issuer']
-    _trader = users['trader']
-
-    # 新規発行
-    web3.eth.defaultAccount = _issuer
-    bond_token, deploy_args = utils. \
-        issue_transferable_bond_token(web3, chain, users, bond_exchange.address)
-
-    # Exchangeへのデポジット：発行体
-    web3.eth.defaultAccount = _issuer
-    _amount_deposit = 100
-    txn_hash = bond_token.transact().transfer(bond_exchange.address, _amount_deposit)
-    chain.wait.for_receipt(txn_hash)
-
-    # トークン送信：発行体 -> 投資家
-    web3.eth.defaultAccount = _issuer
-    _amount_transfer = 0
-    txn_hash = bond_exchange.transact().transfer(
-        bond_token.address, _trader, _amount_transfer)  # エラーになる
-    chain.wait.for_receipt(txn_hash)
-
-    balance_issuer_exchange = bond_exchange.call().balanceOf(_issuer, bond_token.address)
-    balance_trader_exchange = bond_exchange.call().balanceOf(_trader, bond_token.address)
-    balance_issuer_token = bond_token.call().balanceOf(_issuer)
-    balance_trader_token = bond_token.call().balanceOf(_trader)
-
-    assert balance_issuer_exchange == 0
-    assert balance_trader_exchange == 0
-    assert balance_issuer_token == deploy_args[2]
-    assert balance_trader_token == 0
-
-
-'''
-TEST9_Exchange切替
+TEST8_Exchange切替
 '''
 
 
@@ -3869,7 +3695,7 @@ def test_updateExchange_normal_1(web3, chain, users,
     # 新規発行
     web3.eth.defaultAccount = issuer
     bond_token, deploy_args = utils. \
-        issue_transferable_bond_token(web3, chain, users, bond_exchange.address)
+        issue_bond_token(web3, chain, users, bond_exchange.address, personal_info.address)
 
     # Exchangeへのデポジット
     web3.eth.defaultAccount = issuer
