@@ -262,7 +262,7 @@ contract IbetStraightBond is Ownable, IbetStandardTokenInterface {
     emit ChangeStatus(status);
   }
 
-  // ファンクション：取引可能Exchangeの更新
+  // ファンクション：個人情報記帳コントラクトの更新
   function setPersonalInfoAddress(address _address) public onlyOwner() {
     personalInfoAddress = _address;
   }

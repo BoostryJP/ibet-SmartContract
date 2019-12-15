@@ -1352,3 +1352,58 @@ def test_setPrivacyPolicy_error_2(web3, chain, users, bond_exchange, personal_in
 
     privacy_policy = bond_token.call().privacyPolicy()
     assert privacy_policy == 'some_privacy_policy'
+
+
+'''
+TEST15_個人情報記帳コントラクトの更新（setPersonalInfoAddress）
+'''
+
+
+# 正常系1: トークン発行 -> 更新
+def test_setPersonalInfoAddress_normal_1(web3, chain, users, bond_exchange, personal_info):
+    issuer = users['issuer']
+
+    # 債券トークン新規発行
+    web3.eth.defaultAccount = issuer
+    bond_token, deploy_args = utils. \
+        issue_bond_token(web3, chain, users, bond_exchange.address, personal_info.address)
+
+    # 更新
+    web3.eth.defaultAccount = issuer
+    txn_hash = bond_token.transact().setPersonalInfoAddress('0x0000000000000000000000000000000000000000')
+    chain.wait.for_receipt(txn_hash)
+
+    assert bond_token.call().personalInfoAddress() == '0x0000000000000000000000000000000000000000'
+
+
+# エラー系1: トークン発行 -> 更新（入力値の型誤り）
+def test_setPersonalInfoAddress_error_1(web3, chain, users, bond_exchange, personal_info):
+    issuer = users['issuer']
+
+    # 債券トークン新規発行
+    web3.eth.defaultAccount = issuer
+    bond_token, deploy_args = utils. \
+        issue_bond_token(web3, chain, users, bond_exchange.address, personal_info.address)
+
+    # 更新
+    web3.eth.defaultAccount = issuer
+    with pytest.raises(TypeError):
+        bond_token.transact().setPersonalInfoAddress('0xaaaa')
+
+
+# エラー系2: トークン発行 -> 更新（権限エラー）
+def test_setPersonalInfoAddress_error_2(web3, chain, users, bond_exchange, personal_info):
+    issuer = users['issuer']
+    attacker = users['trader']
+
+    # 債券トークン新規発行
+    web3.eth.defaultAccount = issuer
+    bond_token, deploy_args = utils. \
+        issue_bond_token(web3, chain, users, bond_exchange.address, personal_info.address)
+
+    # 更新
+    web3.eth.defaultAccount = attacker
+    txn_hash = bond_token.transact().setPersonalInfoAddress('0x0000000000000000000000000000000000000000')
+    chain.wait.for_receipt(txn_hash)
+
+    assert bond_token.call().personalInfoAddress() == to_checksum_address(personal_info.address)
