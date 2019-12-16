@@ -27,6 +27,9 @@ with project.get_chain(chain_env) as chain:
     # ------------------------------------
     # IbetStraightBond
     # ------------------------------------
+    # ExchangeRegulatorService
+    exchange_regulator_service, _ = chain.provider.deploy_contract('ExchangeRegulatorService')
+
     # Storage
     bond_exchange_storage, _ = chain.provider.deploy_contract('ExchangeStorage')
 
@@ -34,7 +37,8 @@ with project.get_chain(chain_env) as chain:
     deploy_args = [
         payment_gateway.address,
         personal_info.address,
-        bond_exchange_storage.address
+        bond_exchange_storage.address,
+        exchange_regulator_service.address
     ]
     bond_exchange, _ = chain.provider.deploy_contract(
         'IbetStraightBondExchange',
@@ -86,6 +90,7 @@ with project.get_chain(chain_env) as chain:
     print('PersonalInfo : ' + personal_info.address)
     print('PaymentGateway : ' + payment_gateway.address)
     print('ExchangeStorage - Bond : ' + bond_exchange_storage.address)
+    print('ExchangeRegulatorService - Bond : ' + exchange_regulator_service.address)
     print('IbetStraightBondExchange : ' + bond_exchange.address)
     print('ExchangeStorage - Coupon : ' + coupon_exchange_storage.address)
     print('IbetCouponExchange : ' + coupon_exchange.address)
