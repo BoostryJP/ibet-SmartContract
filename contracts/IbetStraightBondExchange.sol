@@ -6,6 +6,7 @@ import "./IbetStraightBond.sol";
 import "./ExchangeStorage.sol";
 import "./PaymentGateway.sol";
 import "./PersonalInfo.sol";
+import "./RegulatorService.sol";
 
 contract IbetStraightBondExchange is Ownable {
     using SafeMath for uint256;
@@ -56,13 +57,16 @@ contract IbetStraightBondExchange is Ownable {
     address public personalInfoAddress;
     address public paymentGatewayAddress;
     address public storageAddress;
+    address public regulatorServiceAddress;
 
-    constructor(address _paymentGatewayAddress, address _personalInfoAddress, address _storageAddress)
+    constructor(address _paymentGatewayAddress, address _personalInfoAddress,
+        address _storageAddress, address _regulatorServiceAddress)
         public
     {
         paymentGatewayAddress = _paymentGatewayAddress;
         personalInfoAddress = _personalInfoAddress;
         storageAddress = _storageAddress;
+        regulatorServiceAddress = _regulatorServiceAddress;
     }
 
     // ---------------------------------------------------------------
@@ -224,6 +228,10 @@ contract IbetStraightBondExchange is Ownable {
         public
         returns (bool)
     {
+        // <CHK>
+        //  取引参加者チェック
+        if (RegulatorService(regulatorServiceAddress).check(msg.sender) != 0) revert();
+
         if (_isBuy == true) { // 買注文の場合
             // <CHK>
             //  1) 注文数量が0の場合
@@ -331,6 +339,10 @@ contract IbetStraightBondExchange is Ownable {
         public
         returns (bool)
     {
+        // <CHK>
+        //  取引参加者チェック
+        if (RegulatorService(regulatorServiceAddress).check(msg.sender) != 0) revert();
+
         // <CHK>
         //  指定した注文IDが直近の注文IDを超えている場合
         require(_orderId <= latestOrderId());
