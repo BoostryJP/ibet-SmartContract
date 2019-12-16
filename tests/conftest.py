@@ -48,6 +48,15 @@ def payment_gateway(web3, chain, users):
 
 
 @pytest.yield_fixture()
+def exchange_regulator_service(web3, chain, users):
+    web3.eth.defaultAccount = users['admin']
+    exchange_regulator_service, _ = chain.provider.get_or_deploy_contract('ExchangeRegulatorService')
+    exchange_regulator_service.transact().register(users['issuer'], False)
+    exchange_regulator_service.transact().register(users['trader'], False)
+    return exchange_regulator_service
+
+
+@pytest.yield_fixture()
 def bond_exchange_storage(web3, chain, users):
     web3.eth.defaultAccount = users['admin']
     bond_exchange_storage, _ = chain.provider.get_or_deploy_contract('ExchangeStorage')
@@ -55,12 +64,14 @@ def bond_exchange_storage(web3, chain, users):
 
 
 @pytest.yield_fixture()
-def bond_exchange(web3, chain, users, personal_info, payment_gateway, bond_exchange_storage):
+def bond_exchange(web3, chain, users,
+                  personal_info, payment_gateway, bond_exchange_storage, exchange_regulator_service):
     web3.eth.defaultAccount = users['admin']
     deploy_args = [
         payment_gateway.address,
         personal_info.address,
-        bond_exchange_storage.address
+        bond_exchange_storage.address,
+        exchange_regulator_service.address
     ]
     bond_exchange, _ = chain.provider.get_or_deploy_contract(
         'IbetStraightBondExchange',
