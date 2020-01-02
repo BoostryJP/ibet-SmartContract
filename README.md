@@ -1,6 +1,8 @@
-# ibet Smart Contract
+<p align='center'>
+  <img alt="ibet" src="https://user-images.githubusercontent.com/963333/71672471-6383c080-2db9-11ea-85b6-8815519652ec.png" width="300"/>
+</p>
 
-<img alt="ibet" src="https://user-images.githubusercontent.com/963333/71672471-6383c080-2db9-11ea-85b6-8815519652ec.png" width="200"/>
+# ibet Smart Contract
 
 <p>
   <img alt="Version" src="https://img.shields.io/badge/version-0.6-blue.svg?cacheSeconds=2592000" />
