@@ -3,7 +3,7 @@
 ## 0. 開発推奨環境
 * OS: macOS 10.14 (Mojave)
 * homebrewインストール済
-* python（3.6.4）インストール済
+* python（3.6.4）インストール済
 * Quorum開発環境構築済（ibet-Quorum）
 
 ## 1. solidity compiler (solc) のインストール
