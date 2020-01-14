@@ -3,9 +3,15 @@ name: Feature request
 about: プロダクトの改善提案
 title: "[FEATURE]"
 labels: feature
-assignees: YoshihitoAso, horsewin, kyken, r-kozu
+assignees: horsewin, kyken, r-kozu, YoshihitoAso
 
 ---
+
+## 対象
+:sob: 債券
+:sob: 会員権
+:sob: クーポン
+:sob: その他
 
 ## 現状の課題
 あなたが感じている現状のプロダクトの課題について、簡潔明瞭に記載してください。
