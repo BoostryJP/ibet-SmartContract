@@ -20,6 +20,7 @@ contract IbetStraightBond is Ownable, IbetStandardTokenInterface {
   string public purpose; // 発行目的
   string public memo; //メモ欄
   bool public status; // 取扱ステータス(True：有効、False：無効)
+  bool public initialOfferingStatus; // 新規募集ステータス（True：募集中、False：停止中）
 
   // 償還状況
   bool public isRedeemed;
@@ -42,6 +43,10 @@ contract IbetStraightBond is Ownable, IbetStandardTokenInterface {
   // image class => url
   mapping (uint8 => string) public image_urls;
 
+  // 募集申込
+  // account_address => data
+  mapping (address => string) public applications;
+
   // イベント：振替
   event Transfer(address indexed from, address indexed to, uint256 value);
 
@@ -56,6 +61,9 @@ contract IbetStraightBond is Ownable, IbetStandardTokenInterface {
 
   // イベント：ステータス変更
   event ChangeStatus(bool indexed status);
+
+  // イベント：募集申込
+  event ApplyFor(address indexed accountAddress);
 
   // コンストラクタ
   constructor(string memory _name, string memory _symbol,
@@ -268,6 +276,25 @@ contract IbetStraightBond is Ownable, IbetStandardTokenInterface {
   // ファンクション：個人情報記帳コントラクトの更新
   function setPersonalInfoAddress(address _address) public onlyOwner() {
     personalInfoAddress = _address;
+  }
+
+  // ファンクション：新規募集ステータス更新
+  // オーナーのみ実行可能
+  function setInitialOfferingStatus(bool _status)
+    public
+    onlyOwner()
+  {
+    initialOfferingStatus = _status;
+  }
+
+  // ファンクション：募集申込
+  function applyForOffering(string memory _data)
+    public
+  {
+    // 申込ステータスが停止中の場合、エラーを返す
+    require(initialOfferingStatus == true);
+    applications[msg.sender] = _data;
+    emit ApplyFor(msg.sender);
   }
 
 }
