@@ -22,6 +22,13 @@ contract IbetStraightBond is Ownable, IbetStandardTokenInterface {
   bool public status; // 取扱ステータス(True：有効、False：無効)
   bool public initialOfferingStatus; // 新規募集ステータス（True：募集中、False：停止中）
 
+  // 募集申込情報
+  struct Application {
+    uint256 requestedAmount; // 申込数量
+    uint256 allottedAmount; // 割当数量
+    string data; // その他データ
+  }
+
   // 償還状況
   bool public isRedeemed;
 
@@ -45,7 +52,7 @@ contract IbetStraightBond is Ownable, IbetStandardTokenInterface {
 
   // 募集申込
   // account_address => data
-  mapping (address => string) public applications;
+  mapping (address => Application) public applications;
 
   // イベント：振替
   event Transfer(address indexed from, address indexed to, uint256 value);
@@ -63,7 +70,10 @@ contract IbetStraightBond is Ownable, IbetStandardTokenInterface {
   event ChangeStatus(bool indexed status);
 
   // イベント：募集申込
-  event ApplyFor(address indexed accountAddress);
+  event ApplyFor(address indexed accountAddress, uint256 amount);
+
+  // イベント：割当
+  event Allot(address indexed accountAddress, uint256 amuont);
 
   // コンストラクタ
   constructor(string memory _name, string memory _symbol,
@@ -288,13 +298,25 @@ contract IbetStraightBond is Ownable, IbetStandardTokenInterface {
   }
 
   // ファンクション：募集申込
-  function applyForOffering(string memory _data)
+  function applyForOffering(uint256 _amount, string memory _data)
     public
   {
     // 申込ステータスが停止中の場合、エラーを返す
     require(initialOfferingStatus == true);
-    applications[msg.sender] = _data;
-    emit ApplyFor(msg.sender);
+
+    applications[msg.sender].requestedAmount = _amount;
+    applications[msg.sender].data = _data;
+    emit ApplyFor(msg.sender, _amount);
+  }
+
+  // ファンクション：募集割当
+  // オーナーのみ実行可能
+  function allot(address _address, uint256 _amount)
+    public
+    onlyOwner()
+  {
+    applications[_address].allottedAmount = _amount;
+    emit Allot(_address, _amount);
   }
 
 }
