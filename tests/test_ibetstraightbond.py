@@ -1577,7 +1577,7 @@ def test_applyForOffering_error_1(web3, chain, users, bond_exchange, personal_in
     # 募集申込（エラー）：amount 文字型
     web3.eth.defaultAccount = trader
     with pytest.raises(TypeError):
-        bond_token.transact().applyForOffering("10", 1234)
+        bond_token.transact().applyForOffering("10", "1234")
 
     # 募集申込（エラー）：data 数値型
     web3.eth.defaultAccount = trader
@@ -1633,14 +1633,66 @@ def test_allot_normal_1(web3, chain, users, bond_exchange, personal_info):
     txn_hash = bond_token.transact().applyForOffering(10, 'abcdefgh')
     chain.wait.for_receipt(txn_hash)
 
-    #
+    # 割当
     web3.eth.defaultAccount = issuer
-    txn_hash = bond_token.transact().setInitialOfferingStatus(True)
+    txn_hash = bond_token.transact().allot(trader, 5)
     chain.wait.for_receipt(txn_hash)
 
     application = bond_token.call().applications(trader)
     assert application[0] == 10
-    assert application[1] == 0
+    assert application[1] == 5
     assert application[2] == 'abcdefgh'
 
 
+# エラー系1
+#   発行：発行体 -> 投資家：募集申込 -> 発行体：募集割当（入力値の型誤り）
+def test_allot_error_1(web3, chain, users, bond_exchange, personal_info):
+    issuer = users['issuer']
+    trader = users['trader']
+
+    # トークン新規発行
+    web3.eth.defaultAccount = issuer
+    bond_token, deploy_args = \
+        utils.issue_bond_token(web3, chain, users, bond_exchange.address, personal_info.address)
+
+    # 新規募集ステータスの更新
+    web3.eth.defaultAccount = issuer
+    txn_hash = bond_token.transact().setInitialOfferingStatus(True)
+    chain.wait.for_receipt(txn_hash)
+
+    # 割当（エラー）：address 数値型
+    web3.eth.defaultAccount = issuer
+    with pytest.raises(TypeError):
+        bond_token.transact().allot(1234, 5)
+
+    # 割当（エラー）：amount 文字型
+    web3.eth.defaultAccount = issuer
+    with pytest.raises(TypeError):
+        bond_token.transact().allot(trader, "5")
+
+
+# エラー系2
+#   発行：発行体 -> 投資家：募集申込 -> 発行体：募集割当（権限エラー）
+def test_allot_error_2(web3, chain, users, bond_exchange, personal_info):
+    issuer = users['issuer']
+    trader = users['trader']
+
+    # トークン新規発行
+    web3.eth.defaultAccount = issuer
+    bond_token, deploy_args = \
+        utils.issue_bond_token(web3, chain, users, bond_exchange.address, personal_info.address)
+
+    # 新規募集ステータスの更新
+    web3.eth.defaultAccount = issuer
+    txn_hash = bond_token.transact().setInitialOfferingStatus(True)
+    chain.wait.for_receipt(txn_hash)
+
+    # 割当（エラー）：権限エラー
+    web3.eth.defaultAccount = trader
+    txn_hash = bond_token.transact().allot(trader, 5)
+    chain.wait.for_receipt(txn_hash)
+
+    application = bond_token.call().applications(trader)
+    assert application[0] == 0
+    assert application[1] == 0
+    assert application[2] == ''
