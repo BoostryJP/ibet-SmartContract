@@ -1480,19 +1480,14 @@ TEST17_募集申込（applyForOffering）
 
 # 正常系1
 #   発行：発行体 -> （申込なし）初期データ参照
-def test_applyForOffering_normal_1(web3, chain, users, bond_exchange, personal_info):
+def test_applyForOffering_normal_1(web3, chain, users):
     issuer = users['issuer']
     trader = users['trader']
 
     # トークン新規発行
     web3.eth.defaultAccount = issuer
     bond_token, deploy_args = \
-        utils.issue_bond_token(web3, chain, users, bond_exchange.address, personal_info.address)
-
-    # 新規募集ステータスの更新
-    web3.eth.defaultAccount = issuer
-    txn_hash = bond_token.transact().setInitialOfferingStatus(True)
-    chain.wait.for_receipt(txn_hash)
+        utils.issue_bond_token(web3, chain, users, zero_address, zero_address)
 
     application = bond_token.call().applications(trader)
     assert application[0] == 0
@@ -1502,19 +1497,23 @@ def test_applyForOffering_normal_1(web3, chain, users, bond_exchange, personal_i
 
 # 正常系2
 #   発行：発行体 -> 投資家：募集申込
-def test_applyForOffering_normal_2(web3, chain, users, bond_exchange, personal_info):
+def test_applyForOffering_normal_2(web3, chain, users, personal_info):
     issuer = users['issuer']
     trader = users['trader']
 
     # トークン新規発行
     web3.eth.defaultAccount = issuer
     bond_token, deploy_args = \
-        utils.issue_bond_token(web3, chain, users, bond_exchange.address, personal_info.address)
+        utils.issue_bond_token(web3, chain, users, zero_address, personal_info.address)
 
     # 新規募集ステータスの更新
     web3.eth.defaultAccount = issuer
     txn_hash = bond_token.transact().setInitialOfferingStatus(True)
     chain.wait.for_receipt(txn_hash)
+
+    # 個人情報登録
+    web3.eth.defaultAccount = trader
+    utils.register_personal_info(chain, personal_info, issuer)
 
     # 募集申込
     web3.eth.defaultAccount = trader
@@ -1529,19 +1528,23 @@ def test_applyForOffering_normal_2(web3, chain, users, bond_exchange, personal_i
 
 # 正常系3
 #   発行：発行体 -> 投資家：募集申込（複数回）
-def test_applyForOffering_normal_3(web3, chain, users, bond_exchange, personal_info):
+def test_applyForOffering_normal_3(web3, chain, users, personal_info):
     issuer = users['issuer']
     trader = users['trader']
 
     # トークン新規発行
     web3.eth.defaultAccount = issuer
     bond_token, deploy_args = \
-        utils.issue_bond_token(web3, chain, users, bond_exchange.address, personal_info.address)
+        utils.issue_bond_token(web3, chain, users, zero_address, personal_info.address)
 
     # 新規募集ステータスの更新
     web3.eth.defaultAccount = issuer
     txn_hash = bond_token.transact().setInitialOfferingStatus(True)
     chain.wait.for_receipt(txn_hash)
+
+    # 個人情報登録
+    web3.eth.defaultAccount = trader
+    utils.register_personal_info(chain, personal_info, issuer)
 
     # 募集申込
     web3.eth.defaultAccount = trader
@@ -1561,19 +1564,14 @@ def test_applyForOffering_normal_3(web3, chain, users, bond_exchange, personal_i
 
 # エラー系1:
 #   発行：発行体 -> 投資家：募集申込（入力値の型誤り）
-def test_applyForOffering_error_1(web3, chain, users, bond_exchange, personal_info):
+def test_applyForOffering_error_1(web3, chain, users):
     issuer = users['issuer']
     trader = users['trader']
 
     # トークン新規発行
     web3.eth.defaultAccount = issuer
     bond_token, deploy_args = \
-        utils.issue_bond_token(web3, chain, users, bond_exchange.address, personal_info.address)
-
-    # 新規募集ステータスの更新
-    web3.eth.defaultAccount = issuer
-    txn_hash = bond_token.transact().setInitialOfferingStatus(True)
-    chain.wait.for_receipt(txn_hash)
+        utils.issue_bond_token(web3, chain, users, zero_address, zero_address)
 
     # 募集申込（エラー）：amount 文字型
     web3.eth.defaultAccount = trader
@@ -1588,16 +1586,45 @@ def test_applyForOffering_error_1(web3, chain, users, bond_exchange, personal_in
 
 # エラー系2:
 #   発行：発行体 -> 投資家：募集申込（申込ステータスが停止中）
-def test_applyForOffering_error_2(web3, chain, users, bond_exchange, personal_info):
+def test_applyForOffering_error_2(web3, chain, users):
     issuer = users['issuer']
     trader = users['trader']
 
     # トークン新規発行
     web3.eth.defaultAccount = issuer
     bond_token, deploy_args = \
-        utils.issue_bond_token(web3, chain, users, bond_exchange.address, personal_info.address)
+        utils.issue_bond_token(web3, chain, users, zero_address, zero_address)
 
     # 募集申込（エラー）：募集申込ステータスFalse状態での申込
+    web3.eth.defaultAccount = trader
+    txn_hash = bond_token.transact().applyForOffering(10, 'abcdefgh')
+    chain.wait.for_receipt(txn_hash)
+
+    application = bond_token.call().applications(trader)
+    assert application[0] == 0
+    assert application[1] == 0
+    assert application[2] == ''
+
+
+# エラー系3
+#   発行：発行体 -> 投資家：募集申込（個人情報未登録）
+def test_applyForOffering_error_3(web3, chain, users, personal_info):
+    issuer = users['issuer']
+    trader = users['trader']
+
+    # トークン新規発行
+    web3.eth.defaultAccount = issuer
+    bond_token, deploy_args = \
+        utils.issue_bond_token(web3, chain, users, zero_address, personal_info.address)
+
+    # 新規募集ステータスの更新
+    web3.eth.defaultAccount = issuer
+    txn_hash = bond_token.transact().setInitialOfferingStatus(True)
+    chain.wait.for_receipt(txn_hash)
+
+    # 個人情報未登録
+
+    # 募集申込（エラーになる）
     web3.eth.defaultAccount = trader
     txn_hash = bond_token.transact().applyForOffering(10, 'abcdefgh')
     chain.wait.for_receipt(txn_hash)
