@@ -314,6 +314,9 @@ contract IbetStraightBond is Ownable, IbetStandardTokenInterface {
     // 申込ステータスが停止中の場合、エラーを返す
     require(initialOfferingStatus == true);
 
+    // 個人情報未登録の場合、エラーを返す
+    require(PersonalInfo(personalInfoAddress).isRegistered(msg.sender, owner) == true);
+
     applications[msg.sender].requestedAmount = _amount;
     applications[msg.sender].data = _data;
     emit ApplyFor(msg.sender, _amount);
