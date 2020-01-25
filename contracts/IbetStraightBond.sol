@@ -108,6 +108,16 @@ contract IbetStraightBond is Ownable, IbetStandardTokenInterface {
     personalInfoAddress = _personalInfoAddress;
   }
 
+  // ファンクション：追加発行
+  // オーナーのみ実行可能
+  function issue(uint _value)
+    public
+    onlyOwner()
+  {
+    totalSupply = totalSupply.add(_value);
+    balances[owner] = balanceOf(owner).add(_value);
+  }
+
   // ファンクション：アドレスフォーマットがコントラクトのものかを判断する
   function isContract(address _addr) private view returns (bool is_contract) {
     uint length;

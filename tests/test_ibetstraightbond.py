@@ -2,6 +2,7 @@ import pytest
 import utils
 from eth_utils import to_checksum_address
 
+zero_address = '0x0000000000000000000000000000000000000000'
 
 def init_args(exchange_address, personal_info_address):
     name = 'test_bond'
@@ -1614,14 +1615,13 @@ TEST18_募集割当（allot）
 
 # 正常系1
 #   発行：発行体 -> 投資家：募集申込 -> 発行体：募集割当
-def test_allot_normal_1(web3, chain, users, bond_exchange, personal_info):
+def test_allot_normal_1(web3, chain, users):
     issuer = users['issuer']
     trader = users['trader']
 
     # トークン新規発行
     web3.eth.defaultAccount = issuer
-    bond_token, deploy_args = \
-        utils.issue_bond_token(web3, chain, users, bond_exchange.address, personal_info.address)
+    bond_token, deploy_args = utils.issue_bond_token(web3, chain, users, zero_address, zero_address)
 
     # 新規募集ステータスの更新
     web3.eth.defaultAccount = issuer
@@ -1646,14 +1646,13 @@ def test_allot_normal_1(web3, chain, users, bond_exchange, personal_info):
 
 # エラー系1
 #   発行：発行体 -> 投資家：募集申込 -> 発行体：募集割当（入力値の型誤り）
-def test_allot_error_1(web3, chain, users, bond_exchange, personal_info):
+def test_allot_error_1(web3, chain, users):
     issuer = users['issuer']
     trader = users['trader']
 
     # トークン新規発行
     web3.eth.defaultAccount = issuer
-    bond_token, deploy_args = \
-        utils.issue_bond_token(web3, chain, users, bond_exchange.address, personal_info.address)
+    bond_token, deploy_args = utils.issue_bond_token(web3, chain, users, zero_address, zero_address)
 
     # 新規募集ステータスの更新
     web3.eth.defaultAccount = issuer
@@ -1673,14 +1672,13 @@ def test_allot_error_1(web3, chain, users, bond_exchange, personal_info):
 
 # エラー系2
 #   発行：発行体 -> 投資家：募集申込 -> 発行体：募集割当（権限エラー）
-def test_allot_error_2(web3, chain, users, bond_exchange, personal_info):
+def test_allot_error_2(web3, chain, users):
     issuer = users['issuer']
     trader = users['trader']
 
     # トークン新規発行
     web3.eth.defaultAccount = issuer
-    bond_token, deploy_args = \
-        utils.issue_bond_token(web3, chain, users, bond_exchange.address, personal_info.address)
+    bond_token, deploy_args = utils.issue_bond_token(web3, chain, users, zero_address, zero_address)
 
     # 新規募集ステータスの更新
     web3.eth.defaultAccount = issuer
@@ -1696,3 +1694,106 @@ def test_allot_error_2(web3, chain, users, bond_exchange, personal_info):
     assert application[0] == 0
     assert application[1] == 0
     assert application[2] == ''
+
+
+'''
+TEST19_追加発行（issue）
+'''
+
+
+# 正常系1: 発行 -> 追加発行
+def test_issue_normal_1(web3, chain, users):
+    issuer = users['issuer']
+    value = 10
+
+    # トークン新規発行
+    web3.eth.defaultAccount = issuer
+    bond_token, deploy_args = utils.issue_bond_token(web3, chain, users, zero_address, zero_address)
+
+    # 追加発行
+    web3.eth.defaultAccount = issuer
+    txn_hash = bond_token.transact().issue(value)
+    chain.wait.for_receipt(txn_hash)
+
+    total_supply = bond_token.call().totalSupply()
+    balance = bond_token.call().balanceOf(issuer)
+
+    assert total_supply == deploy_args[2] + value
+    assert balance == deploy_args[2] + value
+
+
+# エラー系1: 入力値の型誤り
+def test_issue_error_1(web3, chain, users):
+    issuer = users['issuer']
+
+    # トークン新規発行
+    web3.eth.defaultAccount = issuer
+    bond_token, deploy_args = utils.issue_bond_token(web3, chain, users, zero_address, zero_address)
+
+    # String
+    with pytest.raises(TypeError):
+        bond_token.transact().issue("1")
+
+    # 小数
+    with pytest.raises(TypeError):
+        bond_token.transact().issue(1.0)
+
+
+# エラー系2: 限界値超
+def test_issue_error_2(web3, chain, users):
+    issuer = users['issuer']
+
+    # トークン新規発行
+    web3.eth.defaultAccount = issuer
+    bond_token, deploy_args = utils.issue_bond_token(web3, chain, users, zero_address, zero_address)
+
+    # 上限値超
+    with pytest.raises(TypeError):
+        bond_token.transact().issue(2 ** 256)
+
+    # 下限値超
+    with pytest.raises(TypeError):
+        bond_token.transact().issue(-1)
+
+
+# エラー系3: 発行→追加発行→上限界値超
+def test_issue_error_3(web3, chain, users):
+    issuer = users['issuer']
+
+    # トークン新規発行
+    web3.eth.defaultAccount = issuer
+    bond_token, deploy_args = utils.issue_bond_token(web3, chain, users, zero_address, zero_address)
+
+    issue_amount = 2**256 - deploy_args[2]
+
+    # 追加発行（限界値超）
+    web3.eth.defaultAccount = issuer
+    txn_hash = bond_token.transact().issue(issue_amount)  # エラーになる
+    chain.wait.for_receipt(txn_hash)
+
+    total_supply = bond_token.call().totalSupply()
+    balance = bond_token.call().balanceOf(issuer)
+
+    assert total_supply == deploy_args[2]
+    assert balance == deploy_args[2]
+
+
+# エラー系4: 権限エラー
+def test_issue_error_4(web3, chain, users):
+    issuer = users['issuer']
+    attacker = users['trader']
+
+    # トークン新規発行
+    web3.eth.defaultAccount = issuer
+    bond_token, deploy_args = utils.issue_bond_token(web3, chain, users, zero_address, zero_address)
+
+    # 追加発行：権限エラー
+    web3.eth.defaultAccount = attacker
+    txn_hash = bond_token.transact().issue(1)  # エラーになる
+    chain.wait.for_receipt(txn_hash)
+
+    total_supply = bond_token.call().totalSupply()
+    balance = bond_token.call().balanceOf(issuer)
+
+    assert total_supply == deploy_args[2]
+    assert balance == deploy_args[2]
