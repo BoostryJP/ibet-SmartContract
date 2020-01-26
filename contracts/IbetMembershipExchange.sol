@@ -49,10 +49,6 @@ contract IbetMembershipExchange is Ownable {
     // Event：全引き出し
     event Withdrawal(address indexed tokenAddress, address indexed accountAddress);
 
-    // Event：送信
-    event Transfer(address indexed tokenAddress, address indexed from,
-        address indexed to, uint256 value);
-
     // ---------------------------------------------------------------
     // Constructor
     // ---------------------------------------------------------------
@@ -571,33 +567,6 @@ contract IbetMembershipExchange is Ownable {
 
         // イベント登録
         emit Withdrawal(_token, msg.sender);
-
-        return true;
-    }
-
-    // Function：トークンを送信する
-    function transfer(address _token, address _to, uint256 _value)
-        public
-        returns (bool)
-    {
-        uint256 balance = balanceOf(msg.sender, _token);
-
-        // <CHK>
-        //  1) 送信数量が0の場合
-        //  2) 残高数量が送信数量に満たない場合
-        //   -> 更新処理：全ての残高をsenderのアカウントに戻し、falseを返す
-        if (_value == 0 || balance < _value) {
-            IbetMembership(_token).transfer(msg.sender, balance);
-            setBalance(msg.sender, _token, 0);
-            return false;
-        }
-
-        // 更新処理：トークン送信
-        setBalance(msg.sender, _token, balance.sub(_value));
-        IbetMembership(_token).transfer(_to, _value);
-
-        // イベント登録
-        emit Transfer(_token, msg.sender, _to, _value);
 
         return true;
     }

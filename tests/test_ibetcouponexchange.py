@@ -125,220 +125,7 @@ def test_deposit_normal_1(web3, chain, users, coupon_exchange):
 
 
 '''
-TEST2_クーポントークンの割当（Transfer）
-'''
-
-
-# 正常系1
-# ＜発行体＞新規発行 -> ＜発行体＞Exchangeへのデポジット
-#  -> ＜発行体＞アカウントアドレスへの割当（Transfer）
-def test_transfer_normal_1(web3, chain, users, coupon_exchange):
-    _issuer = users['issuer']
-    _consumer = users['trader']
-    _value = 100
-
-    # 新規発行
-    web3.eth.defaultAccount = _issuer
-    deploy_args = init_args(coupon_exchange.address)
-    coupon = deploy(chain, deploy_args)
-
-    # Exchangeへのデポジット
-    web3.eth.defaultAccount = _issuer
-    txn_hash = coupon.transact().allocate(coupon_exchange.address, _value)
-    chain.wait.for_receipt(txn_hash)
-
-    # アカウントアドレスへの割当（Transfer)
-    web3.eth.defaultAccount = _issuer
-    txn_hash = coupon_exchange.transact().transfer(
-        coupon.address, _consumer, _value)
-    chain.wait.for_receipt(txn_hash)
-
-    issuer_balance_coupon = coupon.call().balanceOf(_issuer)
-    issuer_balance_exchange = coupon_exchange.call().balanceOf(_issuer, coupon.address)
-    consumer_balance_coupon = coupon.call().balanceOf(_consumer)
-    consumer_balance_exchange = coupon_exchange.call().balanceOf(_consumer, coupon.address)
-
-    assert issuer_balance_coupon == deploy_args[2] - _value
-    assert issuer_balance_exchange == 0
-    assert consumer_balance_coupon == _value
-    assert consumer_balance_exchange == 0
-
-
-# 正常系２
-# ＜発行体＞新規発行 -> ＜発行体＞Exchangeへのデポジット（２回）
-#  -> ＜発行体＞アカウントアドレスへの割当（Transfer）
-def test_transfer_normal_2(web3, chain, users, coupon_exchange):
-    _admin = users['admin']
-    _issuer = users['issuer']
-    _consumer = users['trader']
-
-    # 新規発行
-    web3.eth.defaultAccount = _issuer
-    deploy_args = init_args(coupon_exchange.address)
-    coupon = deploy(chain, deploy_args)
-
-    # Exchangeへのデポジット（１回目）
-    web3.eth.defaultAccount = _issuer
-    txn_hash = coupon.transact().allocate(coupon_exchange.address, 100)
-    chain.wait.for_receipt(txn_hash)
-
-    # Exchangeへのデポジット（２回目）
-    web3.eth.defaultAccount = _issuer
-    txn_hash = coupon.transact().allocate(coupon_exchange.address, 200)
-    chain.wait.for_receipt(txn_hash)
-
-    # アカウントアドレスへの割当（Transfer)
-    web3.eth.defaultAccount = _issuer
-    txn_hash = coupon_exchange.transact().transfer(
-        coupon.address, _consumer, 250)
-    chain.wait.for_receipt(txn_hash)
-
-    issuer_balance_coupon = coupon.call().balanceOf(_issuer)
-    issuer_balance_exchange = coupon_exchange.call().balanceOf(_issuer, coupon.address)
-    consumer_balance_coupon = coupon.call().balanceOf(_consumer)
-    consumer_balance_exchange = coupon_exchange.call().balanceOf(_consumer, coupon.address)
-
-    assert issuer_balance_coupon == deploy_args[2] - 100 - 200
-    assert issuer_balance_exchange == 100 + 200 - 250
-    assert consumer_balance_coupon == 250
-    assert consumer_balance_exchange == 0
-
-
-# エラー系１：入力値の型誤り（Token）
-def test_transfer_error_1(web3, users, coupon_exchange):
-    _issuer = users['issuer']
-    _consumer = users['trader']
-    _value = 100
-
-    # アカウントアドレスへの割当（Transfer)
-    web3.eth.defaultAccount = _issuer
-
-    with pytest.raises(TypeError):
-        coupon_exchange.transact().transfer(1234, _consumer, _value)
-
-    with pytest.raises(TypeError):
-        coupon_exchange.transact().transfer('1234', _consumer, _value)
-
-
-# エラー系２：入力値の型誤り（To）
-def test_transfer_error_2(web3, chain, users, coupon_exchange):
-    _admin = users['admin']
-    _issuer = users['issuer']
-    _value = 100
-
-    # 新規発行
-    web3.eth.defaultAccount = _issuer
-    deploy_args = init_args(coupon_exchange.address)
-    coupon = deploy(chain, deploy_args)
-
-    # アカウントアドレスへの割当（Transfer)
-    web3.eth.defaultAccount = _issuer
-
-    with pytest.raises(TypeError):
-        coupon_exchange.transact().transfer(coupon.address, 1234, _value)
-
-    with pytest.raises(TypeError):
-        coupon_exchange.transact().transfer(coupon.address, '1234', _value)
-
-
-# エラー系３：入力値の型誤り（To）
-def test_transfer_error_3(web3, chain, users, coupon_exchange):
-    _issuer = users['issuer']
-    _consumer = users['trader']
-    _value = 100
-
-    # 新規発行
-    web3.eth.defaultAccount = _issuer
-    deploy_args = init_args(coupon_exchange.address)
-    coupon = deploy(chain, deploy_args)
-
-    # アカウントアドレスへの割当（Transfer)
-    web3.eth.defaultAccount = _issuer
-
-    with pytest.raises(TypeError):
-        coupon_exchange.transact().transfer(coupon.address, _consumer, '1244')
-
-    with pytest.raises(TypeError):
-        coupon_exchange.transact().transfer(coupon.address, _consumer, -1)
-
-    with pytest.raises(TypeError):
-        coupon_exchange.transact().transfer(coupon.address, _consumer, 2 ** 265)
-
-    with pytest.raises(TypeError):
-        coupon_exchange.transact().transfer(coupon.address, _consumer, 0.1)
-
-
-# エラー系４
-# ＜発行体＞新規発行 -> ＜発行体＞Exchangeへのデポジット
-#  -> ＜発行体＞アカウントアドレスへの割当（Transfer）　残高超過
-def test_transfer_error_4(web3, chain, users, coupon_exchange):
-    _issuer = users['issuer']
-    _consumer = users['trader']
-    _value = 100
-
-    # 新規発行
-    web3.eth.defaultAccount = _issuer
-    deploy_args = init_args(coupon_exchange.address)
-    coupon = deploy(chain, deploy_args)
-
-    # Exchangeへのデポジット
-    web3.eth.defaultAccount = _issuer
-    txn_hash = coupon.transact().allocate(coupon_exchange.address, _value)
-    chain.wait.for_receipt(txn_hash)
-
-    # アカウントアドレスへの割当（Transfer)
-    web3.eth.defaultAccount = _issuer
-    txn_hash = coupon_exchange.transact().transfer(
-        coupon.address, _consumer, _value + 1)  # エラーになる
-    chain.wait.for_receipt(txn_hash)
-
-    issuer_balance_coupon = coupon.call().balanceOf(_issuer)
-    issuer_balance_exchange = coupon_exchange.call().balanceOf(_issuer, coupon.address)
-    consumer_balance_coupon = coupon.call().balanceOf(_consumer)
-    consumer_balance_exchange = coupon_exchange.call().balanceOf(_consumer, coupon.address)
-
-    assert issuer_balance_coupon == deploy_args[2]
-    assert issuer_balance_exchange == 0
-    assert consumer_balance_coupon == 0
-    assert consumer_balance_exchange == 0
-
-
-# エラー系5
-# ＜発行体＞新規発行 -> ＜発行体＞Exchangeへのデポジット
-#  -> ＜発行体＞アカウントアドレスへの割当（Transfer）　数量0指定
-def test_transfer_error_5(web3, chain, users, coupon_exchange):
-    _issuer = users['issuer']
-    _consumer = users['trader']
-    _value = 100
-
-    # 新規発行
-    web3.eth.defaultAccount = _issuer
-    deploy_args = init_args(coupon_exchange.address)
-    coupon = deploy(chain, deploy_args)
-
-    # Exchangeへのデポジット
-    web3.eth.defaultAccount = _issuer
-    txn_hash = coupon.transact().allocate(coupon_exchange.address, _value)
-    chain.wait.for_receipt(txn_hash)
-
-    # アカウントアドレスへの割当（Transfer)
-    web3.eth.defaultAccount = _issuer
-    txn_hash = coupon_exchange.transact().transfer(coupon.address, _consumer, 0)  # エラーになる
-    chain.wait.for_receipt(txn_hash)
-
-    issuer_balance_coupon = coupon.call().balanceOf(_issuer)
-    issuer_balance_exchange = coupon_exchange.call().balanceOf(_issuer, coupon.address)
-    consumer_balance_coupon = coupon.call().balanceOf(_consumer)
-    consumer_balance_exchange = coupon_exchange.call().balanceOf(_consumer, coupon.address)
-
-    assert issuer_balance_coupon == deploy_args[2]
-    assert issuer_balance_exchange == 0
-    assert consumer_balance_coupon == 0
-    assert consumer_balance_exchange == 0
-
-
-'''
-TEST3_全ての残高の引き出し（withdrawAll）
+TEST2_全ての残高の引き出し（withdrawAll）
 '''
 
 
@@ -440,42 +227,8 @@ def test_withdrawAll_error_2_1(web3, chain, users, coupon_exchange):
     assert balance_exchange == 0
 
 
-# エラー系2-2：残高がゼロ（デポジットあり）
-def test_withdrawAll_error_2_2(web3, chain, users, coupon_exchange):
-    _issuer = users['issuer']
-    _consumer = users['trader']
-    _value = 100
-
-    # 新規発行
-    web3.eth.defaultAccount = _issuer
-    deploy_args = init_args(coupon_exchange.address)
-    coupon = deploy(chain, deploy_args)
-
-    # Exchangeへのデポジット
-    web3.eth.defaultAccount = _issuer
-    txn_hash = coupon.transact().allocate(coupon_exchange.address, _value)
-    chain.wait.for_receipt(txn_hash)
-
-    # アカウントアドレスへの割当（Transfer)
-    web3.eth.defaultAccount = _issuer
-    txn_hash = coupon_exchange.transact().transfer(
-        coupon.address, _consumer, _value)
-    chain.wait.for_receipt(txn_hash)
-
-    # 引き出し（withdrawAll)
-    web3.eth.defaultAccount = _issuer
-    txn_hash = coupon_exchange.transact().withdrawAll(coupon.address)  # エラーになる
-    chain.wait.for_receipt(txn_hash)
-
-    balance_coupon = coupon.call().balanceOf(_issuer)
-    balance_exchange = coupon_exchange.call().balanceOf(_issuer, coupon.address)
-
-    assert balance_coupon == deploy_args[2] - _value
-    assert balance_exchange == 0
-
-
 '''
-TEST4_Make注文（createOrder）
+TEST3_Make注文（createOrder）
 '''
 
 
@@ -1025,7 +778,7 @@ def test_createorder_error_7_4(web3, chain, users, coupon_exchange):
 
 
 '''
-TEST5_注文キャンセル（cancelOrder）
+TEST4_注文キャンセル（cancelOrder）
 '''
 
 
@@ -1437,7 +1190,7 @@ def test_cancelorder_error_3_3_2(web3, chain, users, coupon_exchange):
 
 
 '''
-TEST6_Take注文（executeOrder）
+TEST5_Take注文（executeOrder）
 '''
 
 
@@ -2467,7 +2220,7 @@ def test_executeOrder_error_6_7(web3, chain, users, coupon_exchange):
 
 
 '''
-TEST7_決済承認（confirmAgreement）
+TEST6_決済承認（confirmAgreement）
 '''
 
 
@@ -3116,7 +2869,7 @@ def test_confirmAgreement_error_7(web3, chain, users, coupon_exchange):
 
 
 '''
-TEST8_決済非承認（cancelAgreement）
+TEST7_決済非承認（cancelAgreement）
 '''
 
 
@@ -3763,7 +3516,7 @@ def test_cancelAgreement_error_7(web3, chain, users, coupon_exchange):
 
 
 '''
-TEST9_Exchange切替
+TEST8_Exchange切替
 '''
 
 
