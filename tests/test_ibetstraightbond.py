@@ -1642,18 +1642,22 @@ TEST18_募集割当（allot）
 
 # 正常系1
 #   発行：発行体 -> 投資家：募集申込 -> 発行体：募集割当
-def test_allot_normal_1(web3, chain, users):
+def test_allot_normal_1(web3, chain, users, personal_info):
     issuer = users['issuer']
     trader = users['trader']
 
     # トークン新規発行
     web3.eth.defaultAccount = issuer
-    bond_token, deploy_args = utils.issue_bond_token(web3, chain, users, zero_address, zero_address)
+    bond_token, deploy_args = utils.issue_bond_token(web3, chain, users, zero_address, personal_info.address)
 
     # 新規募集ステータスの更新
     web3.eth.defaultAccount = issuer
     txn_hash = bond_token.transact().setInitialOfferingStatus(True)
     chain.wait.for_receipt(txn_hash)
+
+    # 個人情報登録
+    web3.eth.defaultAccount = trader
+    utils.register_personal_info(chain, personal_info, issuer)
 
     # 募集申込
     web3.eth.defaultAccount = trader
