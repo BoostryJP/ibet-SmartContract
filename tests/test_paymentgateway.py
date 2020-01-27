@@ -6,7 +6,7 @@ terms_text = 'terms_sample\nend'
 terms_text_after = 'terms_sample\nafter\nend'
 
 '''
-TEST0_デプロイ
+TEST_デプロイ
 '''
 
 
@@ -34,7 +34,7 @@ def test_deploy_normal_1(web3, chain, users):
 
 
 '''
-TEST1_支払情報を登録（register）
+TEST_支払情報を登録（register）
 '''
 
 
@@ -170,7 +170,7 @@ def test_register_error_3(web3, chain, users):
 
 
 '''
-TEST2_支払情報を承認する(approve)
+TEST_支払情報を承認する(approve)
 '''
 
 
@@ -243,7 +243,7 @@ def test_approve_error_2(web3, chain, users):
 
 
 '''
-TEST3_支払情報を警告状態にする(warn)
+TEST_支払情報を警告状態にする(warn)
 '''
 
 
@@ -316,7 +316,7 @@ def test_warn_error_2(web3, chain, users):
 
 
 '''
-TEST4_支払情報を非承認にする(unapprove)
+TEST_支払情報を非承認にする(unapprove)
 '''
 
 
@@ -428,7 +428,7 @@ def test_unapprove_error_2(web3, chain, users):
 
 
 '''
-TEST5_支払情報をBAN状態にする(ban)
+TEST_支払情報をBAN状態にする(ban)
 '''
 
 
@@ -501,7 +501,7 @@ def test_ban_error_2(web3, chain, users):
 
 
 '''
-TEST6_収納代行業者（Agent）の追加（addAgent）
+TEST_収納代行業者（Agent）の追加（addAgent）
 '''
 
 

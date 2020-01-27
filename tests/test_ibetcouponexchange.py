@@ -80,7 +80,7 @@ def settlement_ng(web3, chain, token, exchange, account,
 
 
 '''
-TEST0_デプロイ
+TEST_デプロイ
 '''
 
 
@@ -97,7 +97,7 @@ def test_deploy_normal_1(users, coupon_exchange, coupon_exchange_storage,
 
 
 '''
-TEST1_クーポントークンのデポジット
+TEST_クーポントークンのデポジット
 '''
 
 
@@ -114,7 +114,7 @@ def test_deposit_normal_1(web3, chain, users, coupon_exchange):
 
     # Exchangeへのデポジット
     web3.eth.defaultAccount = _issuer
-    txn_hash = coupon.transact().allocate(coupon_exchange.address, _value)
+    txn_hash = coupon.transact().transfer(coupon_exchange.address, _value)
     chain.wait.for_receipt(txn_hash)
 
     balance_coupon = coupon.call().balanceOf(_issuer)
@@ -125,7 +125,7 @@ def test_deposit_normal_1(web3, chain, users, coupon_exchange):
 
 
 '''
-TEST2_全ての残高の引き出し（withdrawAll）
+TEST_全ての残高の引き出し（withdrawAll）
 '''
 
 
@@ -143,7 +143,7 @@ def test_withdrawAll_normal_1(web3, chain, users, coupon_exchange):
 
     # Exchangeへのデポジット
     web3.eth.defaultAccount = _issuer
-    txn_hash = coupon.transact().allocate(coupon_exchange.address, _value)
+    txn_hash = coupon.transact().transfer(coupon_exchange.address, _value)
     chain.wait.for_receipt(txn_hash)
 
     # 引き出し（withdrawAll)
@@ -172,12 +172,12 @@ def test_withdrawAll_normal_2(web3, chain, users, coupon_exchange):
 
     # Exchangeへのデポジット（１回目）
     web3.eth.defaultAccount = _issuer
-    txn_hash = coupon.transact().allocate(coupon_exchange.address, _value)
+    txn_hash = coupon.transact().transfer(coupon_exchange.address, _value)
     chain.wait.for_receipt(txn_hash)
 
     # Exchangeへのデポジット（２回目）
     web3.eth.defaultAccount = _issuer
-    txn_hash = coupon.transact().allocate(coupon_exchange.address, _value)
+    txn_hash = coupon.transact().transfer(coupon_exchange.address, _value)
     chain.wait.for_receipt(txn_hash)
 
     # 引き出し（withdrawAll)
@@ -228,7 +228,7 @@ def test_withdrawAll_error_2_1(web3, chain, users, coupon_exchange):
 
 
 '''
-TEST3_Make注文（createOrder）
+TEST_Make注文（createOrder）
 '''
 
 
@@ -386,7 +386,7 @@ def test_createorder_normal_3_2(web3, chain, users, coupon_exchange):
 
 # エラー系1
 #   入力値の型誤り（_token）
-def test_createorder_error_1(web3, users, coupon_exchange):
+def test_createorder_error_1(users, coupon_exchange):
     agent = users['agent']
 
     # Make注文
@@ -778,7 +778,7 @@ def test_createorder_error_7_4(web3, chain, users, coupon_exchange):
 
 
 '''
-TEST4_注文キャンセル（cancelOrder）
+TEST_注文キャンセル（cancelOrder）
 '''
 
 
@@ -1190,7 +1190,7 @@ def test_cancelorder_error_3_3_2(web3, chain, users, coupon_exchange):
 
 
 '''
-TEST5_Take注文（executeOrder）
+TEST_Take注文（executeOrder）
 '''
 
 
@@ -2220,7 +2220,7 @@ def test_executeOrder_error_6_7(web3, chain, users, coupon_exchange):
 
 
 '''
-TEST6_決済承認（confirmAgreement）
+TEST_決済承認（confirmAgreement）
 '''
 
 
@@ -2869,7 +2869,7 @@ def test_confirmAgreement_error_7(web3, chain, users, coupon_exchange):
 
 
 '''
-TEST7_決済非承認（cancelAgreement）
+TEST_決済非承認（cancelAgreement）
 '''
 
 
@@ -3516,7 +3516,7 @@ def test_cancelAgreement_error_7(web3, chain, users, coupon_exchange):
 
 
 '''
-TEST8_Exchange切替
+TEST_Exchange切替
 '''
 
 

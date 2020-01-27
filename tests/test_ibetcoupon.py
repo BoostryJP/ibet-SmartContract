@@ -33,7 +33,7 @@ def deploy(chain, deploy_args):
 
 
 '''
-TEST1_デプロイ
+TEST_デプロイ
 '''
 
 
@@ -186,114 +186,7 @@ def test_deploy_error_11(chain, coupon_exchange):
 
 
 '''
-TEST2_クーポンの割当（allocate）
-'''
-
-
-# 正常系1: アカウントアドレスへの割当
-def test_allocate_normal_1(web3, chain, users, coupon_exchange):
-    _from = users['issuer']
-    _to = users['trader']
-    _value = 100
-
-    # 新規発行
-    web3.eth.defaultAccount = _from
-    deploy_args = init_args(coupon_exchange.address)
-    coupon = deploy(chain, deploy_args)
-
-    # 割当
-    txn_hash = coupon.transact().allocate(_to, _value)
-    chain.wait.for_receipt(txn_hash)
-
-    from_balance = coupon.call().balanceOf(_from)
-    to_balance = coupon.call().balanceOf(_to)
-
-    assert from_balance == deploy_args[2] - _value
-    assert to_balance == _value
-
-
-# エラー系1: 入力値の型誤り（To）
-def test_allocate_error_1(web3, chain, users, coupon_exchange):
-    _from = users['issuer']
-    _to = 1234
-    _value = 100
-
-    # 新規発行
-    web3.eth.defaultAccount = _from
-    deploy_args = init_args(coupon_exchange.address)
-    coupon = deploy(chain, deploy_args)
-
-    web3.eth.defaultAccount = _from
-    with pytest.raises(TypeError):
-        coupon.transact().transfer(_to, _value)
-
-
-# エラー系2: 入力値の型誤り（Value）
-def test_allocate_error_2(web3, chain, users, coupon_exchange):
-    _from = users['issuer']
-    _to = users['trader']
-
-    # 新規発行
-    web3.eth.defaultAccount = _from
-    deploy_args = init_args(coupon_exchange.address)
-    coupon = deploy(chain, deploy_args)
-
-    web3.eth.defaultAccount = _from
-    with pytest.raises(TypeError):
-        coupon.transact().transfer(_to, '0')
-
-    with pytest.raises(TypeError):
-        coupon.transact().transfer(_to, 2 ** 256)
-
-    with pytest.raises(TypeError):
-        coupon.transact().transfer(_to, -1)
-
-    with pytest.raises(TypeError):
-        coupon.transact().transfer(_to, 0.1)
-
-
-# エラー系3: 残高不足
-def test_allocate_error_3(web3, chain, users, coupon_exchange):
-    _from = users['issuer']
-    _to = users['trader']
-
-    # 新規発行
-    web3.eth.defaultAccount = _from
-    deploy_args = init_args(coupon_exchange.address)
-    coupon = deploy(chain, deploy_args)
-
-    # 割当（残高超）
-    web3.eth.defaultAccount = _from
-    _value = deploy_args[2] + 1
-    txn_hash = coupon.transact().transfer(_to, _value)  # エラーになる
-    chain.wait.for_receipt(txn_hash)
-
-    assert coupon.call().balanceOf(_from) == deploy_args[2]
-    assert coupon.call().balanceOf(_to) == 0
-
-
-# エラー系4: 権限なし
-def test_allocate_error_4(web3, chain, users, coupon_exchange):
-    _issuer = users['issuer']
-    _other = users['trader']
-
-    # 新規発行
-    web3.eth.defaultAccount = _issuer
-    deploy_args = init_args(coupon_exchange.address)
-    coupon = deploy(chain, deploy_args)
-
-    # 割当（権限なし）
-    web3.eth.defaultAccount = _other
-    _value = deploy_args[2]
-    txn_hash = coupon.transact().transfer(_other, _value)  # エラーになる
-    chain.wait.for_receipt(txn_hash)
-
-    assert coupon.call().balanceOf(_issuer) == deploy_args[2]
-    assert coupon.call().balanceOf(_other) == 0
-
-
-'''
-TEST3_クーポンの譲渡（transfer）
+TEST_クーポンの譲渡（transfer）
 '''
 
 
@@ -431,7 +324,7 @@ def test_transfer_error_5(web3, chain, users, coupon_exchange, coupon_exchange_s
 
 
 '''
-TEST4_クーポンの消費（consume）
+TEST_クーポンの消費（consume）
 '''
 
 
@@ -472,7 +365,7 @@ def test_consume_normal_2(web3, chain, users, coupon_exchange):
 
     # 割当
     web3.eth.defaultAccount = _issuer
-    txn_hash = coupon.transact().allocate(_consumer, _value)
+    txn_hash = coupon.transact().transferFrom(_issuer, _consumer, _value)
     chain.wait.for_receipt(txn_hash)
 
     # 消費
@@ -559,7 +452,7 @@ def test_consume_error_3(web3, chain, users, coupon_exchange):
 
 
 '''
-TEST5_追加発行（issue）
+TEST_追加発行（issue）
 '''
 
 
@@ -600,7 +493,7 @@ def test_issue_normal_2(web3, chain, users, coupon_exchange):
     coupon = deploy(chain, deploy_args)
 
     # 割当
-    txn_hash = coupon.transact().allocate(_consumer, _allocated)
+    txn_hash = coupon.transact().transferFrom(_issuer, _consumer, _allocated)
     chain.wait.for_receipt(txn_hash)
 
     # 追加発行
@@ -653,7 +546,7 @@ def test_issue_error_2(web3, chain, users, coupon_exchange):
     coupon = deploy(chain, deploy_args)
 
     # 割当
-    txn_hash = coupon.transact().allocate(_consumer, _allocated)
+    txn_hash = coupon.transact().transferFrom(_issuer, _consumer, _allocated)
     chain.wait.for_receipt(txn_hash)
 
     # 追加発行（uint最大値超）
@@ -693,7 +586,7 @@ def test_issue_error_3(web3, chain, users, coupon_exchange):
 
 
 '''
-TEST6_クーポン詳細欄の更新（setDetails）
+TEST_クーポン詳細欄の更新（setDetails）
 '''
 
 
@@ -751,7 +644,7 @@ def test_setDetails_error_2(web3, chain, users, coupon_exchange):
 
 
 '''
-TEST7_メモ欄の更新（setMemo）
+TEST_メモ欄の更新（setMemo）
 '''
 
 
@@ -809,7 +702,7 @@ def test_setMemo_error_2(web3, chain, users, coupon_exchange):
 
 
 '''
-TEST8_残高確認（balanceOf）
+TEST_残高確認（balanceOf）
 '''
 
 
@@ -842,7 +735,7 @@ def test_balanceOf_error_1(web3, chain, users, coupon_exchange):
 
 
 '''
-TEST9_使用済数量確認（usedOf）
+TEST_使用済数量確認（usedOf）
 '''
 
 
@@ -883,7 +776,7 @@ def test_usedOf_error_1(web3, chain, users, coupon_exchange):
 
 
 '''
-TEST10_商品画像の設定（setImageURL, getImageURL）
+TEST_商品画像の設定（setImageURL, getImageURL）
 '''
 
 
@@ -1029,7 +922,7 @@ def test_setImageURL_error_3(web3, chain, users, coupon_exchange):
 
 
 '''
-TEST11_ステータス（有効・無効）の更新（setStatus）
+TEST_ステータス（有効・無効）の更新（setStatus）
 '''
 
 
@@ -1085,7 +978,7 @@ def test_setStatus_error_2(web3, chain, users, coupon_exchange):
 
 
 '''
-TEST12_取引可能Exchangeの更新（setTradableExchange）
+TEST_取引可能Exchangeの更新（setTradableExchange）
 '''
 
 
@@ -1155,7 +1048,7 @@ def test_setTradableExchange_error_2(web3, chain, users, coupon_exchange):
 
 
 '''
-TEST13_有効期限更新（setExpirationDate）
+TEST_有効期限更新（setExpirationDate）
 '''
 
 
@@ -1216,7 +1109,7 @@ def test_setExpirationDate_error_2(web3, chain, users, coupon_exchange):
 
 
 '''
-TEST14_譲渡可能更新（setTransferable）
+TEST_譲渡可能更新（setTransferable）
 '''
 
 
@@ -1276,7 +1169,7 @@ def test_setTransferable_error_2(web3, chain, users, coupon_exchange):
 
 
 '''
-TEST15_新規募集ステータス更新（setInitialOfferingStatus）
+TEST_新規募集ステータス更新（setInitialOfferingStatus）
 '''
 
 
@@ -1339,7 +1232,7 @@ def test_setInitialOfferingStatus_error_1(web3, chain, users, coupon_exchange):
 
 
 '''
-TEST16_募集申込（applyForOffering）
+TEST_募集申込（applyForOffering）
 '''
 
 
@@ -1428,7 +1321,7 @@ def test_applyForOffering_error_2(web3, chain, users, coupon_exchange):
 
 
 '''
-TEST17_リターン詳細更新（setReturnDetails）
+TEST_リターン詳細更新（setReturnDetails）
 '''
 
 
@@ -1487,7 +1380,7 @@ def test_setReturnDetails_error_2(web3, chain, users, coupon_exchange):
 
 
 '''
-TEST18_問い合わせ先情報の更新（setContactInformation）
+TEST_問い合わせ先情報の更新（setContactInformation）
 '''
 
 
@@ -1545,7 +1438,7 @@ def test_setContactInformation_error_2(web3, chain, users, coupon_exchange):
 
 
 '''
-TEST19_プライバシーポリシーの更新（setPrivacyPolicy）
+TEST_プライバシーポリシーの更新（setPrivacyPolicy）
 '''
 
 

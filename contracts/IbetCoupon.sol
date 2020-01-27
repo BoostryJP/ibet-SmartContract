@@ -97,21 +97,6 @@ contract IbetCoupon is Ownable, IbetStandardTokenInterface {
         return true;
     }
 
-    // ファンクション：クーポンを割当する
-    // オーナーのみ実行可能
-    function allocate(address _to, uint _value) public onlyOwner() returns (bool success) {
-        // 割当しようとしている数量が残高を超えている場合、エラーを返す
-        if (balanceOf(msg.sender) < _value) revert();
-
-        bytes memory empty;
-        if(isContract(_to)) {
-            return transferToContract(_to, _value, empty);
-        }
-        else {
-            return transferToAddress(_to, _value, empty);
-        }
-    }
-
     // ファンクション：クーポンを譲渡する
     function transfer(address _to, uint _value) public returns (bool success) {
         // 譲渡しようとしている数量が残高を超えている場合、エラーを返す
@@ -149,6 +134,9 @@ contract IbetCoupon is Ownable, IbetStandardTokenInterface {
         balances[_from] = balanceOf(_from).sub(_value);
         balances[_to] = balanceOf(_to).add(_value);
       }
+
+      // イベント登録
+      emit Transfer(_from, _to, _value);
 
       return true;
     }

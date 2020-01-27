@@ -3,7 +3,7 @@ from eth_utils import to_checksum_address
 
 
 """
-TEST1_取引参加者登録（register）
+TEST_取引参加者登録（register）
 """
 
 
@@ -121,7 +121,7 @@ def test_register_error_3(web3, chain, users):
 
 
 """
-TEST2_取引参加者参照（getWhitelist）
+TEST_取引参加者参照（getWhitelist）
 """
 
 
@@ -178,7 +178,7 @@ def test_getWhitelist_error_1(web3, chain, users):
 
 
 """
-TEST3_取引可否チェック（check）
+TEST_取引可否チェック（check）
 """
 
 

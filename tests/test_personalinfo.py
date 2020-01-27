@@ -4,7 +4,7 @@ encrypted_message = 'encrypted_message'
 encrypted_message_after = 'encrypted_message_after'
 
 '''
-TEST1_個人情報を登録（register）
+TEST_個人情報を登録（register）
 '''
 
 

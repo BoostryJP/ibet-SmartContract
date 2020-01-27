@@ -148,6 +148,9 @@ contract IbetMembership is Ownable, IbetStandardTokenInterface {
       balances[_to] = balanceOf(_to).add(_value);
     }
 
+    // イベント登録
+    emit Transfer(_from, _to, _value);
+
     return true;
   }
 
