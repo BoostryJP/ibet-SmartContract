@@ -212,61 +212,6 @@ def test_allocate_normal_1(web3, chain, users, coupon_exchange):
     assert to_balance == _value
 
 
-# 正常系2-1: Exchangeを経由しての割当（譲渡可能クーポン）
-def test_allocate_normal_2_1(web3, chain, users, coupon_exchange):
-    _from = users['issuer']
-    _to = users['trader']
-    _value = 100
-
-    # 新規発行
-    web3.eth.defaultAccount = _from
-    deploy_args = init_args(coupon_exchange.address)
-    coupon = deploy(chain, deploy_args)
-
-    # 割当（Exchangeへ）
-    txn_hash = coupon.transact().allocate(coupon_exchange.address, _value)
-    chain.wait.for_receipt(txn_hash)
-
-    # 割当（ExchangeからToアドレスへ）
-    txn_hash = coupon_exchange.transact(). \
-        transfer(coupon.address, _to, _value)
-    chain.wait.for_receipt(txn_hash)
-
-    from_balance = coupon.call().balanceOf(_from)
-    to_balance = coupon.call().balanceOf(_to)
-
-    assert from_balance == deploy_args[2] - _value
-    assert to_balance == _value
-
-
-# 正常系2-2: Exchangeを経由しての割当（譲渡不可クーポン）
-def test_allocate_normal_2_2(web3, chain, users, coupon_exchange):
-    _from = users['issuer']
-    _to = users['trader']
-    _value = 100
-
-    # 新規発行
-    web3.eth.defaultAccount = _from
-    deploy_args = init_args(coupon_exchange.address)
-    deploy_args[8] = False  # 譲渡不可
-    coupon = deploy(chain, deploy_args)
-
-    # 割当（Exchangeへ）
-    txn_hash = coupon.transact().allocate(coupon_exchange.address, _value)
-    chain.wait.for_receipt(txn_hash)
-
-    # 割当（ExchangeからToアドレスへ）
-    txn_hash = coupon_exchange.transact(). \
-        transfer(coupon.address, _to, _value)
-    chain.wait.for_receipt(txn_hash)
-
-    from_balance = coupon.call().balanceOf(_from)
-    to_balance = coupon.call().balanceOf(_to)
-
-    assert from_balance == deploy_args[2] - _value
-    assert to_balance == _value
-
-
 # エラー系1: 入力値の型誤り（To）
 def test_allocate_error_1(web3, chain, users, coupon_exchange):
     _from = users['issuer']
