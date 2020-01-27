@@ -80,7 +80,7 @@ def settlement_ng(web3, chain, token, exchange, account,
 
 
 '''
-TEST1_デプロイ
+TEST_デプロイ
 '''
 
 
@@ -97,7 +97,7 @@ def test_deploy_normal_1(users, membership_exchange, membership_exchange_storage
 
 
 '''
-TEST2_Make注文（createOrder）
+TEST_Make注文（createOrder）
 '''
 
 
@@ -647,7 +647,7 @@ def test_createorder_error_7_4(web3, chain, users, membership_exchange):
 
 
 '''
-TEST3_注文キャンセル（cancelOrder）
+TEST_注文キャンセル（cancelOrder）
 '''
 
 
@@ -1059,7 +1059,7 @@ def test_cancelorder_error_3_3_2(web3, chain, users, membership_exchange):
 
 
 '''
-TEST4_Take注文（executeOrder）
+TEST_Take注文（executeOrder）
 '''
 
 
@@ -2089,7 +2089,7 @@ def test_executeOrder_error_6_7(web3, chain, users, membership_exchange):
 
 
 '''
-TEST5_決済承認（confirmAgreement）
+TEST_決済承認（confirmAgreement）
 '''
 
 
@@ -2738,7 +2738,7 @@ def test_confirmAgreement_error_7(web3, chain, users, membership_exchange):
 
 
 '''
-TEST6_決済非承認（cancelAgreement）
+TEST_決済非承認（cancelAgreement）
 '''
 
 
@@ -3385,7 +3385,7 @@ def test_cancelAgreement_error_7(web3, chain, users, membership_exchange):
 
 
 '''
-TEST7_引き出し（withdrawAll）
+TEST_引き出し（withdrawAll）
 '''
 
 
@@ -3560,7 +3560,7 @@ def test_withdrawAll_error_2(web3, chain, users, membership_exchange):
 
 
 '''
-TEST8_Exchange切替
+TEST_Exchange切替
 '''
 
 

@@ -5,7 +5,7 @@ import utils
 token_template = 'some_template'
 
 '''
-TEST1_トークン情報を登録（register）
+TEST_トークン情報を登録（register）
 '''
 
 
@@ -211,7 +211,7 @@ def test_register_error_4(web3, chain, users, bond_exchange, personal_info):
 
 
 '''
-TEST2_オーナーを変更（changeOwner）
+TEST_オーナーを変更（changeOwner）
 '''
 
 

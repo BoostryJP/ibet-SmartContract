@@ -32,7 +32,7 @@ def init_args(exchange_address, personal_info_address):
 
 
 '''
-TEST1_デプロイ
+TEST_デプロイ
 '''
 
 
@@ -215,7 +215,7 @@ def test_deploy_error_16(chain, bond_exchange, personal_info):
 
 
 '''
-TEST2_譲渡可能更新（setTransferable）
+TEST_譲渡可能更新（setTransferable）
 '''
 
 
@@ -274,7 +274,7 @@ def test_setTransferable_error_2(web3, chain, users, bond_exchange, personal_inf
 
 
 '''
-TEST3_トークンの振替（transfer）
+TEST_トークンの振替（transfer）
 '''
 
 
@@ -494,7 +494,7 @@ def test_transfer_error_7(web3, chain, users, bond_exchange, personal_info):
 
 
 '''
-TEST4_残高確認（balanceOf）
+TEST_残高確認（balanceOf）
 '''
 
 
@@ -527,7 +527,7 @@ def test_balanceOf_error_1(web3, chain, users, bond_exchange, personal_info):
 
 
 '''
-TEST5_認定リクエスト（requestSignature）
+TEST_認定リクエスト（requestSignature）
 '''
 
 
@@ -577,7 +577,7 @@ def test_requestSignature_error_1(web3, chain, users, bond_exchange, personal_in
 
 
 '''
-TEST6_認定（sign）
+TEST_認定（sign）
 '''
 
 
@@ -649,7 +649,7 @@ def test_sign_error_2(web3, chain, users, bond_exchange, personal_info):
 
 
 '''
-TEST7_認定取消（unsign）
+TEST_認定取消（unsign）
 '''
 
 
@@ -756,7 +756,7 @@ def test_unsign_error_3(web3, chain, users, bond_exchange, personal_info):
 
 
 '''
-TEST8_償還（redeem）
+TEST_償還（redeem）
 '''
 
 
@@ -796,7 +796,7 @@ def test_redeem_error_1(web3, chain, users, bond_exchange, personal_info):
 
 
 '''
-TEST9_商品画像の設定（setImageURL, getImageURL）
+TEST_商品画像の設定（setImageURL, getImageURL）
 '''
 
 
@@ -934,7 +934,7 @@ def test_setImageURL_error_3(web3, chain, users, bond_exchange, personal_info):
 
 
 '''
-TEST10_メモの更新（updateMemo）
+TEST_メモの更新（updateMemo）
 '''
 
 
@@ -989,7 +989,7 @@ def test_updateMemo_error_2(web3, chain, users, bond_exchange, personal_info):
 
 
 '''
-TEST11_トークンの移転（transferFrom）
+TEST_トークンの移転（transferFrom）
 '''
 
 
@@ -1168,7 +1168,7 @@ def test_transferFrom_error_5(web3, chain, users, bond_exchange, personal_info):
 
 
 '''
-TEST12_取引可能Exchangeの更新（setTradableExchange）
+TEST_取引可能Exchangeの更新（setTradableExchange）
 '''
 
 
@@ -1246,7 +1246,7 @@ def test_setTradableExchange_error_2(web3, chain, users, bond_exchange, personal
 
 
 '''
-TEST13_問い合わせ先情報の更新（setContactInformation）
+TEST_問い合わせ先情報の更新（setContactInformation）
 '''
 
 
@@ -1301,7 +1301,7 @@ def test_setContactInformation_error_2(web3, chain, users, bond_exchange, person
 
 
 '''
-TEST14_プライバシーポリシーの更新（setPrivacyPolicy）
+TEST_プライバシーポリシーの更新（setPrivacyPolicy）
 '''
 
 
@@ -1356,7 +1356,7 @@ def test_setPrivacyPolicy_error_2(web3, chain, users, bond_exchange, personal_in
 
 
 '''
-TEST15_個人情報記帳コントラクトの更新（setPersonalInfoAddress）
+TEST_個人情報記帳コントラクトの更新（setPersonalInfoAddress）
 '''
 
 
@@ -1411,7 +1411,7 @@ def test_setPersonalInfoAddress_error_2(web3, chain, users, bond_exchange, perso
 
 
 '''
-TEST16_新規募集ステータス更新（setInitialOfferingStatus）
+TEST_新規募集ステータス更新（setInitialOfferingStatus）
 '''
 
 
@@ -1474,7 +1474,7 @@ def test_setInitialOfferingStatus_error_1(web3, chain, users, bond_exchange, per
 
 
 '''
-TEST17_募集申込（applyForOffering）
+TEST_募集申込（applyForOffering）
 '''
 
 
@@ -1636,7 +1636,7 @@ def test_applyForOffering_error_3(web3, chain, users, personal_info):
 
 
 '''
-TEST18_募集割当（allot）
+TEST_募集割当（allot）
 '''
 
 
@@ -1728,7 +1728,7 @@ def test_allot_error_2(web3, chain, users):
 
 
 '''
-TEST19_追加発行（issue）
+TEST_追加発行（issue）
 '''
 
 

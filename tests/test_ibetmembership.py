@@ -33,7 +33,7 @@ def deploy(chain, deploy_args):
 
 
 '''
-TEST1_デプロイ
+TEST_デプロイ
 '''
 
 
@@ -206,7 +206,7 @@ def test_deploy_error_11(chain, membership_exchange):
 
 
 '''
-TEST2_トークンの振替（transfer）
+TEST_トークンの振替（transfer）
 '''
 
 
@@ -496,7 +496,7 @@ def test_transfer_error_6(web3, chain, users, membership_exchange,
 
 
 '''
-TEST3_トークンの移転（transferFrom）
+TEST_トークンの移転（transferFrom）
 '''
 
 
@@ -863,7 +863,7 @@ def test_transferFrom_error_4(web3, chain, users, membership_exchange):
 
 
 '''
-TEST4_残高確認（balanceOf）
+TEST_残高確認（balanceOf）
 '''
 
 
@@ -913,7 +913,7 @@ def test_balanceOf_error_1(web3, chain, users, membership_exchange):
 
 
 '''
-TEST5_会員権詳細更新（setDetails）
+TEST_会員権詳細更新（setDetails）
 '''
 
 
@@ -974,7 +974,7 @@ def test_setDetails_error_2(web3, chain, users, membership_exchange):
 
 
 '''
-TEST6_リターン詳細更新（setReturnDetails）
+TEST_リターン詳細更新（setReturnDetails）
 '''
 
 
@@ -1035,7 +1035,7 @@ def test_setReturnDetails_error_2(web3, chain, users, membership_exchange):
 
 
 '''
-TEST7_有効期限更新（setExpirationDate）
+TEST_有効期限更新（setExpirationDate）
 '''
 
 
@@ -1096,7 +1096,7 @@ def test_setExpirationDate_error_2(web3, chain, users, membership_exchange):
 
 
 '''
-TEST8_メモ欄更新（setMemo）
+TEST_メモ欄更新（setMemo）
 '''
 
 
@@ -1155,7 +1155,7 @@ def test_setMemo_error_2(web3, chain, users, membership_exchange):
 
 
 '''
-TEST9_譲渡可能更新（setTransferable）
+TEST_譲渡可能更新（setTransferable）
 '''
 
 
@@ -1215,7 +1215,7 @@ def test_setTransferable_error_2(web3, chain, users, membership_exchange):
 
 
 '''
-TEST10_取扱ステータス更新（setStatus）
+TEST_取扱ステータス更新（setStatus）
 '''
 
 
@@ -1275,7 +1275,7 @@ def test_setStatus_error_2(web3, chain, users, membership_exchange):
 
 
 '''
-TEST11_商品画像更新（setImageURL, getImageURL）
+TEST_商品画像更新（setImageURL, getImageURL）
 '''
 
 
@@ -1350,7 +1350,7 @@ def test_setImageURL_error_2(web3, chain, users, membership_exchange):
 
 
 '''
-TEST12_追加発行（issue）
+TEST_追加発行（issue）
 '''
 
 
@@ -1479,7 +1479,7 @@ def test_issue_error_4(web3, chain, users, membership_exchange):
 
 
 '''
-TEST13_取引可能Exchangeの更新（setTradableExchange）
+TEST_取引可能Exchangeの更新（setTradableExchange）
 '''
 
 
@@ -1552,7 +1552,7 @@ def test_setTradableExchange_error_2(web3, chain, users, membership_exchange,
 
 
 '''
-TEST14_新規募集ステータス更新（setInitialOfferingStatus）
+TEST_新規募集ステータス更新（setInitialOfferingStatus）
 '''
 
 
@@ -1615,7 +1615,7 @@ def test_setInitialOfferingStatus_error_1(web3, chain, users, membership_exchang
 
 
 '''
-TEST15_募集申込（applyForOffering）
+TEST_募集申込（applyForOffering）
 '''
 
 
@@ -1704,7 +1704,7 @@ def test_applyForOffering_error_2(web3, chain, users, membership_exchange):
 
 
 '''
-TEST16_問い合わせ先情報の更新（setContactInformation）
+TEST_問い合わせ先情報の更新（setContactInformation）
 '''
 
 
@@ -1762,7 +1762,7 @@ def test_setContactInformation_error_2(web3, chain, users, membership_exchange):
 
 
 '''
-TEST17_プライバシーポリシーの更新（setPrivacyPolicy）
+TEST_プライバシーポリシーの更新（setPrivacyPolicy）
 '''
 
 

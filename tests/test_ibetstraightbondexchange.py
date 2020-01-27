@@ -39,7 +39,7 @@ def bond_transfer(web3, chain, bond_token, bond_exchange, trader, amount):
 
 
 '''
-TEST1_デプロイ
+TEST_デプロイ
 '''
 
 
@@ -91,7 +91,7 @@ def test_deploy_error_2(web3, users, chain, payment_gateway):
 
 
 '''
-TEST2_Make注文（createOrder）
+TEST_Make注文（createOrder）
 '''
 
 
@@ -701,7 +701,7 @@ def test_createorder_error_11_2(web3, chain, users,
 
 
 '''
-TEST3_注文キャンセル（cancelOrder）
+TEST_注文キャンセル（cancelOrder）
 '''
 
 
@@ -1041,7 +1041,7 @@ def test_cancelOrder_error_4_2(web3, chain, users,
 
 
 '''
-TEST4_Take注文（executeOrder）
+TEST_Take注文（executeOrder）
 '''
 
 
@@ -2283,7 +2283,7 @@ def test_executeOrder_error_13(web3, chain, users,
 
 
 '''
-TEST5_決済承認（confirmAgreement）
+TEST_決済承認（confirmAgreement）
 '''
 
 
@@ -2821,7 +2821,7 @@ def test_confirmAgreement_error_7(web3, chain, users,
 
 
 '''
-TEST6_決済非承認（cancelAgreement）
+TEST_決済非承認（cancelAgreement）
 '''
 
 
@@ -3355,7 +3355,7 @@ def test_cancelAgreement_error_7(web3, chain, users,
 
 
 '''
-TEST7_引き出し（withdrawAll）
+TEST_引き出し（withdrawAll）
 '''
 
 
@@ -3676,7 +3676,7 @@ def test_withdrawAll_error_2_2(web3, chain, users, bond_exchange, personal_info)
 
 
 '''
-TEST8_Exchange切替
+TEST_Exchange切替
 '''
 
 
