@@ -308,7 +308,7 @@ contract IbetStraightBond is Ownable, IbetStandardTokenInterface {
     onlyOwner()
   {
     initialOfferingStatus = _status;
-    emit ChangeInitialOfferingStatus(status);
+    emit ChangeInitialOfferingStatus(_status);
   }
 
   // ファンクション：募集申込
