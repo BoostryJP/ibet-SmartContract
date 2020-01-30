@@ -69,6 +69,9 @@ contract IbetStraightBond is Ownable, IbetStandardTokenInterface {
   // イベント：ステータス変更
   event ChangeStatus(bool indexed status);
 
+  // イベント：募集ステータス変更
+  event ChangeInitialOfferingStatus(bool indexed status);
+
   // イベント：募集申込
   event ApplyFor(address indexed accountAddress, uint256 amount);
 
@@ -305,6 +308,7 @@ contract IbetStraightBond is Ownable, IbetStandardTokenInterface {
     onlyOwner()
   {
     initialOfferingStatus = _status;
+    emit ChangeInitialOfferingStatus(status);
   }
 
   // ファンクション：募集申込
