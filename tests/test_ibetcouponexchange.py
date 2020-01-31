@@ -1249,7 +1249,7 @@ def test_executeOrder_normal_1(web3, chain, users, coupon_exchange):
     ]
 
     # Assert: last_price
-    assert coupon_exchange.call().lastPrice(coupon_token.address) == 123
+    assert coupon_exchange.call().lastPrice(coupon_token.address) == 0
 
 
 # 正常系2
@@ -1307,7 +1307,7 @@ def test_executeOrder_normal_2(web3, chain, users, coupon_exchange):
     ]
 
     # Assert: last_price
-    assert coupon_exchange.call().lastPrice(coupon_token.address) == 123
+    assert coupon_exchange.call().lastPrice(coupon_token.address) == 0
 
 
 # 正常系3-1
@@ -1365,7 +1365,7 @@ def test_executeOrder_normal_3_1(web3, chain, users, coupon_exchange):
     ]
 
     # Assert: last_price
-    assert coupon_exchange.call().lastPrice(coupon_token.address) == 2 ** 256 - 1
+    assert coupon_exchange.call().lastPrice(coupon_token.address) == 0
 
 
 # 正常系3-2
@@ -1423,7 +1423,7 @@ def test_executeOrder_normal_3_2(web3, chain, users, coupon_exchange):
     ]
 
     # Assert: last_price
-    assert coupon_exchange.call().lastPrice(coupon_token.address) == 2 ** 256 - 1
+    assert coupon_exchange.call().lastPrice(coupon_token.address) == 0
 
 
 # エラー系1
@@ -2592,7 +2592,7 @@ def test_confirmAgreement_error_3(web3, chain, users, coupon_exchange):
     ]
 
     # Assert: last_price
-    assert coupon_exchange.call().lastPrice(coupon_token.address) == 123
+    assert coupon_exchange.call().lastPrice(coupon_token.address) == 0
 
 
 # エラー系4
@@ -2657,7 +2657,7 @@ def test_confirmAgreement_error_4(web3, chain, users, coupon_exchange):
     ]
 
     # Assert: last_price
-    assert coupon_exchange.call().lastPrice(coupon_token.address) == 123
+    assert coupon_exchange.call().lastPrice(coupon_token.address) == 0
 
 
 # エラー系5
@@ -2801,7 +2801,7 @@ def test_confirmAgreement_error_6(web3, chain, users, coupon_exchange):
     ]
 
     # Assert: last_price
-    assert coupon_exchange.call().lastPrice(coupon_token.address) == 123
+    assert coupon_exchange.call().lastPrice(coupon_token.address) == 0
 
 
 # エラー系7
@@ -2865,7 +2865,7 @@ def test_confirmAgreement_error_7(web3, chain, users, coupon_exchange):
     ]
 
     # Assert: last_price
-    assert coupon_exchange.call().lastPrice(coupon_token.address) == 123
+    assert coupon_exchange.call().lastPrice(coupon_token.address) == 0
 
 
 '''
@@ -2936,7 +2936,7 @@ def test_cancelAgreement_normal_1(web3, chain, users, coupon_exchange):
     ]
 
     # Assert: last_price
-    assert coupon_exchange.call().lastPrice(coupon_token.address) == 123
+    assert coupon_exchange.call().lastPrice(coupon_token.address) == 0
 
 
 # 正常系2
@@ -3002,7 +3002,7 @@ def test_cancelAgreement_normal_2(web3, chain, users, coupon_exchange):
     ]
 
     # Assert: last_price
-    assert coupon_exchange.call().lastPrice(coupon_token.address) == 123
+    assert coupon_exchange.call().lastPrice(coupon_token.address) == 0
 
 
 # 正常系3-1
@@ -3068,7 +3068,7 @@ def test_cancelAgreement_normal_3_1(web3, chain, users, coupon_exchange):
     ]
 
     # Assert: last_price
-    assert coupon_exchange.call().lastPrice(coupon_token.address) == 2 ** 256 - 1
+    assert coupon_exchange.call().lastPrice(coupon_token.address) == 0
 
 
 # 正常系3-2
@@ -3134,7 +3134,7 @@ def test_cancelAgreement_normal_3_2(web3, chain, users, coupon_exchange):
     ]
 
     # Assert: last_price
-    assert coupon_exchange.call().lastPrice(coupon_token.address) == 2 ** 256 - 1
+    assert coupon_exchange.call().lastPrice(coupon_token.address) == 0
 
 
 # エラー系1
@@ -3241,7 +3241,7 @@ def test_cancelAgreement_error_3(web3, chain, users, coupon_exchange):
     ]
 
     # Assert: last_price
-    assert coupon_exchange.call().lastPrice(coupon_token.address) == 123
+    assert coupon_exchange.call().lastPrice(coupon_token.address) == 0
 
 
 # エラー系4
@@ -3306,7 +3306,7 @@ def test_cancelAgreement_error_4(web3, chain, users, coupon_exchange):
     ]
 
     # Assert: last_price
-    assert coupon_exchange.call().lastPrice(coupon_token.address) == 123
+    assert coupon_exchange.call().lastPrice(coupon_token.address) == 0
 
 
 # エラー系5
@@ -3448,7 +3448,7 @@ def test_cancelAgreement_error_6(web3, chain, users, coupon_exchange):
     ]
 
     # Assert: last_price
-    assert coupon_exchange.call().lastPrice(coupon_token.address) == 123
+    assert coupon_exchange.call().lastPrice(coupon_token.address) == 0
 
 
 # エラー系7
@@ -3512,7 +3512,7 @@ def test_cancelAgreement_error_7(web3, chain, users, coupon_exchange):
     ]
 
     # Assert: last_price
-    assert coupon_exchange.call().lastPrice(coupon_token.address) == 123
+    assert coupon_exchange.call().lastPrice(coupon_token.address) == 0
 
 
 '''
