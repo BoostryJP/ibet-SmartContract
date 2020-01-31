@@ -2356,6 +2356,9 @@ def test_confirmAgreement_normal_1(web3, chain, users,
     assert balance_taker == _amount_take
     assert commitment == _amount_make - _amount_take
 
+    # Assert: last_price
+    assert bond_exchange.call().lastPrice(bond_token.address) == 123
+
 
 # 正常系2
 # Make買、Take売
@@ -2424,6 +2427,9 @@ def test_confirmAgreement_normal_2(web3, chain, users,
     assert balance_maker == _amount_take
     assert balance_taker == deploy_args[2] - _amount_take
     assert commitment == 0
+
+    # Assert: last_price
+    assert bond_exchange.call().lastPrice(bond_token.address) == 123
 
 
 # エラー系1
@@ -2536,6 +2542,9 @@ def test_confirmAgreement_error_3(web3, chain, users,
     assert balance_taker == 0
     assert commitment == _amount_make
 
+    # Assert: last_price
+    assert bond_exchange.call().lastPrice(bond_token.address) == 0
+
 
 # エラー系4
 # 指定した約定IDが、直近の約定ID以上の場合
@@ -2604,6 +2613,9 @@ def test_confirmAgreement_error_4(web3, chain, users,
     assert balance_maker == deploy_args[2] - _amount_make
     assert balance_taker == 0
     assert commitment == _amount_make
+
+    # Assert: last_price
+    assert bond_exchange.call().lastPrice(bond_token.address) == 0
 
 
 # エラー系5
@@ -2678,6 +2690,9 @@ def test_confirmAgreement_error_5(web3, chain, users,
     assert balance_taker == _amount_take
     assert commitment == _amount_make - _amount_take
 
+    # Assert: last_price
+    assert bond_exchange.call().lastPrice(bond_token.address) == 123
+
 
 # エラー系6
 # 元注文で指定した決済業者ではない場合
@@ -2745,6 +2760,9 @@ def test_confirmAgreement_error_6(web3, chain, users,
     assert balance_maker == deploy_args[2] - _amount_make
     assert balance_taker == 0
     assert commitment == _amount_make
+
+    # Assert: last_price
+    assert bond_exchange.call().lastPrice(bond_token.address) == 0
 
 
 # エラー系7
@@ -2818,6 +2836,9 @@ def test_confirmAgreement_error_7(web3, chain, users,
     assert balance_maker == deploy_args[2] - _amount_make + _amount_take
     assert balance_taker == 0
     assert commitment == _amount_make - _amount_take
+
+    # Assert: last_price
+    assert bond_exchange.call().lastPrice(bond_token.address) == 0
 
 
 '''

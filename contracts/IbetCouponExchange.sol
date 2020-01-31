@@ -396,9 +396,6 @@ contract IbetCouponExchange is Ownable {
                 msg.sender, order.owner, order.price, _amount, order.agent);
         }
 
-        // 更新処理：現在値を更新する
-        setLastPrice(order.token, order.price);
-
         return true;
     }
 
@@ -460,6 +457,9 @@ contract IbetCouponExchange is Ownable {
                 agreement.counterpart, order.owner, order.price,
                 agreement.amount, order.agent);
         }
+
+        // 更新処理：現在値を更新する
+        setLastPrice(order.token, order.price);
 
         return true;
     }
