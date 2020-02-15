@@ -106,6 +106,7 @@ contract IbetStraightBond is Ownable, IbetStandardTokenInterface {
     transferable = true;
     balances[owner] = totalSupply;
     isRedeemed = false;
+    status = true;
     contactInformation = _contactInformation;
     privacyPolicy = _privacyPolicy;
     personalInfoAddress = _personalInfoAddress;

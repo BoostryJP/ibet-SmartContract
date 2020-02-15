@@ -239,7 +239,8 @@ contract IbetStraightBondExchange is Ownable {
             //  3) 名簿用個人情報が登録されていない場合
             //  4) 買注文者がコントラクトアドレスの場合
             //  5) 償還済みフラグがTrueの場合
-            //  6) 有効な収納代行業者（Agent）を指定していない場合
+            //  6) 取扱ステータスがFalseの場合
+            //  7) 有効な収納代行業者（Agent）を指定していない場合
             //   -> REVERT
             if (_amount == 0 ||
                 PaymentGateway(paymentGatewayAddress).accountApproved(msg.sender,_agent) == false ||
@@ -247,6 +248,7 @@ contract IbetStraightBondExchange is Ownable {
                     msg.sender,IbetStraightBond(_token).owner()) == false ||
                 isContract(msg.sender) == true ||
                 IbetStraightBond(_token).isRedeemed() == true ||
+                IbetStraightBond(_token).status() == false ||
                 validateAgent(_agent) == false)
             {
                 revert();
@@ -260,7 +262,8 @@ contract IbetStraightBondExchange is Ownable {
             //  3) 認可されたアドレスではない場合
             //  4) 名簿用個人情報が登録されていない場合
             //  5) 償還済みフラグがTrueの場合
-            //  6) 有効な収納代行業者（Agent）を指定していない場合
+            //  6) 取扱ステータスがFalseの場合
+            //  7) 有効な収納代行業者（Agent）を指定していない場合
             //   -> 更新処理：全ての残高を投資家のアカウントに戻し、falseを返す
             if (_amount == 0 ||
                 balanceOf(msg.sender, _token) < _amount ||
@@ -268,6 +271,7 @@ contract IbetStraightBondExchange is Ownable {
                 PersonalInfo(personalInfoAddress).isRegistered(
                     msg.sender,IbetStraightBond(_token).owner()) == false ||
                 IbetStraightBond(_token).isRedeemed() == true ||
+                IbetStraightBond(_token).status() == false ||
                 validateAgent(_agent) == false)
             {
                 IbetStraightBond(_token).transfer(msg.sender, balanceOf(msg.sender, _token));
@@ -363,7 +367,8 @@ contract IbetStraightBondExchange is Ownable {
             //  6) 名簿用個人情報が登録されていない場合
             //  7) 買注文者がコントラクトアドレスの場合
             //  8) 償還済みフラグがTrueの場合
-            //  9) 数量が元注文の残数量を超過している場合
+            //  9) 取扱ステータスがFalseの場合
+            //  10) 数量が元注文の残数量を超過している場合
             //   -> REVERT
             if (_amount == 0 ||
                 order.isBuy == _isBuy ||
@@ -374,6 +379,7 @@ contract IbetStraightBondExchange is Ownable {
                     msg.sender,IbetStraightBond(order.token).owner()) == false ||
                 isContract(msg.sender) == true ||
                 IbetStraightBond(order.token).isRedeemed() == true ||
+                IbetStraightBond(order.token).status() == false ||
                 order.amount < _amount )
             {
                 revert();
@@ -389,8 +395,9 @@ contract IbetStraightBondExchange is Ownable {
             //  5) 認可されたアドレスではない場合
             //  6) 名簿用個人情報が登録されていない場合
             //  7) 償還済みフラグがTrueの場合
-            //  8) 発注者の残高が発注数量を下回っている場合
-            //  9) 数量が元注文の残数量を超過している場合
+            //  8) 取扱ステータスがFalseの場合
+            //  9) 発注者の残高が発注数量を下回っている場合
+            //  10) 数量が元注文の残数量を超過している場合
             //   -> 更新処理：残高を投資家のアカウントに全て戻し、falseを返す
             if (_amount == 0 ||
                 order.isBuy == _isBuy ||
@@ -400,6 +407,7 @@ contract IbetStraightBondExchange is Ownable {
                 PersonalInfo(personalInfoAddress).isRegistered(
                     msg.sender,IbetStraightBond(order.token).owner()) == false ||
                 IbetStraightBond(order.token).isRedeemed() == true ||
+                IbetStraightBond(order.token).status() == false ||
                 balanceOf(msg.sender, order.token) < _amount ||
                 order.amount < _amount )
             {

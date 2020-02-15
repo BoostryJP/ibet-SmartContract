@@ -411,7 +411,7 @@ def test_createorder_error_7_1(web3, chain, users,
 
 
 # エラー系7-2
-# 未認可のアカウントアドレスからの注文（買）
+# 未認可のアカウントアドレスからの注文（売）
 def test_createorder_error_7_2(web3, chain, users,
                                bond_exchange, personal_info):
     issuer = users['issuer']
@@ -541,15 +541,17 @@ def test_createorder_error_9_1(web3, chain, users,
     # 新規注文（買）
     web3.eth.defaultAccount = issuer
     _price = 123
-    _isBuy = False
+    _isBuy = True
     _amount = 100
-    txn_hash = bond_exchange.transact().createOrder(
-        bond_token.address, _amount, _price, _isBuy, agent)  # エラーになる
-    chain.wait.for_receipt(txn_hash)
+    try:
+        chain.wait.for_receipt(
+            bond_exchange.transact().createOrder(bond_token.address, _amount, _price, _isBuy, agent)  # エラーになる
+        )
+    except ValueError:
+        pass
 
     commitment = bond_exchange.call().commitmentOf(issuer, bond_token.address)
     balance = bond_token.call().balanceOf(issuer)
-
     assert balance == deploy_args[2]
     assert commitment == 0
 
@@ -702,6 +704,82 @@ def test_createorder_error_11_2(web3, chain, users,
     commitment = bond_exchange.call().commitmentOf(issuer, bond_token.address)
     balance = bond_token.call().balanceOf(issuer)
 
+    assert balance == deploy_args[2]
+    assert commitment == 0
+
+
+# エラー系12-1
+# 取扱ステータスがFalseの場合（買）
+def test_createorder_error_12_1(web3, chain, users, bond_exchange, personal_info, payment_gateway):
+    issuer = users['issuer']
+    agent = users['agent']
+
+    personalinfo_register(web3, chain, personal_info, issuer, issuer)
+    payment_gateway_register(web3, chain, payment_gateway, issuer, agent)
+    payment_gateway_approve(web3, chain, payment_gateway, issuer, agent)
+
+    # 新規発行
+    web3.eth.defaultAccount = issuer
+    bond_token, deploy_args = utils. \
+        issue_bond_token(web3, chain, users, bond_exchange.address, personal_info.address)
+
+    # ステータス変更
+    web3.eth.defaultAccount = issuer
+    chain.wait.for_receipt(bond_token.transact().setStatus(False))
+
+    # 新規注文（買）
+    web3.eth.defaultAccount = issuer
+    _price = 123
+    _isBuy = True
+    _amount = 100
+    try:
+        chain.wait.for_receipt(
+            bond_exchange.transact().createOrder(bond_token.address, _amount, _price, _isBuy, agent)  # エラーになる
+        )
+    except ValueError:
+        pass
+
+    commitment = bond_exchange.call().commitmentOf(issuer, bond_token.address)
+    balance = bond_token.call().balanceOf(issuer)
+    assert balance == deploy_args[2]
+    assert commitment == 0
+
+
+# エラー系12-2
+# 取扱ステータスがFalseの場合（売）
+def test_createorder_error_12_2(web3, chain, users, bond_exchange, personal_info, payment_gateway):
+    issuer = users['issuer']
+    agent = users['agent']
+
+    personalinfo_register(web3, chain, personal_info, issuer, issuer)
+    payment_gateway_register(web3, chain, payment_gateway, issuer, agent)
+    payment_gateway_approve(web3, chain, payment_gateway, issuer, agent)
+
+    # 新規発行
+    web3.eth.defaultAccount = issuer
+    bond_token, deploy_args = utils. \
+        issue_bond_token(web3, chain, users, bond_exchange.address, personal_info.address)
+
+    # ステータス変更
+    web3.eth.defaultAccount = issuer
+    chain.wait.for_receipt(bond_token.transact().setStatus(False))
+
+    # Exchangeへのデポジット
+    web3.eth.defaultAccount = issuer
+    _amount = 100
+    txn_hash = bond_token.transact().transfer(bond_exchange.address, _amount)
+    chain.wait.for_receipt(txn_hash)
+
+    # 新規注文（売）
+    web3.eth.defaultAccount = issuer
+    _price = 123
+    _isBuy = False
+    txn_hash = bond_exchange.transact().createOrder(
+        bond_token.address, _amount, _price, _isBuy, agent)  # エラーになる
+    chain.wait.for_receipt(txn_hash)
+
+    commitment = bond_exchange.call().commitmentOf(issuer, bond_token.address)
+    balance = bond_token.call().balanceOf(issuer)
     assert balance == deploy_args[2]
     assert commitment == 0
 
@@ -2303,6 +2381,131 @@ def test_executeOrder_error_13(web3, chain, users,
     web3.eth.defaultAccount = _issuer
     txn_hash = bond_exchange.transact().executeOrder(
         order_id, _amount_take + 1, False)  # エラーになる
+    chain.wait.for_receipt(txn_hash)
+
+    orderbook = bond_exchange.call().getOrder(order_id)
+    balance_maker = bond_token.call().balanceOf(_trader)
+    balance_taker = bond_token.call().balanceOf(_issuer)
+    commitment = bond_exchange.call().commitmentOf(_issuer, bond_token.address)
+
+    assert orderbook == [
+        _trader, to_checksum_address(bond_token.address),
+        _amount_make,  # Make注文の件数から減っていない状態
+        _price, True, _agent, False
+    ]
+    assert commitment == 0
+    assert balance_maker == 0
+    assert balance_taker == deploy_args[2]
+
+
+# エラー系14-1
+# 取扱ステータスがFalseの場合（買）
+def test_executeOrder_error_14_1(web3, chain, users, bond_exchange, personal_info, payment_gateway):
+    _issuer = users['issuer']
+    _trader = users['trader']
+    _agent = users['agent']
+
+    personalinfo_register(web3, chain, personal_info, _issuer, _issuer)
+    payment_gateway_register(web3, chain, payment_gateway, _issuer, _agent)
+    payment_gateway_approve(web3, chain, payment_gateway, _issuer, _agent)
+
+    personalinfo_register(web3, chain, personal_info, _trader, _issuer)
+    payment_gateway_register(web3, chain, payment_gateway, _trader, _agent)
+    payment_gateway_approve(web3, chain, payment_gateway, _trader, _agent)
+
+    # 新規発行
+    web3.eth.defaultAccount = _issuer
+    bond_token, deploy_args = utils. \
+        issue_bond_token(web3, chain, users, bond_exchange.address, personal_info.address)
+
+    # 預かりをExchangeへのデポジット：発行体
+    web3.eth.defaultAccount = _issuer
+    _amount_make = 100
+    chain.wait.for_receipt(bond_token.transact().transfer(bond_exchange.address, _amount_make))
+
+    # Make注文（売）：発行体
+    web3.eth.defaultAccount = _issuer
+    _price = 123
+    chain.wait.for_receipt(
+        bond_exchange.transact().createOrder(bond_token.address, _amount_make, _price, False, _agent)
+    )
+
+    order_id = bond_exchange.call().latestOrderId()
+
+    # ステータス変更：発行体
+    web3.eth.defaultAccount = _issuer
+    chain.wait.for_receipt(bond_token.transact().setStatus(False))
+
+    # Take注文（買）：投資家
+    web3.eth.defaultAccount = _trader
+    _amount_take = 50
+    try:
+        txn_hash = bond_exchange.transact().executeOrder(order_id, _amount_take, True)  # エラーになる
+        chain.wait.for_receipt(txn_hash)
+    except ValueError:
+        pass
+
+    orderbook = bond_exchange.call().getOrder(order_id)
+    balance_maker = bond_token.call().balanceOf(_issuer)
+    balance_taker = bond_token.call().balanceOf(_trader)
+    commitment = bond_exchange.call().commitmentOf(_issuer, bond_token.address)
+
+    assert orderbook == [
+        _issuer, to_checksum_address(bond_token.address),
+        _amount_make,  # Make注文の件数から減っていない状態
+        _price, False, _agent, False
+    ]
+    assert balance_maker == deploy_args[2] - _amount_make
+    assert balance_taker == 0
+    assert commitment == _amount_make
+
+
+# エラー系14-2
+# 取扱ステータスがFalseの場合（売）
+def test_executeOrder_error_14_2(web3, chain, users, bond_exchange, personal_info, payment_gateway):
+    _issuer = users['issuer']
+    _trader = users['trader']
+    _agent = users['agent']
+
+    personalinfo_register(web3, chain, personal_info, _issuer, _issuer)
+    payment_gateway_register(web3, chain, payment_gateway, _issuer, _agent)
+    payment_gateway_approve(web3, chain, payment_gateway, _issuer, _agent)
+
+    personalinfo_register(web3, chain, personal_info, _trader, _issuer)
+    payment_gateway_register(web3, chain, payment_gateway, _trader, _agent)
+    payment_gateway_approve(web3, chain, payment_gateway, _trader, _agent)
+
+    # 新規発行
+    web3.eth.defaultAccount = _issuer
+    bond_token, deploy_args = utils. \
+        issue_bond_token(web3, chain, users, bond_exchange.address, personal_info.address)
+
+    # Make注文（買）：投資家
+    web3.eth.defaultAccount = _trader
+    _price = 123
+    _amount_make = 100
+    chain.wait.for_receipt(
+        bond_exchange.transact().createOrder(bond_token.address, _amount_make, _price, True, _agent)
+    )
+
+    order_id = bond_exchange.call().latestOrderId()
+
+    # 償還処理：発行体
+    web3.eth.defaultAccount = _issuer
+    chain.wait.for_receipt(bond_token.transact().redeem())
+
+    # 預かりをExchangeへのデポジット：発行体
+    web3.eth.defaultAccount = _issuer
+    _amount_take = 50
+    chain.wait.for_receipt(bond_token.transact().transfer(bond_exchange.address, _amount_take))
+
+    # ステータス変更：発行体
+    web3.eth.defaultAccount = _issuer
+    chain.wait.for_receipt(bond_token.transact().setStatus(False))
+
+    # Take注文（売）：発行体
+    web3.eth.defaultAccount = _issuer
+    txn_hash = bond_exchange.transact().executeOrder(order_id, _amount_take, False)  # エラーになる
     chain.wait.for_receipt(txn_hash)
 
     orderbook = bond_exchange.call().getOrder(order_id)
