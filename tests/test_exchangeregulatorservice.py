@@ -67,12 +67,14 @@ def test_register_error_1(web3, chain, users):
 
     # 取引参加者リストに登録：権限なしアカウントからの登録 -> 登録不可
     web3.eth.defaultAccount = participant
-    txn_hash = exchange_regulator_service.transact().register(participant, False)
-    chain.wait.for_receipt(txn_hash)
+    try:
+        txn_hash = exchange_regulator_service.transact().register(participant, False)
+        chain.wait.for_receipt(txn_hash)
+    except ValueError:
+        pass
 
     # Whitelist情報の参照
     whitelist = exchange_regulator_service.call().getWhitelist(participant)
-
     assert whitelist[0] == to_checksum_address("0x0000000000000000000000000000000000000000")
     assert whitelist[1] == False
 
@@ -89,8 +91,11 @@ def test_register_error_2(web3, chain, users, membership_exchange):
     # 取引参加者リストに登録：コントラクトアドレスの登録 -> 登録不可
     # NOTE:コントラクトアドレスとして、membership_exchangeのアドレスを登録する
     web3.eth.defaultAccount = admin
-    txn_hash = exchange_regulator_service.transact().register(sample_contract, False)
-    chain.wait.for_receipt(txn_hash)
+    try:
+        txn_hash = exchange_regulator_service.transact().register(sample_contract, False)
+        chain.wait.for_receipt(txn_hash)
+    except ValueError:
+        pass
 
     # Whitelist情報の参照
     whitelist = exchange_regulator_service.call().getWhitelist(sample_contract)

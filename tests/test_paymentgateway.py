@@ -153,8 +153,11 @@ def test_register_error_3(web3, chain, users):
 
     # 登録（２回目） -> Failure
     web3.eth.defaultAccount = trader
-    txn_hash_3 = pg_contract.transact().register(agent, encrypted_message_after)
-    chain.wait.for_receipt(txn_hash_3)
+    try:
+        txn_hash_3 = pg_contract.transact().register(agent, encrypted_message_after)
+        chain.wait.for_receipt(txn_hash_3)
+    except ValueError:
+        pass
 
     payment_account = pg_contract.call().payment_accounts(trader, agent)
     account_approved = pg_contract.call().accountApproved(trader, agent)
@@ -235,10 +238,12 @@ def test_approve_error_2(web3, chain, users):
 
     # 承認 -> Failure
     web3.eth.defaultAccount = agent
-    pg_contract.transact().approve(trader)
+    try:
+        chain.wait.for_receipt(pg_contract.transact().approve(trader))
+    except ValueError:
+        pass
 
     payment_account = pg_contract.call().payment_accounts(trader, agent)
-
     assert payment_account[0] == '0x0000000000000000000000000000000000000000'
 
 
@@ -308,10 +313,12 @@ def test_warn_error_2(web3, chain, users):
 
     # 警告 -> Failure
     web3.eth.defaultAccount = agent
-    pg_contract.transact().warn(trader)
+    try:
+        chain.wait.for_receipt(pg_contract.transact().warn(trader))
+    except ValueError:
+        pass
 
     payment_account = pg_contract.call().payment_accounts(trader, agent)
-
     assert payment_account[0] == '0x0000000000000000000000000000000000000000'
 
 
@@ -420,7 +427,10 @@ def test_unapprove_error_2(web3, chain, users):
 
     # 非承認 -> Failure
     web3.eth.defaultAccount = agent
-    pg_contract.transact().unapprove(trader)
+    try:
+        chain.wait.for_receipt(pg_contract.transact().unapprove(trader))
+    except ValueError:
+        pass
 
     payment_account = pg_contract.call().payment_accounts(trader, agent)
 
@@ -493,7 +503,10 @@ def test_ban_error_2(web3, chain, users):
 
     # BAN -> Failure
     web3.eth.defaultAccount = agent
-    pg_contract.transact().ban(trader)
+    try:
+        chain.wait.for_receipt(pg_contract.transact().ban(trader))
+    except ValueError:
+        pass
 
     payment_account = pg_contract.call().payment_accounts(trader, agent)
 
@@ -589,8 +602,11 @@ def test_addAgent_error_3(web3, chain, users):
 
     # 収納代行業者（Agent）の追加
     web3.eth.defaultAccount = admin
-    txn_hash = pg_contract.transact().addAgent(30, agent)
-    chain.wait.for_receipt(txn_hash)
+    try:
+        txn_hash = pg_contract.transact().addAgent(30, agent)
+        chain.wait.for_receipt(txn_hash)
+    except ValueError:
+        pass
 
     agents = pg_contract.call().getAgents()
     for agent_address in agents:
