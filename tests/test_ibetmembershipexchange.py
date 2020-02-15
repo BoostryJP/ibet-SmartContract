@@ -404,15 +404,17 @@ def test_createorder_error_6_1(web3, chain, users, membership_exchange):
     _amount = 0
     _price = 123
     _isBuy = True
-    make_order(
-        web3, chain,
-        membership_token, membership_exchange,
-        trader, _amount, _price, _isBuy, agent
-    )  # エラーになる
-    order_id_after = membership_exchange.call().latestOrderId()
+    try:
+        make_order(
+            web3, chain,
+            membership_token, membership_exchange,
+            trader, _amount, _price, _isBuy, agent
+        )  # エラーになる
+    except ValueError:
+        pass
 
-    trader_commitment = membership_exchange.call(). \
-        commitmentOf(trader, membership_token.address)
+    order_id_after = membership_exchange.call().latestOrderId()
+    trader_commitment = membership_exchange.call().commitmentOf(trader, membership_token.address)
     assert trader_commitment == 0
     assert membership_token.call().balanceOf(issuer) == deploy_args[2]
     assert membership_token.call().balanceOf(trader) == 0
@@ -443,15 +445,17 @@ def test_createorder_error_6_2(web3, chain, users, membership_exchange):
     _amount = 0
     _price = 123
     _isBuy = True
-    make_order(
-        web3, chain,
-        membership_token, membership_exchange,
-        trader, _amount, _price, _isBuy, agent
-    )  # エラーになる
-    order_id_after = membership_exchange.call().latestOrderId()
+    try:
+        make_order(
+            web3, chain,
+            membership_token, membership_exchange,
+            trader, _amount, _price, _isBuy, agent
+        )  # エラーになる
+    except ValueError:
+        pass
 
-    trader_commitment = membership_exchange.call(). \
-        commitmentOf(trader, membership_token.address)
+    order_id_after = membership_exchange.call().latestOrderId()
+    trader_commitment = membership_exchange.call().commitmentOf(trader, membership_token.address)
     assert trader_commitment == 0
     assert membership_token.call().balanceOf(issuer) == deploy_args[2]
     assert membership_token.call().balanceOf(trader) == 0
@@ -476,16 +480,17 @@ def test_createorder_error_6_3(web3, chain, users, membership_exchange):
     _price = 123
     _isBuy = True
     invalid_agent = users['trader']
-    make_order(
-        web3, chain,
-        membership_token, membership_exchange,
-        trader, _amount, _price, _isBuy, invalid_agent
-    )  # エラーになる
+    try:
+        make_order(
+            web3, chain,
+            membership_token, membership_exchange,
+            trader, _amount, _price, _isBuy, invalid_agent
+        )  # エラーになる
+    except ValueError:
+        pass
 
     order_id_after = membership_exchange.call().latestOrderId()
-    trader_commitment = membership_exchange.call(). \
-        commitmentOf(trader, membership_token.address)
-
+    trader_commitment = membership_exchange.call().commitmentOf(trader, membership_token.address)
     assert trader_commitment == 0
     assert membership_token.call().balanceOf(issuer) == deploy_args[2]
     assert membership_token.call().balanceOf(trader) == 0
@@ -872,9 +877,12 @@ def test_cancelorder_error_2(web3, chain, users, membership_exchange):
     # 注文キャンセル：エラー
     wrong_order_id = membership_exchange.call().latestOrderId() + 1  # 誤った order_id
     correct_order_id = membership_exchange.call().latestOrderId()  # 正しい order_id
-    chain.wait.for_receipt(
-        membership_exchange.transact().cancelOrder(wrong_order_id)
-    )  # エラーになる
+    try:
+        chain.wait.for_receipt(
+            membership_exchange.transact().cancelOrder(wrong_order_id)
+        )  # エラーになる
+    except ValueError:
+        pass
 
     orderbook = membership_exchange.call().getOrder(correct_order_id)
     assert orderbook == [
@@ -926,9 +934,12 @@ def test_cancelorder_error_3_1(web3, chain, users, membership_exchange):
     )
 
     # 注文キャンセル：エラー
-    chain.wait.for_receipt(
-        membership_exchange.transact().cancelOrder(order_id)
-    )  # エラーになる
+    try:
+        chain.wait.for_receipt(
+            membership_exchange.transact().cancelOrder(order_id)
+        )  # エラーになる
+    except ValueError:
+        pass
 
     orderbook = membership_exchange.call().getOrder(order_id)
     assert orderbook == [
@@ -966,9 +977,12 @@ def test_cancelorder_error_3_2(web3, chain, users, membership_exchange):
     )
 
     # 注文キャンセル２回目：エラー
-    chain.wait.for_receipt(
-        membership_exchange.transact().cancelOrder(order_id)
-    )  # エラーになる
+    try:
+        chain.wait.for_receipt(
+            membership_exchange.transact().cancelOrder(order_id)
+        )  # エラーになる
+    except ValueError:
+        pass
 
     orderbook = membership_exchange.call().getOrder(order_id)
     assert orderbook == [
@@ -1002,9 +1016,12 @@ def test_cancelorder_error_3_3_1(web3, chain, users, membership_exchange):
     # 注文キャンセル：エラー
     web3.eth.defaultAccount = issuer  # 注文実施者と異なる
     order_id = membership_exchange.call().latestOrderId()
-    chain.wait.for_receipt(
-        membership_exchange.transact().cancelOrder(order_id)
-    )  # エラーになる
+    try:
+        chain.wait.for_receipt(
+            membership_exchange.transact().cancelOrder(order_id)
+        )  # エラーになる
+    except ValueError:
+        pass
 
     orderbook = membership_exchange.call().getOrder(order_id)
     assert orderbook == [
@@ -1045,9 +1062,12 @@ def test_cancelorder_error_3_3_2(web3, chain, users, membership_exchange):
     # 注文キャンセル：エラー
     web3.eth.defaultAccount = trader  # 注文実施者と異なる
     order_id = membership_exchange.call().latestOrderId()
-    chain.wait.for_receipt(
-        membership_exchange.transact().cancelOrder(order_id)
-    )  # エラーになる
+    try:
+        chain.wait.for_receipt(
+            membership_exchange.transact().cancelOrder(order_id)
+        )  # エラーになる
+    except ValueError:
+        pass
 
     orderbook = membership_exchange.call().getOrder(order_id)
     assert orderbook == [
@@ -1382,11 +1402,14 @@ def test_executeOrder_error_4(web3, chain, users, membership_exchange):
     # Take注文（買）：エラー
     wrong_order_id = membership_exchange.call().latestOrderId() + 1  # 誤ったID
     correct_order_id = membership_exchange.call().latestOrderId()  # 正しいID
-    take_order(
-        web3, chain,
-        membership_token, membership_exchange,
-        trader, wrong_order_id, 30, True
-    )  # エラーになる
+    try:
+        take_order(
+            web3, chain,
+            membership_token, membership_exchange,
+            trader, wrong_order_id, 30, True
+        )  # エラーになる
+    except ValueError:
+        pass
 
     # Assert: orderbook
     orderbook = membership_exchange.call().getOrder(correct_order_id)
@@ -1433,11 +1456,14 @@ def test_executeOrder_error_5_1(web3, chain, users, membership_exchange):
 
     # Take注文（買）：エラー
     order_id = membership_exchange.call().latestOrderId()
-    take_order(
-        web3, chain,
-        membership_token, membership_exchange,
-        trader, order_id, 0, True  # 注文数量が0
-    )  # エラーになる
+    try:
+        take_order(
+            web3, chain,
+            membership_token, membership_exchange,
+            trader, order_id, 0, True  # 注文数量が0
+        )  # エラーになる
+    except ValueError:
+        pass
 
     # Assert: orderbook
     orderbook = membership_exchange.call().getOrder(order_id)
@@ -1479,11 +1505,14 @@ def test_executeOrder_error_5_2(web3, chain, users, membership_exchange):
 
     # Take注文（買）：エラー
     order_id = membership_exchange.call().latestOrderId()
-    take_order(
-        web3, chain,
-        membership_token, membership_exchange,
-        trader, order_id, 30, True  # 同一売買区分
-    )  # エラーになる
+    try:
+        take_order(
+            web3, chain,
+            membership_token, membership_exchange,
+            trader, order_id, 30, True  # 同一売買区分
+        )  # エラーになる
+    except ValueError:
+        pass
 
     # Assert: orderbook
     orderbook = membership_exchange.call().getOrder(order_id)
@@ -1529,11 +1558,14 @@ def test_executeOrder_error_5_3(web3, chain, users, membership_exchange):
 
     # Take注文（買）：エラー
     order_id = membership_exchange.call().latestOrderId()
-    take_order(
-        web3, chain,
-        membership_token, membership_exchange,
-        issuer, order_id, 30, True  # 同一アドレスからの発注
-    )  # エラーになる
+    try:
+        take_order(
+            web3, chain,
+            membership_token, membership_exchange,
+            issuer, order_id, 30, True  # 同一アドレスからの発注
+        )  # エラーになる
+    except ValueError:
+        pass
 
     # Assert: orderbook
     orderbook = membership_exchange.call().getOrder(order_id)
@@ -1586,11 +1618,14 @@ def test_executeOrder_error_5_4(web3, chain, users, membership_exchange):
 
     # Take注文（買）：エラー
     order_id = membership_exchange.call().latestOrderId()
-    take_order(
-        web3, chain,
-        membership_token, membership_exchange,
-        trader, order_id, 30, True
-    )  # エラーになる
+    try:
+        take_order(
+            web3, chain,
+            membership_token, membership_exchange,
+            trader, order_id, 30, True
+        )  # エラーになる
+    except ValueError:
+        pass
 
     # Assert: orderbook
     orderbook = membership_exchange.call().getOrder(order_id)
@@ -1643,11 +1678,14 @@ def test_executeOrder_error_5_5(web3, chain, users, membership_exchange):
 
     # Take注文（買）：エラー
     order_id = membership_exchange.call().latestOrderId()
-    take_order(
-        web3, chain,
-        membership_token, membership_exchange,
-        trader, order_id, 30, True
-    )  # エラーになる
+    try:
+        take_order(
+            web3, chain,
+            membership_token, membership_exchange,
+            trader, order_id, 30, True
+        )  # エラーになる
+    except ValueError:
+        pass
 
     # Assert: orderbook
     orderbook = membership_exchange.call().getOrder(order_id)
@@ -1694,11 +1732,14 @@ def test_executeOrder_error_5_6(web3, chain, users, membership_exchange):
 
     # Take注文（買）：エラー
     order_id = membership_exchange.call().latestOrderId()
-    take_order(
-        web3, chain,
-        membership_token, membership_exchange,
-        trader, order_id, 101, True  # Make注文の数量を超過
-    )  # エラーになる
+    try:
+        take_order(
+            web3, chain,
+            membership_token, membership_exchange,
+            trader, order_id, 101, True  # Make注文の数量を超過
+        )  # エラーになる
+    except ValueError:
+        pass
 
     # Assert: orderbook
     orderbook = membership_exchange.call().getOrder(order_id)
@@ -2434,11 +2475,14 @@ def test_confirmAgreement_error_3(web3, chain, users, membership_exchange):
     # 決済処理：エラー
     wrong_order_id = membership_exchange.call().latestOrderId() + 1  # 誤ったID
     agreement_id = membership_exchange.call().latestAgreementId(order_id)
-    settlement(
-        web3, chain,
-        membership_token, membership_exchange,
-        agent, wrong_order_id, agreement_id
-    )  # エラーになる
+    try:
+        settlement(
+            web3, chain,
+            membership_token, membership_exchange,
+            agent, wrong_order_id, agreement_id
+        )  # エラーになる
+    except ValueError:
+        pass
 
     # Assert: orderbook
     orderbook = membership_exchange.call().getOrder(order_id)
@@ -2499,11 +2543,14 @@ def test_confirmAgreement_error_4(web3, chain, users, membership_exchange):
     # 決済処理：エラー
     agreement_id = membership_exchange.call().latestAgreementId(order_id)
     wrong_agreement_id = membership_exchange.call().latestAgreementId(order_id) + 1  # 誤ったID
-    settlement(
-        web3, chain,
-        membership_token, membership_exchange,
-        agent, order_id, wrong_agreement_id
-    )  # エラーになる
+    try:
+        settlement(
+            web3, chain,
+            membership_token, membership_exchange,
+            agent, order_id, wrong_agreement_id
+        )  # エラーになる
+    except ValueError:
+        pass
 
     # Assert: orderbook
     orderbook = membership_exchange.call().getOrder(order_id)
@@ -2571,11 +2618,14 @@ def test_confirmAgreement_error_5(web3, chain, users, membership_exchange):
 
     # 決済処理２回目：エラー
     agreement_id = membership_exchange.call().latestAgreementId(order_id)
-    settlement(
-        web3, chain,
-        membership_token, membership_exchange,
-        agent, order_id, agreement_id
-    )  # エラーになる
+    try:
+        settlement(
+            web3, chain,
+            membership_token, membership_exchange,
+            agent, order_id, agreement_id
+        )  # エラーになる
+    except ValueError:
+        pass
 
     # Assert: orderbook
     orderbook = membership_exchange.call().getOrder(order_id)
@@ -2643,11 +2693,14 @@ def test_confirmAgreement_error_6(web3, chain, users, membership_exchange):
 
     # 決済処理：エラー
     agreement_id = membership_exchange.call().latestAgreementId(order_id)
-    settlement(
-        web3, chain,
-        membership_token, membership_exchange,
-        agent, order_id, agreement_id
-    )  # エラーになる
+    try:
+        settlement(
+            web3, chain,
+            membership_token, membership_exchange,
+            agent, order_id, agreement_id
+        )  # エラーになる
+    except ValueError:
+        pass
 
     # Assert: orderbook
     orderbook = membership_exchange.call().getOrder(order_id)
@@ -2707,11 +2760,14 @@ def test_confirmAgreement_error_7(web3, chain, users, membership_exchange):
 
     # 決済処理：エラー
     agreement_id = membership_exchange.call().latestAgreementId(order_id)
-    settlement(
-        web3, chain,
-        membership_token, membership_exchange,
-        trader, order_id, agreement_id  # 元注文で指定した決済業者ではない
-    )  # エラーになる
+    try:
+        settlement(
+            web3, chain,
+            membership_token, membership_exchange,
+            trader, order_id, agreement_id  # 元注文で指定した決済業者ではない
+        )  # エラーになる
+    except ValueError:
+        pass
 
     # Assert: orderbook
     orderbook = membership_exchange.call().getOrder(order_id)
@@ -3083,11 +3139,14 @@ def test_cancelAgreement_error_3(web3, chain, users, membership_exchange):
     # 決済非承認：エラー
     wrong_order_id = membership_exchange.call().latestOrderId() + 1  # 誤ったID
     agreement_id = membership_exchange.call().latestAgreementId(order_id)
-    settlement_ng(
-        web3, chain,
-        membership_token, membership_exchange,
-        agent, wrong_order_id, agreement_id
-    )  # エラーになる
+    try:
+        settlement_ng(
+            web3, chain,
+            membership_token, membership_exchange,
+            agent, wrong_order_id, agreement_id
+        )  # エラーになる
+    except ValueError:
+        pass
 
     # Assert: orderbook
     orderbook = membership_exchange.call().getOrder(order_id)
@@ -3148,11 +3207,14 @@ def test_cancelAgreement_error_4(web3, chain, users, membership_exchange):
     # 決済非承認：エラー
     agreement_id = membership_exchange.call().latestAgreementId(order_id)
     wrong_agreement_id = membership_exchange.call().latestAgreementId(order_id) + 1  # 誤ったID
-    settlement_ng(
-        web3, chain,
-        membership_token, membership_exchange,
-        agent, order_id, wrong_agreement_id
-    )  # エラーになる
+    try:
+        settlement_ng(
+            web3, chain,
+            membership_token, membership_exchange,
+            agent, order_id, wrong_agreement_id
+        )  # エラーになる
+    except ValueError:
+        pass
 
     # Assert: orderbook
     orderbook = membership_exchange.call().getOrder(order_id)
@@ -3219,11 +3281,14 @@ def test_cancelAgreement_error_5(web3, chain, users, membership_exchange):
     )
 
     # 決済非承認：エラー
-    settlement_ng(
-        web3, chain,
-        membership_token, membership_exchange,
-        agent, order_id, agreement_id
-    )  # エラーになる
+    try:
+        settlement_ng(
+            web3, chain,
+            membership_token, membership_exchange,
+            agent, order_id, agreement_id
+        )  # エラーになる
+    except ValueError:
+        pass
 
     # Assert: orderbook
     orderbook = membership_exchange.call().getOrder(order_id)
@@ -3290,11 +3355,14 @@ def test_cancelAgreement_error_6(web3, chain, users, membership_exchange):
     )
 
     # 決済非承認２回目：エラー
-    settlement_ng(
-        web3, chain,
-        membership_token, membership_exchange,
-        agent, order_id, agreement_id
-    )  # エラーになる
+    try:
+        settlement_ng(
+            web3, chain,
+            membership_token, membership_exchange,
+            agent, order_id, agreement_id
+        )  # エラーになる
+    except ValueError:
+        pass
 
     # Assert: orderbook
     orderbook = membership_exchange.call().getOrder(order_id)
@@ -3354,11 +3422,14 @@ def test_cancelAgreement_error_7(web3, chain, users, membership_exchange):
 
     # 決済非承認１回目
     agreement_id = membership_exchange.call().latestAgreementId(order_id)
-    settlement_ng(
-        web3, chain,
-        membership_token, membership_exchange,
-        trader, order_id, agreement_id  # 元注文で指定した決済業者ではない
-    )  # エラーになる
+    try:
+        settlement_ng(
+            web3, chain,
+            membership_token, membership_exchange,
+            trader, order_id, agreement_id  # 元注文で指定した決済業者ではない
+        )  # エラーになる
+    except ValueError:
+        pass
 
     # Assert: orderbook
     orderbook = membership_exchange.call().getOrder(order_id)
@@ -3550,9 +3621,12 @@ def test_withdrawAll_error_2(web3, chain, users, membership_exchange):
 
     # 引き出し：エラー
     web3.eth.defaultAccount = issuer
-    chain.wait.for_receipt(
-        membership_exchange.transact().withdrawAll(membership_token.address)
-    )  # エラーになる
+    try:
+        chain.wait.for_receipt(
+            membership_exchange.transact().withdrawAll(membership_token.address)
+        )  # エラーになる
+    except ValueError:
+        pass
 
     # Assert: balance
     assert membership_token.call().balanceOf(issuer) == deploy_args[2]

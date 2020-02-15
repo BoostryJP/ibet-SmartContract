@@ -266,8 +266,11 @@ def test_setTransferable_error_2(web3, chain, users, bond_exchange, personal_inf
 
     # 譲渡可能更新
     web3.eth.defaultAccount = attacker
-    txn_hash = bond_contract.transact().setTransferable(after_transferable)  # エラーになる
-    chain.wait.for_receipt(txn_hash)
+    try:
+        txn_hash = bond_contract.transact().setTransferable(after_transferable)  # エラーになる
+        chain.wait.for_receipt(txn_hash)
+    except ValueError:
+        pass
 
     transferable = bond_contract.call().transferable()
     assert transferable == True
@@ -374,7 +377,10 @@ def test_transfer_error_3(web3, chain, users, bond_exchange, personal_info):
     # 債券トークン振替（残高超）
     web3.eth.defaultAccount = issuer
     transfer_amount = 10000000000
-    bond_contract.transact().transfer(to_address, transfer_amount)
+    try:
+        bond_contract.transact().transfer(to_address, transfer_amount)  # エラーになる
+    except ValueError:
+        pass
 
     assert bond_contract.call().balanceOf(issuer) == 10000
     assert bond_contract.call().balanceOf(to_address) == 0
@@ -426,8 +432,11 @@ def test_transfer_error_5(web3, chain, users, bond_exchange, personal_info,
     )
 
     to_address = dummy_exchange.address
-    txn_hash = bond_contract.transact().transfer(to_address, transfer_amount)  # エラーになる
-    chain.wait.for_receipt(txn_hash)
+    try:
+        txn_hash = bond_contract.transact().transfer(to_address, transfer_amount)  # エラーになる
+        chain.wait.for_receipt(txn_hash)
+    except ValueError:
+        pass
 
     from_balance = bond_contract.call().balanceOf(from_address)
     to_balance = bond_contract.call().balanceOf(to_address)
@@ -458,8 +467,11 @@ def test_transfer_error_6(web3, chain, users, bond_exchange, personal_info):
 
     # 譲渡実行
     web3.eth.defaultAccount = issuer
-    txn_hash = bond_contract.transact().transfer(to_address, transfer_amount)  # エラーとなる
-    chain.wait.for_receipt(txn_hash)
+    try:
+        txn_hash = bond_contract.transact().transfer(to_address, transfer_amount)  # エラーとなる
+        chain.wait.for_receipt(txn_hash)
+    except ValueError:
+        pass
 
     from_balance = bond_contract.call().balanceOf(issuer)
     to_balance = bond_contract.call().balanceOf(to_address)
@@ -483,8 +495,11 @@ def test_transfer_error_7(web3, chain, users, bond_exchange, personal_info):
 
     # 譲渡実行
     web3.eth.defaultAccount = issuer
-    txn_hash = bond_contract.transact().transfer(to_address, transfer_amount)  # エラーとなる
-    chain.wait.for_receipt(txn_hash)
+    try:
+        txn_hash = bond_contract.transact().transfer(to_address, transfer_amount)  # エラーとなる
+        chain.wait.for_receipt(txn_hash)
+    except ValueError:
+        pass
 
     from_balance = bond_contract.call().balanceOf(issuer)
     to_balance = bond_contract.call().balanceOf(to_address)
@@ -617,7 +632,10 @@ def test_sign_error_1(web3, chain, users, bond_exchange, personal_info):
 
     # 認定 -> Failure
     web3.eth.defaultAccount = signer
-    bond_token.transact().sign()
+    try:
+        chain.wait.for_receipt(bond_token.transact().sign())
+    except ValueError:
+        pass
 
     signature = bond_token.call().signatures(signer)
     assert signature == 0
@@ -641,8 +659,11 @@ def test_sign_error_2(web3, chain, users, bond_exchange, personal_info):
 
     # 異なるSignerが認定 -> Failure
     web3.eth.defaultAccount = signer_other
-    txn_hash_2 = bond_token.transact().sign()
-    chain.wait.for_receipt(txn_hash_2)
+    try:
+        txn_hash_2 = bond_token.transact().sign()
+        chain.wait.for_receipt(txn_hash_2)
+    except ValueError:
+        pass
 
     signature = bond_token.call().signatures(signer)
     assert signature == 1
@@ -694,8 +715,11 @@ def test_unsign_error_1(web3, chain, users, bond_exchange, personal_info):
 
     # 認定取消 -> Failure
     web3.eth.defaultAccount = signer
-    txn_hash = bond_token.transact().unsign()
-    chain.wait.for_receipt(txn_hash)
+    try:
+        txn_hash = bond_token.transact().unsign()
+        chain.wait.for_receipt(txn_hash)
+    except ValueError:
+        pass
 
     signature = bond_token.call().signatures(signer)
     assert signature == 0
@@ -718,8 +742,11 @@ def test_unsign_error_2(web3, chain, users, bond_exchange, personal_info):
 
     # 認定取消 -> Failure
     web3.eth.defaultAccount = signer
-    txn_hash_2 = bond_token.transact().unsign()
-    chain.wait.for_receipt(txn_hash_2)
+    try:
+        txn_hash_2 = bond_token.transact().unsign()
+        chain.wait.for_receipt(txn_hash_2)
+    except ValueError:
+        pass
 
     signature = bond_token.call().signatures(signer)
     assert signature == 1
@@ -748,8 +775,11 @@ def test_unsign_error_3(web3, chain, users, bond_exchange, personal_info):
 
     # 異なるSignerが認定取消を実施 -> Failure
     web3.eth.defaultAccount = signer_other
-    txn_hash_3 = bond_token.transact().unsign()
-    chain.wait.for_receipt(txn_hash_3)
+    try:
+        txn_hash_3 = bond_token.transact().unsign()
+        chain.wait.for_receipt(txn_hash_3)
+    except ValueError:
+        pass
 
     signature = bond_token.call().signatures(signer)
     assert signature == 2
@@ -788,8 +818,11 @@ def test_redeem_error_1(web3, chain, users, bond_exchange, personal_info):
 
     # Owner以外のアドレスから償還を実施 -> Failure
     web3.eth.defaultAccount = other
-    txn_hash = bond_token.transact().redeem()
-    chain.wait.for_receipt(txn_hash)
+    try:
+        txn_hash = bond_token.transact().redeem()
+        chain.wait.for_receipt(txn_hash)
+    except ValueError:
+        pass
 
     is_redeemed = bond_token.call().isRedeemed()
     assert is_redeemed is False
@@ -926,8 +959,11 @@ def test_setImageURL_error_3(web3, chain, users, bond_exchange, personal_info):
 
     # Owner以外のアドレスから画像設定を実施 -> Failure
     web3.eth.defaultAccount = other
-    txn_hash = bond_token.transact().setImageURL(0, image_url)
-    chain.wait.for_receipt(txn_hash)
+    try:
+        txn_hash = bond_token.transact().setImageURL(0, image_url)
+        chain.wait.for_receipt(txn_hash)
+    except ValueError:
+        pass
 
     image_url_0 = bond_token.call().getImageURL(0)
     assert image_url_0 == ''
@@ -982,7 +1018,10 @@ def test_updateMemo_error_2(web3, chain, users, bond_exchange, personal_info):
 
     # Owner以外のアドレスからメモ欄の修正を実施 -> Failure
     web3.eth.defaultAccount = other
-    bond_token.transact().updateMemo('updated memo')
+    try:
+        chain.wait.for_receipt(bond_token.transact().updateMemo('updated memo'))
+    except ValueError:
+        pass
 
     memo = bond_token.call().memo()
     assert memo == 'some_memo'
@@ -1120,8 +1159,11 @@ def test_transferFrom_error_4(web3, chain, users, bond_exchange, personal_info):
 
     # 移転（_from -> _to）
     web3.eth.defaultAccount = _issuer
-    txn_hash = bond_contract.transact().transferFrom(_from, _to, 101)  # エラーになる
-    chain.wait.for_receipt(txn_hash)
+    try:
+        txn_hash = bond_contract.transact().transferFrom(_from, _to, 101)  # エラーになる
+        chain.wait.for_receipt(txn_hash)
+    except ValueError:
+        pass
 
     issuer_balance = bond_contract.call().balanceOf(_issuer)
     from_balance = bond_contract.call().balanceOf(_from)
@@ -1155,8 +1197,11 @@ def test_transferFrom_error_5(web3, chain, users, bond_exchange, personal_info):
 
     # 移転（_from -> _to）
     web3.eth.defaultAccount = _from
-    txn_hash = bond_contract.transact().transferFrom(_from, _to, _value)  # エラーになる
-    chain.wait.for_receipt(txn_hash)
+    try:
+        txn_hash = bond_contract.transact().transferFrom(_from, _to, _value)  # エラーになる
+        chain.wait.for_receipt(txn_hash)
+    except ValueError:
+        pass
 
     issuer_balance = bond_contract.call().balanceOf(_issuer)
     from_balance = bond_contract.call().balanceOf(_from)
@@ -1238,9 +1283,11 @@ def test_setTradableExchange_error_2(web3, chain, users, bond_exchange, personal
 
     # Exchangeの更新
     web3.eth.defaultAccount = trader
-    txn_hash = bond_token.transact(). \
-        setTradableExchange(other_exchange.address)  # エラーになる
-    chain.wait.for_receipt(txn_hash)
+    try:
+        txn_hash = bond_token.transact().setTradableExchange(other_exchange.address)  # エラーになる
+        chain.wait.for_receipt(txn_hash)
+    except ValueError:
+        pass
 
     assert bond_token.call().tradableExchange() == to_checksum_address(bond_exchange.address)
 
@@ -1294,7 +1341,10 @@ def test_setContactInformation_error_2(web3, chain, users, bond_exchange, person
 
     # Owner以外のアドレスから更新 -> Failure
     web3.eth.defaultAccount = other
-    bond_token.transact().setContactInformation('updated contact information')
+    try:
+        chain.wait.for_receipt(bond_token.transact().setContactInformation('updated contact information'))
+    except ValueError:
+        pass
 
     contact_information = bond_token.call().contactInformation()
     assert contact_information == 'some_contact_information'
@@ -1349,7 +1399,10 @@ def test_setPrivacyPolicy_error_2(web3, chain, users, bond_exchange, personal_in
 
     # Owner以外のアドレスから更新 -> Failure
     web3.eth.defaultAccount = other
-    bond_token.transact().setPrivacyPolicy('updated privacy policy')
+    try:
+        chain.wait.for_receipt(bond_token.transact().setPrivacyPolicy('updated privacy policy'))
+    except ValueError:
+        pass
 
     privacy_policy = bond_token.call().privacyPolicy()
     assert privacy_policy == 'some_privacy_policy'
@@ -1404,8 +1457,11 @@ def test_setPersonalInfoAddress_error_2(web3, chain, users, bond_exchange, perso
 
     # 更新
     web3.eth.defaultAccount = attacker
-    txn_hash = bond_token.transact().setPersonalInfoAddress('0x0000000000000000000000000000000000000000')
-    chain.wait.for_receipt(txn_hash)
+    try:
+        txn_hash = bond_token.transact().setPersonalInfoAddress('0x0000000000000000000000000000000000000000')
+        chain.wait.for_receipt(txn_hash)
+    except ValueError:
+        pass
 
     assert bond_token.call().personalInfoAddress() == to_checksum_address(personal_info.address)
 
@@ -1597,8 +1653,11 @@ def test_applyForOffering_error_2(web3, chain, users):
 
     # 募集申込（エラー）：募集申込ステータスFalse状態での申込
     web3.eth.defaultAccount = trader
-    txn_hash = bond_token.transact().applyForOffering(10, 'abcdefgh')
-    chain.wait.for_receipt(txn_hash)
+    try:
+        txn_hash = bond_token.transact().applyForOffering(10, 'abcdefgh')
+        chain.wait.for_receipt(txn_hash)
+    except ValueError:
+        pass
 
     application = bond_token.call().applications(trader)
     assert application[0] == 0
@@ -1626,8 +1685,11 @@ def test_applyForOffering_error_3(web3, chain, users, personal_info):
 
     # 募集申込（エラーになる）
     web3.eth.defaultAccount = trader
-    txn_hash = bond_token.transact().applyForOffering(10, 'abcdefgh')
-    chain.wait.for_receipt(txn_hash)
+    try:
+        txn_hash = bond_token.transact().applyForOffering(10, 'abcdefgh')
+        chain.wait.for_receipt(txn_hash)
+    except ValueError:
+        pass
 
     application = bond_token.call().applications(trader)
     assert application[0] == 0
@@ -1718,8 +1780,11 @@ def test_allot_error_2(web3, chain, users):
 
     # 割当（エラー）：権限エラー
     web3.eth.defaultAccount = trader
-    txn_hash = bond_token.transact().allot(trader, 5)
-    chain.wait.for_receipt(txn_hash)
+    try:
+        txn_hash = bond_token.transact().allot(trader, 5)
+        chain.wait.for_receipt(txn_hash)
+    except ValueError:
+        pass
 
     application = bond_token.call().applications(trader)
     assert application[0] == 0
@@ -1799,8 +1864,11 @@ def test_issue_error_3(web3, chain, users):
 
     # 追加発行（限界値超）
     web3.eth.defaultAccount = issuer
-    txn_hash = bond_token.transact().issue(issue_amount)  # エラーになる
-    chain.wait.for_receipt(txn_hash)
+    try:
+        txn_hash = bond_token.transact().issue(issue_amount)  # エラーになる
+        chain.wait.for_receipt(txn_hash)
+    except ValueError:
+        pass
 
     total_supply = bond_token.call().totalSupply()
     balance = bond_token.call().balanceOf(issuer)
@@ -1820,8 +1888,11 @@ def test_issue_error_4(web3, chain, users):
 
     # 追加発行：権限エラー
     web3.eth.defaultAccount = attacker
-    txn_hash = bond_token.transact().issue(1)  # エラーになる
-    chain.wait.for_receipt(txn_hash)
+    try:
+        txn_hash = bond_token.transact().issue(1)  # エラーになる
+        chain.wait.for_receipt(txn_hash)
+    except ValueError:
+        pass
 
     total_supply = bond_token.call().totalSupply()
     balance = bond_token.call().balanceOf(issuer)

@@ -415,8 +415,11 @@ def test_transfer_error_3(web3, chain, users, membership_exchange):
     # 振替（残高超）
     web3.eth.defaultAccount = issuer
     transfer_amount = 10000000000
-    txn_hash = membership_contract.transact().transfer(trader, transfer_amount)
-    chain.wait.for_receipt(txn_hash)
+    try:
+        txn_hash = membership_contract.transact().transfer(trader, transfer_amount)
+        chain.wait.for_receipt(txn_hash)
+    except ValueError:
+        pass
 
     assert membership_contract.call().balanceOf(issuer) == deploy_args[2]
     assert membership_contract.call().balanceOf(trader) == 0
@@ -459,9 +462,11 @@ def test_transfer_error_5(web3, chain, users, membership_exchange):
     # 振替：譲渡不可
     web3.eth.defaultAccount = issuer
     transfer_amount = 10
-    txn_hash = membership_contract.transact(). \
-        transfer(trader, transfer_amount)  # エラーになる
-    chain.wait.for_receipt(txn_hash)
+    try:
+        txn_hash = membership_contract.transact().transfer(trader, transfer_amount)  # エラーになる
+        chain.wait.for_receipt(txn_hash)
+    except ValueError:
+        pass
 
     assert membership_contract.call().balanceOf(issuer) == deploy_args[2]
     assert membership_contract.call().balanceOf(trader) == 0
@@ -487,9 +492,11 @@ def test_transfer_error_6(web3, chain, users, membership_exchange,
     # 振替
     web3.eth.defaultAccount = issuer
     transfer_amount = 10
-    txn_hash = membership_contract.transact(). \
-        transfer(dummy_exchange.address, transfer_amount)  # エラーになる
-    chain.wait.for_receipt(txn_hash)
+    try:
+        txn_hash = membership_contract.transact().transfer(dummy_exchange.address, transfer_amount)  # エラーになる
+        chain.wait.for_receipt(txn_hash)
+    except ValueError:
+        pass
 
     assert membership_contract.call().balanceOf(issuer) == deploy_args[2]
     assert membership_contract.call().balanceOf(dummy_exchange.address) == 0
@@ -832,9 +839,11 @@ def test_transferFrom_error_3(web3, chain, users, membership_exchange):
     # 残高超
     web3.eth.defaultAccount = issuer
     transfer_amount = 10000000000
-    txn_hash = membership_contract.transact(). \
-        transferFrom(issuer, to_address, transfer_amount)
-    chain.wait.for_receipt(txn_hash)
+    try:
+        txn_hash = membership_contract.transact().transferFrom(issuer, to_address, transfer_amount)
+        chain.wait.for_receipt(txn_hash)
+    except ValueError:
+        pass
 
     assert membership_contract.call().balanceOf(issuer) == deploy_args[2]
     assert membership_contract.call().balanceOf(to_address) == 0
@@ -854,9 +863,11 @@ def test_transferFrom_error_4(web3, chain, users, membership_exchange):
 
     # 残高超
     web3.eth.defaultAccount = admin
-    txn_hash = membership_contract.transact(). \
-        transferFrom(issuer, to_address, transfer_amount)  # エラーになる
-    chain.wait.for_receipt(txn_hash)
+    try:
+       txn_hash = membership_contract.transact().transferFrom(issuer, to_address, transfer_amount)  # エラーになる
+       chain.wait.for_receipt(txn_hash)
+    except ValueError:
+        pass
 
     assert membership_contract.call().balanceOf(issuer) == deploy_args[2]
     assert membership_contract.call().balanceOf(to_address) == 0
@@ -965,9 +976,11 @@ def test_setDetails_error_2(web3, chain, users, membership_exchange):
 
     # 会員権詳細更新
     web3.eth.defaultAccount = attacker
-    txn_hash = membership_contract.transact(). \
-        setDetails(after_details)  # エラーになる
-    chain.wait.for_receipt(txn_hash)
+    try:
+        txn_hash = membership_contract.transact().setDetails(after_details)  # エラーになる
+        chain.wait.for_receipt(txn_hash)
+    except ValueError:
+        pass
 
     details = membership_contract.call().details()
     assert details == deploy_args[4]
@@ -1026,9 +1039,11 @@ def test_setReturnDetails_error_2(web3, chain, users, membership_exchange):
 
     # リターン詳細更新：権限エラー
     web3.eth.defaultAccount = attacker
-    txn_hash = membership_contract.transact(). \
-        setReturnDetails(after_return_details)  # エラーになる
-    chain.wait.for_receipt(txn_hash)
+    try:
+        txn_hash = membership_contract.transact().setReturnDetails(after_return_details)  # エラーになる
+        chain.wait.for_receipt(txn_hash)
+    except ValueError:
+        pass
 
     return_details = membership_contract.call().returnDetails()
     assert return_details == deploy_args[5]
@@ -1087,9 +1102,11 @@ def test_setExpirationDate_error_2(web3, chain, users, membership_exchange):
 
     # 有効期限更新：権限エラー
     web3.eth.defaultAccount = attacker
-    txn_hash = membership_contract.transact(). \
-        setExpirationDate(after_expiration_date)  # エラーになる
-    chain.wait.for_receipt(txn_hash)
+    try:
+        txn_hash = membership_contract.transact().setExpirationDate(after_expiration_date)  # エラーになる
+        chain.wait.for_receipt(txn_hash)
+    except ValueError:
+        pass
 
     expiration_date = membership_contract.call().expirationDate()
     assert expiration_date == deploy_args[6]
@@ -1147,8 +1164,11 @@ def test_setMemo_error_2(web3, chain, users, membership_exchange):
 
     # メモ欄更新：権限エラー
     web3.eth.defaultAccount = attacker
-    txn_hash = membership_contract.transact().setMemo(after_memo)  # エラーになる
-    chain.wait.for_receipt(txn_hash)
+    try:
+        txn_hash = membership_contract.transact().setMemo(after_memo)  # エラーになる
+        chain.wait.for_receipt(txn_hash)
+    except ValueError:
+        pass
 
     memo = membership_contract.call().memo()
     assert memo == deploy_args[7]
@@ -1206,9 +1226,11 @@ def test_setTransferable_error_2(web3, chain, users, membership_exchange):
 
     # 譲渡可能更新
     web3.eth.defaultAccount = attacker
-    txn_hash = membership_contract.transact(). \
-        setTransferable(after_transferable)  # エラーになる
-    chain.wait.for_receipt(txn_hash)
+    try:
+        txn_hash = membership_contract.transact().setTransferable(after_transferable)  # エラーになる
+        chain.wait.for_receipt(txn_hash)
+    except ValueError:
+        pass
 
     transferable = membership_contract.call().transferable()
     assert transferable == deploy_args[8]
@@ -1266,9 +1288,11 @@ def test_setStatus_error_2(web3, chain, users, membership_exchange):
 
     # 取扱ステータス更新
     web3.eth.defaultAccount = attacker
-    txn_hash = membership_contract.transact(). \
-        setStatus(after_status)  # エラーになる
-    chain.wait.for_receipt(txn_hash)
+    try:
+        txn_hash = membership_contract.transact().setStatus(after_status)  # エラーになる
+        chain.wait.for_receipt(txn_hash)
+    except ValueError:
+        pass
 
     status = membership_contract.call().status()
     assert status is True
@@ -1341,9 +1365,11 @@ def test_setImageURL_error_2(web3, chain, users, membership_exchange):
 
     # 商品画像更新
     web3.eth.defaultAccount = attacker
-    txn_hash = membership_contract.transact(). \
-        setImageURL(0, after_url)  # エラーになる
-    chain.wait.for_receipt(txn_hash)
+    try:
+        txn_hash = membership_contract.transact().setImageURL(0, after_url)  # エラーになる
+        chain.wait.for_receipt(txn_hash)
+    except ValueError:
+        pass
 
     url = membership_contract.call().getImageURL(0)
     assert url == ''
@@ -1446,8 +1472,11 @@ def test_issue_error_3(web3, chain, users, membership_exchange):
 
     # 追加発行（限界値超）
     web3.eth.defaultAccount = issuer
-    txn_hash = membership_contract.transact().issue(1)  # エラーになる
-    chain.wait.for_receipt(txn_hash)
+    try:
+        txn_hash = membership_contract.transact().issue(1)  # エラーになる
+        chain.wait.for_receipt(txn_hash)
+    except ValueError:
+        pass
 
     total_supply = membership_contract.call().totalSupply()
     balance = membership_contract.call().balanceOf(issuer)
@@ -1468,8 +1497,11 @@ def test_issue_error_4(web3, chain, users, membership_exchange):
 
     # 追加発行：権限エラー
     web3.eth.defaultAccount = attacker
-    txn_hash = membership_contract.transact().issue(1)  # エラーになる
-    chain.wait.for_receipt(txn_hash)
+    try:
+        txn_hash = membership_contract.transact().issue(1)  # エラーになる
+        chain.wait.for_receipt(txn_hash)
+    except ValueError:
+        pass
 
     total_supply = membership_contract.call().totalSupply()
     balance = membership_contract.call().balanceOf(issuer)
@@ -1544,9 +1576,11 @@ def test_setTradableExchange_error_2(web3, chain, users, membership_exchange,
 
     # Exchangeの更新
     web3.eth.defaultAccount = trader
-    txn_hash = membership_contract.transact(). \
-        setTradableExchange(other_exchange.address)  # エラーになる
-    chain.wait.for_receipt(txn_hash)
+    try:
+        txn_hash = membership_contract.transact().setTradableExchange(other_exchange.address)  # エラーになる
+        chain.wait.for_receipt(txn_hash)
+    except ValueError:
+        pass
 
     assert membership_contract.call().tradableExchange() == to_checksum_address(membership_exchange.address)
 
@@ -1697,8 +1731,11 @@ def test_applyForOffering_error_2(web3, chain, users, membership_exchange):
 
     # 募集申込
     web3.eth.defaultAccount = trader
-    txn_hash = membership_contract.transact().applyForOffering('abcdefgh')
-    chain.wait.for_receipt(txn_hash)
+    try:
+        txn_hash = membership_contract.transact().applyForOffering('abcdefgh')
+        chain.wait.for_receipt(txn_hash)
+    except ValueError:
+        pass
 
     assert membership_contract.call().applications(trader) == ''
 
@@ -1754,8 +1791,11 @@ def test_setContactInformation_error_2(web3, chain, users, membership_exchange):
 
     # 修正
     web3.eth.defaultAccount = other
-    txn_hash = membership_contract.transact().setContactInformation('updated contact information')
-    chain.wait.for_receipt(txn_hash)
+    try:
+        txn_hash = membership_contract.transact().setContactInformation('updated contact information')
+        chain.wait.for_receipt(txn_hash)
+    except ValueError:
+        pass
 
     contact_information = membership_contract.call().contactInformation()
     assert contact_information == 'some_contact_information'
@@ -1812,8 +1852,11 @@ def test_setPrivacyPolicy_error_2(web3, chain, users, membership_exchange):
 
     # 修正
     web3.eth.defaultAccount = other
-    txn_hash = membership_contract.transact().setPrivacyPolicy('updated privacy policy')
-    chain.wait.for_receipt(txn_hash)
+    try:
+        txn_hash = membership_contract.transact().setPrivacyPolicy('updated privacy policy')
+        chain.wait.for_receipt(txn_hash)
+    except ValueError:
+        pass
 
     privacy_policy = membership_contract.call().privacyPolicy()
     assert privacy_policy == 'some_privacy_policy'

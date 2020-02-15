@@ -2,9 +2,19 @@
 
 ## 0. 開発推奨環境
 * OS: macOS 10.14 (Mojave)
-* homebrewインストール済
-* python（3.6.4）インストール済
-* Quorum開発環境構築済（ibet-Quorum）
+* Homebrew
+* python（3.6.8）
+* Ganache
+
+### Ganache 設定
+#### Server
+* hostname : 127.0.0.1 - lo0
+* port number : 8545
+* chain id : 2017
+
+#### Chain
+* gas price : 0
+* hard fork : Petersburg
 
 ## 1. solidity compiler (solc) のインストール
 * brew install を実施する。

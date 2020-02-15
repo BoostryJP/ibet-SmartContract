@@ -148,8 +148,11 @@ def test_register_error_3(web3, chain, users, bond_exchange, personal_info):
 
     # 新規登録（2回目） -> Failure
     web3.eth.defaultAccount = issuer
-    txn_hash = tokenlist_contract.transact().register(token_address, token_template)
-    chain.wait.for_receipt(txn_hash)
+    try:
+        txn_hash = tokenlist_contract.transact().register(token_address, token_template)
+        chain.wait.for_receipt(txn_hash)
+    except ValueError:
+        pass
 
     # 登録後のリストの長さが正しいことを確認
     list_length = tokenlist_contract.call().getListLength()
@@ -190,8 +193,11 @@ def test_register_error_4(web3, chain, users, bond_exchange, personal_info):
 
     # 新規登録（account_2） -> Failure
     web3.eth.defaultAccount = admin
-    txn_hash = tokenlist_contract.transact().register(token_address, token_template)
-    chain.wait.for_receipt(txn_hash)
+    try:
+        txn_hash = tokenlist_contract.transact().register(token_address, token_template)
+        chain.wait.for_receipt(txn_hash)
+    except ValueError:
+        pass
 
     # 登録後のリストの長さが正しいことを確認
     list_length = tokenlist_contract.call().getListLength()
@@ -318,8 +324,11 @@ def test_changeOwner_error_3(web3, chain, users, bond_exchange, personal_info):
 
     # オーナー変更 -> Failure
     web3.eth.defaultAccount = issuer
-    txn_hash = tokenlist_contract.transact().changeOwner(token_address, new_owner_address)
-    chain.wait.for_receipt(txn_hash)
+    try:
+        txn_hash = tokenlist_contract.transact().changeOwner(token_address, new_owner_address)
+        chain.wait.for_receipt(txn_hash)
+    except ValueError:
+        pass
 
     owner_address = tokenlist_contract.call().getOwnerAddress(token_address)
     assert owner_address == '0x0000000000000000000000000000000000000000'
@@ -348,8 +357,11 @@ def test_changeOwner_error_4(web3, chain, users, bond_exchange, personal_info):
 
     # オーナー変更 -> Failure
     web3.eth.defaultAccount = admin
-    txn_hash = tokenlist_contract.transact().changeOwner(token_address, new_owner_address)
-    chain.wait.for_receipt(txn_hash)
+    try:
+        txn_hash = tokenlist_contract.transact().changeOwner(token_address, new_owner_address)
+        chain.wait.for_receipt(txn_hash)
+    except ValueError:
+        pass
 
     owner_address = tokenlist_contract.call().getOwnerAddress(token_address)
     assert owner_address == to_checksum_address(issuer)
