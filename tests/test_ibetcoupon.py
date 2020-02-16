@@ -268,8 +268,11 @@ def test_transfer_error_3(web3, chain, users, coupon_exchange):
     # 譲渡（残高超）
     web3.eth.defaultAccount = _from
     _value = deploy_args[2] + 1
-    txn_hash = coupon.transact().transfer(_to, _value)  # エラーになる
-    chain.wait.for_receipt(txn_hash)
+    try:
+        txn_hash = coupon.transact().transfer(_to, _value)  # エラーになる
+        chain.wait.for_receipt(txn_hash)
+    except ValueError:
+        pass
 
     assert coupon.call().balanceOf(_from) == deploy_args[2]
     assert coupon.call().balanceOf(_to) == 0
@@ -289,8 +292,11 @@ def test_transfer_error_4(web3, chain, users, coupon_exchange):
     # 譲渡（譲渡不可）
     web3.eth.defaultAccount = _from
     _value = 1
-    txn_hash = coupon.transact().transfer(_to, _value)  # エラーになる
-    chain.wait.for_receipt(txn_hash)
+    try:
+        txn_hash = coupon.transact().transfer(_to, _value)  # エラーになる
+        chain.wait.for_receipt(txn_hash)
+    except ValueError:
+        pass
 
     assert coupon.call().balanceOf(_from) == deploy_args[2]
     assert coupon.call().balanceOf(_to) == 0
@@ -316,8 +322,11 @@ def test_transfer_error_5(web3, chain, users, coupon_exchange, coupon_exchange_s
     # 譲渡
     web3.eth.defaultAccount = _issuer
     _value = deploy_args[2]
-    txn_hash = coupon.transact().transfer(dummy_exchange.address, _value)  # エラーになる
-    chain.wait.for_receipt(txn_hash)
+    try:
+        txn_hash = coupon.transact().transfer(dummy_exchange.address, _value)  # エラーになる
+        chain.wait.for_receipt(txn_hash)
+    except ValueError:
+        pass
 
     assert coupon.call().balanceOf(_issuer) == deploy_args[2]
     assert coupon.call().balanceOf(dummy_exchange.address) == 0
@@ -420,8 +429,11 @@ def test_consume_error_2(web3, chain, users, coupon_exchange):
     # 消費
     web3.eth.defaultAccount = _issuer
     _value = deploy_args[2] + 1
-    txn_hash = coupon.transact().consume(_value)  # エラーになる
-    chain.wait.for_receipt(txn_hash)
+    try:
+        txn_hash = coupon.transact().consume(_value)  # エラーになる
+        chain.wait.for_receipt(txn_hash)
+    except ValueError:
+        pass
 
     assert coupon.call().balanceOf(_issuer) == deploy_args[2]
     assert coupon.call().usedOf(_issuer) == 0
@@ -444,8 +456,11 @@ def test_consume_error_3(web3, chain, users, coupon_exchange):
 
     # 消費
     web3.eth.defaultAccount = _issuer
-    txn_hash = coupon.transact().consume(_value)  # エラーになる
-    chain.wait.for_receipt(txn_hash)
+    try:
+        txn_hash = coupon.transact().consume(_value)  # エラーになる
+        chain.wait.for_receipt(txn_hash)
+    except ValueError:
+        pass
 
     assert coupon.call().balanceOf(_issuer) == deploy_args[2]
     assert coupon.call().usedOf(_issuer) == 0
@@ -551,8 +566,11 @@ def test_issue_error_2(web3, chain, users, coupon_exchange):
 
     # 追加発行（uint最大値超）
     web3.eth.defaultAccount = _issuer
-    txn_hash = coupon.transact().issue(_value)  # エラーになる（2**256 -1 +1）
-    chain.wait.for_receipt(txn_hash)
+    try:
+        txn_hash = coupon.transact().issue(_value)  # エラーになる（2**256 -1 +1）
+        chain.wait.for_receipt(txn_hash)
+    except ValueError:
+        pass
 
     balance = coupon.call().balanceOf(_issuer)
     total_supply = coupon.call().totalSupply()
@@ -575,8 +593,11 @@ def test_issue_error_3(web3, chain, users, coupon_exchange):
 
     # 追加発行（uint最大値超）
     web3.eth.defaultAccount = _other
-    txn_hash = coupon.transact().issue(_value)  # エラーになる
-    chain.wait.for_receipt(txn_hash)
+    try:
+        txn_hash = coupon.transact().issue(_value)  # エラーになる
+        chain.wait.for_receipt(txn_hash)
+    except ValueError:
+        pass
 
     balance = coupon.call().balanceOf(_issuer)
     total_supply = coupon.call().totalSupply()
@@ -636,8 +657,11 @@ def test_setDetails_error_2(web3, chain, users, coupon_exchange):
 
     # 詳細欄の修正
     web3.eth.defaultAccount = other
-    txn_hash = coupon.transact().setDetails('updated details')
-    chain.wait.for_receipt(txn_hash)
+    try:
+        txn_hash = coupon.transact().setDetails('updated details')
+        chain.wait.for_receipt(txn_hash)
+    except ValueError:
+        pass
 
     details = coupon.call().details()
     assert details == 'some_details'
@@ -694,8 +718,11 @@ def test_setMemo_error_2(web3, chain, users, coupon_exchange):
 
     # メモ欄の修正
     web3.eth.defaultAccount = other
-    txn_hash = coupon.transact().setMemo('updated memo')
-    chain.wait.for_receipt(txn_hash)
+    try:
+        txn_hash = coupon.transact().setMemo('updated memo')
+        chain.wait.for_receipt(txn_hash)
+    except ValueError:
+        pass
 
     details = coupon.call().memo()
     assert details == 'some_memo'
@@ -914,8 +941,11 @@ def test_setImageURL_error_3(web3, chain, users, coupon_exchange):
 
     # 画像設定
     web3.eth.defaultAccount = other
-    txn_hash = coupon.transact().setImageURL(0, image_url)  # エラーになる
-    chain.wait.for_receipt(txn_hash)
+    try:
+        txn_hash = coupon.transact().setImageURL(0, image_url)  # エラーになる
+        chain.wait.for_receipt(txn_hash)
+    except ValueError:
+        pass
 
     image_url_0 = coupon.call().getImageURL(0)
     assert image_url_0 == ''
@@ -971,8 +1001,11 @@ def test_setStatus_error_2(web3, chain, users, coupon_exchange):
 
     # メモ欄の修正
     web3.eth.defaultAccount = other
-    txn_hash = coupon.transact().setStatus(False)
-    chain.wait.for_receipt(txn_hash)
+    try:
+        txn_hash = coupon.transact().setStatus(False)
+        chain.wait.for_receipt(txn_hash)
+    except ValueError:
+        pass
 
     assert coupon.call().status() is True
 
@@ -1041,8 +1074,11 @@ def test_setTradableExchange_error_2(web3, chain, users, coupon_exchange):
 
     # Exchangeの更新
     web3.eth.defaultAccount = trader
-    txn_hash = coupon.transact().setTradableExchange(other_exchange.address)  # エラーになる
-    chain.wait.for_receipt(txn_hash)
+    try:
+        txn_hash = coupon.transact().setTradableExchange(other_exchange.address)  # エラーになる
+        chain.wait.for_receipt(txn_hash)
+    except ValueError:
+        pass
 
     assert coupon.call().tradableExchange() == to_checksum_address(coupon_exchange.address)
 
@@ -1100,9 +1136,11 @@ def test_setExpirationDate_error_2(web3, chain, users, coupon_exchange):
 
     # 有効期限更新：権限エラー
     web3.eth.defaultAccount = attacker
-    txn_hash = \
-        coupon.transact().setExpirationDate(after_expiration_date)  # エラーになる
-    chain.wait.for_receipt(txn_hash)
+    try:
+        txn_hash = coupon.transact().setExpirationDate(after_expiration_date)  # エラーになる
+        chain.wait.for_receipt(txn_hash)
+    except ValueError:
+        pass
 
     expiration_date = coupon.call().expirationDate()
     assert expiration_date == deploy_args[7]
@@ -1160,9 +1198,11 @@ def test_setTransferable_error_2(web3, chain, users, coupon_exchange):
 
     # 譲渡可能更新
     web3.eth.defaultAccount = attacker
-    txn_hash = \
-        coupon.transact().setTransferable(after_transferable)  # エラーになる
-    chain.wait.for_receipt(txn_hash)
+    try:
+        txn_hash = coupon.transact().setTransferable(after_transferable)  # エラーになる
+        chain.wait.for_receipt(txn_hash)
+    except ValueError:
+        pass
 
     transferable = coupon.call().transferable()
     assert transferable == deploy_args[8]
@@ -1314,8 +1354,11 @@ def test_applyForOffering_error_2(web3, chain, users, coupon_exchange):
 
     # 募集申込
     web3.eth.defaultAccount = trader
-    txn_hash = coupon.transact().applyForOffering('abcdefgh')
-    chain.wait.for_receipt(txn_hash)
+    try:
+        txn_hash = coupon.transact().applyForOffering('abcdefgh')
+        chain.wait.for_receipt(txn_hash)
+    except ValueError:
+        pass
 
     assert coupon.call().applications(trader) == ''
 
@@ -1372,8 +1415,11 @@ def test_setReturnDetails_error_2(web3, chain, users, coupon_exchange):
 
     # リターン詳細更新：権限エラー
     web3.eth.defaultAccount = attacker
-    txn_hash = coupon.transact().setReturnDetails(after_return_details)  # エラーになる
-    chain.wait.for_receipt(txn_hash)
+    try:
+        txn_hash = coupon.transact().setReturnDetails(after_return_details)  # エラーになる
+        chain.wait.for_receipt(txn_hash)
+    except ValueError:
+        pass
 
     return_details = coupon.call().returnDetails()
     assert return_details == deploy_args[5]
@@ -1430,8 +1476,11 @@ def test_setContactInformation_error_2(web3, chain, users, coupon_exchange):
 
     # 修正
     web3.eth.defaultAccount = other
-    txn_hash = coupon.transact().setContactInformation('updated contact information')
-    chain.wait.for_receipt(txn_hash)
+    try:
+        txn_hash = coupon.transact().setContactInformation('updated contact information')
+        chain.wait.for_receipt(txn_hash)
+    except ValueError:
+        pass
 
     contact_information = coupon.call().contactInformation()
     assert contact_information == 'some_contact_information'
@@ -1488,8 +1537,11 @@ def test_setPrivacyPolicy_error_2(web3, chain, users, coupon_exchange):
 
     # 修正
     web3.eth.defaultAccount = other
-    txn_hash = coupon.transact().setPrivacyPolicy('updated privacy policy')
-    chain.wait.for_receipt(txn_hash)
+    try:
+        txn_hash = coupon.transact().setPrivacyPolicy('updated privacy policy')
+        chain.wait.for_receipt(txn_hash)
+    except ValueError:
+        pass
 
     privacy_policy = coupon.call().privacyPolicy()
     assert privacy_policy == 'some_privacy_policy'
