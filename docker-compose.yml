@@ -1,0 +1,15 @@
+version: "3"
+
+services:
+  ganache-cli:
+    image: "trufflesuite/ganache-cli:latest"
+    ports:
+      - "8545:8545"
+  ibet-smartcontract:
+    build: "."
+    environment:
+      APP_ENV: "dev"
+    links:
+      - ganache-cli:quorum
+    depends_on:
+      - ganache-cli
