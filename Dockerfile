@@ -85,8 +85,8 @@ RUN echo 'export PYENV_ROOT="$HOME/.pyenv"' >> ~apl/.bash_profile \
 
 # install python & package
 RUN . ~/.bash_profile \
- && pyenv install 3.6.2 \
- && pyenv global 3.6.2 \
+ && pyenv install 3.6.10 \
+ && pyenv global 3.6.10 \
  && pip install --upgrade pip
 
 # requirements
