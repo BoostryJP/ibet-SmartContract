@@ -109,7 +109,7 @@ contract IbetBeneficarySecurity is Ownable, IbetStandardTokenInterface {
     // ファンクション：配当基準日の更新
     // オーナーのみ実行可能
     function setDivindendDate(string _divindendDate) public onlyOwner() {
-        divindendDate = _ddivindendDate;
+        divindendDate = _divindendDate;
     }
 
     // ファンクション：リターン内容の更新
@@ -132,11 +132,11 @@ contract IbetBeneficarySecurity is Ownable, IbetStandardTokenInterface {
 
     // ファンクション：商品の関連URLを設定する
     // オーナーのみ実行可能
-    function setReferenceUrls(uint8 _class, string memory _reference_url)
+    function setReferenceUrls(uint8 _class, string memory _referenceUrl)
         public
         onlyOwner()
     {
-        reference_urls[_class] = _reference_url;
+        referenceUrls[_class] = _referenceUrl;
     }
 
     // ファンクション：問い合わせ先情報更新
