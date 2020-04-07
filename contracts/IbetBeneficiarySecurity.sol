@@ -15,9 +15,13 @@ contract IbetBeneficiarySecurity is Ownable, IbetStandardTokenInterface {
 
     // 属性情報
     uint256 public issuePrice; // 発行価格
-    uint256 public dividends; // 1口あたりの配当金/分配金
-    string public dividendRecordDate; // 権利確定日
-    string public dividendPaymentDate; // 配当支払日
+    // 配当情報
+    struct DividendInfomation {
+        uint256 dividends; // 1口あたりの配当金/分配金
+        string dividendRecordDate; // 権利確定日
+        string dividendPaymentDate; // 配当支払日
+    }
+    DividendInfomation public dividendInfomation;
     string public cansellationDate; // 消却日
     mapping(uint8 => string) public referenceUrls; // 関連URL
     string public memo; // 補足情報
@@ -73,9 +77,9 @@ contract IbetBeneficiarySecurity is Ownable, IbetStandardTokenInterface {
         personalInfoAddress = _personalInfoAddress;
         issuePrice = _issuePrice;
         totalSupply = _totalSupply;
-        dividends = _dividends;
-        dividendRecordDate = _dividendRecordDate;
-        dividendPaymentDate = _dividendPaymentDate;
+        dividendInfomation.dividends = _dividends;
+        dividendInfomation.dividendRecordDate = _dividendRecordDate;
+        dividendInfomation.dividendPaymentDate = _dividendPaymentDate;
         cansellationDate = _cansellationDate;
         contactInformation = _contactInformation;
         privacyPolicy = _privacyPolicy;
@@ -104,9 +108,9 @@ contract IbetBeneficiarySecurity is Ownable, IbetStandardTokenInterface {
         string _dividendRecordDate,
         string _dividendPaymentDate
     ) public onlyOwner() {
-        dividends = _dividends;
-        dividendRecordDate = _dividendRecordDate;
-        dividendPaymentDate = _dividendPaymentDate;
+        dividendInfomation.dividends = _dividends;
+        dividendInfomation.dividendRecordDate = _dividendRecordDate;
+        dividendInfomation.dividendPaymentDate = _dividendPaymentDate;
     }
 
     // ファンクション：消却日の更新
