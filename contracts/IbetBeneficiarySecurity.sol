@@ -15,8 +15,9 @@ contract IbetBeneficiarySecurity is Ownable, IbetStandardTokenInterface {
 
     // 属性情報
     uint256 public issuePrice; // 発行価格
-    uint256 public dividendRate; // 配当率
-    string public divindendDate; // 配当日（JSON）
+    uint256 public dividends; // 1口あたりの配当金/分配金
+    string public dividendRecordDate; // 権利確定日
+    string public dividendPaymentDate; // 配当支払日
     string public cansellationDate; // 消却日
     mapping(uint8 => string) public referenceUrls; // 関連URL
     string public memo; // 補足情報
@@ -56,8 +57,9 @@ contract IbetBeneficiarySecurity is Ownable, IbetStandardTokenInterface {
         address _personalInfoAddress,
         uint256 _issuePrice,
         uint256 _totalSupply,
-        uint256 _dividendRate,
-        string memory _divindendDate,
+        uint256 _dividends,
+        string memory _dividendRecordDate,
+        string memory _dividendPaymentDate,
         string memory _cansellationDate,
         string _contactInformation,
         string _privacyPolicy,
@@ -71,8 +73,9 @@ contract IbetBeneficiarySecurity is Ownable, IbetStandardTokenInterface {
         personalInfoAddress = _personalInfoAddress;
         issuePrice = _issuePrice;
         totalSupply = _totalSupply;
-        dividendRate = _dividendRate;
-        divindendDate = _divindendDate;
+        dividends = _dividends;
+        dividendRecordDate = _dividendRecordDate;
+        dividendPaymentDate = _dividendPaymentDate;
         cansellationDate = _cansellationDate;
         contactInformation = _contactInformation;
         privacyPolicy = _privacyPolicy;
@@ -94,16 +97,16 @@ contract IbetBeneficiarySecurity is Ownable, IbetStandardTokenInterface {
         personalInfoAddress = _address;
     }
 
-    // ファンクション：配当利回りの更新
+    // ファンクション：配当情報の更新
     // オーナーのみ実行可能
-    function setDividendRate(uint256 _dividendRate) public onlyOwner() {
-        dividendRate = _dividendRate;
-    }
-
-    // ファンクション：配当基準日の更新
-    // オーナーのみ実行可能
-    function setDivindendDate(string _divindendDate) public onlyOwner() {
-        divindendDate = _divindendDate;
+    function setDividendInfomation(
+        uint256 _dividends,
+        string _dividendRecordDate,
+        string _dividendPaymentDate
+    ) public onlyOwner() {
+        dividends = _dividends;
+        dividendRecordDate = _dividendRecordDate;
+        dividendPaymentDate = _dividendPaymentDate;
     }
 
     // ファンクション：消却日の更新
@@ -179,7 +182,9 @@ contract IbetBeneficiarySecurity is Ownable, IbetStandardTokenInterface {
         uint256 _value,
         bytes memory /*_data*/
     ) private returns (bool success) {
-        if (msg.sender != tradableExchange && msg.sender != owner) {
+        // 個人情報登録有無のチェック。
+        // 取引コントラクトからのtransferと、発行体へのtransferの場合はチェックを行わない。
+        if (msg.sender != tradableExchange && _to != owner) {
             require(
                 PersonalInfo(personalInfoAddress).isRegistered(_to, owner) ==
                     true
