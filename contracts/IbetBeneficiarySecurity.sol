@@ -15,8 +15,8 @@ contract IbetBeneficiarySecurity is Ownable, IbetStandardTokenInterface {
 
     // 属性情報
     uint256 public issuePrice; // 発行価格
-    uint256 public dividendYield; // 配当利回り
-    string public divindendDate; // 配当基準日（JSON）
+    uint256 public dividendYield; // 配当率
+    string public divindendDate; // 配当日（JSON）
     string public returnContents; // リターン内容
     string public returnDate; // リターン実施日
     string public cansellationDate; // 消却日
