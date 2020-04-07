@@ -15,10 +15,8 @@ contract IbetBeneficiarySecurity is Ownable, IbetStandardTokenInterface {
 
     // 属性情報
     uint256 public issuePrice; // 発行価格
-    uint256 public dividendYield; // 配当率
+    uint256 public dividendRate; // 配当率
     string public divindendDate; // 配当日（JSON）
-    string public returnContents; // リターン内容
-    string public returnDate; // リターン実施日
     string public cansellationDate; // 消却日
     mapping(uint8 => string) public referenceUrls; // 関連URL
     string public memo; // 補足情報
@@ -58,10 +56,8 @@ contract IbetBeneficiarySecurity is Ownable, IbetStandardTokenInterface {
         address _personalInfoAddress,
         uint256 _issuePrice,
         uint256 _totalSupply,
-        uint256 _dividendYield,
+        uint256 _dividendRate,
         string memory _divindendDate,
-        string memory _returnDate,
-        string memory _returnContents,
         string memory _cansellationDate,
         string _contactInformation,
         string _privacyPolicy,
@@ -75,10 +71,8 @@ contract IbetBeneficiarySecurity is Ownable, IbetStandardTokenInterface {
         personalInfoAddress = _personalInfoAddress;
         issuePrice = _issuePrice;
         totalSupply = _totalSupply;
-        dividendYield = _dividendYield;
+        dividendRate = _dividendRate;
         divindendDate = _divindendDate;
-        returnContents = _returnContents;
-        returnDate = _returnDate;
         cansellationDate = _cansellationDate;
         contactInformation = _contactInformation;
         privacyPolicy = _privacyPolicy;
@@ -102,26 +96,14 @@ contract IbetBeneficiarySecurity is Ownable, IbetStandardTokenInterface {
 
     // ファンクション：配当利回りの更新
     // オーナーのみ実行可能
-    function setDividendYield(uint256 _dividendYield) public onlyOwner() {
-        dividendYield = _dividendYield;
+    function setDividendRate(uint256 _dividendRate) public onlyOwner() {
+        dividendRate = _dividendRate;
     }
 
     // ファンクション：配当基準日の更新
     // オーナーのみ実行可能
     function setDivindendDate(string _divindendDate) public onlyOwner() {
         divindendDate = _divindendDate;
-    }
-
-    // ファンクション：リターン内容の更新
-    // オーナーのみ実行可能
-    function setReturnContents(string _returnContents) public onlyOwner() {
-        returnContents = _returnContents;
-    }
-
-    // ファンクション：リターン日の更新
-    // オーナーのみ実行可能
-    function setReturnDate(string _returnDate) public onlyOwner() {
-        returnDate = _returnDate;
     }
 
     // ファンクション：消却日の更新
