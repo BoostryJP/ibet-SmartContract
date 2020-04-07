@@ -7,14 +7,14 @@ import "./IbetStandardTokenInterface.sol";
 import "./PersonalInfo.sol";
 
 
-contract IbetBeneficarySecurity is Ownable, IbetStandardTokenInterface {
+contract IbetBeneficiarySecurity is Ownable, IbetStandardTokenInterface {
     using SafeMath for uint256;
 
     // 関連アドレス情報
     address public personalInfoAddress; // 個人情報記帳コントラクト
 
     // 属性情報
-    uint256 public unitPrice; // 単価
+    uint256 public issuePrice; // 発行価格
     uint256 public dividendYield; // 配当利回り
     string public divindendDate; // 配当基準日（JSON）
     string public returnContents; // リターン内容
@@ -56,7 +56,7 @@ contract IbetBeneficarySecurity is Ownable, IbetStandardTokenInterface {
         string memory _symbol,
         address _tradableExchange,
         address _personalInfoAddress,
-        uint256 _unitPrice,
+        uint256 _issuePrice,
         uint256 _totalSupply,
         uint256 _dividendYield,
         string memory _divindendDate,
@@ -73,7 +73,7 @@ contract IbetBeneficarySecurity is Ownable, IbetStandardTokenInterface {
         owner = msg.sender;
         tradableExchange = _tradableExchange;
         personalInfoAddress = _personalInfoAddress;
-        unitPrice = _unitPrice;
+        issuePrice = _issuePrice;
         totalSupply = _totalSupply;
         dividendYield = _dividendYield;
         divindendDate = _divindendDate;
@@ -197,7 +197,7 @@ contract IbetBeneficarySecurity is Ownable, IbetStandardTokenInterface {
         uint256 _value,
         bytes memory /*_data*/
     ) private returns (bool success) {
-        if (msg.sender != tradableExchange) {
+        if (msg.sender != tradableExchange && msg.sender != owner) {
             require(
                 PersonalInfo(personalInfoAddress).isRegistered(_to, owner) ==
                     true
