@@ -234,11 +234,11 @@ contract IbetBeneficiarySecurity is Ownable, IbetStandardTokenInterface {
 
     // ファンクション：資産アンロック
     // 認可済みアドレスあるいは発行体のみ実行可能
-    function unlock(address _account_address, uint256 _value) public {
+    function unlock(address _account_address, address _receive_address, uint256 _value) public {
         require(authorizedAddress[msg.sender] == true || msg.sender == owner);
         if (lockedOf(msg.sender, _account_address) < _value) revert();
 
-        balances[_account_address] = balanceOf(_account_address).add(_value);
+        balances[_receive_address] = balanceOf(_receive_address).add(_value);
         locked[msg.sender][_account_address] = lockedOf(
             msg.sender,
             _account_address
