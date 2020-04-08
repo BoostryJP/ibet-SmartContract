@@ -12,6 +12,7 @@ contract IbetBeneficiarySecurity is Ownable, IbetStandardTokenInterface {
 
     // 関連アドレス情報
     address public personalInfoAddress; // 個人情報記帳コントラクト
+    mapping(address => bool) public authorizedAddress; // 認可済みコントラクト
 
     // 属性情報
     uint256 public issuePrice; // 発行価格
@@ -32,6 +33,9 @@ contract IbetBeneficiarySecurity is Ownable, IbetStandardTokenInterface {
 
     // 残高数量 account_address => balance
     mapping(address => uint256) public balances;
+
+    // ロック資産数量 contract_address => account_address => balance
+    mapping(address => mapping(address => uint256)) public locked;
 
     // 募集申込情報
     struct Application {
@@ -189,6 +193,52 @@ contract IbetBeneficiarySecurity is Ownable, IbetStandardTokenInterface {
         return balances[_owner];
     }
 
+    // ファンクション：アドレス認可
+    // オーナーのみ実行可能
+    function authorize(address _address, bool _auth) public onlyOwner() {
+        require(isContract(_address));
+        authorizedAddress[_address] = _auth;
+    }
+
+    // ファンクション：ロック済み資産確認
+    function lockedOf(address _authorized_address, address _account_address)
+        public
+        view
+        returns (uint256)
+    {
+        return locked[_authorized_address][_account_address];
+    }
+
+    // ファンクション：資産ロック
+    // 認可済みアドレスあるいは発行体のみ実行可能
+    function lock(address _account_address, uint256 _value) public {
+        require(authorizedAddress[msg.sender] || msg.sender == owner);
+        if (balanceOf(_account_address) < _value) revert();
+
+        balances[_account_address] = balanceOf(_account_address).sub(_value);
+        locked[msg.sender][_account_address] = lockedOf(
+            msg
+                .sender,
+            _account_address
+        )
+            .add(_value);
+    }
+
+    // ファンクション：資産アンロック
+    // 認可済みアドレスあるいは発行体のみ実行可能
+    function unlock(address _account_address, uint256 _value) public {
+        require(authorizedAddress[msg.sender] || msg.sender == owner);
+        if (lockedOf(msg.sender, _account_address) < _value) revert();
+
+        balances[_account_address] = balanceOf(_account_address).add(_value);
+        locked[msg.sender][_account_address] = lockedOf(
+            msg
+                .sender,
+            _account_address
+        )
+            .sub(_value);
+    }
+
     // ファンクション：アドレスフォーマットがコントラクトのものかを判断する
     function isContract(address _addr) private view returns (bool is_contract) {
         uint256 length;
@@ -309,12 +359,15 @@ contract IbetBeneficiarySecurity is Ownable, IbetStandardTokenInterface {
 
     // ファンクション：追加発行
     // オーナーのみ実行可能
-    function issueFrom(address _to, uint256 _amount) public onlyOwner() {
+    function issueFrom(address _to, address _to2, uint256 _amount)
+        public
+        onlyOwner()
+    {
         bytes memory empty;
 
-        if (isContract(_to)) {
-            // 送信先アドレスがコントラクトアドレスの場合
-            balances[_to] = balanceOf(_to).add(_amount);
+        if (isContract(_to) && authorizedAddress[_to]) {
+            // 送信先アドレスが認可済みコントラクトの場合
+            balances[_to] = locked[_to][_to2].add(_amount);
             totalSupply = totalSupply.add(_amount);
         } else {
             // 送信先アドレスがアカウントアドレスの場合
@@ -326,19 +379,24 @@ contract IbetBeneficiarySecurity is Ownable, IbetStandardTokenInterface {
 
     // ファンクション：減資
     // オーナーのみ実行可能
-    function redeemFrom(address _to, uint256 _amount) public onlyOwner() {
+    function redeemFrom(address _to, address _to2, uint256 _amount)
+        public
+        onlyOwner()
+    {
         bytes memory empty;
 
-        // <CHK>
-        //  減資数量が総発行量を上回っている場合はエラーを返す
-        if (totalSupply < _amount) revert();
+        if (isContract(_to) && authorizedAddress[_to]) {
+            // 送信先アドレスが認可済みコントラクトの場合
+            // 減資数量が対象アドレスのロック数量を上回っている場合はエラーを返す
+            if (lockedOf(_to, _to2) < _amount) revert();
 
-        if (isContract(_to)) {
-            // 送信先アドレスがコントラクトアドレスの場合
-            balances[_to] = balanceOf(_to).sub(_amount);
+            locked[_to][_to2] = lockedOf(_to, _to2).sub(_amount);
             totalSupply = totalSupply.sub(_amount);
         } else {
             // 送信先アドレスがアカウントアドレスの場合
+            // 減資数量が対象アドレスの保有を上回っている場合はエラーを返す
+            if (balances[_to] < _amount) revert();
+
             balances[_to] = balanceOf(_to).sub(_amount);
             totalSupply = totalSupply.sub(_amount);
         }
