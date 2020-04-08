@@ -1499,12 +1499,12 @@ def test_applyForOffering_error_3(web3, chain, users, personal_info):
 
 
 '''
-TEST_追加発行（issue）
+TEST_増資（issueFrom）
 '''
 
 
-# 正常系1: 発行 -> 追加発行
-def test_issue_normal_1(web3, chain, users):
+# 正常系1: 発行 -> 増資（発行体自身のアドレスに増資）
+def test_issueFrom_normal_1(web3, chain, users):
     issuer = users['issuer']
     value = 10
 
@@ -1512,9 +1512,9 @@ def test_issue_normal_1(web3, chain, users):
     web3.eth.defaultAccount = issuer
     bs_token, deploy_args = utils.issue_bs_token(web3, chain, users, zero_address, zero_address)
 
-    # 追加発行
+    # 増資
     web3.eth.defaultAccount = issuer
-    txn_hash = bs_token.transact().issue(value)
+    txn_hash = bs_token.transact().issueFrom(issuer, value)
     chain.wait.for_receipt(txn_hash)
 
     total_supply = bs_token.call().totalSupply()
@@ -1524,8 +1524,36 @@ def test_issue_normal_1(web3, chain, users):
     assert balance == deploy_args[5] + value
 
 
+# 正常系1: 発行 -> 増資（投資家想定のEOAアドレス並びにExchangeコントラクトのアドレスを増資）
+def test_issueFrom_normal_2(web3, chain, users, bs_exchange):
+    issuer = users['issuer']
+    trader = users['trader']
+    value = 10
+
+    # トークン新規発行
+    web3.eth.defaultAccount = issuer
+    bs_token, deploy_args = utils.issue_bs_token(web3, chain, users, zero_address, zero_address)
+
+    # 増資
+    web3.eth.defaultAccount = issuer
+    txn_hash = bs_token.transact().issueFrom(trader, value)
+    chain.wait.for_receipt(txn_hash)
+    txn_hash = bs_token.transact().issueFrom(bs_exchange.address, value)
+    chain.wait.for_receipt(txn_hash)
+
+    total_supply = bs_token.call().totalSupply()
+    balance_issuer = bs_token.call().balanceOf(issuer)
+    balance_trader = bs_token.call().balanceOf(trader)
+    balance_exchange = bs_token.call().balanceOf(bs_exchange.address)
+
+    assert total_supply == deploy_args[5] + value + value
+    assert balance_issuer == deploy_args[5]
+    assert balance_trader == value
+    assert balance_exchange == value
+
+
 # エラー系1: 入力値の型誤り
-def test_issue_error_1(web3, chain, users):
+def test_issueFrom_error_1(web3, chain, users):
     issuer = users['issuer']
 
     # トークン新規発行
@@ -1534,15 +1562,19 @@ def test_issue_error_1(web3, chain, users):
 
     # String
     with pytest.raises(TypeError):
-        bs_token.transact().issue("1")
+        bs_token.transact().issueFrom(issuer, "1")
 
     # 小数
     with pytest.raises(TypeError):
-        bs_token.transact().issue(1.0)
+        bs_token.transact().issueFrom(issuer, 1.0)
+
+    # アドレス不正
+    with pytest.raises(TypeError):
+        bs_token.transact().issueFrom("0x00", 1)
 
 
 # エラー系2: 限界値超
-def test_issue_error_2(web3, chain, users):
+def test_issueFrom_error_2(web3, chain, users):
     issuer = users['issuer']
 
     # トークン新規発行
@@ -1551,15 +1583,15 @@ def test_issue_error_2(web3, chain, users):
 
     # 上限値超
     with pytest.raises(TypeError):
-        bs_token.transact().issue(2 ** 256)
+        bs_token.transact().issueFrom(issuer, 2 ** 256)
 
     # 下限値超
     with pytest.raises(TypeError):
-        bs_token.transact().issue(-1)
+        bs_token.transact().issueFrom(issuer, -1)
 
 
-# エラー系3: 発行→追加発行→上限界値超
-def test_issue_error_3(web3, chain, users):
+# エラー系3: 発行→増資→上限界値超
+def test_issueFrom_error_3(web3, chain, users):
     issuer = users['issuer']
 
     # トークン新規発行
@@ -1568,10 +1600,10 @@ def test_issue_error_3(web3, chain, users):
 
     issue_amount = 2**256 - deploy_args[5]
 
-    # 追加発行（限界値超）
+    # 増資（限界値超）
     web3.eth.defaultAccount = issuer
     try:
-        txn_hash = bs_token.transact().issue(issue_amount)  # エラーになる
+        txn_hash = bs_token.transact().issueFrom(issuer, issue_amount)  # エラーになる
         chain.wait.for_receipt(txn_hash)
     except ValueError:
         pass
@@ -1584,7 +1616,7 @@ def test_issue_error_3(web3, chain, users):
 
 
 # エラー系4: 権限エラー
-def test_issue_error_4(web3, chain, users):
+def test_issueFrom_error_4(web3, chain, users):
     issuer = users['issuer']
     attacker = users['trader']
 
@@ -1592,10 +1624,154 @@ def test_issue_error_4(web3, chain, users):
     web3.eth.defaultAccount = issuer
     bs_token, deploy_args = utils.issue_bs_token(web3, chain, users, zero_address, zero_address)
 
-    # 追加発行：権限エラー
+    # 増資：権限エラー
     web3.eth.defaultAccount = attacker
     try:
-        txn_hash = bs_token.transact().issue(1)  # エラーになる
+        txn_hash = bs_token.transact().issueFrom(attacker, 1)  # エラーになる
+        chain.wait.for_receipt(txn_hash)
+    except ValueError:
+        pass
+
+    total_supply = bs_token.call().totalSupply()
+    balance = bs_token.call().balanceOf(issuer)
+
+    assert total_supply == deploy_args[5]
+    assert balance == deploy_args[5]
+
+
+'''
+TEST_減資（redeemFrom）
+'''
+
+
+# 正常系1: 発行 -> 減資（発行体自身のアドレスに減資）
+def test_redeemFrom_normal_1(web3, chain, users):
+    issuer = users['issuer']
+    value = 10
+
+    # トークン新規発行
+    web3.eth.defaultAccount = issuer
+    bs_token, deploy_args = utils.issue_bs_token(web3, chain, users, zero_address, zero_address)
+
+    # 減資
+    web3.eth.defaultAccount = issuer
+    txn_hash = bs_token.transact().redeemFrom(issuer, value)
+    chain.wait.for_receipt(txn_hash)
+
+    total_supply = bs_token.call().totalSupply()
+    balance = bs_token.call().balanceOf(issuer)
+
+    assert total_supply == deploy_args[5] - value
+    assert balance == deploy_args[5] - value
+
+
+# 正常系1: 発行 -> 減資（投資家想定のEOAアドレス並びにExchangeコントラクトのアドレスを減資）
+def test_redeemFrom_normal_2(web3, chain, users, bs_exchange):
+    issuer = users['issuer']
+    trader = users['trader']
+    transfer_amount = 30
+    value = 10
+
+    # トークン新規発行
+    web3.eth.defaultAccount = issuer
+    bs_token, deploy_args = utils.issue_bs_token(web3, chain, users, zero_address, zero_address)
+
+    # traderとexchangeに譲渡
+    txn_hash = bs_token.transact().transferFrom(issuer, trader, transfer_amount)
+    chain.wait.for_receipt(txn_hash)
+    txn_hash = bs_token.transact().transferFrom(issuer, bs_exchange.address, transfer_amount)
+    chain.wait.for_receipt(txn_hash)
+
+    # 減資
+    web3.eth.defaultAccount = issuer
+    txn_hash = bs_token.transact().redeemFrom(trader, value)
+    chain.wait.for_receipt(txn_hash)
+    txn_hash = bs_token.transact().redeemFrom(bs_exchange.address, value)
+    chain.wait.for_receipt(txn_hash)
+
+    total_supply = bs_token.call().totalSupply()
+    balance_issuer = bs_token.call().balanceOf(issuer)
+    balance_trader = bs_token.call().balanceOf(trader)
+    balance_exchange = bs_token.call().balanceOf(bs_exchange.address)
+
+    assert total_supply == deploy_args[5] - value - value
+    assert balance_issuer == deploy_args[5] - transfer_amount - transfer_amount
+    assert balance_trader == transfer_amount - value
+    assert balance_exchange == transfer_amount - value
+
+
+# エラー系1: 入力値の型誤り
+def test_redeemFrom_error_1(web3, chain, users):
+    issuer = users['issuer']
+
+    # トークン新規発行
+    web3.eth.defaultAccount = issuer
+    bs_token, deploy_args = utils.issue_bs_token(web3, chain, users, zero_address, zero_address)
+
+    # String
+    with pytest.raises(TypeError):
+        bs_token.transact().redeemFrom(issuer, "1")
+
+    # 小数
+    with pytest.raises(TypeError):
+        bs_token.transact().redeemFrom(issuer, 1.0)
+
+    # アドレス不正
+    with pytest.raises(TypeError):
+        bs_token.transact().redeemFrom("0x00", 1)
+
+
+# エラー系2: 限界値超
+def test_redeemFrom_error_2(web3, chain, users):
+    issuer = users['issuer']
+
+    # トークン新規発行
+    web3.eth.defaultAccount = issuer
+    bs_token, deploy_args = utils.issue_bs_token(web3, chain, users, zero_address, zero_address)
+
+    # 下限値超
+    with pytest.raises(TypeError):
+        bs_token.transact().redeemFrom(issuer, -1)
+
+
+# エラー系3: 発行→減資→発行数量より下限を超過
+def test_redeemFrom_error_3(web3, chain, users):
+    issuer = users['issuer']
+
+    # トークン新規発行
+    web3.eth.defaultAccount = issuer
+    bs_token, deploy_args = utils.issue_bs_token(web3, chain, users, zero_address, zero_address)
+
+    redeem_amount = deploy_args[5] + 1
+
+    # 減資（限界値超）
+    web3.eth.defaultAccount = issuer
+    try:
+        txn_hash = bs_token.transact().redeemFrom(issuer, redeem_amount)  # エラーになる
+        chain.wait.for_receipt(txn_hash)
+    except ValueError:
+        pass
+
+    total_supply = bs_token.call().totalSupply()
+    balance = bs_token.call().balanceOf(issuer)
+
+    assert total_supply == deploy_args[5]
+    assert balance == deploy_args[5]
+
+
+# エラー系4: 権限エラー
+def test_redeemFrom_error_4(web3, chain, users):
+    issuer = users['issuer']
+    attacker = users['trader']
+
+    # トークン新規発行
+    web3.eth.defaultAccount = issuer
+    bs_token, deploy_args = utils.issue_bs_token(web3, chain, users, zero_address, zero_address)
+
+    # 減資：権限エラー
+    web3.eth.defaultAccount = attacker
+    try:
+        txn_hash = bs_token.transact().redeemFrom(attacker, 1)  # エラーになる
         chain.wait.for_receipt(txn_hash)
     except ValueError:
         pass

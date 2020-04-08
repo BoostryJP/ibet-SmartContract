@@ -41,6 +41,13 @@ contract IbetBeneficiarySecurity is Ownable, IbetStandardTokenInterface {
     // 募集申込 account_address => data
     mapping(address => Application) public applications;
 
+    // イベント：配当情報の変更
+    event ChangeDividendInfomation(
+        uint256 dividends,
+        string dividendRecordDate,
+        string dividendPaymentDate
+    );
+
     // イベント：振替
     event Transfer(address indexed from, address indexed to, uint256 value);
 
@@ -52,6 +59,12 @@ contract IbetBeneficiarySecurity is Ownable, IbetStandardTokenInterface {
 
     // イベント：募集申込
     event ApplyFor(address indexed accountAddress, uint256 amount);
+
+    // イベント：増資
+    event Issue(address indexed from, address indexed to, uint256 amount);
+
+    // イベント：減資
+    event Redeem(address indexed from, address indexed to, uint256 amount);
 
     // コンストラクタ
     constructor(
@@ -111,6 +124,11 @@ contract IbetBeneficiarySecurity is Ownable, IbetStandardTokenInterface {
         dividendInfomation.dividends = _dividends;
         dividendInfomation.dividendRecordDate = _dividendRecordDate;
         dividendInfomation.dividendPaymentDate = _dividendPaymentDate;
+        emit ChangeDividendInfomation(
+            dividendInfomation.dividends,
+            dividendInfomation.dividendRecordDate,
+            dividendInfomation.dividendPaymentDate
+        );
     }
 
     // ファンクション：消却日の更新
@@ -291,8 +309,43 @@ contract IbetBeneficiarySecurity is Ownable, IbetStandardTokenInterface {
 
     // ファンクション：追加発行
     // オーナーのみ実行可能
-    function issue(uint256 _value) public onlyOwner() {
-        totalSupply = totalSupply.add(_value);
-        balances[owner] = balanceOf(owner).add(_value);
+    function issueFrom(address _to, uint256 _amount) public onlyOwner() {
+        bytes memory empty;
+
+        if (isContract(_to)) {
+            // 送信先アドレスがコントラクトアドレスの場合
+            balances[_to] = balanceOf(_to).add(_amount);
+            totalSupply = totalSupply.add(_amount);
+            ContractReceiver receiver = ContractReceiver(_to);
+            receiver.tokenFallback(msg.sender, _amount, empty);
+        } else {
+            // 送信先アドレスがアカウントアドレスの場合
+            balances[_to] = balanceOf(_to).add(_amount);
+            totalSupply = totalSupply.add(_amount);
+        }
+        emit Issue(msg.sender, _to, _amount);
+    }
+
+    // ファンクション：減資
+    // オーナーのみ実行可能
+    function redeemFrom(address _to, uint256 _amount) public onlyOwner() {
+        bytes memory empty;
+
+        // <CHK>
+        //  減資数量が総発行量を下回っている場合はエラーを返す
+        if (totalSupply < _amount) revert();
+
+        if (isContract(_to)) {
+            // 送信先アドレスがコントラクトアドレスの場合
+            balances[_to] = balanceOf(_to).sub(_amount);
+            totalSupply = totalSupply.sub(_amount);
+            ContractReceiver receiver = ContractReceiver(_to);
+            receiver.tokenFallback(msg.sender, _amount, empty);
+        } else {
+            // 送信先アドレスがアカウントアドレスの場合
+            balances[_to] = balanceOf(_to).sub(_amount);
+            totalSupply = totalSupply.sub(_amount);
+        }
+        emit Redeem(msg.sender, _to, _amount);
     }
 }
