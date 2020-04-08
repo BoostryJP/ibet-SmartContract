@@ -52,7 +52,7 @@ contract IbetBeneficiarySecurity is Ownable, IbetStandardTokenInterface {
     event Lock(address indexed to, uint256 value);
 
     // イベント：資産アンロック
-    event Unlock(address indexed to, uint256 value);
+    event Unlock(address indexed from, address indexed to, uint256 value);
 
     // イベント：配当情報の変更
     event ChangeDividendInfomation(
