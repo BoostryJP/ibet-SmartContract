@@ -45,6 +45,15 @@ contract IbetBeneficiarySecurity is Ownable, IbetStandardTokenInterface {
     // 募集申込 account_address => data
     mapping(address => Application) public applications;
 
+    // イベント：認可
+    event Authorize(address indexed to, bool auth);
+
+    // イベント：資産ロック
+    event Lock(address indexed to, uint256 value);
+
+    // イベント：資産アンロック
+    event Unlock(address indexed to, uint256 value);
+
     // イベント：配当情報の変更
     event ChangeDividendInfomation(
         uint256 dividends,
@@ -65,10 +74,10 @@ contract IbetBeneficiarySecurity is Ownable, IbetStandardTokenInterface {
     event ApplyFor(address indexed accountAddress, uint256 amount);
 
     // イベント：増資
-    event Issue(address indexed from, address indexed to, uint256 amount);
+    event Issue(address indexed from, address indexed primary_address, address indexed secondary_address, uint256 amount);
 
     // イベント：減資
-    event Redeem(address indexed from, address indexed to, uint256 amount);
+    event Redeem(address indexed from, address indexed primary_address, address indexed secondary_address, uint256 amount);
 
     // コンストラクタ
     constructor(
@@ -196,8 +205,8 @@ contract IbetBeneficiarySecurity is Ownable, IbetStandardTokenInterface {
     // ファンクション：アドレス認可
     // オーナーのみ実行可能
     function authorize(address _address, bool _auth) public onlyOwner() {
-        require(isContract(_address));
         authorizedAddress[_address] = _auth;
+        emit Authorize(_address, _auth);
     }
 
     // ファンクション：ロック済み資産確認
@@ -212,31 +221,29 @@ contract IbetBeneficiarySecurity is Ownable, IbetStandardTokenInterface {
     // ファンクション：資産ロック
     // 認可済みアドレスあるいは発行体のみ実行可能
     function lock(address _account_address, uint256 _value) public {
-        require(authorizedAddress[msg.sender] || msg.sender == owner);
+        require(authorizedAddress[msg.sender] == true || msg.sender == owner);
         if (balanceOf(_account_address) < _value) revert();
 
         balances[_account_address] = balanceOf(_account_address).sub(_value);
         locked[msg.sender][_account_address] = lockedOf(
-            msg
-                .sender,
+            msg.sender,
             _account_address
-        )
-            .add(_value);
+        ).add(_value);
+        emit Lock(_account_address, _value);
     }
 
     // ファンクション：資産アンロック
     // 認可済みアドレスあるいは発行体のみ実行可能
     function unlock(address _account_address, uint256 _value) public {
-        require(authorizedAddress[msg.sender] || msg.sender == owner);
+        require(authorizedAddress[msg.sender] == true || msg.sender == owner);
         if (lockedOf(msg.sender, _account_address) < _value) revert();
 
         balances[_account_address] = balanceOf(_account_address).add(_value);
         locked[msg.sender][_account_address] = lockedOf(
-            msg
-                .sender,
+            msg.sender,
             _account_address
-        )
-            .sub(_value);
+        ).sub(_value);
+        emit Unlock(_account_address, _value);
     }
 
     // ファンクション：アドレスフォーマットがコントラクトのものかを判断する
@@ -359,47 +366,47 @@ contract IbetBeneficiarySecurity is Ownable, IbetStandardTokenInterface {
 
     // ファンクション：追加発行
     // オーナーのみ実行可能
-    function issueFrom(address _to, address _to2, uint256 _amount)
+    function issueFrom(address _primary_address, address _secondary_address, uint256 _amount)
         public
         onlyOwner()
     {
         bytes memory empty;
 
-        if (isContract(_to) && authorizedAddress[_to]) {
+        if (isContract(_primary_address) && authorizedAddress[_primary_address] == true) {
             // 送信先アドレスが認可済みコントラクトの場合
-            balances[_to] = locked[_to][_to2].add(_amount);
+            locked[_primary_address][_secondary_address] = lockedOf(_primary_address, _secondary_address).add(_amount);
             totalSupply = totalSupply.add(_amount);
         } else {
             // 送信先アドレスがアカウントアドレスの場合
-            balances[_to] = balanceOf(_to).add(_amount);
+            balances[_primary_address] = balanceOf(_primary_address).add(_amount);
             totalSupply = totalSupply.add(_amount);
         }
-        emit Issue(msg.sender, _to, _amount);
+        emit Issue(msg.sender, _primary_address, _secondary_address, _amount);
     }
 
     // ファンクション：減資
     // オーナーのみ実行可能
-    function redeemFrom(address _to, address _to2, uint256 _amount)
+    function redeemFrom(address _primary_address, address _secondary_address, uint256 _amount)
         public
         onlyOwner()
     {
         bytes memory empty;
 
-        if (isContract(_to) && authorizedAddress[_to]) {
+        if (isContract(_primary_address) && authorizedAddress[_primary_address] == true) {
             // 送信先アドレスが認可済みコントラクトの場合
             // 減資数量が対象アドレスのロック数量を上回っている場合はエラーを返す
-            if (lockedOf(_to, _to2) < _amount) revert();
+            if (lockedOf(_primary_address, _secondary_address) < _amount) revert();
 
-            locked[_to][_to2] = lockedOf(_to, _to2).sub(_amount);
+            locked[_primary_address][_secondary_address] = lockedOf(_primary_address, _secondary_address).sub(_amount);
             totalSupply = totalSupply.sub(_amount);
         } else {
             // 送信先アドレスがアカウントアドレスの場合
             // 減資数量が対象アドレスの保有を上回っている場合はエラーを返す
-            if (balances[_to] < _amount) revert();
+            if (balances[_primary_address] < _amount) revert();
 
-            balances[_to] = balanceOf(_to).sub(_amount);
+            balances[_primary_address] = balanceOf(_primary_address).sub(_amount);
             totalSupply = totalSupply.sub(_amount);
         }
-        emit Redeem(msg.sender, _to, _amount);
+        emit Redeem(msg.sender, _primary_address, _secondary_address, _amount);
     }
 }
