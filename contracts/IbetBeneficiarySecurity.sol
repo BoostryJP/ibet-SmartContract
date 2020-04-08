@@ -34,7 +34,7 @@ contract IbetBeneficiarySecurity is Ownable, IbetStandardTokenInterface {
     // 残高数量 account_address => balance
     mapping(address => uint256) public balances;
 
-    // ロック資産数量 contract_address => account_address => balance
+    // ロック資産数量 address => account_address => balance
     mapping(address => mapping(address => uint256)) public locked;
 
     // 募集申込情報
