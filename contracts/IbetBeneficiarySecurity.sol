@@ -243,7 +243,7 @@ contract IbetBeneficiarySecurity is Ownable, IbetStandardTokenInterface {
             msg.sender,
             _account_address
         ).sub(_value);
-        emit Unlock(_account_address, _value);
+        emit Unlock(_account_address, _receive_address, _value);
     }
 
     // ファンクション：アドレスフォーマットがコントラクトのものかを判断する
