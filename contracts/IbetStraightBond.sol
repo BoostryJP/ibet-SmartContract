@@ -16,7 +16,7 @@ contract IbetStraightBond is Ownable, IbetStandardTokenInterface {
   string public redemptionDate; // 償還日
   uint256 public redemptionValue; // 償還金額
   string public returnDate; // リターン実施日
-  string public returnAmount; // リターン内容
+  string public returnDetails; // リターン内容
   string public purpose; // 発行目的
   string public memo; //メモ欄
   bool public status; // 取扱ステータス(True：有効、False：無効)
@@ -83,7 +83,7 @@ contract IbetStraightBond is Ownable, IbetStandardTokenInterface {
     uint256 _totalSupply, address _tradableExchange,
     uint256 _faceValue, uint256 _interestRate, string memory _interestPaymentDate,
     string memory _redemptionDate, uint256 _redemptionValue,
-    string memory _returnDate, string memory _returnAmount,
+    string memory _returnDate, string memory _returnDetails,
     string memory _purpose, string memory _memo,
     string _contactInformation, string _privacyPolicy,
     address _personalInfoAddress)
@@ -100,7 +100,7 @@ contract IbetStraightBond is Ownable, IbetStandardTokenInterface {
     redemptionDate = _redemptionDate;
     redemptionValue = _redemptionValue;
     returnDate = _returnDate;
-    returnAmount = _returnAmount;
+    returnDetails = _returnDetails;
     purpose = _purpose;
     memo = _memo;
     transferable = true;
