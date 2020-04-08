@@ -49,7 +49,7 @@ contract IbetBeneficiarySecurity is Ownable, IbetStandardTokenInterface {
     event Authorize(address indexed to, bool auth);
 
     // イベント：資産ロック
-    event Lock(address indexed to, uint256 value);
+    event Lock(address indexed _target_address, uint256 value);
 
     // イベント：資産アンロック
     event Unlock(address indexed from, address indexed to, uint256 value);
@@ -219,17 +219,18 @@ contract IbetBeneficiarySecurity is Ownable, IbetStandardTokenInterface {
     }
 
     // ファンクション：資産ロック
-    // 認可済みアドレスあるいは発行体のみ実行可能
-    function lock(address _account_address, uint256 _value) public {
-        require(authorizedAddress[msg.sender] == true || msg.sender == owner);
-        if (balanceOf(_account_address) < _value) revert();
+    function lock(address _target_address, uint256 _value) public {
+        // ロック対象が認可済みであるか、発行者であることをチェック
+        require(authorizedAddress[_target_address] == true || _target_address == owner);
+        // ロック数量が保有を上回っている場合、エラー
+        if (balanceOf(msg.sender) < _value) revert();
 
-        balances[_account_address] = balanceOf(_account_address).sub(_value);
-        locked[msg.sender][_account_address] = lockedOf(
-            msg.sender,
-            _account_address
+        balances[msg.sender] = balanceOf(msg.sender).sub(_value);
+        locked[_target_address][msg.sender] = lockedOf(
+            _target_address,
+            msg.sender
         ).add(_value);
-        emit Lock(_account_address, _value);
+        emit Lock(_target_address, _value);
     }
 
     // ファンクション：資産アンロック
@@ -237,12 +238,12 @@ contract IbetBeneficiarySecurity is Ownable, IbetStandardTokenInterface {
     function unlock(address _account_address, address _receive_address, uint256 _value) public {
         require(authorizedAddress[msg.sender] == true || msg.sender == owner);
         if (lockedOf(msg.sender, _account_address) < _value) revert();
-
-        balances[_receive_address] = balanceOf(_receive_address).add(_value);
+        
         locked[msg.sender][_account_address] = lockedOf(
             msg.sender,
             _account_address
         ).sub(_value);
+        balances[_receive_address] = balanceOf(_receive_address).add(_value);
         emit Unlock(_account_address, _receive_address, _value);
     }
 
