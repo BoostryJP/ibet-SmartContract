@@ -920,6 +920,509 @@ def test_balanceOf_error_1(web3, chain, users, bs_exchange, personal_info):
 
 
 '''
+TEST_アドレス認可（authorize）
+'''
+
+
+# 正常系1: 商品コントラクト作成 -> アドレス認可 -> 認可情報変更
+def test_authorize_normal_1(web3, chain, users, bs_exchange, personal_info):
+    issuer = users['issuer']
+    trader = users['trader']
+
+    # 受益証券トークン新規発行
+    web3.eth.defaultAccount = issuer
+    bs_token, deploy_args = utils. \
+        issue_bs_token(web3, chain, users, bs_exchange.address, personal_info.address)
+
+    # 認可
+    txn_hash = bs_token.transact().authorize(trader, True)
+    chain.wait.for_receipt(txn_hash)
+
+
+    auth_trader= bs_token.call().authorizedAddress(trader)
+    auth_issuer = bs_token.call().authorizedAddress(issuer)
+    assert auth_trader== True
+    assert auth_issuer == False
+
+    # 変更
+    txn_hash = bs_token.transact().authorize(trader, False)
+    chain.wait.for_receipt(txn_hash)
+
+    auth_trader = bs_token.call().authorizedAddress(trader)
+    assert auth_trader == False
+
+
+# エラー系1: 入力値の型誤り（address, auth）
+def test_authorize_error_1(web3, chain, users, bs_exchange, personal_info):
+    issuer = users['issuer']
+
+    # 受益証券トークン新規発行
+    web3.eth.defaultAccount = issuer
+    bs_token, deploy_args = utils. \
+        issue_bs_token(web3, chain, users, bs_exchange.address, personal_info.address)
+
+    account_address = 1234
+
+    # アドレス指定誤り
+    with pytest.raises(TypeError):
+        bs_token.transact().authorize('0x1234', True)
+
+    # アドレス指定誤り
+    with pytest.raises(TypeError):
+        bs_token.transact().authorize(issuer, 'True')     
+
+
+'''
+TEST_ロック（lock）、ロック数量参照（lockedOf）
+'''
+
+
+# 正常系1: 認可済みアドレスによるロック（商品コントラクト作成 -> 移管 -> 認可 -> ロック）
+def test_lock_normal_1(web3, chain, users, bs_exchange, personal_info):
+    issuer = users['issuer']
+    trader = users['trader']
+    agent = users['agent']
+    transfer_amount = 30
+    lock_amount = 10
+
+
+    # 受益証券トークン新規発行
+    web3.eth.defaultAccount = issuer
+    bs_token, deploy_args = utils. \
+        issue_bs_token(web3, chain, users, bs_exchange.address, personal_info.address)
+    
+    # 投資家に移管
+    txn_hash = bs_token.transact().transferFrom(issuer, trader, transfer_amount)
+    chain.wait.for_receipt(txn_hash)
+
+    # agentを認可
+    txn_hash = bs_token.transact().authorize(agent, True)
+    chain.wait.for_receipt(txn_hash)
+
+    # agentによりtraderの保有をロック
+    web3.eth.defaultAccount = agent
+    txn_hash = bs_token.transact().lock(trader, lock_amount)
+    chain.wait.for_receipt(txn_hash)
+
+    trader_amount = bs_token.call().balanceOf(trader)
+    trader_locked_amount = bs_token.call().lockedOf(agent, trader)
+
+    assert trader_amount == transfer_amount - lock_amount
+    assert trader_locked_amount == lock_amount
+
+# 正常系2: 発行体によるロック（商品コントラクト作成 -> 移管 -> ロック）
+def test_lock_normal_2(web3, chain, users, bs_exchange, personal_info):
+    issuer = users['issuer']
+    trader = users['trader']
+
+    transfer_amount = 30
+    lock_amount = 10
+
+    # 受益証券トークン新規発行
+    web3.eth.defaultAccount = issuer
+    bs_token, deploy_args = utils. \
+        issue_bs_token(web3, chain, users, bs_exchange.address, personal_info.address)
+    
+    # 投資家に移管
+    txn_hash = bs_token.transact().transferFrom(issuer, trader, transfer_amount)
+    chain.wait.for_receipt(txn_hash)
+
+    # issuerによりtraderの保有をロック
+    txn_hash = bs_token.transact().lock(trader, lock_amount)
+    chain.wait.for_receipt(txn_hash)
+
+    trader_amount = bs_token.call().balanceOf(trader)
+    trader_locked_amount = bs_token.call().lockedOf(issuer, trader)
+
+    assert trader_amount == transfer_amount - lock_amount
+    assert trader_locked_amount == lock_amount
+
+# 異常系1: 入力値の型誤り
+def test_lock_error_1(web3, chain, users, bs_exchange, personal_info):
+    issuer = users['issuer']
+    trader = users['trader']
+
+    transfer_amount = 30
+    lock_amount = 10
+
+    # 受益証券トークン新規発行
+    web3.eth.defaultAccount = issuer
+    bs_token, deploy_args = utils. \
+        issue_bs_token(web3, chain, users, bs_exchange.address, personal_info.address)
+    
+    # 投資家に移管
+    txn_hash = bs_token.transact().transferFrom(issuer, trader, transfer_amount)
+    chain.wait.for_receipt(txn_hash)
+
+    # アドレス指定誤り
+    with pytest.raises(TypeError):
+        bs_token.transact().lock('0x1234', lock_amount)
+
+    # 数量指定誤り
+    with pytest.raises(TypeError):
+        bs_token.transact().lock(trader, '10')
+    
+    trader_amount = bs_token.call().balanceOf(trader)
+    trader_locked_amount = bs_token.call().lockedOf(issuer, trader)
+
+    assert trader_amount == transfer_amount
+    assert trader_locked_amount == 0
+
+# 異常系2: 数量超過
+def test_lock_error_2(web3, chain, users, bs_exchange, personal_info):
+    issuer = users['issuer']
+    trader = users['trader']
+
+    transfer_amount = 30
+    lock_amount = 40
+
+    # 受益証券トークン新規発行
+    web3.eth.defaultAccount = issuer
+    bs_token, deploy_args = utils. \
+        issue_bs_token(web3, chain, users, bs_exchange.address, personal_info.address)
+    
+    # 投資家に移管
+    txn_hash = bs_token.transact().transferFrom(issuer, trader, transfer_amount)
+    chain.wait.for_receipt(txn_hash)
+
+    with pytest.raises(ValueError):
+        bs_token.transact().lock(trader, lock_amount)
+
+    trader_amount = bs_token.call().balanceOf(trader)
+    trader_locked_amount = bs_token.call().lockedOf(issuer, trader)
+
+    assert trader_amount == transfer_amount
+    assert trader_locked_amount == 0
+
+# 異常系3: 認可外アドレスによるlock（認可はあるがFalse）
+def test_lock_error_3(web3, chain, users, bs_exchange, personal_info):
+    issuer = users['issuer']
+    trader = users['trader']
+    agent = users['agent']
+    transfer_amount = 30
+    lock_amount = 10
+
+    # 受益証券トークン新規発行
+    web3.eth.defaultAccount = issuer
+    bs_token, deploy_args = utils. \
+        issue_bs_token(web3, chain, users, bs_exchange.address, personal_info.address)
+    
+    # 投資家に移管
+    txn_hash = bs_token.transact().transferFrom(issuer, trader, transfer_amount)
+    chain.wait.for_receipt(txn_hash)
+
+    # agentを非認可
+    txn_hash = bs_token.transact().authorize(agent, False)
+    chain.wait.for_receipt(txn_hash)
+
+    # agentによりtraderの保有をロック
+    web3.eth.defaultAccount = agent
+    with pytest.raises(ValueError):
+        txn_hash = bs_token.transact().lock(trader, lock_amount)
+
+    trader_amount = bs_token.call().balanceOf(trader)
+    trader_locked_amount = bs_token.call().lockedOf(agent, trader)
+
+    assert trader_amount == transfer_amount
+    assert trader_locked_amount == 0
+
+# 異常系4: 認可外アドレスによるlock（認可が存在しない）
+def test_lock_error_4(web3, chain, users, bs_exchange, personal_info):
+    issuer = users['issuer']
+    trader = users['trader']
+    agent = users['agent']
+    transfer_amount = 30
+    lock_amount = 10
+
+    # 受益証券トークン新規発行
+    web3.eth.defaultAccount = issuer
+    bs_token, deploy_args = utils. \
+        issue_bs_token(web3, chain, users, bs_exchange.address, personal_info.address)
+    
+    # 投資家に移管
+    txn_hash = bs_token.transact().transferFrom(issuer, trader, transfer_amount)
+    chain.wait.for_receipt(txn_hash)
+
+    # agentによりtraderの保有をロック
+    web3.eth.defaultAccount = agent
+    with pytest.raises(ValueError):
+        txn_hash = bs_token.transact().lock(trader, lock_amount)
+
+    trader_amount = bs_token.call().balanceOf(trader)
+    trader_locked_amount = bs_token.call().lockedOf(agent, trader)
+
+    assert trader_amount == transfer_amount
+    assert trader_locked_amount == 0
+
+
+'''
+TEST_ロック数量参照（lockedOf）
+'''
+
+
+# 異常系1: 型エラー
+def test_lockedOf_error_1(web3, chain, users, bs_exchange, personal_info):
+    issuer = users['issuer']
+    trader = users['trader']
+    transfer_amount = 30
+    lock_amount = 10
+
+    # 受益証券トークン新規発行
+    web3.eth.defaultAccount = issuer
+    bs_token, deploy_args = utils. \
+        issue_bs_token(web3, chain, users, bs_exchange.address, personal_info.address)
+        
+    # 投資家に移管
+    txn_hash = bs_token.transact().transferFrom(issuer, trader, transfer_amount)
+    chain.wait.for_receipt(txn_hash)
+
+    # issuerによりtraderの保有をロック
+    txn_hash = bs_token.transact().lock(trader, lock_amount)
+    chain.wait.for_receipt(txn_hash)
+
+    # アドレス指定誤り
+    with pytest.raises(TypeError):
+        bs_token.transact().lockedOf('0x1234', trader)
+
+    # アドレス指定誤り
+    with pytest.raises(TypeError):
+        bs_token.transact().lockedOf(issuer, '0x1234')
+
+
+'''
+TEST_アンロック（unlock）
+'''
+
+
+# 正常系1: 認可済みアドレスによるアンロック（商品コントラクト作成 -> 移管 -> 認可 -> ロック -> アンロック）
+def test_unlock_normal_1(web3, chain, users, bs_exchange, personal_info):
+    issuer = users['issuer']
+    trader = users['trader']
+    agent = users['agent']
+    transfer_amount = 30
+    lock_amount = 10
+    unlock_amount = 3
+
+    # 受益証券トークン新規発行
+    web3.eth.defaultAccount = issuer
+    bs_token, deploy_args = utils. \
+        issue_bs_token(web3, chain, users, bs_exchange.address, personal_info.address)
+    
+    # 投資家に移管
+    txn_hash = bs_token.transact().transferFrom(issuer, trader, transfer_amount)
+    chain.wait.for_receipt(txn_hash)
+
+    # agentを認可
+    txn_hash = bs_token.transact().authorize(agent, True)
+    chain.wait.for_receipt(txn_hash)
+
+    # agentによりtraderの保有をロック
+    web3.eth.defaultAccount = agent
+    txn_hash = bs_token.transact().lock(trader, lock_amount)
+    chain.wait.for_receipt(txn_hash)
+
+    # agentによりtraderの保有をアンロック（agentへ）
+    txn_hash = bs_token.transact().unlock(trader, agent, unlock_amount)
+    chain.wait.for_receipt(txn_hash)
+
+    # agentによりtraderの保有をアンロック（traderへ）
+    txn_hash = bs_token.transact().unlock(trader, trader, unlock_amount)
+    chain.wait.for_receipt(txn_hash)
+
+    trader_amount = bs_token.call().balanceOf(trader)
+    agent_amount = bs_token.call().balanceOf(agent)
+    trader_locked_amount = bs_token.call().lockedOf(agent, trader)
+
+    assert trader_amount == transfer_amount - lock_amount + unlock_amount
+    assert agent_amount == unlock_amount
+    assert trader_locked_amount == lock_amount - unlock_amount - unlock_amount
+
+# 正常系2: 発行体によるアンロック（商品コントラクト作成 -> 移管 -> 認可 -> ロック -> アンロック）
+def test_unlock_normal_2(web3, chain, users, bs_exchange, personal_info):
+    issuer = users['issuer']
+    trader = users['trader']
+
+    transfer_amount = 30
+    lock_amount = 10
+    unlock_amount = 3
+
+    # 受益証券トークン新規発行
+    web3.eth.defaultAccount = issuer
+    bs_token, deploy_args = utils. \
+        issue_bs_token(web3, chain, users, bs_exchange.address, personal_info.address)
+    
+    # 投資家に移管
+    txn_hash = bs_token.transact().transferFrom(issuer, trader, transfer_amount)
+    chain.wait.for_receipt(txn_hash)
+
+    # issuerによりtraderの保有をロック
+    txn_hash = bs_token.transact().lock(trader, lock_amount)
+    chain.wait.for_receipt(txn_hash)
+
+    # issuerによりtraderの保有をアンロック（issuerへ）
+    txn_hash = bs_token.transact().unlock(trader, issuer, unlock_amount)
+    chain.wait.for_receipt(txn_hash)
+
+    # issuerによりtraderの保有をアンロック（traderへ）
+    txn_hash = bs_token.transact().unlock(trader, trader, unlock_amount)
+    chain.wait.for_receipt(txn_hash)
+
+    trader_amount = bs_token.call().balanceOf(trader)
+    issuer_amount = bs_token.call().balanceOf(issuer)
+    trader_locked_amount = bs_token.call().lockedOf(issuer, trader)
+
+    assert trader_amount == transfer_amount - lock_amount + unlock_amount
+    assert issuer_amount == deploy_args[5] - transfer_amount + unlock_amount
+    assert trader_locked_amount == lock_amount - unlock_amount - unlock_amount
+
+# 異常系1: 入力値の型誤り
+def test_unlock_error_1(web3, chain, users, bs_exchange, personal_info):
+    issuer = users['issuer']
+    trader = users['trader']
+
+    transfer_amount = 30
+    lock_amount = 10
+    unlock_amount = 3
+
+    # 受益証券トークン新規発行
+    web3.eth.defaultAccount = issuer
+    bs_token, deploy_args = utils. \
+        issue_bs_token(web3, chain, users, bs_exchange.address, personal_info.address)
+    
+    # 投資家に移管
+    txn_hash = bs_token.transact().transferFrom(issuer, trader, transfer_amount)
+    chain.wait.for_receipt(txn_hash)
+
+    # issuerによりtraderの保有をロック
+    txn_hash = bs_token.transact().lock(trader, lock_amount)
+    chain.wait.for_receipt(txn_hash)
+
+    # アドレス誤り
+    with pytest.raises(TypeError):
+        bs_token.transact().unlock('0x1111', issuer, unlock_amount)
+
+    # アドレス誤り
+    with pytest.raises(TypeError):
+        bs_token.transact().unlock(trader, '0x1234', unlock_amount)
+
+    # 数量指定誤り
+    with pytest.raises(TypeError):
+        bs_token.transact().unlock(trader, issuer, '3')
+
+    trader_amount = bs_token.call().balanceOf(trader)
+    trader_locked_amount = bs_token.call().lockedOf(issuer, trader)
+
+    assert trader_amount == transfer_amount - lock_amount
+    assert trader_locked_amount == lock_amount
+
+# 異常系2: 数量超過
+def test_unlock_error_2(web3, chain, users, bs_exchange, personal_info):
+    issuer = users['issuer']
+    trader = users['trader']
+
+    transfer_amount = 30
+    lock_amount = 10
+    unlock_amount = 11
+
+    # 受益証券トークン新規発行
+    web3.eth.defaultAccount = issuer
+    bs_token, deploy_args = utils. \
+        issue_bs_token(web3, chain, users, bs_exchange.address, personal_info.address)
+    
+    # 投資家に移管
+    txn_hash = bs_token.transact().transferFrom(issuer, trader, transfer_amount)
+    chain.wait.for_receipt(txn_hash)
+
+    # issuerによりtraderの保有をロック
+    txn_hash = bs_token.transact().lock(trader, lock_amount)
+    chain.wait.for_receipt(txn_hash)
+
+    # lock数量よりも多いunlockをする
+    with pytest.raises(ValueError):
+        bs_token.transact().unlock(trader, issuer, unlock_amount)
+
+    trader_amount = bs_token.call().balanceOf(trader)
+    trader_locked_amount = bs_token.call().lockedOf(issuer, trader)
+
+    assert trader_amount == transfer_amount - lock_amount
+    assert trader_locked_amount == lock_amount
+
+# 異常系3: 認可外アドレスによるunlock（認可はあるがFalse）
+def test_unlock_error_3(web3, chain, users, bs_exchange, personal_info):
+    issuer = users['issuer']
+    trader = users['trader']
+    agent = users['agent']
+
+    transfer_amount = 30
+    lock_amount = 10
+    unlock_amount = 3
+
+
+    # 受益証券トークン新規発行
+    web3.eth.defaultAccount = issuer
+    bs_token, deploy_args = utils. \
+        issue_bs_token(web3, chain, users, bs_exchange.address, personal_info.address)
+    
+    # 投資家に移管
+    txn_hash = bs_token.transact().transferFrom(issuer, trader, transfer_amount)
+    chain.wait.for_receipt(txn_hash)
+
+    # agentを非認可
+    txn_hash = bs_token.transact().authorize(agent, False)
+    chain.wait.for_receipt(txn_hash)
+
+    # issuerによりtraderの保有をロック
+    txn_hash = bs_token.transact().lock(trader, lock_amount)
+    chain.wait.for_receipt(txn_hash)
+
+    # 非認可アドレスからアンロック
+    web3.eth.defaultAccount = agent
+    with pytest.raises(ValueError):
+        bs_token.transact().unlock(trader, agent, unlock_amount)
+
+    trader_amount = bs_token.call().balanceOf(trader)
+    trader_locked_amount = bs_token.call().lockedOf(issuer, trader)
+
+    assert trader_amount == transfer_amount - lock_amount
+    assert trader_locked_amount == lock_amount
+
+# 異常系4: 認可外アドレスによるlock（認可がない）
+def test_unlock_error_4(web3, chain, users, bs_exchange, personal_info):
+    issuer = users['issuer']
+    trader = users['trader']
+    agent = users['agent']
+
+    transfer_amount = 30
+    lock_amount = 10
+    unlock_amount = 3
+
+
+    # 受益証券トークン新規発行
+    web3.eth.defaultAccount = issuer
+    bs_token, deploy_args = utils. \
+        issue_bs_token(web3, chain, users, bs_exchange.address, personal_info.address)
+    
+    # 投資家に移管
+    txn_hash = bs_token.transact().transferFrom(issuer, trader, transfer_amount)
+    chain.wait.for_receipt(txn_hash)
+
+    # issuerによりtraderの保有をロック
+    txn_hash = bs_token.transact().lock(trader, lock_amount)
+    chain.wait.for_receipt(txn_hash)
+
+    # 認可のないアドレスからアンロック
+    web3.eth.defaultAccount = agent
+    with pytest.raises(ValueError):
+        bs_token.transact().unlock(trader, agent, unlock_amount)
+
+    trader_amount = bs_token.call().balanceOf(trader)
+    trader_locked_amount = bs_token.call().lockedOf(issuer, trader)
+
+    assert trader_amount == transfer_amount - lock_amount
+    assert trader_locked_amount == lock_amount
+
+
+'''
 TEST_トークンの振替（transfer）
 '''
 
@@ -1514,7 +2017,7 @@ def test_issueFrom_normal_1(web3, chain, users):
 
     # 増資
     web3.eth.defaultAccount = issuer
-    txn_hash = bs_token.transact().issueFrom(issuer, value)
+    txn_hash = bs_token.transact().issueFrom(issuer, zero_address, value)
     chain.wait.for_receipt(txn_hash)
 
     total_supply = bs_token.call().totalSupply()
@@ -1524,7 +2027,7 @@ def test_issueFrom_normal_1(web3, chain, users):
     assert balance == deploy_args[5] + value
 
 
-# 正常系1: 発行 -> 増資（投資家想定のEOAアドレス並びにExchangeコントラクトのアドレスを増資）
+# 正常系2: 発行 -> 増資（投資家想定のEOAアドレスのアドレスを増資）
 def test_issueFrom_normal_2(web3, chain, users, bs_exchange):
     issuer = users['issuer']
     trader = users['trader']
@@ -1536,20 +2039,50 @@ def test_issueFrom_normal_2(web3, chain, users, bs_exchange):
 
     # 増資
     web3.eth.defaultAccount = issuer
-    txn_hash = bs_token.transact().issueFrom(trader, value)
-    chain.wait.for_receipt(txn_hash)
-    txn_hash = bs_token.transact().issueFrom(bs_exchange.address, value)
+    txn_hash = bs_token.transact().issueFrom(trader, zero_address, value)
     chain.wait.for_receipt(txn_hash)
 
     total_supply = bs_token.call().totalSupply()
     balance_issuer = bs_token.call().balanceOf(issuer)
     balance_trader = bs_token.call().balanceOf(trader)
-    balance_exchange = bs_token.call().balanceOf(bs_exchange.address)
 
-    assert total_supply == deploy_args[5] + value + value
+    assert total_supply == deploy_args[5] + value
     assert balance_issuer == deploy_args[5]
     assert balance_trader == value
-    assert balance_exchange == value
+
+# 正常系3: 発行 -> 譲渡 -> ロック -> ロック済み数量の増資（from issuer）
+def test_issueFrom_normal_3(web3, chain, users, bs_exchange):
+    issuer = users['issuer']
+    trader = users['trader']
+
+    transfer_amount = 30
+    lock_amount = 10
+
+    value = 5
+
+    # 受益証券トークン新規発行
+    web3.eth.defaultAccount = issuer
+    bs_token, deploy_args = utils. \
+        issue_bs_token(web3, chain, users, bs_exchange.address, zero_address)
+    
+    # 投資家に移管
+    txn_hash = bs_token.transact().transferFrom(issuer, trader, transfer_amount)
+    chain.wait.for_receipt(txn_hash)
+
+    # issuerによりtraderの保有をロック
+    txn_hash = bs_token.transact().lock(trader, lock_amount)
+    chain.wait.for_receipt(txn_hash)
+
+    # 増資
+    web3.eth.defaultAccount = issuer
+    txn_hash = bs_token.transact().issueFrom(issuer, trader, value)
+    chain.wait.for_receipt(txn_hash)
+
+    trader_amount = bs_token.call().balanceOf(trader)
+    trader_locked_amount = bs_token.call().lockedOf(issuer, trader)
+
+    assert trader_amount == transfer_amount - lock_amount
+    assert trader_locked_amount == lock_amount + value
 
 
 # エラー系1: 入力値の型誤り
@@ -1562,18 +2095,22 @@ def test_issueFrom_error_1(web3, chain, users):
 
     # String
     with pytest.raises(TypeError):
-        bs_token.transact().issueFrom(issuer, "1")
+        bs_token.transact().issueFrom(issuer, zero_address,  "1")
 
     # 小数
     with pytest.raises(TypeError):
-        bs_token.transact().issueFrom(issuer, 1.0)
+        bs_token.transact().issueFrom(issuer, zero_address, 1.0)
 
     # アドレス不正
     with pytest.raises(TypeError):
-        bs_token.transact().issueFrom("0x00", 1)
+        bs_token.transact().issueFrom("0x00", zero_address, 1)
+
+    # アドレス不正（locked_address）
+    with pytest.raises(TypeError):
+        bs_token.transact().issueFrom(issuer, "0x00", 1)
 
 
-# エラー系2: 限界値超
+# エラー系2: 限界値超（balance）
 def test_issueFrom_error_2(web3, chain, users):
     issuer = users['issuer']
 
@@ -1583,16 +2120,34 @@ def test_issueFrom_error_2(web3, chain, users):
 
     # 上限値超
     with pytest.raises(TypeError):
-        bs_token.transact().issueFrom(issuer, 2 ** 256)
+        bs_token.transact().issueFrom(issuer, zero_address, 2 ** 256)
 
     # 下限値超
     with pytest.raises(TypeError):
-        bs_token.transact().issueFrom(issuer, -1)
+        bs_token.transact().issueFrom(issuer, zero_address, -1)
 
-
-# エラー系3: 発行→増資→上限界値超
+# エラー系3 限界値超（locked）
 def test_issueFrom_error_3(web3, chain, users):
     issuer = users['issuer']
+    trader = users['trader']
+
+    # トークン新規発行
+    web3.eth.defaultAccount = issuer
+    bs_token, deploy_args = utils.issue_bs_token(web3, chain, users, zero_address, zero_address)
+
+    # 上限値超
+    with pytest.raises(TypeError):
+        bs_token.transact().issueFrom(issuer, trader, 2 ** 256)
+
+    # 下限値超
+    with pytest.raises(TypeError):
+        bs_token.transact().issueFrom(issuer, trader, -1)
+
+
+# エラー系4: 発行→増資→上限界値超
+def test_issueFrom_error_4(web3, chain, users):
+    issuer = users['issuer']
+    trader = users['trader']
 
     # トークン新規発行
     web3.eth.defaultAccount = issuer
@@ -1603,7 +2158,13 @@ def test_issueFrom_error_3(web3, chain, users):
     # 増資（限界値超）
     web3.eth.defaultAccount = issuer
     try:
-        txn_hash = bs_token.transact().issueFrom(issuer, issue_amount)  # エラーになる
+        txn_hash = bs_token.transact().issueFrom(issuer, zero_address, issue_amount)  # エラーになる
+        chain.wait.for_receipt(txn_hash)
+    except ValueError:
+        pass
+
+    try:
+        txn_hash = bs_token.transact().issueFrom(issuer, trader, issue_amount)  # エラーになる
         chain.wait.for_receipt(txn_hash)
     except ValueError:
         pass
@@ -1615,8 +2176,8 @@ def test_issueFrom_error_3(web3, chain, users):
     assert balance == deploy_args[5]
 
 
-# エラー系4: 権限エラー
-def test_issueFrom_error_4(web3, chain, users):
+# エラー系5: 権限エラー
+def test_issueFrom_error_5(web3, chain, users):
     issuer = users['issuer']
     attacker = users['trader']
 
@@ -1627,7 +2188,7 @@ def test_issueFrom_error_4(web3, chain, users):
     # 増資：権限エラー
     web3.eth.defaultAccount = attacker
     try:
-        txn_hash = bs_token.transact().issueFrom(attacker, 1)  # エラーになる
+        txn_hash = bs_token.transact().issueFrom(attacker, zero_address, 1)  # エラーになる
         chain.wait.for_receipt(txn_hash)
     except ValueError:
         pass
@@ -1644,7 +2205,7 @@ TEST_減資（redeemFrom）
 '''
 
 
-# 正常系1: 発行 -> 減資（発行体自身のアドレスに減資）
+# 正常系1: 発行 -> 減資（発行体自身のアドレスの保有を減資）
 def test_redeemFrom_normal_1(web3, chain, users):
     issuer = users['issuer']
     value = 10
@@ -1655,7 +2216,7 @@ def test_redeemFrom_normal_1(web3, chain, users):
 
     # 減資
     web3.eth.defaultAccount = issuer
-    txn_hash = bs_token.transact().redeemFrom(issuer, value)
+    txn_hash = bs_token.transact().redeemFrom(issuer, zero_address, value)
     chain.wait.for_receipt(txn_hash)
 
     total_supply = bs_token.call().totalSupply()
@@ -1665,7 +2226,7 @@ def test_redeemFrom_normal_1(web3, chain, users):
     assert balance == deploy_args[5] - value
 
 
-# 正常系1: 発行 -> 減資（投資家想定のEOAアドレス並びにExchangeコントラクトのアドレスを減資）
+# 正常系2: 発行 -> 減資（投資家想定のEOAアドレスの保有を減資）
 def test_redeemFrom_normal_2(web3, chain, users, bs_exchange):
     issuer = users['issuer']
     trader = users['trader']
@@ -1679,26 +2240,54 @@ def test_redeemFrom_normal_2(web3, chain, users, bs_exchange):
     # traderとexchangeに譲渡
     txn_hash = bs_token.transact().transferFrom(issuer, trader, transfer_amount)
     chain.wait.for_receipt(txn_hash)
-    txn_hash = bs_token.transact().transferFrom(issuer, bs_exchange.address, transfer_amount)
-    chain.wait.for_receipt(txn_hash)
 
     # 減資
     web3.eth.defaultAccount = issuer
-    txn_hash = bs_token.transact().redeemFrom(trader, value)
-    chain.wait.for_receipt(txn_hash)
-    txn_hash = bs_token.transact().redeemFrom(bs_exchange.address, value)
+    txn_hash = bs_token.transact().redeemFrom(trader, zero_address, value)
     chain.wait.for_receipt(txn_hash)
 
     total_supply = bs_token.call().totalSupply()
     balance_issuer = bs_token.call().balanceOf(issuer)
     balance_trader = bs_token.call().balanceOf(trader)
-    balance_exchange = bs_token.call().balanceOf(bs_exchange.address)
 
-    assert total_supply == deploy_args[5] - value - value
-    assert balance_issuer == deploy_args[5] - transfer_amount - transfer_amount
+    assert total_supply == deploy_args[5] - value
+    assert balance_issuer == deploy_args[5] - transfer_amount
     assert balance_trader == transfer_amount - value
-    assert balance_exchange == transfer_amount - value
 
+# 正常系3: 発行 -> ロック -> 減資（投資家想定のEOAアドレスのロック数量を減資）
+def test_redeemFrom_normal_3(web3, chain, users, bs_exchange):
+    issuer = users['issuer']
+    trader = users['trader']
+    transfer_amount = 30
+    lock_amount = 10
+    value = 5
+
+    # トークン新規発行
+    web3.eth.defaultAccount = issuer
+    bs_token, deploy_args = utils.issue_bs_token(web3, chain, users, zero_address, zero_address)
+
+    # traderに譲渡
+    txn_hash = bs_token.transact().transferFrom(issuer, trader, transfer_amount)
+    chain.wait.for_receipt(txn_hash)
+
+    # issuerによりtraderの保有をロック
+    txn_hash = bs_token.transact().lock(trader, lock_amount)
+    chain.wait.for_receipt(txn_hash)
+
+    # 減資
+    web3.eth.defaultAccount = issuer
+    txn_hash = bs_token.transact().redeemFrom(issuer, trader, value)
+    chain.wait.for_receipt(txn_hash)
+
+    total_supply = bs_token.call().totalSupply()
+    balance_issuer = bs_token.call().balanceOf(issuer)
+    balance_trader = bs_token.call().balanceOf(trader)
+    balance_trader_lock = bs_token.call().locked(issuer, trader)
+
+    assert total_supply == deploy_args[5] - value
+    assert balance_issuer == deploy_args[5] - transfer_amount
+    assert balance_trader == transfer_amount - lock_amount
+    assert balance_trader_lock == lock_amount - value
 
 # エラー系1: 入力値の型誤り
 def test_redeemFrom_error_1(web3, chain, users):
@@ -1710,16 +2299,19 @@ def test_redeemFrom_error_1(web3, chain, users):
 
     # String
     with pytest.raises(TypeError):
-        bs_token.transact().redeemFrom(issuer, "1")
+        bs_token.transact().redeemFrom(issuer, zero_address, "1")
 
     # 小数
     with pytest.raises(TypeError):
-        bs_token.transact().redeemFrom(issuer, 1.0)
+        bs_token.transact().redeemFrom(issuer, zero_address, 1.0)
 
     # アドレス不正
     with pytest.raises(TypeError):
-        bs_token.transact().redeemFrom("0x00", 1)
+        bs_token.transact().redeemFrom("0x00", zero_address, 1)
 
+    # アドレス不正
+    with pytest.raises(TypeError):
+        bs_token.transact().redeemFrom(issuer, "0x00", 1)
 
 # エラー系2: 限界値超
 def test_redeemFrom_error_2(web3, chain, users):
@@ -1731,7 +2323,7 @@ def test_redeemFrom_error_2(web3, chain, users):
 
     # 下限値超
     with pytest.raises(TypeError):
-        bs_token.transact().redeemFrom(issuer, -1)
+        bs_token.transact().redeemFrom(issuer, zero_address, -1)
 
 
 # エラー系3: 発行→減資→発行数量より下限を超過
@@ -1747,7 +2339,7 @@ def test_redeemFrom_error_3(web3, chain, users):
     # 減資（限界値超）
     web3.eth.defaultAccount = issuer
     try:
-        txn_hash = bs_token.transact().redeemFrom(issuer, redeem_amount)  # エラーになる
+        txn_hash = bs_token.transact().redeemFrom(issuer, zero_address, redeem_amount)  # エラーになる
         chain.wait.for_receipt(txn_hash)
     except ValueError:
         pass
@@ -1758,9 +2350,46 @@ def test_redeemFrom_error_3(web3, chain, users):
     assert total_supply == deploy_args[5]
     assert balance == deploy_args[5]
 
-
-# エラー系4: 権限エラー
+# エラー系4: 発行→ロック→減資→ロック数量より下限を超過
 def test_redeemFrom_error_4(web3, chain, users):
+    issuer = users['issuer']
+    trader = users['trader']
+    transfer_amount = 30
+    lock_amount = 10
+    redeem_amount = lock_amount + 1
+
+    # トークン新規発行
+    web3.eth.defaultAccount = issuer
+    bs_token, deploy_args = utils.issue_bs_token(web3, chain, users, zero_address, zero_address)
+
+    # traderに譲渡
+    txn_hash = bs_token.transact().transferFrom(issuer, trader, transfer_amount)
+    chain.wait.for_receipt(txn_hash)
+
+    # issuerによりtraderの保有をロック
+    txn_hash = bs_token.transact().lock(trader, lock_amount)
+    chain.wait.for_receipt(txn_hash)
+
+    # 減資（限界値超）
+    web3.eth.defaultAccount = issuer
+    try:
+        txn_hash = bs_token.transact().redeemFrom(issuer, trader, redeem_amount)  # エラーになる
+        chain.wait.for_receipt(txn_hash)
+    except ValueError:
+        pass
+
+    total_supply = bs_token.call().totalSupply()
+    issuer_balance = bs_token.call().balanceOf(issuer)
+    trader_balance = bs_token.call().balanceOf(trader)
+    trader_locked =  bs_token.call().locked(issuer, trader)
+
+    assert total_supply == deploy_args[5]
+    assert issuer_balance == deploy_args[5] - transfer_amount
+    assert trader_balance == transfer_amount - lock_amount
+    assert trader_locked == lock_amount
+
+# エラー系5: 権限エラー
+def test_redeemFrom_error_5(web3, chain, users):
     issuer = users['issuer']
     attacker = users['trader']
 
@@ -1771,7 +2400,7 @@ def test_redeemFrom_error_4(web3, chain, users):
     # 減資：権限エラー
     web3.eth.defaultAccount = attacker
     try:
-        txn_hash = bs_token.transact().redeemFrom(attacker, 1)  # エラーになる
+        txn_hash = bs_token.transact().redeemFrom(attacker, zero_address, 1)  # エラーになる
         chain.wait.for_receipt(txn_hash)
     except ValueError:
         pass
