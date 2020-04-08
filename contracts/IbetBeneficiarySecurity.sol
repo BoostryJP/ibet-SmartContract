@@ -316,8 +316,6 @@ contract IbetBeneficiarySecurity is Ownable, IbetStandardTokenInterface {
             // 送信先アドレスがコントラクトアドレスの場合
             balances[_to] = balanceOf(_to).add(_amount);
             totalSupply = totalSupply.add(_amount);
-            ContractReceiver receiver = ContractReceiver(_to);
-            receiver.tokenFallback(msg.sender, _amount, empty);
         } else {
             // 送信先アドレスがアカウントアドレスの場合
             balances[_to] = balanceOf(_to).add(_amount);
@@ -332,15 +330,13 @@ contract IbetBeneficiarySecurity is Ownable, IbetStandardTokenInterface {
         bytes memory empty;
 
         // <CHK>
-        //  減資数量が総発行量を下回っている場合はエラーを返す
+        //  減資数量が総発行量を上回っている場合はエラーを返す
         if (totalSupply < _amount) revert();
 
         if (isContract(_to)) {
             // 送信先アドレスがコントラクトアドレスの場合
             balances[_to] = balanceOf(_to).sub(_amount);
             totalSupply = totalSupply.sub(_amount);
-            ContractReceiver receiver = ContractReceiver(_to);
-            receiver.tokenFallback(msg.sender, _amount, empty);
         } else {
             // 送信先アドレスがアカウントアドレスの場合
             balances[_to] = balanceOf(_to).sub(_amount);
