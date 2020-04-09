@@ -536,7 +536,7 @@ def test_addAgent_normal_1(web3, chain, users):
     assert agent_available == True
 
 
-# 正常系2: 登録２回
+# 正常系2: 登録２回（同一アドレス）
 def test_addAgent_normal_2(web3, chain, users):
     admin = users['admin']
     agent = users['agent']
@@ -559,8 +559,35 @@ def test_addAgent_normal_2(web3, chain, users):
     assert agent_available == True
 
 
-# 正常系3: 登録なしアドレスの参照
+# 正常系3: 登録２回（異なるアドレス）
 def test_addAgent_normal_3(web3, chain, users):
+    admin = users['admin']
+    agent_1 = users['agent']
+    agent_2 = users['trader']  # NOTE:traderのアドレスで代用
+
+    # PaymentGatewayデプロイ
+    web3.eth.defaultAccount = admin
+    pg_contract, _ = chain.provider.get_or_deploy_contract('PaymentGateway')
+
+    # 収納代行業者（Agent）の追加
+    web3.eth.defaultAccount = admin
+    txn_hash = pg_contract.transact().addAgent(agent_1)
+    chain.wait.for_receipt(txn_hash)
+
+    # 収納代行業者（Agent）の追加（2回目）
+    web3.eth.defaultAccount = admin
+    txn_hash = pg_contract.transact().addAgent(agent_2)
+    chain.wait.for_receipt(txn_hash)
+
+    agent_1_available = pg_contract.call().getAgent(agent_1)
+    assert agent_1_available == True
+
+    agent_2_available = pg_contract.call().getAgent(agent_2)
+    assert agent_2_available == True
+
+
+# 正常系4: 登録なしアドレスの参照
+def test_addAgent_normal_4(web3, chain, users):
     admin = users['admin']
 
     # PaymentGatewayデプロイ
