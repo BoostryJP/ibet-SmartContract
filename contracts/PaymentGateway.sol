@@ -4,9 +4,6 @@ import "./Ownable.sol";
 
 contract PaymentGateway is Ownable {
 
-    // 収納代行業者（Agent）のリスト
-    address[30] public agents;
-
     // 振込用銀行口座
     struct PaymentAccount {
         address account_address; // アカウントアドレス
@@ -15,13 +12,19 @@ contract PaymentGateway is Ownable {
         uint8 approval_status; // 認可状況（NONE(0)/NG(1)/OK(2)/WARN(3)/BAN(4)）
     }
 
-    // 最新の版番
-    // agent_address => 版番
-    mapping(address => uint16) public latest_terms_version;
+    // 収納代行業者（Agent）
+    // agent_address => 登録状況
+    mapping(address => bool) public agents;
 
     // 振込用銀行口座情報
     // account_address => agent_address => PaymentAccount
     mapping(address => mapping(address => PaymentAccount)) public payment_accounts;
+
+    // イベント：収納代行業者追加
+    event AddAgent(address indexed agent_address);
+
+    // イベント：収納代行業者削除
+    event RemoveAgent(address indexed agent_address);
 
     // イベント：登録
     event Register(address indexed account_address, address indexed agent_address);
@@ -42,19 +45,26 @@ contract PaymentGateway is Ownable {
     constructor() public {
     }
 
-    // ファンクション：（管理者）収納代行業者（Agent）の追加
-    function addAgent(uint _agent_id, address _agent_address)
+    // ファンクション：（管理者）収納代行業者の追加
+    function addAgent(address _agent_address)
         public
         onlyOwner()
-        returns (uint)
     {
-        require(_agent_id >= 0 && _agent_id <= 29);
-        agents[_agent_id] = _agent_address;
-        return _agent_id;
+        agents[_agent_address] = true;
+        emit AddAgent(_agent_address);
     }
 
-    function getAgents() public view returns (address[30] memory) {
-        return agents;
+    // ファンクション：（管理者）収納代行業者の削除
+    function removeAgent(address _agent_address)
+        public
+        onlyOwner()
+    {
+        agents[_agent_address] = false;
+        emit RemoveAgent(_agent_address);
+    }
+
+    function getAgent(address _agent_address) public view returns (bool) {
+        return agents[_agent_address];
     }
 
     // ファンクション：支払情報を登録する
@@ -77,9 +87,12 @@ contract PaymentGateway is Ownable {
     }
 
     // ファンクション：（収納代行業者）口座情報を承認する
-    function approve(address _account_address) public returns (bool) {
+    function approve(address _account_address)
+        public
+        returns (bool)
+    {
         PaymentAccount storage payment_account = payment_accounts[_account_address][msg.sender];
-        require(payment_account.account_address != 0x0000000000000000000000000000000000000000);
+        require(payment_account.account_address != address(0));
 
         payment_account.approval_status = 2;
 
@@ -88,9 +101,12 @@ contract PaymentGateway is Ownable {
     }
 
     // ファンクション：（収納代行業者）口座情報を警告状態にする
-    function warn(address _account_address) public returns (bool) {
+    function warn(address _account_address)
+        public
+        returns (bool)
+    {
         PaymentAccount storage payment_account = payment_accounts[_account_address][msg.sender];
-        require(payment_account.account_address != 0x0000000000000000000000000000000000000000);
+        require(payment_account.account_address != address(0));
 
         payment_account.approval_status = 3;
 
@@ -99,9 +115,12 @@ contract PaymentGateway is Ownable {
     }
 
     // ファンクション：（収納代行業者）口座情報を非承認にする
-    function unapprove(address _account_address) public returns (bool) {
+    function unapprove(address _account_address)
+        public
+        returns (bool)
+    {
         PaymentAccount storage payment_account = payment_accounts[_account_address][msg.sender];
-        require(payment_account.account_address != 0x0000000000000000000000000000000000000000);
+        require(payment_account.account_address != address(0));
 
         payment_account.approval_status = 1;
 
@@ -110,9 +129,12 @@ contract PaymentGateway is Ownable {
     }
 
     // ファンクション：（収納代行業者）口座情報をアカウント停止（BAN）する。
-    function ban(address _account_address) public returns (bool) {
+    function ban(address _account_address)
+        public
+        returns (bool)
+    {
         PaymentAccount storage payment_account = payment_accounts[_account_address][msg.sender];
-        require(payment_account.account_address != 0x0000000000000000000000000000000000000000);
+        require(payment_account.account_address != address(0));
 
         payment_account.approval_status = 4;
 
@@ -128,8 +150,8 @@ contract PaymentGateway is Ownable {
     {
         PaymentAccount storage payment_account = payment_accounts[_account_address][_agent_address];
         // アカウントが登録済み、かつ承認済みである場合、trueを返す
-        if (payment_account.account_address != 0x0000000000000000000000000000000000000000 &&
-            payment_account.approval_status == 2)
+        if (payment_account.account_address != address(0) &&
+        payment_account.approval_status == 2)
         {
             return true;
         } else {

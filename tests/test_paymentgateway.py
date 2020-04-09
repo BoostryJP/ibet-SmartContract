@@ -514,7 +514,7 @@ def test_ban_error_2(web3, chain, users):
 
 
 '''
-TEST_収納代行業者（Agent）の追加（addAgent）
+TEST_収納代行業者の追加（addAgent）
 '''
 
 
@@ -529,12 +529,11 @@ def test_addAgent_normal_1(web3, chain, users):
 
     # 収納代行業者（Agent）の追加
     web3.eth.defaultAccount = admin
-    txn_hash = pg_contract.transact().addAgent(0, agent)
+    txn_hash = pg_contract.transact().addAgent(agent)
     chain.wait.for_receipt(txn_hash)
 
-    agents = pg_contract.call().getAgents()
-    assert agents[0] == agent
-    assert len(agents) == 30
+    agent_available = pg_contract.call().getAgent(agent)
+    assert agent_available == True
 
 
 # 正常系2: 登録２回
@@ -548,36 +547,32 @@ def test_addAgent_normal_2(web3, chain, users):
 
     # 収納代行業者（Agent）の追加
     web3.eth.defaultAccount = admin
-    txn_hash = pg_contract.transact().addAgent(0, agent)
+    txn_hash = pg_contract.transact().addAgent(agent)
     chain.wait.for_receipt(txn_hash)
 
     # 収納代行業者（Agent）の追加（2回目）
     web3.eth.defaultAccount = admin
-    txn_hash = pg_contract.transact().addAgent(0, agent)
+    txn_hash = pg_contract.transact().addAgent(agent)
     chain.wait.for_receipt(txn_hash)
 
-    agents = pg_contract.call().getAgents()
-    assert agents[0] == agent
-    assert len(agents) == 30
+    agent_available = pg_contract.call().getAgent(agent)
+    assert agent_available == True
 
 
-# エラー系1: 入力値の型誤り（agent_id）
-def test_addAgent_error_1(web3, chain, users):
+# 正常系3: 登録なしアドレスの参照
+def test_addAgent_normal_3(web3, chain, users):
     admin = users['admin']
-    agent = users['agent']
 
     # PaymentGatewayデプロイ
     web3.eth.defaultAccount = admin
     pg_contract, _ = chain.provider.get_or_deploy_contract('PaymentGateway')
 
-    # 収納代行業者（Agent）の追加
-    web3.eth.defaultAccount = admin
-    with pytest.raises(TypeError):
-        pg_contract.transact().addAgent('0', agent)
+    agent_available = pg_contract.call().getAgent("0xCfC4BEa6d2f573EB7E804E7a01ba1f4D1b208939")  # NOTE:任意のEOA
+    assert agent_available == False
 
 
-# エラー系2: 入力値の型誤り（agent_address）
-def test_addAgent_error_2(web3, chain, users):
+# エラー系1: 入力値の型誤り（agent_address）
+def test_addAgent_error_1(web3, chain, users):
     admin = users['admin']
     agent = '1234'
 
@@ -588,11 +583,56 @@ def test_addAgent_error_2(web3, chain, users):
     # 収納代行業者（Agent）の追加
     web3.eth.defaultAccount = admin
     with pytest.raises(TypeError):
-        pg_contract.transact().addAgent(0, agent)
+        pg_contract.transact().addAgent(agent)
 
 
-# エラー系3: リスト上限超
-def test_addAgent_error_3(web3, chain, users):
+# エラー系2: 権限不足
+def test_addAgent_error_2(web3, chain, users):
+    admin = users['admin']
+    attacker = users['trader']
+    agent = users['agent']
+
+    # PaymentGatewayデプロイ
+    web3.eth.defaultAccount = admin
+    pg_contract, _ = chain.provider.get_or_deploy_contract('PaymentGateway')
+
+    # 権限不足で更新できない
+    web3.eth.defaultAccount = attacker
+    try:
+        txn_hash = pg_contract.transact().addAgent(agent)
+        chain.wait.for_receipt(txn_hash)
+    except ValueError:
+        pass
+
+    agent_available = pg_contract.call().getAgent(agent)
+    assert agent_available == False
+
+
+'''
+TEST_収納代行業者の削除（removeAgent）
+'''
+
+
+# 正常系1: データなし
+def test_removeAgent_normal_1(web3, chain, users):
+    admin = users['admin']
+    agent = users['agent']
+
+    # PaymentGatewayデプロイ
+    web3.eth.defaultAccount = admin
+    pg_contract, _ = chain.provider.get_or_deploy_contract('PaymentGateway')
+
+    # 収納代行業者（Agent）の削除
+    web3.eth.defaultAccount = admin
+    txn_hash = pg_contract.transact().removeAgent(agent)
+    chain.wait.for_receipt(txn_hash)
+
+    agent_available = pg_contract.call().getAgent(agent)
+    assert agent_available == False
+
+
+# 正常系2: データあり
+def test_removeAgent_normal_2(web3, chain, users):
     admin = users['admin']
     agent = users['agent']
 
@@ -602,13 +642,55 @@ def test_addAgent_error_3(web3, chain, users):
 
     # 収納代行業者（Agent）の追加
     web3.eth.defaultAccount = admin
+    txn_hash = pg_contract.transact().addAgent(agent)
+    chain.wait.for_receipt(txn_hash)
+
+    # 収納代行業者（Agent）の削除
+    web3.eth.defaultAccount = admin
+    txn_hash = pg_contract.transact().removeAgent(agent)
+    chain.wait.for_receipt(txn_hash)
+
+    agent_available = pg_contract.call().getAgent(agent)
+    assert agent_available == False
+
+
+# エラー系1: 入力値の型誤り（agent_address）
+def test_removeAgent_error_1(web3, chain, users):
+    admin = users['admin']
+    agent = '1234'
+
+    # PaymentGatewayデプロイ
+    web3.eth.defaultAccount = admin
+    pg_contract, _ = chain.provider.get_or_deploy_contract('PaymentGateway')
+
+    # 収納代行業者（Agent）の追加
+    web3.eth.defaultAccount = admin
+    with pytest.raises(TypeError):
+        pg_contract.transact().removeAgent(agent)
+
+
+# エラー系2: 権限不足
+def test_removeAgent_error_2(web3, chain, users):
+    admin = users['admin']
+    attacker = users['trader']
+    agent = users['agent']
+
+    # PaymentGatewayデプロイ
+    web3.eth.defaultAccount = admin
+    pg_contract, _ = chain.provider.get_or_deploy_contract('PaymentGateway')
+
+    # 収納代行業者追加：正常
+    web3.eth.defaultAccount = admin
+    txn_hash = pg_contract.transact().addAgent(agent)
+    chain.wait.for_receipt(txn_hash)
+
+    # 収納代行業者削除：権限不足
+    web3.eth.defaultAccount = attacker
     try:
-        txn_hash = pg_contract.transact().addAgent(30, agent)
+        txn_hash = pg_contract.transact().removeAgent(agent)
         chain.wait.for_receipt(txn_hash)
     except ValueError:
         pass
 
-    agents = pg_contract.call().getAgents()
-    for agent_address in agents:
-        assert agent_address == '0x0000000000000000000000000000000000000000'
-    assert len(agents) == 30
+    agent_available = pg_contract.call().getAgent(agent)
+    assert agent_available == True

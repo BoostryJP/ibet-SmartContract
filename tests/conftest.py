@@ -43,7 +43,7 @@ def personal_info(web3, chain, users):
 def payment_gateway(web3, chain, users):
     web3.eth.defaultAccount = users['admin']
     payment_gateway, _ = chain.provider.get_or_deploy_contract('PaymentGateway')
-    payment_gateway.transact().addAgent(0, users['agent'])
+    payment_gateway.transact().addAgent(users['agent'])
     return payment_gateway
 
 

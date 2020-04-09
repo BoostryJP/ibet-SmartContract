@@ -50,8 +50,8 @@ with project.get_chain(chain_env) as chain:
         abi=contracts['PaymentGateway']['abi'],
     )
 
-    txn_hash = payment_gateway.transact().addAgent(agent_id, agent_address)
+    txn_hash = payment_gateway.transact().addAgent(agent_address)
     chain.wait.for_receipt(txn_hash)
 
-    agents = payment_gateway.call().getAgents()
-    print(agents)
+    agent_available = payment_gateway.call().getAgent(agent_address)
+    print(agent_available)
