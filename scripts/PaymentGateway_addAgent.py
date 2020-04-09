@@ -14,10 +14,6 @@ Parameters
 contract_address : str
     PaymentGatewayコントラクトのアドレス。
     デプロイ済のものを指定する。
-agent_id : str
-    収納代行業者のID。
-    重複しないように割り振る。
-    スクリプト内で str -> int 変換を行っている。
 agent_address : str
     収納代行業者のアカウントアドレス。
 
@@ -42,8 +38,7 @@ with project.get_chain(chain_env) as chain:
     contracts = json.load(open('build/contracts.json', 'r'))
 
     contract_address = sys.argv[1]
-    agent_id = int(sys.argv[2])
-    agent_address = sys.argv[3]
+    agent_address = sys.argv[2]
 
     payment_gateway = web3.eth.contract(
         address=to_checksum_address(contract_address),
