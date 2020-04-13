@@ -51,7 +51,7 @@ contract OTCExchangeStorage is Ownable {
     // 残高情報
     // account => token => balance
     // +++++++++++++++++++
-    mapping(address => mapping(address => uint256)) public balances;
+    mapping(address => mapping(address => uint256)) private balances;
 
     function setBalance(address _account, address _token, uint256 _value)
         public
@@ -78,7 +78,7 @@ contract OTCExchangeStorage is Ownable {
     // 拘束数量
     // account => token => order commitment
     // +++++++++++++++++++
-    mapping(address => mapping(address => uint256)) public commitments;
+    mapping(address => mapping(address => uint256)) private commitments;
 
     function setCommitment(address _account, address _token, uint256 _value)
         public
@@ -114,7 +114,7 @@ contract OTCExchangeStorage is Ownable {
     // 注文情報
     // orderId => order
     // +++++++++++++++++++
-    mapping(uint256 => Order) public orderBook;
+    mapping(uint256 => Order) private orderBook;
 
     function setOrder(
         uint256 _orderId,
