@@ -866,8 +866,7 @@ contract IbetOTCExchange is Ownable {
 
     // ファンクション：新規注文時に指定したagentアドレスが有効なアドレスであることをチェックする
     function validateAgent(address _addr) private view returns (bool) {
-        address[30] memory agents = PaymentGateway(paymentGatewayAddress)
-            .getAgents();
+        address[30] memory agents = PaymentGateway(paymentGatewayAddress).getAgents();
         for (uint256 i = 0; i < 30; i++) {
             if (agents[i] == _addr) {
                 return true;
