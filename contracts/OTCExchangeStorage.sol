@@ -1,4 +1,5 @@
 pragma solidity ^0.4.24;
+pragma experimental ABIEncoderV2;
 
 import "./Ownable.sol";
 
@@ -146,27 +147,9 @@ contract OTCExchangeStorage is Ownable {
         public
         view
         onlyAuthorized()
-        returns (
-            address owner,
-            address counterpart,
-            address token,
-            uint256 amount,
-            uint256 price,
-            bool isBuy,
-            address agent,
-            bool canceled
-        )
+        returns (Order)
     {
-        return (
-            orderBook[_orderId].owner,
-            orderBook[_orderId].counterpart,
-            orderBook[_orderId].token,
-            orderBook[_orderId].amount,
-            orderBook[_orderId].price,
-            orderBook[_orderId].isBuy,
-            orderBook[_orderId].agent,
-            orderBook[_orderId].canceled
-        );
+        return orderBook[_orderId];
     }
 
     // -------------------------------------------------------------------
@@ -249,23 +232,9 @@ contract OTCExchangeStorage is Ownable {
         public
         view
         onlyAuthorized()
-        returns (
-            address _counterpart,
-            uint256 _amount,
-            uint256 _price,
-            bool _canceled,
-            bool _paid,
-            uint256 _expiry
-        )
+        returns (Agreement)
     {
-        return (
-            agreements[_orderId][_agreementId].counterpart,
-            agreements[_orderId][_agreementId].amount,
-            agreements[_orderId][_agreementId].price,
-            agreements[_orderId][_agreementId].canceled,
-            agreements[_orderId][_agreementId].paid,
-            agreements[_orderId][_agreementId].expiry
-        );
+        return agreements[_orderId][_agreementId];
     }
 
     // -------------------------------------------------------------------

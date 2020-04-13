@@ -1,4 +1,5 @@
 pragma solidity ^0.4.24;
+pragma experimental ABIEncoderV2;
 
 import "./SafeMath.sol";
 import "./Ownable.sol";
@@ -107,44 +108,11 @@ contract IbetOTCExchange is Ownable {
         regulatorServiceAddress = _regulatorServiceAddress;
     }
 
-    // ---------------------------------------------------------------
-    // Function: Storage
-    // ---------------------------------------------------------------
-    struct Order {
-        address owner;
-        address counterpart;
-        address token;
-        uint256 amount; // 数量
-        uint256 price; // 価格
-        bool isBuy; // 売買区分（買い：True）
-        address agent; // 決済業者のアドレス
-        bool canceled; // キャンセル済みフラグ
-    }
-
-    struct Agreement {
-        address counterpart; // 約定相手
-        uint256 amount; // 約定数量
-        uint256 price; // 約定価格
-        bool canceled; // キャンセル済みフラグ
-        bool paid; // 支払い済みフラグ
-        uint256 expiry; // 有効期限（約定から１４日）
-    }
-
     // -------------------------------------------------------------------
     // 関係者限定のmodifier
     // -------------------------------------------------------------------
     modifier onlyInvolved(uint256 _orderId) {
-        Order memory order;
-        (
-            order.owner,
-            order.counterpart,
-            order.token,
-            order.amount,
-            order.price,
-            order.isBuy,
-            order.agent,
-            order.canceled
-        ) = getOrder(_orderId);
+        OTCExchangeStorage.Order memory order = getOrder(_orderId);
         require(order.owner == msg.sender || order.counterpart == msg.sender);
         _;
     }
@@ -154,16 +122,7 @@ contract IbetOTCExchange is Ownable {
         public
         view
         onlyInvolved(_orderId)
-        returns (
-            address owner,
-            address counterpart,
-            address token,
-            uint256 amount,
-            uint256 price,
-            bool isBuy,
-            address agent,
-            bool canceled
-        )
+        returns (OTCExchangeStorage.Order)
     {
         return OTCExchangeStorage(storageAddress).getOrder(_orderId);
     }
@@ -198,14 +157,7 @@ contract IbetOTCExchange is Ownable {
         public
         view
         onlyInvolved(_orderId)
-        returns (
-            address _counterpart,
-            uint256 _amount,
-            uint256 _price,
-            bool _canceled,
-            bool _paid,
-            uint256 _expiry
-        )
+        returns (OTCExchangeStorage.Agreement)
     {
         return
             OTCExchangeStorage(storageAddress).getAgreement(
@@ -445,17 +397,7 @@ contract IbetOTCExchange is Ownable {
         //   -> REVERT
         require(_orderId <= latestOrderId());
 
-        Order memory order;
-        (
-            order.owner,
-            order.counterpart,
-            order.token,
-            order.amount,
-            order.price,
-            order.isBuy,
-            order.agent,
-            order.canceled
-        ) = getOrder(_orderId);
+        OTCExchangeStorage.Order memory order = getOrder(_orderId);
 
         // <CHK>
         //  1) 元注文の残注文数量が0の場合
@@ -527,17 +469,7 @@ contract IbetOTCExchange is Ownable {
         //  指定した注文IDが直近の注文IDを超えている場合
         require(_orderId <= latestOrderId());
 
-        Order memory order;
-        (
-            order.owner,
-            order.counterpart,
-            order.token,
-            order.amount,
-            order.price,
-            order.isBuy,
-            order.agent,
-            order.canceled
-        ) = getOrder(_orderId);
+        OTCExchangeStorage.Order memory order = getOrder(_orderId);
 
         require(order.owner != 0x0000000000000000000000000000000000000000);
 
@@ -695,27 +627,12 @@ contract IbetOTCExchange is Ownable {
         require(_orderId <= latestOrderId());
         require(_agreementId <= latestAgreementId(_orderId));
 
-        Order memory order;
-        (
-            order.owner,
-            order.counterpart,
-            order.token,
-            order.amount,
-            order.price,
-            order.isBuy,
-            order.agent,
-            order.canceled
-        ) = getOrder(_orderId);
+        OTCExchangeStorage.Order memory order = getOrder(_orderId);
 
-        Agreement memory agreement;
-        (
-            agreement.counterpart,
-            agreement.amount,
-            agreement.price,
-            agreement.canceled,
-            agreement.paid,
-            agreement.expiry
-        ) = getAgreement(_orderId, _agreementId);
+        OTCExchangeStorage.Agreement memory agreement = getAgreement(
+            _orderId,
+            _agreementId
+        );
 
         // <CHK>
         //  1) すでに決済承認済み（支払い済み）の場合
@@ -801,27 +718,12 @@ contract IbetOTCExchange is Ownable {
         require(_orderId <= latestOrderId());
         require(_agreementId <= latestAgreementId(_orderId));
 
-        Order memory order;
-        (
-            order.owner,
-            order.counterpart,
-            order.token,
-            order.amount,
-            order.price,
-            order.isBuy,
-            order.agent,
-            order.canceled
-        ) = getOrder(_orderId);
+        OTCExchangeStorage.Order memory order = getOrder(_orderId);
 
-        Agreement memory agreement;
-        (
-            agreement.counterpart,
-            agreement.amount,
-            agreement.price,
-            agreement.canceled,
-            agreement.paid,
-            agreement.expiry
-        ) = getAgreement(_orderId, _agreementId);
+        OTCExchangeStorage.Agreement memory agreement = getAgreement(
+            _orderId,
+            _agreementId
+        );
 
         if (agreement.expiry <= now) {
             // 約定明細の有効期限を超過している場合
