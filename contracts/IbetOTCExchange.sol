@@ -26,7 +26,7 @@ contract IbetOTCExchange is Ownable {
         address indexed tokenAddress,
         uint256 orderId,
         address indexed ownerAddress,
-        address indexed counterpartAddress,
+        address counterpartAddress,
         bool indexed isBuy,
         uint256 price,
         uint256 amount,
@@ -38,7 +38,7 @@ contract IbetOTCExchange is Ownable {
         address indexed tokenAddress,
         uint256 orderId,
         address indexed ownerAddress,
-        address indexed counterpartAddress,
+        address counterpartAddress,
         bool indexed isBuy,
         uint256 price,
         uint256 amount,
@@ -134,19 +134,29 @@ contract IbetOTCExchange is Ownable {
     // 関係者限定のmodifier
     // -------------------------------------------------------------------
     modifier onlyInvolved(uint256 _orderId) {
-        _order = getOrder(_orderId)
-        require(_order[_orderId].owner == msg.sender || _order[_orderId].counterpart == msg.sender);
+        Order memory order;
+        (
+            order.owner,
+            order.counterpart,
+            order.token,
+            order.amount,
+            order.price,
+            order.isBuy,
+            order.agent,
+            order.canceled
+        ) = getOrder(_orderId);
+        require(order.owner == msg.sender || order.counterpart == msg.sender);
         _;
     }
 
     // Order
     function getOrder(uint256 _orderId)
         public
-        onlyInvolved(_orderId)
         view
+        onlyInvolved(_orderId)
         returns (
             address owner,
-            address counterpart
+            address counterpart,
             address token,
             uint256 amount,
             uint256 price,
@@ -186,8 +196,8 @@ contract IbetOTCExchange is Ownable {
     // Agreement
     function getAgreement(uint256 _orderId, uint256 _agreementId)
         public
-        onlyInvolved(_orderId)
         view
+        onlyInvolved(_orderId)
         returns (
             address _counterpart,
             uint256 _amount,
@@ -239,14 +249,18 @@ contract IbetOTCExchange is Ownable {
 
     // Latest Agreement ID
     function latestAgreementId(uint256 _orderId) public view returns (uint256) {
-        return OTCExchangeStorage(storageAddress).getLatestAgreementId(_orderId);
+        return
+            OTCExchangeStorage(storageAddress).getLatestAgreementId(_orderId);
     }
 
     function setLatestAgreementId(uint256 _orderId, uint256 _value)
         private
         returns (bool)
     {
-        OTCExchangeStorage(storageAddress).setLatestAgreementId(_orderId, _value);
+        OTCExchangeStorage(storageAddress).setLatestAgreementId(
+            _orderId,
+            _value
+        );
         return true;
     }
 
@@ -277,14 +291,19 @@ contract IbetOTCExchange is Ownable {
         view
         returns (uint256)
     {
-        return OTCExchangeStorage(storageAddress).getCommitment(_account, _token);
+        return
+            OTCExchangeStorage(storageAddress).getCommitment(_account, _token);
     }
 
     function setCommitment(address _account, address _token, uint256 _value)
         private
         returns (bool)
     {
-        OTCExchangeStorage(storageAddress).setCommitment(_account, _token, _value);
+        OTCExchangeStorage(storageAddress).setCommitment(
+            _account,
+            _token,
+            _value
+        );
         return true;
     }
 
@@ -303,8 +322,10 @@ contract IbetOTCExchange is Ownable {
     ) public returns (bool) {
         // <CHK>
         //  取引参加者チェック
-        if (RegulatorService(regulatorServiceAddress).check(msg.sender) != 0 || RegulatorService(regulatorServiceAddress).check(_counterpart) != 0)
-            revert();
+        if (
+            RegulatorService(regulatorServiceAddress).check(msg.sender) != 0 ||
+            RegulatorService(regulatorServiceAddress).check(_counterpart) != 0
+        ) revert();
 
         if (_isBuy == true) {
             // 買注文の場合
@@ -548,7 +569,7 @@ contract IbetOTCExchange is Ownable {
                 ) ==
                 false ||
                 isContract(msg.sender) == true ||
-                IbetStandardTokenInterface(order.token).status() == false ||
+                IbetStandardTokenInterface(order.token).status() == false
             ) {
                 revert();
             }
@@ -654,7 +675,7 @@ contract IbetOTCExchange is Ownable {
                 msg.sender,
                 order.owner,
                 order.price,
-                _amount,
+                order.amount,
                 order.agent
             );
         }
@@ -677,6 +698,7 @@ contract IbetOTCExchange is Ownable {
         Order memory order;
         (
             order.owner,
+            order.counterpart,
             order.token,
             order.amount,
             order.price,
@@ -764,9 +786,6 @@ contract IbetOTCExchange is Ownable {
             );
         }
 
-        // 更新処理：現在値を更新する
-        setLastPrice(order.token, order.price);
-
         return true;
     }
 
@@ -785,6 +804,7 @@ contract IbetOTCExchange is Ownable {
         Order memory order;
         (
             order.owner,
+            order.counterpart,
             order.token,
             order.amount,
             order.price,

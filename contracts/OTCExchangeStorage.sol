@@ -9,7 +9,6 @@ import "./Ownable.sol";
 //   Storageのアクセスは認可したExchangeコントラクト限定
 // =========================================================================
 contract OTCExchangeStorage is Ownable {
-
     constructor() public {}
 
     // -------------------------------------------------------------------
@@ -36,7 +35,6 @@ contract OTCExchangeStorage is Ownable {
     function upgradeVersion(address _newVersion) public onlyOwner() {
         latestVersion = _newVersion;
     }
-
 
     modifier onlyLatestVersion() {
         require(msg.sender == latestVersion);
@@ -119,7 +117,7 @@ contract OTCExchangeStorage is Ownable {
     function setOrder(
         uint256 _orderId,
         address _owner,
-        address _counterpart;
+        address _counterpart,
         address _token,
         uint256 _amount,
         uint256 _price,
@@ -146,8 +144,8 @@ contract OTCExchangeStorage is Ownable {
 
     function getOrder(uint256 _orderId)
         public
-        onlyAuthorized()
         view
+        onlyAuthorized()
         returns (
             address owner,
             address counterpart,
@@ -183,7 +181,7 @@ contract OTCExchangeStorage is Ownable {
         latestOrderId = _latestOrderId;
     }
 
-    function getLatestOrderId() public onlyAuthorized() view returns (uint256) {
+    function getLatestOrderId() public view onlyAuthorized() returns (uint256) {
         return latestOrderId;
     }
 
