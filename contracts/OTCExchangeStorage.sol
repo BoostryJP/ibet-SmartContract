@@ -2,6 +2,7 @@ pragma solidity ^0.4.24;
 pragma experimental ABIEncoderV2;
 
 import "./Ownable.sol";
+import "./ExchangeStorageModel.sol";
 
 
 // =========================================================================
@@ -9,22 +10,22 @@ import "./Ownable.sol";
 //   Exchange コントラクトの取引情報を管理するための Eternal Storage
 //   Storageのアクセスは認可したExchangeコントラクト限定
 // =========================================================================
-contract OTCExchangeStorage is Ownable {
+contract OTCExchangeStorage is Ownable, ExchangeStorageModel {
     constructor() public {}
 
     // -------------------------------------------------------------------
     // 認可済みコントラクトアドレス
     // -------------------------------------------------------------------
-    mapping(address => bool) public authorizedAddress;
+    mapping(address => bool) public registeredAddress;
 
     // ファンクション：アドレス認可
     // オーナーのみ実行可能
-    function authorize(address _address, bool _auth) public onlyOwner() {
-        authorizedAddress[_address] = _auth;
+    function register(address _address, bool _auth) public onlyOwner() {
+        registeredAddress[_address] = _auth;
     }
 
     modifier onlyAuthorized() {
-        require(authorizedAddress[msg.sender]);
+        require(registeredAddress[msg.sender]);
         _;
     }
 
@@ -98,26 +99,17 @@ contract OTCExchangeStorage is Ownable {
     // -------------------------------------------------------------------
     // 注文情報
     // -------------------------------------------------------------------
-    struct Order {
-        address owner;
-        address counterpart;
-        address token;
-        uint256 amount; // 数量
-        uint256 price; // 価格
-        bool isBuy; // 売買区分（買い：True）
-        address agent; // 決済業者のアドレス
-        bool canceled; // キャンセル済みフラグ
-    }
+
 
     // +++++++++++++++++++
     // 注文情報
     // orderId => order
     // +++++++++++++++++++
-    mapping(uint256 => Order) private orderBook;
+    mapping(uint256 => ExchangeStorageModel.OTCOrder) private orderBook;
 
     function setOrder(
         uint256 _orderId,
-        Order _order
+        ExchangeStorageModel.OTCOrder _order
     ) public onlyLatestVersion() {
         orderBook[_orderId] = _order;
     }
@@ -140,7 +132,7 @@ contract OTCExchangeStorage is Ownable {
         public
         view
         onlyAuthorized()
-        returns (Order)
+        returns (ExchangeStorageModel.OTCOrder)
     {
         return orderBook[_orderId];
     }
@@ -164,25 +156,17 @@ contract OTCExchangeStorage is Ownable {
     // -------------------------------------------------------------------
     // 約定情報
     // -------------------------------------------------------------------
-    struct Agreement {
-        address counterpart; // 約定相手
-        uint256 amount; // 約定数量
-        uint256 price; // 約定価格
-        bool canceled; // キャンセル済みフラグ
-        bool paid; // 支払い済みフラグ
-        uint256 expiry; // 有効期限（約定から１４日）
-    }
 
     // +++++++++++++++++++
     // 約定情報
     // orderId => agreementId => Agreement
     // +++++++++++++++++++
-    mapping(uint256 => mapping(uint256 => Agreement)) public agreements;
+    mapping(uint256 => mapping(uint256 => ExchangeStorageModel.OTCAgreement)) public agreements;
 
     function setAgreement(
         uint256 _orderId,
         uint256 _agreementId,
-        Agreement _agreement
+        ExchangeStorageModel.OTCAgreement _agreement
     ) public onlyLatestVersion() {
         agreements[_orderId][_agreementId] = _agreement;
     }
@@ -207,7 +191,7 @@ contract OTCExchangeStorage is Ownable {
         public
         view
         onlyAuthorized()
-        returns (Agreement)
+        returns (ExchangeStorageModel.OTCAgreement)
     {
         return agreements[_orderId][_agreementId];
     }
