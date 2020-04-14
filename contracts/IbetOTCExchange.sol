@@ -22,7 +22,7 @@ contract IbetOTCExchange is Ownable {
     // Event
     // ---------------------------------------------------------------
 
-    // Event：注文
+    // Event: 注文
     event NewOrder(
         address indexed tokenAddress,
         uint256 orderId,
@@ -34,7 +34,7 @@ contract IbetOTCExchange is Ownable {
         address agentAddress
     );
 
-    // Event：注文取消
+    // Event: 注文取消
     event CancelOrder(
         address indexed tokenAddress,
         uint256 orderId,
@@ -46,7 +46,7 @@ contract IbetOTCExchange is Ownable {
         address agentAddress
     );
 
-    // Event：約定
+    // Event: 約定
     event Agree(
         address indexed tokenAddress,
         uint256 orderId,
@@ -58,7 +58,7 @@ contract IbetOTCExchange is Ownable {
         address agentAddress
     );
 
-    // Event：決済OK
+    // Event: 決済OK
     event SettlementOK(
         address indexed tokenAddress,
         uint256 orderId,
@@ -70,7 +70,7 @@ contract IbetOTCExchange is Ownable {
         address agentAddress
     );
 
-    // Event：決済NG
+    // Event: 決済NG
     event SettlementNG(
         address indexed tokenAddress,
         uint256 orderId,
@@ -82,7 +82,7 @@ contract IbetOTCExchange is Ownable {
         address agentAddress
     );
 
-    // Event：全引き出し
+    // Event: 全引き出し
     event Withdrawal(
         address indexed tokenAddress,
         address indexed accountAddress
@@ -109,13 +109,19 @@ contract IbetOTCExchange is Ownable {
     }
 
     // -------------------------------------------------------------------
-    // 関係者限定のmodifier
+    // modifier
     // -------------------------------------------------------------------
+
+    // modifier: 取引関係者限のチェック
     modifier onlyInvolved(uint256 _orderId) {
         OTCExchangeStorage.Order memory order = getOrder(_orderId);
         require(order.owner == msg.sender || order.counterpart == msg.sender);
         _;
     }
+
+    // -------------------------------------------------------------------
+    // Function: getter/setter
+    // -------------------------------------------------------------------
 
     // Order
     function getOrder(uint256 _orderId)
@@ -138,16 +144,18 @@ contract IbetOTCExchange is Ownable {
         address _agent,
         bool _canceled
     ) private returns (bool) {
+        OTCExchangeStorage.Order _order;
+        _order.owner = _owner;
+        _order.counterpart = _counterpart;
+        _order.token = _token;
+        _order.amount = _amount;
+        _order.price = _price;
+        _order.isBuy = _isBuy;
+        _order.agent = _agent;
+        _order.canceled = _canceled;
         OTCExchangeStorage(storageAddress).setOrder(
             _orderId,
-            _owner,
-            _counterpart,
-            _token,
-            _amount,
-            _price,
-            _isBuy,
-            _agent,
-            _canceled
+            _order
         );
         return true;
     }
@@ -176,15 +184,17 @@ contract IbetOTCExchange is Ownable {
         bool _paid,
         uint256 _expiry
     ) private returns (bool) {
+        OTCExchangeStorage.Agreement _agreement;
+        _agreement.counterpart = _counterpart;
+        _agreement.amount = _amount;
+        _agreement.price = _price;
+        _agreement.canceled = _canceled;
+        _agreement.paid = _paid;
+        _agreement.expiry = _expiry;
         OTCExchangeStorage(storageAddress).setAgreement(
             _orderId,
             _agreementId,
-            _counterpart,
-            _amount,
-            _price,
-            _canceled,
-            _paid,
-            _expiry
+            _agreement
         );
         return true;
     }
@@ -263,7 +273,7 @@ contract IbetOTCExchange is Ownable {
     // Function: Logic
     // ---------------------------------------------------------------
 
-    // Function：（投資家）新規注文を作成する　Make注文
+    // Function: （投資家）新規注文を作成する　Make注文
     function createOrder(
         address _counterpart,
         address _token,
@@ -320,7 +330,7 @@ contract IbetOTCExchange is Ownable {
             //  5) 償還済みフラグがTrueの場合
             //  6) 取扱ステータスがFalseの場合
             //  7) 有効な収納代行業者（Agent）を指定していない場合
-            //   -> 更新処理：全ての残高を投資家のアカウントに戻し、falseを返す
+            //   -> 更新処理: 全ての残高を投資家のアカウントに戻し、falseを返す
             if (
                 _amount == 0 ||
                 balanceOf(msg.sender, _token) < _amount ||
@@ -346,7 +356,7 @@ contract IbetOTCExchange is Ownable {
             }
         }
 
-        // 更新処理：注文IDをカウントアップ -> 注文情報を挿入
+        // 更新処理: 注文IDをカウントアップ -> 注文情報を挿入
         uint256 orderId = latestOrderId() + 1;
         setLatestOrderId(orderId);
         setOrder(
@@ -361,7 +371,7 @@ contract IbetOTCExchange is Ownable {
             false
         );
 
-        // 更新処理：売り注文の場合、預かりを拘束
+        // 更新処理: 売り注文の場合、預かりを拘束
         if (!_isBuy) {
             setBalance(
                 msg.sender,
@@ -375,7 +385,7 @@ contract IbetOTCExchange is Ownable {
             );
         }
 
-        // イベント登録：新規注文
+        // イベント登録: 新規注文
         emit NewOrder(
             _token,
             orderId,
@@ -390,7 +400,7 @@ contract IbetOTCExchange is Ownable {
         return true;
     }
 
-    // Function：（投資家）注文をキャンセルする
+    // Function: （投資家）注文をキャンセルする
     function cancelOrder(uint256 _orderId) public returns (bool) {
         // <CHK>
         //  指定した注文番号が、直近の注文ID以上の場合
@@ -412,7 +422,7 @@ contract IbetOTCExchange is Ownable {
             revert();
         }
 
-        // 更新処理：売り注文の場合、注文で拘束している預かりを解放 => 残高を投資家のアカウントに戻す
+        // 更新処理: 売り注文の場合、注文で拘束している預かりを解放 => 残高を投資家のアカウントに戻す
         if (!order.isBuy) {
             setCommitment(
                 msg.sender,
@@ -425,20 +435,10 @@ contract IbetOTCExchange is Ownable {
             );
         }
 
-        // 更新処理：キャンセル済みフラグをキャンセル済み（True）に更新
-        setOrder(
-            _orderId,
-            order.owner,
-            order.counterpart,
-            order.token,
-            order.amount,
-            order.price,
-            order.isBuy,
-            order.agent,
-            true
-        );
+        // 更新処理: キャンセル済みフラグをキャンセル済み（True）に更新
+         OTCExchangeStorage(storageAddress).setOrderCanceled(_orderId, true);
 
-        // イベント登録：注文キャンセル
+        // イベント登録: 注文キャンセル
         emit CancelOrder(
             order.token,
             _orderId,
@@ -453,7 +453,7 @@ contract IbetOTCExchange is Ownable {
         return true;
     }
 
-    // Function：（投資家）注文に応じる　Take注文 -> 約定
+    // Function: （投資家）注文に応じる　Take注文 -> 約定
     // NOTE: OTCの場合注文数量＝注文数量とする
     function executeOrder(uint256 _orderId, bool _isBuy)
         public
@@ -520,7 +520,7 @@ contract IbetOTCExchange is Ownable {
             //  8) 取扱ステータスがFalseの場合
             //  9) 発注者の残高が発注数量を下回っている場合
             //  10) 数量が元注文の残数量を超過している場合
-            //   -> 更新処理：残高を投資家のアカウントに全て戻し、falseを返す
+            //   -> 更新処理: 残高を投資家のアカウントに全て戻し、falseを返す
             if (
                 order.isBuy == _isBuy ||
                 msg.sender == order.owner ||
@@ -547,7 +547,7 @@ contract IbetOTCExchange is Ownable {
             }
         }
 
-        // 更新処理：約定IDをカウントアップ => 約定情報を挿入する
+        // 更新処理: 約定IDをカウントアップ => 約定情報を挿入する
         uint256 agreementId = latestAgreementId(_orderId) + 1;
         setLatestAgreementId(_orderId, agreementId);
         uint256 expiry = now + lockingPeriod;
@@ -562,21 +562,11 @@ contract IbetOTCExchange is Ownable {
             expiry
         );
 
-        // 更新処理：元注文の数量を減らす
-        setOrder(
-            _orderId,
-            order.owner,
-            order.counterpart,
-            order.token,
-            0,
-            order.price,
-            order.isBuy,
-            order.agent,
-            order.canceled
-        );
+        // 更新処理: 元注文の数量を減らす
+         OTCExchangeStorage(storageAddress).setOrderAmount(_orderId, 0);
 
         if (order.isBuy) {
-            // 更新処理：買い注文に対して売り注文で応じた場合、売りの預かりを拘束
+            // 更新処理: 買い注文に対して売り注文で応じた場合、売りの預かりを拘束
             setBalance(
                 msg.sender,
                 order.token,
@@ -587,7 +577,7 @@ contract IbetOTCExchange is Ownable {
                 order.token,
                 commitmentOf(msg.sender, order.token).add(order.amount)
             );
-            // イベント登録：約定
+            // イベント登録: 約定
             emit Agree(
                 order.token,
                 _orderId,
@@ -599,7 +589,7 @@ contract IbetOTCExchange is Ownable {
                 order.agent
             );
         } else {
-            // イベント登録：約定
+            // イベント登録: 約定
             emit Agree(
                 order.token,
                 _orderId,
@@ -615,7 +605,7 @@ contract IbetOTCExchange is Ownable {
         return true;
     }
 
-    // Function：（決済業者）決済処理 -> 預かりの移動 -> 預かりの引き出し
+    // Function: （決済業者）決済処理 -> 預かりの移動 -> 預かりの引き出し
     function confirmAgreement(uint256 _orderId, uint256 _agreementId)
         public
         returns (bool)
@@ -643,20 +633,11 @@ contract IbetOTCExchange is Ownable {
             revert();
         }
 
-        // 更新処理：支払い済みフラグを支払い済み（True）に更新する
-        setAgreement(
-            _orderId,
-            _agreementId,
-            agreement.counterpart,
-            agreement.amount,
-            agreement.price,
-            agreement.canceled,
-            true,
-            agreement.expiry
-        );
+        // 更新処理: 支払い済みフラグを支払い済み（True）に更新する
+         OTCExchangeStorage(storageAddress).setAgreementPaid(_orderId, _agreementId, true);
 
         if (order.isBuy) {
-            // 更新処理：買注文の場合、突合相手（売り手）から注文者（買い手）へと資産移転を行う
+            // 更新処理: 買注文の場合、突合相手（売り手）から注文者（買い手）へと資産移転を行う
             setCommitment(
                 agreement.counterpart,
                 order.token,
@@ -668,7 +649,7 @@ contract IbetOTCExchange is Ownable {
                 order.owner,
                 agreement.amount
             );
-            // イベント登録：決済OK
+            // イベント登録: 決済OK
             emit SettlementOK(
                 order.token,
                 _orderId,
@@ -680,7 +661,7 @@ contract IbetOTCExchange is Ownable {
                 order.agent
             );
         } else {
-            // 更新処理：売注文の場合、注文者（売り手）から突合相手（買い手）へと資産移転を行う
+            // 更新処理: 売注文の場合、注文者（売り手）から突合相手（買い手）へと資産移転を行う
             setCommitment(
                 order.owner,
                 order.token,
@@ -690,7 +671,7 @@ contract IbetOTCExchange is Ownable {
                 agreement.counterpart,
                 agreement.amount
             );
-            // イベント登録：決済OK
+            // イベント登録: 決済OK
             emit SettlementOK(
                 order.token,
                 _orderId,
@@ -706,7 +687,7 @@ contract IbetOTCExchange is Ownable {
         return true;
     }
 
-    // Function：（決済業者）約定キャンセル
+    // Function: （決済業者）約定キャンセル
     function cancelAgreement(uint256 _orderId, uint256 _agreementId)
         public
         returns (bool)
@@ -757,20 +738,11 @@ contract IbetOTCExchange is Ownable {
             }
         }
 
-        // 更新処理：キャンセル済みフラグをキャンセル（True）に更新する
-        setAgreement(
-            _orderId,
-            _agreementId,
-            agreement.counterpart,
-            agreement.amount,
-            agreement.price,
-            true,
-            agreement.paid,
-            agreement.expiry
-        );
+        // 更新処理: キャンセル済みフラグをキャンセル（True）に更新する
+         OTCExchangeStorage(storageAddress).setAgreementCanceled( _orderId, _agreementId, true);
 
         if (order.isBuy) {
-            // 更新処理：買い注文の場合、突合相手（売り手）の預かりを解放 -> 預かりの引き出し
+            // 更新処理: 買い注文の場合、突合相手（売り手）の預かりを解放 -> 預かりの引き出し
             // 取り消した注文は無効化する（注文中状態に戻さない）
             setCommitment(
                 agreement.counterpart,
@@ -783,7 +755,7 @@ contract IbetOTCExchange is Ownable {
                 agreement.counterpart,
                 agreement.amount
             );
-            // イベント登録：決済NG
+            // イベント登録: 決済NG
             emit SettlementNG(
                 order.token,
                 _orderId,
@@ -795,7 +767,7 @@ contract IbetOTCExchange is Ownable {
                 order.agent
             );
         } else {
-            // 更新処理：売り注文の場合、突合相手（買い手）の注文数量だけ注文者（売り手）の預かりを解放
+            // 更新処理: 売り注文の場合、突合相手（買い手）の注文数量だけ注文者（売り手）の預かりを解放
             //  -> 預かりの引き出し。
             // 取り消した注文は無効化する（注文中状態に戻さない）
             setCommitment(
@@ -807,7 +779,7 @@ contract IbetOTCExchange is Ownable {
                 order.owner,
                 agreement.amount
             );
-            // イベント登録：決済NG
+            // イベント登録: 決済NG
             emit SettlementNG(
                 order.token,
                 _orderId,
@@ -823,7 +795,7 @@ contract IbetOTCExchange is Ownable {
         return true;
     }
 
-    // Function：（投資家）全ての預かりを引き出しする
+    // Function: （投資家）全ての預かりを引き出しする
     //  Note:
     //   未売却の預かり（balances）に対してのみ引き出しをおこなう。
     //   約定済、注文中の預かり（commitments）の引き出しはおこなわない。
@@ -836,7 +808,7 @@ contract IbetOTCExchange is Ownable {
             revert();
         }
 
-        // 更新処理：トークン引き出し（送信）
+        // 更新処理: トークン引き出し（送信）
         IbetStandardTokenInterface(_token).transfer(msg.sender, balance);
         setBalance(msg.sender, _token, 0);
 
@@ -846,7 +818,7 @@ contract IbetOTCExchange is Ownable {
         return true;
     }
 
-    // Function： Deposit Handler
+    // Function:  Deposit Handler
     function tokenFallback(
         address _from,
         uint256 _value,
@@ -855,7 +827,7 @@ contract IbetOTCExchange is Ownable {
         setBalance(_from, msg.sender, balanceOf(_from, msg.sender).add(_value));
     }
 
-    // ファンクション：アドレスフォーマットがコントラクトのものかを判断する
+    // ファンクション: アドレスフォーマットがコントラクトのものかを判断する
     function isContract(address _addr) private view returns (bool is_contract) {
         uint256 length;
         assembly {
@@ -864,7 +836,7 @@ contract IbetOTCExchange is Ownable {
         return (length > 0);
     }
 
-    // ファンクション：新規注文時に指定したagentアドレスが有効なアドレスであることをチェックする
+    // ファンクション: 新規注文時に指定したagentアドレスが有効なアドレスであることをチェックする
     function validateAgent(address _addr)
         private
         view

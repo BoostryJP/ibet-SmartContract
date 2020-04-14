@@ -117,23 +117,16 @@ contract OTCExchangeStorage is Ownable {
 
     function setOrder(
         uint256 _orderId,
-        address _owner,
-        address _counterpart,
-        address _token,
-        uint256 _amount,
-        uint256 _price,
-        bool _isBuy,
-        address _agent,
-        bool _canceled
+        Order _order
     ) public onlyLatestVersion() {
-        orderBook[_orderId].owner = _owner;
-        orderBook[_orderId].counterpart = _counterpart;
-        orderBook[_orderId].token = _token;
+        orderBook[_orderId] = _order;
+    }
+    
+    function setOrderAmount(uint256 _orderId, uint256 _amount)
+        public
+        onlyLatestVersion()
+    {
         orderBook[_orderId].amount = _amount;
-        orderBook[_orderId].price = _price;
-        orderBook[_orderId].isBuy = _isBuy;
-        orderBook[_orderId].agent = _agent;
-        orderBook[_orderId].canceled = _canceled;
     }
 
     function setOrderCanceled(uint256 _orderId, bool _canceled)
@@ -189,19 +182,9 @@ contract OTCExchangeStorage is Ownable {
     function setAgreement(
         uint256 _orderId,
         uint256 _agreementId,
-        address _counterpart,
-        uint256 _amount,
-        uint256 _price,
-        bool _canceled,
-        bool _paid,
-        uint256 _expiry
+        Agreement _agreement
     ) public onlyLatestVersion() {
-        agreements[_orderId][_agreementId].counterpart = _counterpart;
-        agreements[_orderId][_agreementId].amount = _amount;
-        agreements[_orderId][_agreementId].price = _price;
-        agreements[_orderId][_agreementId].canceled = _canceled;
-        agreements[_orderId][_agreementId].paid = _paid;
-        agreements[_orderId][_agreementId].expiry = _expiry;
+        agreements[_orderId][_agreementId] = _agreement;
     }
 
     function setAgreementCanceled(
@@ -218,14 +201,6 @@ contract OTCExchangeStorage is Ownable {
         bool _paid
     ) public onlyLatestVersion() {
         agreements[_orderId][_agreementId].paid = _paid;
-    }
-
-    function setAgreementExpiry(
-        uint256 _orderId,
-        uint256 _agreementId,
-        uint256 _expiry
-    ) public onlyLatestVersion() {
-        agreements[_orderId][_agreementId].expiry = _expiry;
     }
 
     function getAgreement(uint256 _orderId, uint256 _agreementId)
