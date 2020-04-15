@@ -1819,6 +1819,104 @@ def test_confirmAgreement_error_07(web3, chain, users,
 
 
 '''
+TEST_getAgreement
+'''
+
+
+# 異常系1
+# 入力値の型誤り（orderId, agreementId）
+def test_getAgreement_error_1(web3, chain, users, otc_exchange, personal_info, payment_gateway):
+    issuer = users['issuer']
+    agent = users['agent']
+
+    personalinfo_register(web3, chain, personal_info, issuer, issuer)
+    payment_gateway_register(web3, chain, payment_gateway, issuer, agent)
+    payment_gateway_approve(web3, chain, payment_gateway, issuer, agent)
+
+    web3.eth.defaultAccount = issuer
+    with pytest.raises(TypeError):
+        otc_exchange.transact().getAgreement("1", 1)
+    with pytest.raises(TypeError):
+        otc_exchange.transact().getAgreement(1.0, 1)
+    with pytest.raises(TypeError):
+        otc_exchange.transact().getAgreement(-1, 1)
+    with pytest.raises(TypeError):
+        otc_exchange.transact().getAgreement(2 ** 256, 1)
+    with pytest.raises(TypeError):
+        otc_exchange.transact().getAgreement(1, "1")
+    with pytest.raises(TypeError):
+        otc_exchange.transact().getAgreement(1, 1.0)
+    with pytest.raises(TypeError):
+        otc_exchange.transact().getAgreement(1, -1)
+    with pytest.raises(TypeError):
+        otc_exchange.transact().getAgreement(1, 2 ** 256)
+
+
+# 異常系2
+# 取引関係者外からの参照
+def test_getAgreement_error_2(web3, chain, users, otc_exchange, personal_info, payment_gateway):
+    _issuer = users['issuer']
+    _attacker = users['admin']
+    _trader = users['trader']
+    _agent = users['agent']
+
+    personalinfo_register(web3, chain, personal_info, _issuer, _issuer)
+    payment_gateway_register(web3, chain, payment_gateway, _issuer, _agent)
+    payment_gateway_approve(web3, chain, payment_gateway, _issuer, _agent)
+
+    personalinfo_register(web3, chain, personal_info, _trader, _issuer)
+    payment_gateway_register(web3, chain, payment_gateway, _trader, _agent)
+    payment_gateway_approve(web3, chain, payment_gateway, _trader, _agent)
+
+    # 新規発行
+    web3.eth.defaultAccount = _issuer
+    share_token, deploy_args = utils. \
+        issue_share_token(web3, chain, users, otc_exchange.address, personal_info.address)
+
+    # Exchangeへのデポジット：発行体
+    web3.eth.defaultAccount = _issuer
+    _amount_make = 100
+    txn_hash = share_token.transact().transfer(otc_exchange.address, _amount_make)
+    chain.wait.for_receipt(txn_hash)
+
+    # Make注文（売）：発行体
+    web3.eth.defaultAccount = _issuer
+    _price = 123
+    txn_hash = otc_exchange.transact().createOrder(
+        _trader, share_token.address, _amount_make, _price, _agent)
+    chain.wait.for_receipt(txn_hash)
+
+    # Take注文（買）：投資家
+    web3.eth.defaultAccount = _trader
+    order_id = otc_exchange.call().latestOrderId()
+    txn_hash = otc_exchange.transact().executeOrder(order_id)
+    chain.wait.for_receipt(txn_hash)
+
+    agreement_id = otc_exchange.call().latestAgreementId(order_id)
+
+    web3.eth.defaultAccount = _attacker
+    try:
+        agreement = otc_exchange.call().getAgreement(order_id, agreement_id)
+    except ValueError:
+        pass
+
+    web3.eth.defaultAccount = _issuer
+    agreement = otc_exchange.call().getAgreement(order_id, agreement_id)
+
+    assert agreement[0:5] == [_trader, _amount_make, _price, False, False]
+
+    web3.eth.defaultAccount = _trader
+    agreement = otc_exchange.call().getAgreement(order_id, agreement_id)
+
+    assert agreement[0:5] == [_trader, _amount_make, _price, False, False]
+
+    web3.eth.defaultAccount = _agent
+    agreement = otc_exchange.call().getAgreement(order_id, agreement_id)
+
+    assert agreement[0:5] == [_trader, _amount_make, _price, False, False]
+
+
+'''
 TEST_決済非承認（cancelAgreement）
 '''
 

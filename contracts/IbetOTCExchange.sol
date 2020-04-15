@@ -432,7 +432,7 @@ contract IbetOTCExchange is Ownable, ExchangeStorageModel {
         ExchangeStorageModel.OTCOrder memory order = OTCExchangeStorage(storageAddress).getOrder(_orderId);
 
         // <CHK>
-        //  取引参加者だけの処理
+        // 取引関係者限定
         require(order.owner == msg.sender || order.counterpart == msg.sender || order.agent == msg.sender);
     
 

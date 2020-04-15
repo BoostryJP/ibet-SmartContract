@@ -5,7 +5,7 @@ from eth_utils import to_checksum_address
 zero_address = '0x0000000000000000000000000000000000000000'
 
 def init_args(exchange_address, personal_info_address):
-    name = 'test_bs'
+    name = 'test_share'
     symbol = 'IBS'
     issue_price = 10000
     total_supply = 10000
@@ -37,24 +37,24 @@ def test_deploy_normal_1(web3, chain, users, share_exchange, personal_info):
     deploy_args = init_args(share_exchange.address, personal_info.address)
 
     web3.eth.defaultAccount = account_address
-    beneficiary_security_contract, _ = chain.provider.get_or_deploy_contract(
+    share_contract, _ = chain.provider.get_or_deploy_contract(
         'IbetShare',
         deploy_args=deploy_args
     )
 
-    owner_address = beneficiary_security_contract.call().owner()
-    name = beneficiary_security_contract.call().name()
-    symbol = beneficiary_security_contract.call().symbol()
-    tradable_exchange = beneficiary_security_contract.call().tradableExchange()
-    personal_info_address = beneficiary_security_contract.call().personalInfoAddress()
-    issue_price = beneficiary_security_contract.call().issuePrice()
-    total_supply = beneficiary_security_contract.call().totalSupply()
-    dividend_infomation = beneficiary_security_contract.call().dividendInfomation()
-    cansellation_date = beneficiary_security_contract.call().cansellationDate()
-    contact_information = beneficiary_security_contract.call().contactInformation()
-    privacy_policy = beneficiary_security_contract.call().privacyPolicy()
-    memo = beneficiary_security_contract.call().memo()
-    transferable = beneficiary_security_contract.call().transferable()
+    owner_address = share_contract.call().owner()
+    name = share_contract.call().name()
+    symbol = share_contract.call().symbol()
+    tradable_exchange = share_contract.call().tradableExchange()
+    personal_info_address = share_contract.call().personalInfoAddress()
+    issue_price = share_contract.call().issuePrice()
+    total_supply = share_contract.call().totalSupply()
+    dividend_infomation = share_contract.call().dividendInfomation()
+    cansellation_date = share_contract.call().cansellationDate()
+    contact_information = share_contract.call().contactInformation()
+    privacy_policy = share_contract.call().privacyPolicy()
+    memo = share_contract.call().memo()
+    transferable = share_contract.call().transferable()
 
     assert owner_address == account_address
     assert name == deploy_args[0]
@@ -773,15 +773,15 @@ def test_setTransferable_normal_1(web3, chain, users, share_exchange, personal_i
 
     # 新規発行
     web3.eth.defaultAccount = issuer
-    beneficiary_security_contract, deploy_args = \
+    share_contract, deploy_args = \
         utils.issue_share_token(web3, chain, users, share_exchange.address, personal_info.address)
 
     # 譲渡可能更新
     web3.eth.defaultAccount = issuer
-    txn_hash = beneficiary_security_contract.transact().setTransferable(after_transferable)
+    txn_hash = share_contract.transact().setTransferable(after_transferable)
     chain.wait.for_receipt(txn_hash)
 
-    transferable = beneficiary_security_contract.call().transferable()
+    transferable = share_contract.call().transferable()
     assert after_transferable == transferable
 
 
@@ -791,13 +791,13 @@ def test_setTransferable_error_1(web3, chain, users, share_exchange, personal_in
 
     # 新規発行
     web3.eth.defaultAccount = issuer
-    beneficiary_security_contract, deploy_args = \
+    share_contract, deploy_args = \
         utils.issue_share_token(web3, chain, users, share_exchange.address, personal_info.address)
 
     # 型誤り
     web3.eth.defaultAccount = issuer
     with pytest.raises(TypeError):
-        beneficiary_security_contract.transact().setTransferable('False')
+        share_contract.transact().setTransferable('False')
 
 
 # エラー系2: 権限エラー
@@ -808,18 +808,18 @@ def test_setTransferable_error_2(web3, chain, users, share_exchange, personal_in
 
     # 新規発行
     web3.eth.defaultAccount = issuer
-    beneficiary_security_contract, deploy_args = \
+    share_contract, deploy_args = \
         utils.issue_share_token(web3, chain, users, share_exchange.address, personal_info.address)
 
     # 譲渡可能更新
     web3.eth.defaultAccount = attacker
     try:
-        txn_hash = beneficiary_security_contract.transact().setTransferable(after_transferable)  # エラーになる
+        txn_hash = share_contract.transact().setTransferable(after_transferable)  # エラーになる
         chain.wait.for_receipt(txn_hash)
     except ValueError:
         pass
 
-    transferable = beneficiary_security_contract.call().transferable()
+    transferable = share_contract.call().transferable()
     assert transferable == True
 
 
@@ -1447,7 +1447,7 @@ def test_transfer_normal_1(web3, chain, users, share_exchange, personal_info):
 
     # 株式トークン新規発行
     web3.eth.defaultAccount = from_address
-    beneficiary_security_contract, deploy_args = utils. \
+    share_contract, deploy_args = utils. \
         issue_share_token(web3, chain, users, share_exchange.address, personal_info.address)
 
     # 振替先の個人情報登録
@@ -1456,11 +1456,11 @@ def test_transfer_normal_1(web3, chain, users, share_exchange, personal_info):
 
     # 振替
     web3.eth.defaultAccount = from_address
-    txn_hash = beneficiary_security_contract.transact().transfer(to_address, transfer_amount)
+    txn_hash = share_contract.transact().transfer(to_address, transfer_amount)
     chain.wait.for_receipt(txn_hash)
 
-    from_balance = beneficiary_security_contract.call().balanceOf(from_address)
-    to_balance = beneficiary_security_contract.call().balanceOf(to_address)
+    from_balance = share_contract.call().balanceOf(from_address)
+    to_balance = share_contract.call().balanceOf(to_address)
 
     assert from_balance == deploy_args[5] - transfer_amount
     assert to_balance == transfer_amount
@@ -1473,15 +1473,15 @@ def test_transfer_normal_2(web3, chain, users, share_exchange, personal_info):
 
     # 株式トークン新規発行
     web3.eth.defaultAccount = from_address
-    beneficiary_security_contract, deploy_args = utils. \
+    share_contract, deploy_args = utils. \
         issue_share_token(web3, chain, users, share_exchange.address, personal_info.address)
 
     to_address = share_exchange.address
-    txn_hash = beneficiary_security_contract.transact().transfer(to_address, transfer_amount)
+    txn_hash = share_contract.transact().transfer(to_address, transfer_amount)
     chain.wait.for_receipt(txn_hash)
 
-    from_balance = beneficiary_security_contract.call().balanceOf(from_address)
-    to_balance = beneficiary_security_contract.call().balanceOf(to_address)
+    from_balance = share_contract.call().balanceOf(from_address)
+    to_balance = share_contract.call().balanceOf(to_address)
 
     assert from_balance == deploy_args[5] - transfer_amount
     assert to_balance == transfer_amount
@@ -1495,11 +1495,11 @@ def test_transfer_error_1(web3, chain, users, share_exchange, personal_info):
 
     # 株式トークン新規発行
     web3.eth.defaultAccount = from_address
-    beneficiary_security_contract, deploy_args = utils. \
+    share_contract, deploy_args = utils. \
         issue_share_token(web3, chain, users, share_exchange.address, personal_info.address)
 
     with pytest.raises(TypeError):
-        beneficiary_security_contract.transact().transfer(to_address, transfer_amount)
+        share_contract.transact().transfer(to_address, transfer_amount)
 
 
 # エラー系2: 入力値の型誤り（Value）
@@ -1510,11 +1510,11 @@ def test_transfer_error_2(web3, chain, users, share_exchange, personal_info):
 
     # 株式トークン新規発行
     web3.eth.defaultAccount = from_address
-    beneficiary_security_contract, deploy_args = utils. \
+    share_contract, deploy_args = utils. \
         issue_share_token(web3, chain, users, share_exchange.address, personal_info.address)
 
     with pytest.raises(TypeError):
-        beneficiary_security_contract.transact().transfer(to_address, transfer_amount)
+        share_contract.transact().transfer(to_address, transfer_amount)
 
 
 # エラー系3: 残高不足
@@ -1525,7 +1525,7 @@ def test_transfer_error_3(web3, chain, users, share_exchange, personal_info):
 
     # 株式トークン新規発行
     web3.eth.defaultAccount = from_address
-    beneficiary_security_contract, deploy_args = utils. \
+    share_contract, deploy_args = utils. \
         issue_share_token(web3, chain, users, share_exchange.address, personal_info.address)
 
     # 個人情報登録
@@ -1536,12 +1536,12 @@ def test_transfer_error_3(web3, chain, users, share_exchange, personal_info):
     web3.eth.defaultAccount = issuer
     transfer_amount = 10000000000
     try:
-        beneficiary_security_contract.transact().transfer(to_address, transfer_amount)  # エラーになる
+        share_contract.transact().transfer(to_address, transfer_amount)  # エラーになる
     except ValueError:
         pass
 
-    assert beneficiary_security_contract.call().balanceOf(issuer) == 10000
-    assert beneficiary_security_contract.call().balanceOf(to_address) == 0
+    assert share_contract.call().balanceOf(issuer) == 10000
+    assert share_contract.call().balanceOf(to_address) == 0
 
 
 # エラー系4: private functionにアクセスできない
@@ -1555,17 +1555,17 @@ def test_transfer_error_4(web3, chain, users, share_exchange, personal_info):
 
     # 株式トークン新規発行
     web3.eth.defaultAccount = from_address
-    beneficiary_security_contract, deploy_args = utils. \
+    share_contract, deploy_args = utils. \
         issue_share_token(web3, chain, users, share_exchange.address, personal_info.address)
 
     with pytest.raises(ValueError):
-        beneficiary_security_contract.call().isContract(to_address)
+        share_contract.call().isContract(to_address)
 
     with pytest.raises(ValueError):
-        beneficiary_security_contract.transact().transferToAddress(to_address, transfer_amount, data)
+        share_contract.transact().transferToAddress(to_address, transfer_amount, data)
 
     with pytest.raises(ValueError):
-        beneficiary_security_contract.transact().transferToContract(to_address, transfer_amount, data)
+        share_contract.transact().transferToContract(to_address, transfer_amount, data)
 
 
 # エラー系5: 取引不可Exchangeへの振替
@@ -1576,7 +1576,7 @@ def test_transfer_error_5(web3, chain, users, share_exchange, personal_info,
 
     # 株式トークン新規発行
     web3.eth.defaultAccount = from_address
-    beneficiary_security_contract, deploy_args = utils. \
+    share_contract, deploy_args = utils. \
         issue_share_token(web3, chain, users, share_exchange.address, personal_info.address)
 
     # 取引不可Exchange
@@ -1591,13 +1591,13 @@ def test_transfer_error_5(web3, chain, users, share_exchange, personal_info,
 
     to_address = dummy_exchange.address
     try:
-        txn_hash = beneficiary_security_contract.transact().transfer(to_address, transfer_amount)  # エラーになる
+        txn_hash = share_contract.transact().transfer(to_address, transfer_amount)  # エラーになる
         chain.wait.for_receipt(txn_hash)
     except ValueError:
         pass
 
-    from_balance = beneficiary_security_contract.call().balanceOf(from_address)
-    to_balance = beneficiary_security_contract.call().balanceOf(to_address)
+    from_balance = share_contract.call().balanceOf(from_address)
+    to_balance = share_contract.call().balanceOf(to_address)
 
     assert from_balance == deploy_args[5]
     assert to_balance == 0
@@ -1611,7 +1611,7 @@ def test_transfer_error_6(web3, chain, users, share_exchange, personal_info):
 
     # 株式トークン新規発行
     web3.eth.defaultAccount = issuer
-    beneficiary_security_contract, deploy_args = \
+    share_contract, deploy_args = \
         utils.issue_share_token(web3, chain, users, share_exchange.address, personal_info.address)
 
     # 個人情報登録
@@ -1620,19 +1620,19 @@ def test_transfer_error_6(web3, chain, users, share_exchange, personal_info):
 
     # 譲渡不可設定
     web3.eth.defaultAccount = issuer
-    txn_hash = beneficiary_security_contract.transact().setTransferable(False)
+    txn_hash = share_contract.transact().setTransferable(False)
     chain.wait.for_receipt(txn_hash)
 
     # 譲渡実行
     web3.eth.defaultAccount = issuer
     try:
-        txn_hash = beneficiary_security_contract.transact().transfer(to_address, transfer_amount)  # エラーとなる
+        txn_hash = share_contract.transact().transfer(to_address, transfer_amount)  # エラーとなる
         chain.wait.for_receipt(txn_hash)
     except ValueError:
         pass
 
-    from_balance = beneficiary_security_contract.call().balanceOf(issuer)
-    to_balance = beneficiary_security_contract.call().balanceOf(to_address)
+    from_balance = share_contract.call().balanceOf(issuer)
+    to_balance = share_contract.call().balanceOf(to_address)
 
     assert from_balance == deploy_args[5]
     assert to_balance == 0
@@ -1646,7 +1646,7 @@ def test_transfer_error_7(web3, chain, users, share_exchange, personal_info):
 
     # 株式トークン新規発行
     web3.eth.defaultAccount = issuer
-    beneficiary_security_contract, deploy_args = \
+    share_contract, deploy_args = \
         utils.issue_share_token(web3, chain, users, share_exchange.address, personal_info.address)
 
     # NOTE:個人情報未登録（to_address）
@@ -1654,13 +1654,13 @@ def test_transfer_error_7(web3, chain, users, share_exchange, personal_info):
     # 譲渡実行
     web3.eth.defaultAccount = issuer
     try:
-        txn_hash = beneficiary_security_contract.transact().transfer(to_address, transfer_amount)  # エラーとなる
+        txn_hash = share_contract.transact().transfer(to_address, transfer_amount)  # エラーとなる
         chain.wait.for_receipt(txn_hash)
     except ValueError:
         pass
 
-    from_balance = beneficiary_security_contract.call().balanceOf(issuer)
-    to_balance = beneficiary_security_contract.call().balanceOf(to_address)
+    from_balance = share_contract.call().balanceOf(issuer)
+    to_balance = share_contract.call().balanceOf(to_address)
 
     assert from_balance == deploy_args[5]
     assert to_balance == 0
@@ -1680,7 +1680,7 @@ def test_transferFrom_normal_1(web3, chain, users, share_exchange, personal_info
 
     # 株式トークン新規発行
     web3.eth.defaultAccount = _issuer
-    beneficiary_security_contract, deploy_args = utils. \
+    share_contract, deploy_args = utils. \
         issue_share_token(web3, chain, users, share_exchange.address, personal_info.address)
 
     # 振替先の個人情報登録（_from）
@@ -1689,17 +1689,17 @@ def test_transferFrom_normal_1(web3, chain, users, share_exchange, personal_info
 
     # 譲渡（issuer -> _from）
     web3.eth.defaultAccount = _issuer
-    txn_hash = beneficiary_security_contract.transact().transfer(_from, _value)
+    txn_hash = share_contract.transact().transfer(_from, _value)
     chain.wait.for_receipt(txn_hash)
 
     # 移転（_from -> _to）
     web3.eth.defaultAccount = _issuer
-    txn_hash = beneficiary_security_contract.transact().transferFrom(_from, _to, _value)
+    txn_hash = share_contract.transact().transferFrom(_from, _to, _value)
     chain.wait.for_receipt(txn_hash)
 
-    issuer_balance = beneficiary_security_contract.call().balanceOf(_issuer)
-    from_balance = beneficiary_security_contract.call().balanceOf(_from)
-    to_balance = beneficiary_security_contract.call().balanceOf(_to)
+    issuer_balance = share_contract.call().balanceOf(_issuer)
+    from_balance = share_contract.call().balanceOf(_from)
+    to_balance = share_contract.call().balanceOf(_to)
 
     assert issuer_balance == deploy_args[5] - _value
     assert from_balance == 0
@@ -1714,17 +1714,17 @@ def test_transferFrom_error_1(web3, chain, users, share_exchange, personal_info)
 
     # 株式トークン新規発行
     web3.eth.defaultAccount = _issuer
-    beneficiary_security_contract, deploy_args = utils. \
+    share_contract, deploy_args = utils. \
         issue_share_token(web3, chain, users, share_exchange.address, personal_info.address)
 
     # 移転（_from -> _to）
     web3.eth.defaultAccount = _issuer
 
     with pytest.raises(TypeError):
-        beneficiary_security_contract.transact().transferFrom('1234', _to, _value)
+        share_contract.transact().transferFrom('1234', _to, _value)
 
     with pytest.raises(TypeError):
-        beneficiary_security_contract.transact().transferFrom(1234, _to, _value)
+        share_contract.transact().transferFrom(1234, _to, _value)
 
 
 # エラー系2: 入力値の型誤り（To）
@@ -1735,17 +1735,17 @@ def test_transferFrom_error_2(web3, chain, users, share_exchange, personal_info)
 
     # 株式トークン新規発行
     web3.eth.defaultAccount = _issuer
-    beneficiary_security_contract, deploy_args = utils. \
+    share_contract, deploy_args = utils. \
         issue_share_token(web3, chain, users, share_exchange.address, personal_info.address)
 
     # 移転（_from -> _to）
     web3.eth.defaultAccount = _issuer
 
     with pytest.raises(TypeError):
-        beneficiary_security_contract.transact().transferFrom(_from, '1234', _value)
+        share_contract.transact().transferFrom(_from, '1234', _value)
 
     with pytest.raises(TypeError):
-        beneficiary_security_contract.transact().transferFrom(_from, 1234, _value)
+        share_contract.transact().transferFrom(_from, 1234, _value)
 
 
 # エラー系3: 入力値の型誤り（Value）
@@ -1756,23 +1756,23 @@ def test_transferFrom_error_3(web3, chain, users, share_exchange, personal_info)
 
     # 株式トークン新規発行
     web3.eth.defaultAccount = _issuer
-    beneficiary_security_contract, deploy_args = utils. \
+    share_contract, deploy_args = utils. \
         issue_share_token(web3, chain, users, share_exchange.address, personal_info.address)
 
     # 移転（_from -> _to）
     web3.eth.defaultAccount = _issuer
 
     with pytest.raises(TypeError):
-        beneficiary_security_contract.transact().transferFrom(_from, _to, -1)
+        share_contract.transact().transferFrom(_from, _to, -1)
 
     with pytest.raises(TypeError):
-        beneficiary_security_contract.transact().transferFrom(_from, _to, 2 ** 256)
+        share_contract.transact().transferFrom(_from, _to, 2 ** 256)
 
     with pytest.raises(TypeError):
-        beneficiary_security_contract.transact().transferFrom(_from, _to, '0')
+        share_contract.transact().transferFrom(_from, _to, '0')
 
     with pytest.raises(TypeError):
-        beneficiary_security_contract.transact().transferFrom(_from, _to, 0.1)
+        share_contract.transact().transferFrom(_from, _to, 0.1)
 
 
 # エラー系4: 残高不足
@@ -1784,7 +1784,7 @@ def test_transferFrom_error_4(web3, chain, users, share_exchange, personal_info)
 
     # 株式トークン新規発行
     web3.eth.defaultAccount = _issuer
-    beneficiary_security_contract, deploy_args = utils. \
+    share_contract, deploy_args = utils. \
         issue_share_token(web3, chain, users, share_exchange.address, personal_info.address)
 
     # 振替先の個人情報登録（_from）
@@ -1793,20 +1793,20 @@ def test_transferFrom_error_4(web3, chain, users, share_exchange, personal_info)
 
     # 譲渡（issuer -> _from）
     web3.eth.defaultAccount = _issuer
-    txn_hash = beneficiary_security_contract.transact().transfer(_from, _value)
+    txn_hash = share_contract.transact().transfer(_from, _value)
     chain.wait.for_receipt(txn_hash)
 
     # 移転（_from -> _to）
     web3.eth.defaultAccount = _issuer
     try:
-        txn_hash = beneficiary_security_contract.transact().transferFrom(_from, _to, 101)  # エラーになる
+        txn_hash = share_contract.transact().transferFrom(_from, _to, 101)  # エラーになる
         chain.wait.for_receipt(txn_hash)
     except ValueError:
         pass
 
-    issuer_balance = beneficiary_security_contract.call().balanceOf(_issuer)
-    from_balance = beneficiary_security_contract.call().balanceOf(_from)
-    to_balance = beneficiary_security_contract.call().balanceOf(_to)
+    issuer_balance = share_contract.call().balanceOf(_issuer)
+    from_balance = share_contract.call().balanceOf(_from)
+    to_balance = share_contract.call().balanceOf(_to)
 
     assert issuer_balance == deploy_args[5] - _value
     assert from_balance == _value
@@ -1822,7 +1822,7 @@ def test_transferFrom_error_5(web3, chain, users, share_exchange, personal_info)
 
     # 株式トークン新規発行
     web3.eth.defaultAccount = _issuer
-    beneficiary_security_contract, deploy_args = utils. \
+    share_contract, deploy_args = utils. \
         issue_share_token(web3, chain, users, share_exchange.address, personal_info.address)
 
     # 振替先の個人情報登録（_from）
@@ -1831,20 +1831,20 @@ def test_transferFrom_error_5(web3, chain, users, share_exchange, personal_info)
 
     # 譲渡（issuer -> _from）
     web3.eth.defaultAccount = _issuer
-    txn_hash = beneficiary_security_contract.transact().transfer(_from, _value)
+    txn_hash = share_contract.transact().transfer(_from, _value)
     chain.wait.for_receipt(txn_hash)
 
     # 移転（_from -> _to）
     web3.eth.defaultAccount = _from
     try:
-        txn_hash = beneficiary_security_contract.transact().transferFrom(_from, _to, _value)  # エラーになる
+        txn_hash = share_contract.transact().transferFrom(_from, _to, _value)  # エラーになる
         chain.wait.for_receipt(txn_hash)
     except ValueError:
         pass
 
-    issuer_balance = beneficiary_security_contract.call().balanceOf(_issuer)
-    from_balance = beneficiary_security_contract.call().balanceOf(_from)
-    to_balance = beneficiary_security_contract.call().balanceOf(_to)
+    issuer_balance = share_contract.call().balanceOf(_issuer)
+    from_balance = share_contract.call().balanceOf(_from)
+    to_balance = share_contract.call().balanceOf(_to)
 
     assert issuer_balance == deploy_args[5] - _value
     assert from_balance == _value

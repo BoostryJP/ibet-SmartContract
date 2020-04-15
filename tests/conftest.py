@@ -133,14 +133,15 @@ def share_exchange(web3, chain, users,
     deploy_args = [
         payment_gateway.address,
         personal_info.address,
-        share_exchange_storage.address,
-        exchange_regulator_service.address
+        share_exchange_storage.address
     ]
     share_exchange, _ = chain.provider.get_or_deploy_contract(
         'IbetOTCExchange',
         deploy_args=deploy_args
     )
     share_exchange_storage.transact().upgradeVersion(share_exchange.address)
+    # storage参照可能コントラクトの設定
+    share_exchange_storage.transact().register(share_exchange.address, True)
     return share_exchange
 
 @pytest.yield_fixture()
