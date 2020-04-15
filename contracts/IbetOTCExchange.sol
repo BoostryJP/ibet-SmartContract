@@ -105,25 +105,12 @@ contract IbetOTCExchange is Ownable, ExchangeStorageModel {
     }
 
     // -------------------------------------------------------------------
-    // modifier
-    // -------------------------------------------------------------------
-
-    // modifier: 取引関係者限のチェック
-    modifier onlyInvolved(uint256 _orderId) {
-        ExchangeStorageModel.OTCOrder memory _order = OTCExchangeStorage(storageAddress).getOrder(_orderId);
-        require(_order.owner == msg.sender || _order.counterpart == msg.sender);
-        _;
-    }
-
-    // -------------------------------------------------------------------
     // Function: getter/setter
     // -------------------------------------------------------------------
 
-    // コントラクト外へのreturnは各プロパティとする
     function getOrder(uint256 _orderId)
         public
         view
-        onlyInvolved(_orderId)
         returns (
         address _owner,
         address _counterpart,
@@ -134,7 +121,9 @@ contract IbetOTCExchange is Ownable, ExchangeStorageModel {
         bool _canceled
         )
     {
+        // 取引関係者限定
         ExchangeStorageModel.OTCOrder memory _order = OTCExchangeStorage(storageAddress).getOrder(_orderId);
+        require(_order.owner == msg.sender || _order.counterpart == msg.sender || _order.agent == msg.sender);
         return (
            _order.owner,
            _order.counterpart,
@@ -144,7 +133,6 @@ contract IbetOTCExchange is Ownable, ExchangeStorageModel {
            _order.agent,
            _order.canceled
         );
-        // return OTCExchangeStorage(storageAddress).getOrder(_orderId);
     }
 
     function setOrder(
@@ -185,6 +173,10 @@ contract IbetOTCExchange is Ownable, ExchangeStorageModel {
             uint256 _expiry
         )
     {
+        // 取引関係者限定
+        ExchangeStorageModel.OTCOrder memory _order = OTCExchangeStorage(storageAddress).getOrder(_orderId);
+        require(_order.owner == msg.sender || _order.counterpart == msg.sender || _order.agent == msg.sender);
+        
         ExchangeStorageModel.OTCAgreement memory _agreement = OTCExchangeStorage(storageAddress).getAgreement(_orderId, _agreementId);
         return (
            _agreement.counterpart,
@@ -306,20 +298,12 @@ contract IbetOTCExchange is Ownable, ExchangeStorageModel {
         address _agent
     ) public returns (bool) {
         // <CHK>
-        //  取引参加者チェック
-        // if (
-        //     RegulatorService(regulatorServiceAddress).check(msg.sender) != 0 ||
-        //     RegulatorService(regulatorServiceAddress).check(_counterpart) != 0
-        // ) revert();
-
-        // <CHK>
         //  1) 注文数量が0の場合
         //  2) 残高数量が発注数量に満たない場合
         //  3) 認可されたアドレスではない場合
         //  4) 名簿用個人情報が登録されていない場合
-        //  5) 償還済みフラグがTrueの場合
-        //  6) 取扱ステータスがFalseの場合
-        //  7) 有効な収納代行業者（Agent）を指定していない場合
+        //  5) 取扱ステータスがFalseの場合
+        //  6) 有効な収納代行業者（Agent）を指定していない場合
         //   -> 更新処理: 全ての残高を投資家のアカウントに戻し、falseを返す
         if (
             _amount == 0 ||
@@ -392,8 +376,7 @@ contract IbetOTCExchange is Ownable, ExchangeStorageModel {
         //   -> REVERT
         require(_orderId <= latestOrderId());
 
-        ExchangeStorageModel.OTCOrder memory order;
-        (order.owner, order.counterpart, order.token, order.amount, order.price, order.agent, order.canceled) = getOrder(_orderId);
+        ExchangeStorageModel.OTCOrder memory order = OTCExchangeStorage(storageAddress).getOrder(_orderId);
 
         // <CHK>
         //  1) 元注文の残注文数量が0の場合
@@ -437,60 +420,43 @@ contract IbetOTCExchange is Ownable, ExchangeStorageModel {
     }
 
     // Function: （投資家）注文に応じる　Take注文 -> 約定
-    // NOTE: OTCの場合注文数量＝注文数量とする
-    function executeOrder(uint256 _orderId, bool _isBuy)
+    // NOTE: 約定数量 = 注文数量
+    function executeOrder(uint256 _orderId)
         public
-        onlyInvolved(_orderId)
         returns (bool)
     {
-        // <CHK>
-        //  取引参加者チェック
-        // if (RegulatorService(regulatorServiceAddress).check(msg.sender) != 0)
-        //     revert();
-
         // <CHK>
         //  指定した注文IDが直近の注文IDを超えている場合
         require(_orderId <= latestOrderId());
 
-        ExchangeStorageModel.OTCOrder memory order;
-        (order.owner, order.counterpart, order.token, order.amount, order.price, order.agent, order.canceled) = getOrder(_orderId);
+        ExchangeStorageModel.OTCOrder memory order = OTCExchangeStorage(storageAddress).getOrder(_orderId);
+
+        // <CHK>
+        //  取引参加者だけの処理
+        require(order.owner == msg.sender || order.counterpart == msg.sender || order.agent == msg.sender);
+    
 
         require(order.owner != 0x0000000000000000000000000000000000000000);
 
         // <CHK>
-        //  1) 注文数量が0の場合
-        //  2) 元注文と、発注する注文が同一の売買区分の場合
-        //  3) 元注文の発注者と同一のアドレスからの発注の場合
-        //  4) 元注文がキャンセル済の場合
-        //  5) 認可されたアドレスではない場合
-        //  6) 名簿用個人情報が登録されていない場合
-        //  7) 償還済みフラグがTrueの場合
-        //  8) 取扱ステータスがFalseの場合
-        //  9) 発注者の残高が発注数量を下回っている場合
-        //  10) 数量が元注文の残数量を超過している場合
-        //   -> 更新処理: 残高を投資家のアカウントに全て戻し、falseを返す
+        //  1) 元注文の発注者と同一のアドレスからの発注の場合
+        //  2) 元注文がキャンセル済の場合
+        //  3) 認可されたアドレスではない場合
+        //  4) 名簿用個人情報が登録されていない場合
+        //  5) 買注文者がコントラクトアドレスの場合
+        //  6) 取扱ステータスがFalseの場合
+        //   -> REVERT
         if (
             msg.sender == order.owner ||
             order.canceled == true ||
-            PaymentGateway(paymentGatewayAddress).accountApproved(
-                msg.sender,
-                order.agent
-            ) ==
-            false ||
+            PaymentGateway(paymentGatewayAddress).accountApproved(msg.sender,order.agent) == false ||
             PersonalInfo(personalInfoAddress).isRegistered(
-                msg.sender,
-                IbetStandardTokenInterface(order.token).owner()
-            ) ==
-            false ||
-            IbetStandardTokenInterface(order.token).status() == false ||
-            balanceOf(msg.sender, order.token) < order.amount
-        ) {
-            IbetStandardTokenInterface(order.token).transfer(
-                msg.sender,
-                balanceOf(msg.sender, order.token)
-            );
-            setBalance(msg.sender, order.token, 0);
-            return false;
+                    msg.sender,IbetStandardTokenInterface(order.token).owner()) == false ||
+            isContract(msg.sender) == true ||
+            IbetStandardTokenInterface(order.token).status() == false
+            )
+        {
+            revert();
         }
 
         // 更新処理: 約定IDをカウントアップ => 約定情報を挿入する
@@ -508,7 +474,7 @@ contract IbetOTCExchange is Ownable, ExchangeStorageModel {
             expiry
         );
 
-        // 更新処理: 元注文の数量を減らす
+        // 更新処理: 元注文の数量を0にする
          OTCExchangeStorage(storageAddress).setOrderAmount(_orderId, 0);
            
          // イベント登録: 約定
@@ -537,12 +503,9 @@ contract IbetOTCExchange is Ownable, ExchangeStorageModel {
         require(_orderId <= latestOrderId());
         require(_agreementId <= latestAgreementId(_orderId));
 
-        ExchangeStorageModel.OTCOrder memory order;
-        (order.owner, order.counterpart, order.token, order.amount, order.price, order.agent, order.canceled) = getOrder(_orderId);
+        ExchangeStorageModel.OTCOrder memory order = OTCExchangeStorage(storageAddress).getOrder(_orderId);
 
-        ExchangeStorageModel.OTCAgreement memory agreement;
-        (agreement.counterpart, agreement.amount, agreement.price, agreement.canceled, agreement.paid, agreement.expiry)
-            = getAgreement(_orderId, _agreementId);
+        ExchangeStorageModel.OTCAgreement memory agreement = OTCExchangeStorage(storageAddress).getAgreement(_orderId, _agreementId);
 
         // <CHK>
         //  1) すでに決済承認済み（支払い済み）の場合
@@ -593,12 +556,9 @@ contract IbetOTCExchange is Ownable, ExchangeStorageModel {
         require(_orderId <= latestOrderId());
         require(_agreementId <= latestAgreementId(_orderId));
 
-        ExchangeStorageModel.OTCOrder memory order;
-        (order.owner, order.counterpart, order.token, order.amount, order.price, order.agent, order.canceled) = getOrder(_orderId);
+        ExchangeStorageModel.OTCOrder memory order = OTCExchangeStorage(storageAddress).getOrder(_orderId);
 
-        ExchangeStorageModel.OTCAgreement memory agreement;
-        (agreement.counterpart, agreement.amount, agreement.price, agreement.canceled, agreement.paid, agreement.expiry)
-            = getAgreement(_orderId, _agreementId);
+        ExchangeStorageModel.OTCAgreement memory agreement = OTCExchangeStorage(storageAddress).getAgreement(_orderId, _agreementId);
 
         if (agreement.expiry <= now) {
             // 約定明細の有効期限を超過している場合

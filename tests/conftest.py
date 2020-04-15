@@ -122,7 +122,7 @@ def coupon_exchange(web3, chain, users, payment_gateway, coupon_exchange_storage
 @pytest.yield_fixture()
 def bs_exchange_storage(web3, chain, users):
     web3.eth.defaultAccount = users['admin']
-    bs_exchange_storage, _ = chain.provider.get_or_deploy_contract('ExchangeStorage')
+    bs_exchange_storage, _ = chain.provider.get_or_deploy_contract('OTCExchangeStorage')
     return bs_exchange_storage
 
 
@@ -136,10 +136,34 @@ def bs_exchange(web3, chain, users,
         bs_exchange_storage.address,
         exchange_regulator_service.address
     ]
-    # ToDo: 受益証券取引コントラクトに変更
     bs_exchange, _ = chain.provider.get_or_deploy_contract(
-        'IbetStraightBondExchange',
+        'IbetOTCExchange',
         deploy_args=deploy_args
     )
     bs_exchange_storage.transact().upgradeVersion(bs_exchange.address)
     return bs_exchange
+
+@pytest.yield_fixture()
+def otc_exchange_storage(web3, chain, users):
+    web3.eth.defaultAccount = users['admin']
+    otc_exchange_storage, _ = chain.provider.get_or_deploy_contract('OTCExchangeStorage')
+    return otc_exchange_storage
+
+
+@pytest.yield_fixture()
+def otc_exchange(web3, chain, users,
+                  personal_info, payment_gateway, otc_exchange_storage):
+    web3.eth.defaultAccount = users['admin']
+    deploy_args = [
+        payment_gateway.address,
+        personal_info.address,
+        otc_exchange_storage.address,
+    ]
+    otc_exchange, _ = chain.provider.get_or_deploy_contract(
+        'IbetOTCExchange',
+        deploy_args=deploy_args
+    )
+    otc_exchange_storage.transact().upgradeVersion(otc_exchange.address)
+    # storage参照可能コントラクトの設定
+    otc_exchange_storage.transact().register(otc_exchange.address, True)
+    return otc_exchange
