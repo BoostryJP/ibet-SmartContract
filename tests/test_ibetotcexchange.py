@@ -121,29 +121,29 @@ def test_createorder_normal_1(web3, chain, users, otc_exchange, personal_info, p
 
     # 新規発行
     web3.eth.defaultAccount = issuer
-    bs_token, deploy_args = utils. \
-        issue_bs_token(web3, chain, users, otc_exchange.address, personal_info.address)
+    share_token, deploy_args = utils. \
+        issue_share_token(web3, chain, users, otc_exchange.address, personal_info.address)
 
     # Exchangeへのデポジット
     _amount = 100
-    txn_hash = bs_token.transact().transfer(otc_exchange.address, _amount)
+    txn_hash = share_token.transact().transfer(otc_exchange.address, _amount)
     chain.wait.for_receipt(txn_hash)
 
     # 新規注文
     _amount = 100
     _price = 123
-    txn_hash = otc_exchange.transact().createOrder(trader, bs_token.address, _amount, _price, agent)
+    txn_hash = otc_exchange.transact().createOrder(trader, share_token.address, _amount, _price, agent)
     chain.wait.for_receipt(txn_hash)
 
     order_id = otc_exchange.call().latestOrderId()
     orderbook = otc_exchange.call().getOrder(order_id)
-    commitment = otc_exchange.call().commitmentOf(issuer, bs_token.address)
+    commitment = otc_exchange.call().commitmentOf(issuer, share_token.address)
 
     assert orderbook == [
-        issuer, trader, to_checksum_address(bs_token.address), _amount, _price,
+        issuer, trader, to_checksum_address(share_token.address), _amount, _price,
         agent, False
     ]
-    assert bs_token.call().balanceOf(issuer) == deploy_args[5] - _amount
+    assert share_token.call().balanceOf(issuer) == deploy_args[5] - _amount
     assert commitment == _amount
 
 # エラー系1
@@ -155,8 +155,8 @@ def test_createorder_error_01(web3, chain, users, otc_exchange, personal_info):
 
     # 新規発行
     web3.eth.defaultAccount = issuer
-    bs_token, deploy_args = utils. \
-        issue_bs_token(web3, chain, users, otc_exchange.address, personal_info.address)
+    share_token, deploy_args = utils. \
+        issue_share_token(web3, chain, users, otc_exchange.address, personal_info.address)
 
     # 新規注文
     web3.eth.defaultAccount = issuer
@@ -164,10 +164,10 @@ def test_createorder_error_01(web3, chain, users, otc_exchange, personal_info):
     _amount = 100
 
     with pytest.raises(TypeError):
-        otc_exchange.transact().createOrder('1234', bs_token.address, _amount, _price, agent)
+        otc_exchange.transact().createOrder('1234', share_token.address, _amount, _price, agent)
 
     with pytest.raises(TypeError):
-        otc_exchange.transact().createOrder(1234, bs_token.address, _amount, _price, agent)
+        otc_exchange.transact().createOrder(1234, share_token.address, _amount, _price, agent)
 
 
 # エラー系2
@@ -198,8 +198,8 @@ def test_createorder_error_03(web3, chain, users, otc_exchange, personal_info):
 
     # 新規発行
     web3.eth.defaultAccount = issuer
-    bs_token, deploy_args = utils. \
-        issue_bs_token(web3, chain, users, otc_exchange.address, personal_info.address)
+    share_token, deploy_args = utils. \
+        issue_share_token(web3, chain, users, otc_exchange.address, personal_info.address)
 
     # 新規注文
     web3.eth.defaultAccount = issuer
@@ -207,19 +207,19 @@ def test_createorder_error_03(web3, chain, users, otc_exchange, personal_info):
 
     with pytest.raises(TypeError):
         otc_exchange.transact().createOrder(
-            trader, bs_token.address, -1, _price, agent)
+            trader, share_token.address, -1, _price, agent)
 
     with pytest.raises(TypeError):
         otc_exchange.transact().createOrder(
-            trader, bs_token.address, 2 ** 256, _price, agent)
+            trader, share_token.address, 2 ** 256, _price, agent)
 
     with pytest.raises(TypeError):
         otc_exchange.transact().createOrder(
-            trader, bs_token.address, '0', _price, agent)
+            trader, share_token.address, '0', _price, agent)
 
     with pytest.raises(TypeError):
         otc_exchange.transact().createOrder(
-            trader, bs_token.address, 0.1, _price, agent)
+            trader, share_token.address, 0.1, _price, agent)
 
 
 # エラー系4
@@ -231,8 +231,8 @@ def test_createorder_error_04(web3, chain, users, otc_exchange, personal_info):
 
     # 新規発行
     web3.eth.defaultAccount = issuer
-    bs_token, deploy_args = utils. \
-        issue_bs_token(web3, chain, users, otc_exchange.address, personal_info.address)
+    share_token, deploy_args = utils. \
+        issue_share_token(web3, chain, users, otc_exchange.address, personal_info.address)
 
     # 新規注文
     web3.eth.defaultAccount = issuer
@@ -240,19 +240,19 @@ def test_createorder_error_04(web3, chain, users, otc_exchange, personal_info):
 
     with pytest.raises(TypeError):
         otc_exchange.transact().createOrder(
-            trader, bs_token.address, _amount, -1, agent)
+            trader, share_token.address, _amount, -1, agent)
 
     with pytest.raises(TypeError):
         otc_exchange.transact().createOrder(
-            trader, bs_token.address, _amount, 2 ** 256, agent)
+            trader, share_token.address, _amount, 2 ** 256, agent)
 
     with pytest.raises(TypeError):
         otc_exchange.transact().createOrder(
-            trader, bs_token.address, _amount, '0', agent)
+            trader, share_token.address, _amount, '0', agent)
 
     with pytest.raises(TypeError):
         otc_exchange.transact().createOrder(
-            trader, bs_token.address, _amount, 0.1, agent)
+            trader, share_token.address, _amount, 0.1, agent)
 
 
 # エラー系5
@@ -264,8 +264,8 @@ def test_createorder_error_05(web3, chain, users, otc_exchange, personal_info):
 
     # 新規発行
     web3.eth.defaultAccount = issuer
-    bs_token, deploy_args = utils. \
-        issue_bs_token(web3, chain, users, otc_exchange.address, personal_info.address)
+    share_token, deploy_args = utils. \
+        issue_share_token(web3, chain, users, otc_exchange.address, personal_info.address)
 
     # 新規注文
     web3.eth.defaultAccount = issuer
@@ -274,11 +274,11 @@ def test_createorder_error_05(web3, chain, users, otc_exchange, personal_info):
 
     with pytest.raises(TypeError):
         otc_exchange.transact().createOrder(
-            trader, bs_token.address, _amount, _price, 1234, agent)
+            trader, share_token.address, _amount, _price, 1234, agent)
 
     with pytest.raises(TypeError):
         otc_exchange.transact().createOrder(
-            trader, bs_token.address, _amount, _price, 'True', agent)
+            trader, share_token.address, _amount, _price, 'True', agent)
 
 
 # エラー系6
@@ -289,8 +289,8 @@ def test_createorder_error_06(web3, chain, users, otc_exchange, personal_info):
 
     # 新規発行
     web3.eth.defaultAccount = issuer
-    bs_token, deploy_args = utils. \
-        issue_bs_token(web3, chain, users, otc_exchange.address, personal_info.address)
+    share_token, deploy_args = utils. \
+        issue_share_token(web3, chain, users, otc_exchange.address, personal_info.address)
 
     # 新規注文
     web3.eth.defaultAccount = issuer
@@ -299,11 +299,11 @@ def test_createorder_error_06(web3, chain, users, otc_exchange, personal_info):
 
     with pytest.raises(TypeError):
         otc_exchange.transact().createOrder(
-            trader, bs_token.address, _amount, _price, '1234')
+            trader, share_token.address, _amount, _price, '1234')
 
     with pytest.raises(TypeError):
         otc_exchange.transact().createOrder(
-            trader, bs_token.address, _amount, _price, 1234)
+            trader, share_token.address, _amount, _price, 1234)
 
 
 # エラー系7
@@ -320,13 +320,13 @@ def test_createorder_error_07(web3, chain, users,
 
     # 新規発行
     web3.eth.defaultAccount = issuer
-    bs_token, deploy_args = utils. \
-        issue_bs_token(web3, chain, users, otc_exchange.address, personal_info.address)
+    share_token, deploy_args = utils. \
+        issue_share_token(web3, chain, users, otc_exchange.address, personal_info.address)
 
     # Exchangeへのデポジット
     web3.eth.defaultAccount = issuer
     _amount = 100
-    txn_hash = bs_token.transact().transfer(otc_exchange.address, _amount)
+    txn_hash = share_token.transact().transfer(otc_exchange.address, _amount)
     chain.wait.for_receipt(txn_hash)
 
     # 新規注文（売）
@@ -334,11 +334,11 @@ def test_createorder_error_07(web3, chain, users,
     _amount = 0
     _price = 123
     txn_hash = otc_exchange.transact().createOrder(
-        trader, bs_token.address, _amount, _price, agent)  # エラーになる
+        trader, share_token.address, _amount, _price, agent)  # エラーになる
     chain.wait.for_receipt(txn_hash)
 
-    commitment = otc_exchange.call().commitmentOf(issuer, bs_token.address)
-    balance = bs_token.call().balanceOf(issuer)
+    commitment = otc_exchange.call().commitmentOf(issuer, share_token.address)
+    balance = share_token.call().balanceOf(issuer)
 
     assert balance == deploy_args[5]
     assert commitment == 0
@@ -356,13 +356,13 @@ def test_createorder_error_08(web3, chain, users,
 
     # 新規発行
     web3.eth.defaultAccount = issuer
-    bs_token, deploy_args = utils. \
-        issue_bs_token(web3, chain, users, otc_exchange.address, personal_info.address)
+    share_token, deploy_args = utils. \
+        issue_share_token(web3, chain, users, otc_exchange.address, personal_info.address)
 
     # Exchangeへのデポジット
     web3.eth.defaultAccount = issuer
     _amount = 100
-    txn_hash = bs_token.transact().transfer(otc_exchange.address, _amount)
+    txn_hash = share_token.transact().transfer(otc_exchange.address, _amount)
     chain.wait.for_receipt(txn_hash)
 
     # 新規注文（売）
@@ -370,11 +370,11 @@ def test_createorder_error_08(web3, chain, users,
     _amount = 0
     _price = 123
     txn_hash = otc_exchange.transact().createOrder(
-        trader, bs_token.address, _amount, _price, agent)  # エラーになる
+        trader, share_token.address, _amount, _price, agent)  # エラーになる
     chain.wait.for_receipt(txn_hash)
 
-    commitment = otc_exchange.call().commitmentOf(issuer, bs_token.address)
-    balance = bs_token.call().balanceOf(issuer)
+    commitment = otc_exchange.call().commitmentOf(issuer, share_token.address)
+    balance = share_token.call().balanceOf(issuer)
 
     assert balance == deploy_args[5]
     assert commitment == 0
@@ -393,13 +393,13 @@ def test_createorder_error_09(web3, chain, users,
 
     # 新規発行
     web3.eth.defaultAccount = issuer
-    bs_token, deploy_args = utils. \
-        issue_bs_token(web3, chain, users, otc_exchange.address, personal_info.address)
+    share_token, deploy_args = utils. \
+        issue_share_token(web3, chain, users, otc_exchange.address, personal_info.address)
 
     # Exchangeへのデポジット
     web3.eth.defaultAccount = issuer
     _amount = 100
-    txn_hash = bs_token.transact().transfer(otc_exchange.address, _amount)
+    txn_hash = share_token.transact().transfer(otc_exchange.address, _amount)
     chain.wait.for_receipt(txn_hash)
 
     # 新規注文（売）
@@ -407,11 +407,11 @@ def test_createorder_error_09(web3, chain, users,
     _amount = 100
     _price = 123
     txn_hash = otc_exchange.transact().createOrder(
-        trader, bs_token.address, _amount, _price, agent)  # エラーになる
+        trader, share_token.address, _amount, _price, agent)  # エラーになる
     chain.wait.for_receipt(txn_hash)
 
-    commitment = otc_exchange.call().commitmentOf(issuer, bs_token.address)
-    balance = bs_token.call().balanceOf(issuer)
+    commitment = otc_exchange.call().commitmentOf(issuer, share_token.address)
+    balance = share_token.call().balanceOf(issuer)
 
     assert balance == deploy_args[5]
     assert commitment == 0
@@ -431,24 +431,24 @@ def test_createorder_error_10(web3, chain, users,
 
     # 新規発行
     web3.eth.defaultAccount = issuer
-    bs_token, deploy_args = utils. \
-        issue_bs_token(web3, chain, users, otc_exchange.address, personal_info.address)
+    share_token, deploy_args = utils. \
+        issue_share_token(web3, chain, users, otc_exchange.address, personal_info.address)
 
     # Exchangeへのデポジット
     web3.eth.defaultAccount = issuer
     _amount = 100
-    txn_hash = bs_token.transact().transfer(otc_exchange.address, _amount)
+    txn_hash = share_token.transact().transfer(otc_exchange.address, _amount)
     chain.wait.for_receipt(txn_hash)
 
     # 新規注文（売）
     web3.eth.defaultAccount = issuer
     _price = 123
     txn_hash = otc_exchange.transact().createOrder(
-        trader, bs_token.address, _amount + 1, _price, agent)  # エラーになる
+        trader, share_token.address, _amount + 1, _price, agent)  # エラーになる
     chain.wait.for_receipt(txn_hash)
 
-    commitment = otc_exchange.call().commitmentOf(issuer, bs_token.address)
-    balance = bs_token.call().balanceOf(issuer)
+    commitment = otc_exchange.call().commitmentOf(issuer, share_token.address)
+    balance = share_token.call().balanceOf(issuer)
 
     assert balance == deploy_args[5]
     assert commitment == 0
@@ -468,13 +468,13 @@ def test_createorder_error_11(web3, chain, users,
 
     # 新規発行
     web3.eth.defaultAccount = issuer
-    bs_token, deploy_args = utils. \
-        issue_bs_token(web3, chain, users, otc_exchange.address, personal_info.address)
+    share_token, deploy_args = utils. \
+        issue_share_token(web3, chain, users, otc_exchange.address, personal_info.address)
 
     # Exchangeへのデポジット
     web3.eth.defaultAccount = issuer
     _amount = 100
-    txn_hash = bs_token.transact().transfer(otc_exchange.address, _amount)
+    txn_hash = share_token.transact().transfer(otc_exchange.address, _amount)
     chain.wait.for_receipt(txn_hash)
 
     # 新規注文（売）
@@ -482,11 +482,11 @@ def test_createorder_error_11(web3, chain, users,
     _amount = 100
     _price = 123
     txn_hash = otc_exchange.transact().createOrder(
-        trader, bs_token.address, _amount, _price, attacker)  # エラーになる
+        trader, share_token.address, _amount, _price, attacker)  # エラーになる
     chain.wait.for_receipt(txn_hash)
 
-    commitment = otc_exchange.call().commitmentOf(issuer, bs_token.address)
-    balance = bs_token.call().balanceOf(issuer)
+    commitment = otc_exchange.call().commitmentOf(issuer, share_token.address)
+    balance = share_token.call().balanceOf(issuer)
 
     assert balance == deploy_args[5]
     assert commitment == 0
@@ -505,28 +505,28 @@ def test_createorder_error_12(web3, chain, users, otc_exchange, personal_info, p
 
     # 新規発行
     web3.eth.defaultAccount = issuer
-    bs_token, deploy_args = utils. \
-        issue_bs_token(web3, chain, users, otc_exchange.address, personal_info.address)
+    share_token, deploy_args = utils. \
+        issue_share_token(web3, chain, users, otc_exchange.address, personal_info.address)
 
     # ステータス変更
     web3.eth.defaultAccount = issuer
-    chain.wait.for_receipt(bs_token.transact().setStatus(False))
+    chain.wait.for_receipt(share_token.transact().setStatus(False))
 
     # Exchangeへのデポジット
     web3.eth.defaultAccount = issuer
     _amount = 100
-    txn_hash = bs_token.transact().transfer(otc_exchange.address, _amount)
+    txn_hash = share_token.transact().transfer(otc_exchange.address, _amount)
     chain.wait.for_receipt(txn_hash)
 
     # 新規注文
     web3.eth.defaultAccount = issuer
     _price = 123
     txn_hash = otc_exchange.transact().createOrder(
-        trader, bs_token.address, _amount, _price, agent)  # エラーになる
+        trader, share_token.address, _amount, _price, agent)  # エラーになる
     chain.wait.for_receipt(txn_hash)
 
-    commitment = otc_exchange.call().commitmentOf(issuer, bs_token.address)
-    balance = bs_token.call().balanceOf(issuer)
+    commitment = otc_exchange.call().commitmentOf(issuer, share_token.address)
+    balance = share_token.call().balanceOf(issuer)
     assert balance == deploy_args[5]
     assert commitment == 0
 
@@ -571,18 +571,18 @@ def test_getOrder_error_2(web3, chain, users, otc_exchange, personal_info, payme
 
     # 新規発行
     web3.eth.defaultAccount = issuer
-    bs_token, deploy_args = utils. \
-        issue_bs_token(web3, chain, users, otc_exchange.address, personal_info.address)
+    share_token, deploy_args = utils. \
+        issue_share_token(web3, chain, users, otc_exchange.address, personal_info.address)
 
     # Exchangeへのデポジット
     _amount = 100
-    txn_hash = bs_token.transact().transfer(otc_exchange.address, _amount)
+    txn_hash = share_token.transact().transfer(otc_exchange.address, _amount)
     chain.wait.for_receipt(txn_hash)
 
     # 新規注文
     _amount = 100
     _price = 123
-    txn_hash = otc_exchange.transact().createOrder(trader, bs_token.address, _amount, _price, agent)
+    txn_hash = otc_exchange.transact().createOrder(trader, share_token.address, _amount, _price, agent)
     chain.wait.for_receipt(txn_hash)
 
 
@@ -597,7 +597,7 @@ def test_getOrder_error_2(web3, chain, users, otc_exchange, personal_info, payme
     orderbook = otc_exchange.call().getOrder(order_id)
 
     assert orderbook == [
-        issuer, trader, to_checksum_address(bs_token.address), _amount, _price,
+        issuer, trader, to_checksum_address(share_token.address), _amount, _price,
         agent, False
     ]
 
@@ -605,7 +605,7 @@ def test_getOrder_error_2(web3, chain, users, otc_exchange, personal_info, payme
     orderbook = otc_exchange.call().getOrder(order_id)
 
     assert orderbook == [
-        issuer, trader, to_checksum_address(bs_token.address), _amount, _price,
+        issuer, trader, to_checksum_address(share_token.address), _amount, _price,
         agent, False
     ]
 
@@ -613,7 +613,7 @@ def test_getOrder_error_2(web3, chain, users, otc_exchange, personal_info, payme
     orderbook = otc_exchange.call().getOrder(order_id)
 
     assert orderbook == [
-        issuer, trader, to_checksum_address(bs_token.address), _amount, _price,
+        issuer, trader, to_checksum_address(share_token.address), _amount, _price,
         agent, False
     ]
 
@@ -637,20 +637,20 @@ def test_cancelOrder_normal_1(web3, chain, users,
 
     # 新規発行
     web3.eth.defaultAccount = issuer
-    bs_token, deploy_args = utils. \
-        issue_bs_token(web3, chain, users, otc_exchange.address, personal_info.address)
+    share_token, deploy_args = utils. \
+        issue_share_token(web3, chain, users, otc_exchange.address, personal_info.address)
 
     # Exchangeへのデポジット
     web3.eth.defaultAccount = issuer
     _amount = 100
-    txn_hash = bs_token.transact().transfer(otc_exchange.address, _amount)
+    txn_hash = share_token.transact().transfer(otc_exchange.address, _amount)
     chain.wait.for_receipt(txn_hash)
 
     # 新規注文（売）
     web3.eth.defaultAccount = issuer
     _price = 123
     txn_hash = otc_exchange.transact().createOrder(
-        trader, bs_token.address, _amount, _price, agent)
+        trader, share_token.address, _amount, _price, agent)
     chain.wait.for_receipt(txn_hash)
 
     # 注文キャンセル
@@ -660,12 +660,12 @@ def test_cancelOrder_normal_1(web3, chain, users,
     chain.wait.for_receipt(txn_hash)
 
     orderbook = otc_exchange.call().getOrder(order_id)
-    commitment = otc_exchange.call().commitmentOf(issuer, bs_token.address)
+    commitment = otc_exchange.call().commitmentOf(issuer, share_token.address)
 
     assert orderbook == [
-        issuer, trader, to_checksum_address(bs_token.address), _amount, _price, agent, True
+        issuer, trader, to_checksum_address(share_token.address), _amount, _price, agent, True
     ]
-    assert bs_token.call().balanceOf(issuer) == deploy_args[5]
+    assert share_token.call().balanceOf(issuer) == deploy_args[5]
     assert commitment == 0
 
 
@@ -704,13 +704,13 @@ def test_cancelOrder_error_2(web3, chain, users,
 
     # 新規発行
     web3.eth.defaultAccount = issuer
-    bs_token, deploy_args = utils. \
-        issue_bs_token(web3, chain, users, otc_exchange.address, personal_info.address)
+    share_token, deploy_args = utils. \
+        issue_share_token(web3, chain, users, otc_exchange.address, personal_info.address)
 
     # Exchangeへのデポジット
     web3.eth.defaultAccount = issuer
     _amount = 100
-    txn_hash = bs_token.transact().transfer(otc_exchange.address, _amount)
+    txn_hash = share_token.transact().transfer(otc_exchange.address, _amount)
     chain.wait.for_receipt(txn_hash)
 
     # 新規注文
@@ -718,13 +718,13 @@ def test_cancelOrder_error_2(web3, chain, users,
     _amount = 100
     _price = 123
     txn_hash = otc_exchange.transact().createOrder(
-        trader, bs_token.address, _amount, _price, agent)
+        trader, share_token.address, _amount, _price, agent)
     chain.wait.for_receipt(txn_hash)
 
     # 注文キャンセル
     web3.eth.defaultAccount = issuer
     order_id = otc_exchange.call().latestOrderId() + 1
-    commitment = otc_exchange.call().commitmentOf(issuer, bs_token.address)
+    commitment = otc_exchange.call().commitmentOf(issuer, share_token.address)
 
     try:
         txn_hash = otc_exchange.transact().cancelOrder(order_id)  # エラーになる
@@ -734,11 +734,11 @@ def test_cancelOrder_error_2(web3, chain, users,
 
     orderbook = otc_exchange.call().getOrder(order_id - 1)
     assert orderbook == [
-        issuer, trader, to_checksum_address(bs_token.address), _amount, _price, agent, False
+        issuer, trader, to_checksum_address(share_token.address), _amount, _price, agent, False
     ]
     # キャンセルがエラーとなっているため、注文中の状態
 
-    assert bs_token.call().balanceOf(issuer) == deploy_args[5] - _amount
+    assert share_token.call().balanceOf(issuer) == deploy_args[5] - _amount
     assert commitment == 100
 
 
@@ -756,13 +756,13 @@ def test_cancelOrder_error_3(web3, chain, users,
 
     # 新規発行
     web3.eth.defaultAccount = issuer
-    bs_token, deploy_args = utils. \
-        issue_bs_token(web3, chain, users, otc_exchange.address, personal_info.address)
+    share_token, deploy_args = utils. \
+        issue_share_token(web3, chain, users, otc_exchange.address, personal_info.address)
 
     # Exchangeへのデポジット
     web3.eth.defaultAccount = issuer
     _amount = 100
-    txn_hash = bs_token.transact().transfer(otc_exchange.address, _amount)
+    txn_hash = share_token.transact().transfer(otc_exchange.address, _amount)
     chain.wait.for_receipt(txn_hash)
 
     # 新規注文
@@ -770,7 +770,7 @@ def test_cancelOrder_error_3(web3, chain, users,
     _amount = 100
     _price = 123
     txn_hash = otc_exchange.transact().createOrder(
-        trader, bs_token.address, _amount, _price, agent)
+        trader, share_token.address, _amount, _price, agent)
     chain.wait.for_receipt(txn_hash)
 
     # 注文キャンセル
@@ -788,12 +788,12 @@ def test_cancelOrder_error_3(web3, chain, users,
         pass
 
     orderbook = otc_exchange.call().getOrder(order_id)
-    commitment = otc_exchange.call().commitmentOf(issuer, bs_token.address)
+    commitment = otc_exchange.call().commitmentOf(issuer, share_token.address)
 
     assert orderbook == [
-        issuer, trader, to_checksum_address(bs_token.address), _amount, _price, agent, True
+        issuer, trader, to_checksum_address(share_token.address), _amount, _price, agent, True
     ]
-    assert bs_token.call().balanceOf(issuer) == deploy_args[5]
+    assert share_token.call().balanceOf(issuer) == deploy_args[5]
     assert commitment == 0
 
 # エラー系4
@@ -811,20 +811,20 @@ def test_cancelOrder_error_4(web3, chain, users,
 
     # 新規発行
     web3.eth.defaultAccount = issuer
-    bs_token, deploy_args = utils. \
-        issue_bs_token(web3, chain, users, otc_exchange.address, personal_info.address)
+    share_token, deploy_args = utils. \
+        issue_share_token(web3, chain, users, otc_exchange.address, personal_info.address)
 
     # Exchangeへのデポジット
     web3.eth.defaultAccount = issuer
     _amount = 100
-    txn_hash = bs_token.transact().transfer(otc_exchange.address, _amount)
+    txn_hash = share_token.transact().transfer(otc_exchange.address, _amount)
     chain.wait.for_receipt(txn_hash)
 
     # 新規注文
     web3.eth.defaultAccount = issuer
     _price = 123
     txn_hash = otc_exchange.transact().createOrder(
-        trader, bs_token.address, _amount, _price, agent)
+        trader, share_token.address, _amount, _price, agent)
     chain.wait.for_receipt(txn_hash)
 
     # 注文キャンセル
@@ -839,11 +839,11 @@ def test_cancelOrder_error_4(web3, chain, users,
     # assert
     web3.eth.defaultAccount = issuer
     orderbook = otc_exchange.call().getOrder(order_id)
-    balance = bs_token.call().balanceOf(issuer)
-    commitment = otc_exchange.call().commitmentOf(issuer, bs_token.address)
+    balance = share_token.call().balanceOf(issuer)
+    commitment = otc_exchange.call().commitmentOf(issuer, share_token.address)
 
     assert orderbook == [
-        issuer, trader, to_checksum_address(bs_token.address), _amount, _price, agent, False
+        issuer, trader, to_checksum_address(share_token.address), _amount, _price, agent, False
     ]
     assert balance == deploy_args[5] - _amount
     assert commitment == _amount
@@ -872,20 +872,20 @@ def test_executeOrder_normal_1(web3, chain, users,
 
     # 新規発行
     web3.eth.defaultAccount = _issuer
-    bs_token, deploy_args = utils. \
-        issue_bs_token(web3, chain, users, otc_exchange.address, personal_info.address)
+    share_token, deploy_args = utils. \
+        issue_share_token(web3, chain, users, otc_exchange.address, personal_info.address)
 
     # Exchangeへのデポジット
     web3.eth.defaultAccount = _issuer
     _amount_make = 100
-    txn_hash = bs_token.transact().transfer(otc_exchange.address, _amount_make)
+    txn_hash = share_token.transact().transfer(otc_exchange.address, _amount_make)
     chain.wait.for_receipt(txn_hash)
 
     # make
     web3.eth.defaultAccount = _issuer
     _price = 123
     txn_hash = otc_exchange.transact().createOrder(
-        _trader, bs_token.address, _amount_make, _price, _agent)
+        _trader, share_token.address, _amount_make, _price, _agent)
     chain.wait.for_receipt(txn_hash)
 
     # take
@@ -899,12 +899,12 @@ def test_executeOrder_normal_1(web3, chain, users,
     orderbook = otc_exchange.call().getOrder(order_id)
     agree = otc_exchange.call().getAgreement(order_id, agreement_id)
 
-    balance_maker = bs_token.call().balanceOf(_issuer)
-    balance_taker = bs_token.call().balanceOf(_trader)
-    commitment = otc_exchange.call().commitmentOf(_issuer, bs_token.address)
+    balance_maker = share_token.call().balanceOf(_issuer)
+    balance_taker = share_token.call().balanceOf(_trader)
+    commitment = otc_exchange.call().commitmentOf(_issuer, share_token.address)
 
     assert orderbook == [
-        _issuer, _trader, to_checksum_address(bs_token.address),
+        _issuer, _trader, to_checksum_address(share_token.address),
         0, _price, _agent, False
     ]
 
@@ -951,20 +951,20 @@ def test_executeOrder_error_02(web3, chain, users,
 
     # 新規発行
     web3.eth.defaultAccount = _issuer
-    bs_token, deploy_args = utils. \
-        issue_bs_token(web3, chain, users, otc_exchange.address, personal_info.address)
+    share_token, deploy_args = utils. \
+        issue_share_token(web3, chain, users, otc_exchange.address, personal_info.address)
 
     # Exchangeへのデポジット
     web3.eth.defaultAccount = _issuer
     _amount_make = 100
-    txn_hash = bs_token.transact().transfer(otc_exchange.address, _amount_make)
+    txn_hash = share_token.transact().transfer(otc_exchange.address, _amount_make)
     chain.wait.for_receipt(txn_hash)
 
     # make
     web3.eth.defaultAccount = _issuer
     _price = 123
     txn_hash = otc_exchange.transact().createOrder(
-        _trader, bs_token.address, _amount_make, _price, _agent)
+        _trader, share_token.address, _amount_make, _price, _agent)
     chain.wait.for_receipt(txn_hash)
 
     latest_order_id_error = otc_exchange.call().latestOrderId() + 1
@@ -981,12 +981,12 @@ def test_executeOrder_error_02(web3, chain, users,
         pass
 
     orderbook = otc_exchange.call().getOrder(latest_order_id)
-    balance_maker = bs_token.call().balanceOf(_issuer)
-    balance_taker = bs_token.call().balanceOf(_trader)
-    commitment = otc_exchange.call().commitmentOf(_issuer, bs_token.address)
+    balance_maker = share_token.call().balanceOf(_issuer)
+    balance_taker = share_token.call().balanceOf(_trader)
+    commitment = otc_exchange.call().commitmentOf(_issuer, share_token.address)
 
     assert orderbook == [
-        _issuer, _trader, to_checksum_address(bs_token.address),
+        _issuer, _trader, to_checksum_address(share_token.address),
         _amount_make,  # Make注文の件数から減っていない状態
         _price, _agent, False
     ]
@@ -1012,20 +1012,20 @@ def test_executeOrder_error_03(web3, chain, users,
 
     # 新規発行
     web3.eth.defaultAccount = _issuer
-    bs_token, deploy_args = utils. \
-        issue_bs_token(web3, chain, users, otc_exchange.address, personal_info.address)
+    share_token, deploy_args = utils. \
+        issue_share_token(web3, chain, users, otc_exchange.address, personal_info.address)
 
     # 預かりをExchangeへのデポジット：発行体
     web3.eth.defaultAccount = _issuer
     _amount_make = 100
-    txn_hash = bs_token.transact().transfer(otc_exchange.address, _amount_make)
+    txn_hash = share_token.transact().transfer(otc_exchange.address, _amount_make)
     chain.wait.for_receipt(txn_hash)
 
     # Make注文：発行体
     web3.eth.defaultAccount = _issuer
     _price = 123
     txn_hash = otc_exchange.transact().createOrder(
-        _trader, bs_token.address, _amount_make, _price, _agent)
+        _trader, share_token.address, _amount_make, _price, _agent)
     chain.wait.for_receipt(txn_hash)
 
     # Take注文：発行体
@@ -1038,11 +1038,11 @@ def test_executeOrder_error_03(web3, chain, users,
         pass
 
     orderbook = otc_exchange.call().getOrder(order_id)
-    balance_maker = bs_token.call().balanceOf(_issuer)
-    commitment = otc_exchange.call().commitmentOf(_issuer, bs_token.address)
+    balance_maker = share_token.call().balanceOf(_issuer)
+    commitment = otc_exchange.call().commitmentOf(_issuer, share_token.address)
 
     assert orderbook == [
-        _issuer, _trader, to_checksum_address(bs_token.address),
+        _issuer, _trader, to_checksum_address(share_token.address),
         _amount_make,  # Make注文の件数から減っていない状態
         _price, _agent, False
     ]
@@ -1070,20 +1070,20 @@ def test_executeOrder_error_04(web3, chain, users,
 
     # 新規発行
     web3.eth.defaultAccount = _issuer
-    bs_token, deploy_args = utils. \
-        issue_bs_token(web3, chain, users, otc_exchange.address, personal_info.address)
+    share_token, deploy_args = utils. \
+        issue_share_token(web3, chain, users, otc_exchange.address, personal_info.address)
 
     # 預かりをExchangeへのデポジット：発行体
     web3.eth.defaultAccount = _issuer
     _amount_make = 100
-    txn_hash = bs_token.transact().transfer(otc_exchange.address, _amount_make)
+    txn_hash = share_token.transact().transfer(otc_exchange.address, _amount_make)
     chain.wait.for_receipt(txn_hash)
 
     # Make注文：発行体
     web3.eth.defaultAccount = _issuer
     _price = 123
     txn_hash = otc_exchange.transact().createOrder(
-        _trader, bs_token.address, _amount_make, _price, _agent)
+        _trader, share_token.address, _amount_make, _price, _agent)
     chain.wait.for_receipt(txn_hash)
 
     order_id = otc_exchange.call().latestOrderId()
@@ -1102,12 +1102,12 @@ def test_executeOrder_error_04(web3, chain, users,
         pass
 
     orderbook = otc_exchange.call().getOrder(order_id)
-    balance_maker = bs_token.call().balanceOf(_issuer)
-    balance_taker = bs_token.call().balanceOf(_trader)
-    commitment = otc_exchange.call().commitmentOf(_issuer, bs_token.address)
+    balance_maker = share_token.call().balanceOf(_issuer)
+    balance_taker = share_token.call().balanceOf(_trader)
+    commitment = otc_exchange.call().commitmentOf(_issuer, share_token.address)
 
     assert orderbook == [
-        _issuer, _trader, to_checksum_address(bs_token.address),
+        _issuer, _trader, to_checksum_address(share_token.address),
         _amount_make,  # Make注文の件数から減っていない状態
         _price, _agent, True  # 取消済み状態
     ]
@@ -1133,20 +1133,20 @@ def test_executeOrder_error_05(web3, chain, users,
 
     # 新規発行
     web3.eth.defaultAccount = _issuer
-    bs_token, deploy_args = utils. \
-        issue_bs_token(web3, chain, users, otc_exchange.address, personal_info.address)
+    share_token, deploy_args = utils. \
+        issue_share_token(web3, chain, users, otc_exchange.address, personal_info.address)
 
     # 預かりをExchangeへのデポジット：発行体
     web3.eth.defaultAccount = _issuer
     _amount_make = 100
-    txn_hash = bs_token.transact().transfer(otc_exchange.address, _amount_make)
+    txn_hash = share_token.transact().transfer(otc_exchange.address, _amount_make)
     chain.wait.for_receipt(txn_hash)
 
     # Make注文：発行体
     web3.eth.defaultAccount = _issuer
     _price = 123
     txn_hash = otc_exchange.transact().createOrder(
-        _trader, bs_token.address, _amount_make, _price, _agent)
+        _trader, share_token.address, _amount_make, _price, _agent)
     chain.wait.for_receipt(txn_hash)
 
     order_id = otc_exchange.call().latestOrderId()
@@ -1160,12 +1160,12 @@ def test_executeOrder_error_05(web3, chain, users,
         pass
 
     orderbook = otc_exchange.call().getOrder(order_id)
-    balance_maker = bs_token.call().balanceOf(_issuer)
-    balance_taker = bs_token.call().balanceOf(_trader)
-    commitment = otc_exchange.call().commitmentOf(_issuer, bs_token.address)
+    balance_maker = share_token.call().balanceOf(_issuer)
+    balance_taker = share_token.call().balanceOf(_trader)
+    commitment = otc_exchange.call().commitmentOf(_issuer, share_token.address)
 
     assert orderbook == [
-        _issuer, _trader, to_checksum_address(bs_token.address),
+        _issuer, _trader, to_checksum_address(share_token.address),
         _amount_make,  # Make注文の件数から減っていない状態
         _price, _agent, False
     ]
@@ -1192,20 +1192,20 @@ def test_executeOrder_error_06(web3, chain, users,
 
     # 新規発行
     web3.eth.defaultAccount = _issuer
-    bs_token, deploy_args = utils. \
-        issue_bs_token(web3, chain, users, otc_exchange.address, personal_info.address)
+    share_token, deploy_args = utils. \
+        issue_share_token(web3, chain, users, otc_exchange.address, personal_info.address)
 
     # 預かりをExchangeへのデポジット：発行体
     web3.eth.defaultAccount = _issuer
     _amount_make = 100
-    txn_hash = bs_token.transact().transfer(otc_exchange.address, _amount_make)
+    txn_hash = share_token.transact().transfer(otc_exchange.address, _amount_make)
     chain.wait.for_receipt(txn_hash)
 
     # Make注文（売）：発行体
     web3.eth.defaultAccount = _issuer
     _price = 123
     txn_hash = otc_exchange.transact().createOrder(
-        _trader, bs_token.address, _amount_make, _price, _agent)
+        _trader, share_token.address, _amount_make, _price, _agent)
     chain.wait.for_receipt(txn_hash)
 
     order_id = otc_exchange.call().latestOrderId()
@@ -1219,12 +1219,12 @@ def test_executeOrder_error_06(web3, chain, users,
         pass
 
     orderbook = otc_exchange.call().getOrder(order_id)
-    balance_maker = bs_token.call().balanceOf(_issuer)
-    balance_taker = bs_token.call().balanceOf(_trader)
-    commitment = otc_exchange.call().commitmentOf(_issuer, bs_token.address)
+    balance_maker = share_token.call().balanceOf(_issuer)
+    balance_taker = share_token.call().balanceOf(_trader)
+    commitment = otc_exchange.call().commitmentOf(_issuer, share_token.address)
 
     assert orderbook == [
-        _issuer, _trader, to_checksum_address(bs_token.address),
+        _issuer, _trader, to_checksum_address(share_token.address),
         _amount_make,  # Make注文の件数から減っていない状態
         _price, _agent, False
     ]
@@ -1250,26 +1250,26 @@ def test_executeOrder_error_07(web3, chain, users, otc_exchange, personal_info, 
 
     # 新規発行
     web3.eth.defaultAccount = _issuer
-    bs_token, deploy_args = utils. \
-        issue_bs_token(web3, chain, users, otc_exchange.address, personal_info.address)
+    share_token, deploy_args = utils. \
+        issue_share_token(web3, chain, users, otc_exchange.address, personal_info.address)
 
     # 預かりをExchangeへのデポジット：発行体
     web3.eth.defaultAccount = _issuer
     _amount_make = 100
-    chain.wait.for_receipt(bs_token.transact().transfer(otc_exchange.address, _amount_make))
+    chain.wait.for_receipt(share_token.transact().transfer(otc_exchange.address, _amount_make))
 
     # Make注文：発行体
     web3.eth.defaultAccount = _issuer
     _price = 123
     chain.wait.for_receipt(
-        otc_exchange.transact().createOrder(_trader, bs_token.address, _amount_make, _price, _agent)
+        otc_exchange.transact().createOrder(_trader, share_token.address, _amount_make, _price, _agent)
     )
 
     order_id = otc_exchange.call().latestOrderId()
 
     # ステータス変更：発行体
     web3.eth.defaultAccount = _issuer
-    chain.wait.for_receipt(bs_token.transact().setStatus(False))
+    chain.wait.for_receipt(share_token.transact().setStatus(False))
 
     # Take注文：投資家
     web3.eth.defaultAccount = _trader
@@ -1280,12 +1280,12 @@ def test_executeOrder_error_07(web3, chain, users, otc_exchange, personal_info, 
         pass
 
     orderbook = otc_exchange.call().getOrder(order_id)
-    balance_maker = bs_token.call().balanceOf(_issuer)
-    balance_taker = bs_token.call().balanceOf(_trader)
-    commitment = otc_exchange.call().commitmentOf(_issuer, bs_token.address)
+    balance_maker = share_token.call().balanceOf(_issuer)
+    balance_taker = share_token.call().balanceOf(_trader)
+    commitment = otc_exchange.call().commitmentOf(_issuer, share_token.address)
 
     assert orderbook == [
-        _issuer, _trader, to_checksum_address(bs_token.address),
+        _issuer, _trader, to_checksum_address(share_token.address),
         _amount_make,  # Make注文の件数から減っていない状態
         _price, _agent, False
     ]
@@ -1312,26 +1312,26 @@ def test_executeOrder_error_08(web3, chain, users, otc_exchange, personal_info, 
 
     # 新規発行
     web3.eth.defaultAccount = _issuer
-    bs_token, deploy_args = utils. \
-        issue_bs_token(web3, chain, users, otc_exchange.address, personal_info.address)
+    share_token, deploy_args = utils. \
+        issue_share_token(web3, chain, users, otc_exchange.address, personal_info.address)
 
     # 預かりをExchangeへのデポジット：発行体
     web3.eth.defaultAccount = _issuer
     _amount_make = 100
-    chain.wait.for_receipt(bs_token.transact().transfer(otc_exchange.address, _amount_make))
+    chain.wait.for_receipt(share_token.transact().transfer(otc_exchange.address, _amount_make))
 
     # Make注文：発行体
     web3.eth.defaultAccount = _issuer
     _price = 123
     chain.wait.for_receipt(
-        otc_exchange.transact().createOrder(_trader, bs_token.address, _amount_make, _price, _agent)
+        otc_exchange.transact().createOrder(_trader, share_token.address, _amount_make, _price, _agent)
     )
 
     order_id = otc_exchange.call().latestOrderId()
 
     # ステータス変更：発行体
     web3.eth.defaultAccount = _issuer
-    chain.wait.for_receipt(bs_token.transact().setStatus(False))
+    chain.wait.for_receipt(share_token.transact().setStatus(False))
 
     # Take注文：第三者
     web3.eth.defaultAccount = _attacker
@@ -1343,13 +1343,13 @@ def test_executeOrder_error_08(web3, chain, users, otc_exchange, personal_info, 
 
     web3.eth.defaultAccount = _issuer
     orderbook = otc_exchange.call().getOrder(order_id)
-    balance_maker = bs_token.call().balanceOf(_issuer)
-    balance_taker = bs_token.call().balanceOf(_trader)
-    balance_attacker = bs_token.call().balanceOf(_attacker)
-    commitment = otc_exchange.call().commitmentOf(_issuer, bs_token.address)
+    balance_maker = share_token.call().balanceOf(_issuer)
+    balance_taker = share_token.call().balanceOf(_trader)
+    balance_attacker = share_token.call().balanceOf(_attacker)
+    commitment = otc_exchange.call().commitmentOf(_issuer, share_token.address)
 
     assert orderbook == [
-        _issuer, _trader, to_checksum_address(bs_token.address),
+        _issuer, _trader, to_checksum_address(share_token.address),
         _amount_make,  # Make注文の件数から減っていない状態
         _price, _agent, False
     ]
@@ -1383,20 +1383,20 @@ def test_confirmAgreement_normal_1(web3, chain, users,
 
     # 新規発行
     web3.eth.defaultAccount = _issuer
-    bs_token, deploy_args = utils. \
-        issue_bs_token(web3, chain, users, otc_exchange.address, personal_info.address)
+    share_token, deploy_args = utils. \
+        issue_share_token(web3, chain, users, otc_exchange.address, personal_info.address)
 
     # Exchangeへのデポジット：発行体
     web3.eth.defaultAccount = _issuer
     _amount_make = 100
-    txn_hash = bs_token.transact().transfer(otc_exchange.address, _amount_make)
+    txn_hash = share_token.transact().transfer(otc_exchange.address, _amount_make)
     chain.wait.for_receipt(txn_hash)
 
     # Make注文（売）：発行体
     web3.eth.defaultAccount = _issuer
     _price = 123
     txn_hash = otc_exchange.transact().createOrder(
-        _trader, bs_token.address, _amount_make, _price, _agent)
+        _trader, share_token.address, _amount_make, _price, _agent)
     chain.wait.for_receipt(txn_hash)
 
     # Take注文（買）：投資家
@@ -1414,12 +1414,12 @@ def test_confirmAgreement_normal_1(web3, chain, users,
 
     orderbook = otc_exchange.call().getOrder(order_id)
     agreement = otc_exchange.call().getAgreement(order_id, agreement_id)
-    balance_maker = bs_token.call().balanceOf(_issuer)
-    balance_taker = bs_token.call().balanceOf(_trader)
-    commitment = otc_exchange.call().commitmentOf(_issuer, bs_token.address)
+    balance_maker = share_token.call().balanceOf(_issuer)
+    balance_taker = share_token.call().balanceOf(_trader)
+    commitment = otc_exchange.call().commitmentOf(_issuer, share_token.address)
 
     assert orderbook == [
-        _issuer, _trader, to_checksum_address(bs_token.address),
+        _issuer, _trader, to_checksum_address(share_token.address),
         0, _price, _agent, False
     ]
 
@@ -1489,20 +1489,20 @@ def test_confirmAgreement_error_03(web3, chain, users,
 
     # 新規発行
     web3.eth.defaultAccount = _issuer
-    bs_token, deploy_args = utils. \
-        issue_bs_token(web3, chain, users, otc_exchange.address, personal_info.address)
+    share_token, deploy_args = utils. \
+        issue_share_token(web3, chain, users, otc_exchange.address, personal_info.address)
 
     # Exchangeへのデポジット：発行体
     web3.eth.defaultAccount = _issuer
     _amount_make = 100
-    txn_hash = bs_token.transact().transfer(otc_exchange.address, _amount_make)
+    txn_hash = share_token.transact().transfer(otc_exchange.address, _amount_make)
     chain.wait.for_receipt(txn_hash)
 
     # Make注文：発行体
     web3.eth.defaultAccount = _issuer
     _price = 123
     txn_hash = otc_exchange.transact().createOrder(
-        _trader, bs_token.address, _amount_make, _price, _agent)
+        _trader, share_token.address, _amount_make, _price, _agent)
     chain.wait.for_receipt(txn_hash)
 
     # Take注文（買）：投資家
@@ -1524,12 +1524,12 @@ def test_confirmAgreement_error_03(web3, chain, users,
 
     orderbook = otc_exchange.call().getOrder(order_id)
     agreement = otc_exchange.call().getAgreement(order_id, agreement_id)
-    balance_maker = bs_token.call().balanceOf(_issuer)
-    balance_taker = bs_token.call().balanceOf(_trader)
-    commitment = otc_exchange.call().commitmentOf(_issuer, bs_token.address)
+    balance_maker = share_token.call().balanceOf(_issuer)
+    balance_taker = share_token.call().balanceOf(_trader)
+    commitment = otc_exchange.call().commitmentOf(_issuer, share_token.address)
 
     assert orderbook == [
-        _issuer, _trader, to_checksum_address(bs_token.address),
+        _issuer, _trader, to_checksum_address(share_token.address),
         0, _price, _agent, False
     ]
 
@@ -1557,20 +1557,20 @@ def test_confirmAgreement_error_04(web3, chain, users,
 
     # 新規発行
     web3.eth.defaultAccount = _issuer
-    bs_token, deploy_args = utils. \
-        issue_bs_token(web3, chain, users, otc_exchange.address, personal_info.address)
+    share_token, deploy_args = utils. \
+        issue_share_token(web3, chain, users, otc_exchange.address, personal_info.address)
 
     # Exchangeへのデポジット：発行体
     web3.eth.defaultAccount = _issuer
     _amount_make = 100
-    txn_hash = bs_token.transact().transfer(otc_exchange.address, _amount_make)
+    txn_hash = share_token.transact().transfer(otc_exchange.address, _amount_make)
     chain.wait.for_receipt(txn_hash)
 
     # Make注文：発行体
     web3.eth.defaultAccount = _issuer
     _price = 123
     txn_hash = otc_exchange.transact().createOrder(
-        _trader, bs_token.address, _amount_make, _price, _agent)
+        _trader, share_token.address, _amount_make, _price, _agent)
     chain.wait.for_receipt(txn_hash)
 
     # Take注文（買）：投資家
@@ -1592,12 +1592,12 @@ def test_confirmAgreement_error_04(web3, chain, users,
 
     orderbook = otc_exchange.call().getOrder(order_id)
     agreement = otc_exchange.call().getAgreement(order_id, agreement_id)
-    balance_maker = bs_token.call().balanceOf(_issuer)
-    balance_taker = bs_token.call().balanceOf(_trader)
-    commitment = otc_exchange.call().commitmentOf(_issuer, bs_token.address)
+    balance_maker = share_token.call().balanceOf(_issuer)
+    balance_taker = share_token.call().balanceOf(_trader)
+    commitment = otc_exchange.call().commitmentOf(_issuer, share_token.address)
 
     assert orderbook == [
-        _issuer, _trader, to_checksum_address(bs_token.address),
+        _issuer, _trader, to_checksum_address(share_token.address),
         0, _price, _agent, False
     ]
 
@@ -1625,20 +1625,20 @@ def test_confirmAgreement_error_05(web3, chain, users,
 
     # 新規発行
     web3.eth.defaultAccount = _issuer
-    bs_token, deploy_args = utils. \
-        issue_bs_token(web3, chain, users, otc_exchange.address, personal_info.address)
+    share_token, deploy_args = utils. \
+        issue_share_token(web3, chain, users, otc_exchange.address, personal_info.address)
 
     # Exchangeへのデポジット：発行体
     web3.eth.defaultAccount = _issuer
     _amount_make = 100
-    txn_hash = bs_token.transact().transfer(otc_exchange.address, _amount_make)
+    txn_hash = share_token.transact().transfer(otc_exchange.address, _amount_make)
     chain.wait.for_receipt(txn_hash)
 
     # Make注文：発行体
     web3.eth.defaultAccount = _issuer
     _price = 123
     txn_hash = otc_exchange.transact().createOrder(
-        _trader, bs_token.address, _amount_make, _price, _agent)
+        _trader, share_token.address, _amount_make, _price, _agent)
     chain.wait.for_receipt(txn_hash)
 
     # Take注文：投資家
@@ -1665,12 +1665,12 @@ def test_confirmAgreement_error_05(web3, chain, users,
 
     orderbook = otc_exchange.call().getOrder(order_id)
     agreement = otc_exchange.call().getAgreement(order_id, agreement_id)
-    balance_maker = bs_token.call().balanceOf(_issuer)
-    balance_taker = bs_token.call().balanceOf(_trader)
-    commitment = otc_exchange.call().commitmentOf(_issuer, bs_token.address)
+    balance_maker = share_token.call().balanceOf(_issuer)
+    balance_taker = share_token.call().balanceOf(_trader)
+    commitment = otc_exchange.call().commitmentOf(_issuer, share_token.address)
 
     assert orderbook == [
-        _issuer, _trader, to_checksum_address(bs_token.address),
+        _issuer, _trader, to_checksum_address(share_token.address),
         0, _price, _agent, False
     ]
     assert agreement[0:5] == [_trader, _amount_make, _price, False, True]
@@ -1697,20 +1697,20 @@ def test_confirmAgreement_error_06(web3, chain, users,
 
     # 新規発行
     web3.eth.defaultAccount = _issuer
-    bs_token, deploy_args = utils. \
-        issue_bs_token(web3, chain, users, otc_exchange.address, personal_info.address)
+    share_token, deploy_args = utils. \
+        issue_share_token(web3, chain, users, otc_exchange.address, personal_info.address)
 
     # Exchangeへのデポジット：発行体
     web3.eth.defaultAccount = _issuer
     _amount_make = 100
-    txn_hash = bs_token.transact().transfer(otc_exchange.address, _amount_make)
+    txn_hash = share_token.transact().transfer(otc_exchange.address, _amount_make)
     chain.wait.for_receipt(txn_hash)
 
     # Make注文（売）：発行体
     web3.eth.defaultAccount = _issuer
     _price = 123
     txn_hash = otc_exchange.transact().createOrder(
-        _trader, bs_token.address, _amount_make, _price, _agent)
+        _trader, share_token.address, _amount_make, _price, _agent)
     chain.wait.for_receipt(txn_hash)
 
     # Take注文（買）：投資家
@@ -1731,12 +1731,12 @@ def test_confirmAgreement_error_06(web3, chain, users,
 
     orderbook = otc_exchange.call().getOrder(order_id)
     agreement = otc_exchange.call().getAgreement(order_id, agreement_id)
-    balance_maker = bs_token.call().balanceOf(_issuer)
-    balance_taker = bs_token.call().balanceOf(_trader)
-    commitment = otc_exchange.call().commitmentOf(_issuer, bs_token.address)
+    balance_maker = share_token.call().balanceOf(_issuer)
+    balance_taker = share_token.call().balanceOf(_trader)
+    commitment = otc_exchange.call().commitmentOf(_issuer, share_token.address)
 
     assert orderbook == [
-        _issuer, _trader, to_checksum_address(bs_token.address),
+        _issuer, _trader, to_checksum_address(share_token.address),
         0, _price, _agent, False
     ]
 
@@ -1764,20 +1764,20 @@ def test_confirmAgreement_error_07(web3, chain, users,
 
     # 新規発行
     web3.eth.defaultAccount = _issuer
-    bs_token, deploy_args = utils. \
-        issue_bs_token(web3, chain, users, otc_exchange.address, personal_info.address)
+    share_token, deploy_args = utils. \
+        issue_share_token(web3, chain, users, otc_exchange.address, personal_info.address)
 
     # Exchangeへのデポジット：発行体
     web3.eth.defaultAccount = _issuer
     _amount_make = 100
-    txn_hash = bs_token.transact().transfer(otc_exchange.address, _amount_make)
+    txn_hash = share_token.transact().transfer(otc_exchange.address, _amount_make)
     chain.wait.for_receipt(txn_hash)
 
     # Make注文：発行体
     web3.eth.defaultAccount = _issuer
     _price = 123
     txn_hash = otc_exchange.transact().createOrder(
-        _trader, bs_token.address, _amount_make, _price, _agent)
+        _trader, share_token.address, _amount_make, _price, _agent)
     chain.wait.for_receipt(txn_hash)
 
     # Take注文：投資家
@@ -1804,12 +1804,12 @@ def test_confirmAgreement_error_07(web3, chain, users,
 
     orderbook = otc_exchange.call().getOrder(order_id)
     agreement = otc_exchange.call().getAgreement(order_id, agreement_id)
-    balance_maker = bs_token.call().balanceOf(_issuer)
-    balance_taker = bs_token.call().balanceOf(_trader)
-    commitment = otc_exchange.call().commitmentOf(_issuer, bs_token.address)
+    balance_maker = share_token.call().balanceOf(_issuer)
+    balance_taker = share_token.call().balanceOf(_trader)
+    commitment = otc_exchange.call().commitmentOf(_issuer, share_token.address)
 
     assert orderbook == [
-        _issuer, _trader, to_checksum_address(bs_token.address),
+        _issuer, _trader, to_checksum_address(share_token.address),
         0, _price, _agent, False
     ]
     assert agreement[0:5] == [_trader, _amount_make, _price, True, False]
@@ -1843,20 +1843,20 @@ def test_cancelAgreement_normal_1(web3, chain, users,
 
     # 新規発行
     web3.eth.defaultAccount = _issuer
-    bs_token, deploy_args = utils. \
-        issue_bs_token(web3, chain, users, otc_exchange.address, personal_info.address)
+    share_token, deploy_args = utils. \
+        issue_share_token(web3, chain, users, otc_exchange.address, personal_info.address)
 
     # Exchangeへのデポジット：発行体
     web3.eth.defaultAccount = _issuer
     _amount_make = 100
-    txn_hash = bs_token.transact().transfer(otc_exchange.address, _amount_make)
+    txn_hash = share_token.transact().transfer(otc_exchange.address, _amount_make)
     chain.wait.for_receipt(txn_hash)
 
     # Make注文（売）：発行体
     web3.eth.defaultAccount = _issuer
     _price = 123
     txn_hash = otc_exchange.transact().createOrder(
-        _trader, bs_token.address, _amount_make, _price, _agent)
+        _trader, share_token.address, _amount_make, _price, _agent)
     chain.wait.for_receipt(txn_hash)
 
     # Take注文（買）：投資家
@@ -1875,12 +1875,12 @@ def test_cancelAgreement_normal_1(web3, chain, users,
 
     orderbook = otc_exchange.call().getOrder(order_id)
     agreement = otc_exchange.call().getAgreement(order_id, agreement_id)
-    balance_maker = bs_token.call().balanceOf(_issuer)
-    balance_taker = bs_token.call().balanceOf(_trader)
-    commitment = otc_exchange.call().commitmentOf(_issuer, bs_token.address)
+    balance_maker = share_token.call().balanceOf(_issuer)
+    balance_taker = share_token.call().balanceOf(_trader)
+    commitment = otc_exchange.call().commitmentOf(_issuer, share_token.address)
 
     assert orderbook == [
-        _issuer, _trader, to_checksum_address(bs_token.address),
+        _issuer, _trader, to_checksum_address(share_token.address),
         0, _price, _agent, False
     ]
     assert agreement[0:5] == [_trader, _amount_make, _price, True, False]
@@ -1949,20 +1949,20 @@ def test_cancelAgreement_error_03(web3, chain, users,
 
     # 新規発行
     web3.eth.defaultAccount = _issuer
-    bs_token, deploy_args = utils. \
-        issue_bs_token(web3, chain, users, otc_exchange.address, personal_info.address)
+    share_token, deploy_args = utils. \
+        issue_share_token(web3, chain, users, otc_exchange.address, personal_info.address)
 
     # Exchangeへのデポジット：発行体
     web3.eth.defaultAccount = _issuer
     _amount_make = 100
-    txn_hash = bs_token.transact().transfer(otc_exchange.address, _amount_make)
+    txn_hash = share_token.transact().transfer(otc_exchange.address, _amount_make)
     chain.wait.for_receipt(txn_hash)
 
     # Make注文：発行体
     web3.eth.defaultAccount = _issuer
     _price = 123
     txn_hash = otc_exchange.transact().createOrder(
-        _trader, bs_token.address, _amount_make, _price, _agent)
+        _trader, share_token.address, _amount_make, _price, _agent)
     chain.wait.for_receipt(txn_hash)
 
     # Take注文：投資家
@@ -1984,12 +1984,12 @@ def test_cancelAgreement_error_03(web3, chain, users,
 
     orderbook = otc_exchange.call().getOrder(order_id)
     agreement = otc_exchange.call().getAgreement(order_id, agreement_id)
-    balance_maker = bs_token.call().balanceOf(_issuer)
-    balance_taker = bs_token.call().balanceOf(_trader)
-    commitment = otc_exchange.call().commitmentOf(_issuer, bs_token.address)
+    balance_maker = share_token.call().balanceOf(_issuer)
+    balance_taker = share_token.call().balanceOf(_trader)
+    commitment = otc_exchange.call().commitmentOf(_issuer, share_token.address)
 
     assert orderbook == [
-        _issuer, _trader, to_checksum_address(bs_token.address),
+        _issuer, _trader, to_checksum_address(share_token.address),
         0, _price, _agent, False
     ]
     assert agreement[0:5] == [_trader, _amount_make, _price, False, False]
@@ -2016,20 +2016,20 @@ def test_cancelAgreement_error_04(web3, chain, users,
 
     # 新規発行
     web3.eth.defaultAccount = _issuer
-    bs_token, deploy_args = utils. \
-        issue_bs_token(web3, chain, users, otc_exchange.address, personal_info.address)
+    share_token, deploy_args = utils. \
+        issue_share_token(web3, chain, users, otc_exchange.address, personal_info.address)
 
     # Exchangeへのデポジット：発行体
     web3.eth.defaultAccount = _issuer
     _amount_make = 100
-    txn_hash = bs_token.transact().transfer(otc_exchange.address, _amount_make)
+    txn_hash = share_token.transact().transfer(otc_exchange.address, _amount_make)
     chain.wait.for_receipt(txn_hash)
 
     # Make注文（売）：発行体
     web3.eth.defaultAccount = _issuer
     _price = 123
     txn_hash = otc_exchange.transact().createOrder(
-        _trader, bs_token.address, _amount_make, _price, _agent)
+        _trader, share_token.address, _amount_make, _price, _agent)
     chain.wait.for_receipt(txn_hash)
 
     # Take注文（買）：投資家
@@ -2051,12 +2051,12 @@ def test_cancelAgreement_error_04(web3, chain, users,
 
     orderbook = otc_exchange.call().getOrder(order_id)
     agreement = otc_exchange.call().getAgreement(order_id, agreement_id)
-    balance_maker = bs_token.call().balanceOf(_issuer)
-    balance_taker = bs_token.call().balanceOf(_trader)
-    commitment = otc_exchange.call().commitmentOf(_issuer, bs_token.address)
+    balance_maker = share_token.call().balanceOf(_issuer)
+    balance_taker = share_token.call().balanceOf(_trader)
+    commitment = otc_exchange.call().commitmentOf(_issuer, share_token.address)
 
     assert orderbook == [
-        _issuer, _trader, to_checksum_address(bs_token.address),
+        _issuer, _trader, to_checksum_address(share_token.address),
         0, _price, _agent, False
     ]
     assert agreement[0:5] == [_trader, _amount_make, _price, False, False]
@@ -2083,20 +2083,20 @@ def test_cancelAgreement_error_05(web3, chain, users,
 
     # 新規発行
     web3.eth.defaultAccount = _issuer
-    bs_token, deploy_args = utils. \
-        issue_bs_token(web3, chain, users, otc_exchange.address, personal_info.address)
+    share_token, deploy_args = utils. \
+        issue_share_token(web3, chain, users, otc_exchange.address, personal_info.address)
 
     # Exchangeへのデポジット：発行体
     web3.eth.defaultAccount = _issuer
     _amount_make = 100
-    txn_hash = bs_token.transact().transfer(otc_exchange.address, _amount_make)
+    txn_hash = share_token.transact().transfer(otc_exchange.address, _amount_make)
     chain.wait.for_receipt(txn_hash)
 
     # Make注文（売）：発行体
     web3.eth.defaultAccount = _issuer
     _price = 123
     txn_hash = otc_exchange.transact().createOrder(
-        _trader, bs_token.address, _amount_make, _price, _agent)
+        _trader, share_token.address, _amount_make, _price, _agent)
     chain.wait.for_receipt(txn_hash)
 
     # Take注文（買）：投資家
@@ -2123,12 +2123,12 @@ def test_cancelAgreement_error_05(web3, chain, users,
 
     orderbook = otc_exchange.call().getOrder(order_id)
     agreement = otc_exchange.call().getAgreement(order_id, agreement_id)
-    balance_maker = bs_token.call().balanceOf(_issuer)
-    balance_taker = bs_token.call().balanceOf(_trader)
-    commitment = otc_exchange.call().commitmentOf(_issuer, bs_token.address)
+    balance_maker = share_token.call().balanceOf(_issuer)
+    balance_taker = share_token.call().balanceOf(_trader)
+    commitment = otc_exchange.call().commitmentOf(_issuer, share_token.address)
 
     assert orderbook == [
-        _issuer, _trader, to_checksum_address(bs_token.address),
+        _issuer, _trader, to_checksum_address(share_token.address),
         0, _price, _agent, False
     ]
     assert agreement[0:5] == [_trader, _amount_make, _price, False, True]
@@ -2155,20 +2155,20 @@ def test_cancelAgreement_error_06(web3, chain, users,
 
     # 新規発行
     web3.eth.defaultAccount = _issuer
-    bs_token, deploy_args = utils. \
-        issue_bs_token(web3, chain, users, otc_exchange.address, personal_info.address)
+    share_token, deploy_args = utils. \
+        issue_share_token(web3, chain, users, otc_exchange.address, personal_info.address)
 
     # Exchangeへのデポジット：発行体
     web3.eth.defaultAccount = _issuer
     _amount_make = 100
-    txn_hash = bs_token.transact().transfer(otc_exchange.address, _amount_make)
+    txn_hash = share_token.transact().transfer(otc_exchange.address, _amount_make)
     chain.wait.for_receipt(txn_hash)
 
     # Make注文：発行体
     web3.eth.defaultAccount = _issuer
     _price = 123
     txn_hash = otc_exchange.transact().createOrder(
-        _trader, bs_token.address, _amount_make, _price, _agent)
+        _trader, share_token.address, _amount_make, _price, _agent)
     chain.wait.for_receipt(txn_hash)
 
     # Take注文（買）：投資家
@@ -2189,12 +2189,12 @@ def test_cancelAgreement_error_06(web3, chain, users,
 
     orderbook = otc_exchange.call().getOrder(order_id)
     agreement = otc_exchange.call().getAgreement(order_id, agreement_id)
-    balance_maker = bs_token.call().balanceOf(_issuer)
-    balance_taker = bs_token.call().balanceOf(_trader)
-    commitment = otc_exchange.call().commitmentOf(_issuer, bs_token.address)
+    balance_maker = share_token.call().balanceOf(_issuer)
+    balance_taker = share_token.call().balanceOf(_trader)
+    commitment = otc_exchange.call().commitmentOf(_issuer, share_token.address)
 
     assert orderbook == [
-        _issuer, _trader, to_checksum_address(bs_token.address),
+        _issuer, _trader, to_checksum_address(share_token.address),
         0, _price, _agent, False
     ]
     assert agreement[0:5] == [_trader, _amount_make, _price, False, False]
@@ -2221,20 +2221,20 @@ def test_cancelAgreement_error_07(web3, chain, users,
 
     # 新規発行
     web3.eth.defaultAccount = _issuer
-    bs_token, deploy_args = utils. \
-        issue_bs_token(web3, chain, users, otc_exchange.address, personal_info.address)
+    share_token, deploy_args = utils. \
+        issue_share_token(web3, chain, users, otc_exchange.address, personal_info.address)
 
     # Exchangeへのデポジット：発行体
     web3.eth.defaultAccount = _issuer
     _amount_make = 100
-    txn_hash = bs_token.transact().transfer(otc_exchange.address, _amount_make)
+    txn_hash = share_token.transact().transfer(otc_exchange.address, _amount_make)
     chain.wait.for_receipt(txn_hash)
 
     # Make注文：発行体
     web3.eth.defaultAccount = _issuer
     _price = 123
     txn_hash = otc_exchange.transact().createOrder(
-        _trader, bs_token.address, _amount_make, _price, _agent)
+        _trader, share_token.address, _amount_make, _price, _agent)
     chain.wait.for_receipt(txn_hash)
 
     # Take注文：投資家
@@ -2261,12 +2261,12 @@ def test_cancelAgreement_error_07(web3, chain, users,
 
     orderbook = otc_exchange.call().getOrder(order_id)
     agreement = otc_exchange.call().getAgreement(order_id, agreement_id)
-    balance_maker = bs_token.call().balanceOf(_issuer)
-    balance_taker = bs_token.call().balanceOf(_trader)
-    commitment = otc_exchange.call().commitmentOf(_issuer, bs_token.address)
+    balance_maker = share_token.call().balanceOf(_issuer)
+    balance_taker = share_token.call().balanceOf(_trader)
+    commitment = otc_exchange.call().commitmentOf(_issuer, share_token.address)
 
     assert orderbook == [
-        _issuer, _trader, to_checksum_address(bs_token.address),
+        _issuer, _trader, to_checksum_address(share_token.address),
         0, _price, _agent, False
     ]
     assert agreement[0:5] == [_trader, _amount_make, _price, True, False]
@@ -2287,22 +2287,22 @@ def test_withdrawAll_normal_1(web3, chain, users, otc_exchange, personal_info):
 
     # 新規発行
     web3.eth.defaultAccount = _issuer
-    bs_token, deploy_args = utils. \
-        issue_bs_token(web3, chain, users, otc_exchange.address, personal_info.address)
+    share_token, deploy_args = utils. \
+        issue_share_token(web3, chain, users, otc_exchange.address, personal_info.address)
 
     # Exchangeへのデポジット：発行体
     web3.eth.defaultAccount = _issuer
     _amount_make = 100
-    txn_hash = bs_token.transact().transfer(otc_exchange.address, _amount_make)
+    txn_hash = share_token.transact().transfer(otc_exchange.address, _amount_make)
     chain.wait.for_receipt(txn_hash)
 
     # 引き出し：発行体
     web3.eth.defaultAccount = _issuer
-    txn_hash = otc_exchange.transact().withdrawAll(bs_token.address)
+    txn_hash = otc_exchange.transact().withdrawAll(share_token.address)
     chain.wait.for_receipt(txn_hash)
 
-    balance_exchange = otc_exchange.call().balanceOf(_issuer, bs_token.address)
-    balance_token = bs_token.call().balanceOf(_issuer)
+    balance_exchange = otc_exchange.call().balanceOf(_issuer, share_token.address)
+    balance_token = share_token.call().balanceOf(_issuer)
 
     assert balance_exchange == 0
     assert balance_token == deploy_args[5]
@@ -2315,28 +2315,28 @@ def test_withdrawAll_normal_2(web3, chain, users, otc_exchange, personal_info):
 
     # 新規発行
     web3.eth.defaultAccount = _issuer
-    bs_token, deploy_args = utils. \
-        issue_bs_token(web3, chain, users, otc_exchange.address, personal_info.address)
+    share_token, deploy_args = utils. \
+        issue_share_token(web3, chain, users, otc_exchange.address, personal_info.address)
 
     # Exchangeへのデポジット：発行体
     web3.eth.defaultAccount = _issuer
     _amount_make = 100
-    txn_hash = bs_token.transact().transfer(otc_exchange.address, _amount_make)
+    txn_hash = share_token.transact().transfer(otc_exchange.address, _amount_make)
     chain.wait.for_receipt(txn_hash)
 
     # Exchangeへのデポジット（2回目）：発行体
     web3.eth.defaultAccount = _issuer
     _amount_make = 100
-    txn_hash = bs_token.transact().transfer(otc_exchange.address, _amount_make)
+    txn_hash = share_token.transact().transfer(otc_exchange.address, _amount_make)
     chain.wait.for_receipt(txn_hash)
 
     # 引き出し：発行体
     web3.eth.defaultAccount = _issuer
-    txn_hash = otc_exchange.transact().withdrawAll(bs_token.address)
+    txn_hash = otc_exchange.transact().withdrawAll(share_token.address)
     chain.wait.for_receipt(txn_hash)
 
-    balance_exchange = otc_exchange.call().balanceOf(_issuer, bs_token.address)
-    balance_token = bs_token.call().balanceOf(_issuer)
+    balance_exchange = otc_exchange.call().balanceOf(_issuer, share_token.address)
+    balance_token = share_token.call().balanceOf(_issuer)
 
     assert balance_exchange == 0
     assert balance_token == deploy_args[5]
@@ -2357,13 +2357,13 @@ def test_withdrawAll_normal_3(web3, chain, users,
 
     # 新規発行
     web3.eth.defaultAccount = _issuer
-    bs_token, deploy_args = utils. \
-        issue_bs_token(web3, chain, users, otc_exchange.address, personal_info.address)
+    share_token, deploy_args = utils. \
+        issue_share_token(web3, chain, users, otc_exchange.address, personal_info.address)
 
     # Exchangeへのデポジット：発行体
     web3.eth.defaultAccount = _issuer
     _amount_transfer = 100
-    txn_hash = bs_token.transact().transfer(otc_exchange.address, _amount_transfer)
+    txn_hash = share_token.transact().transfer(otc_exchange.address, _amount_transfer)
     chain.wait.for_receipt(txn_hash)
 
     # Make注文：発行体
@@ -2371,17 +2371,17 @@ def test_withdrawAll_normal_3(web3, chain, users,
     _amount_make = 70  # 100のうち70だけ売注文
     _price = 123
     txn_hash = otc_exchange.transact().createOrder(
-        _trader, bs_token.address, _amount_make, _price, _agent)
+        _trader, share_token.address, _amount_make, _price, _agent)
     chain.wait.for_receipt(txn_hash)
 
     # 引き出し：発行体
     web3.eth.defaultAccount = _issuer
-    txn_hash = otc_exchange.transact().withdrawAll(bs_token.address)
+    txn_hash = otc_exchange.transact().withdrawAll(share_token.address)
     chain.wait.for_receipt(txn_hash)
 
-    balance_exchange = otc_exchange.call().balanceOf(_issuer, bs_token.address)
-    balance_token = bs_token.call().balanceOf(_issuer)
-    commitment = otc_exchange.call().commitmentOf(_issuer, bs_token.address)
+    balance_exchange = otc_exchange.call().balanceOf(_issuer, share_token.address)
+    balance_token = share_token.call().balanceOf(_issuer)
+    commitment = otc_exchange.call().commitmentOf(_issuer, share_token.address)
 
     assert balance_exchange == 0
     assert balance_token == deploy_args[5] - _amount_make
@@ -2407,13 +2407,13 @@ def test_withdrawAll_normal_4(web3, chain, users,
 
     # 新規発行
     web3.eth.defaultAccount = _issuer
-    bs_token, deploy_args = utils. \
-        issue_bs_token(web3, chain, users, otc_exchange.address, personal_info.address)
+    share_token, deploy_args = utils. \
+        issue_share_token(web3, chain, users, otc_exchange.address, personal_info.address)
 
     # Exchangeへのデポジット：発行体
     web3.eth.defaultAccount = _issuer
     _amount_transfer = 100
-    txn_hash = bs_token.transact().transfer(otc_exchange.address, _amount_transfer)
+    txn_hash = share_token.transact().transfer(otc_exchange.address, _amount_transfer)
     chain.wait.for_receipt(txn_hash)
 
     # Make注文：発行体
@@ -2421,7 +2421,7 @@ def test_withdrawAll_normal_4(web3, chain, users,
     _amount_make = 70  # 100のうち70だけ売注文
     _price = 123
     txn_hash = otc_exchange.transact().createOrder(
-        _trader, bs_token.address, _amount_make, _price, _agent)
+        _trader, share_token.address, _amount_make, _price, _agent)
     chain.wait.for_receipt(txn_hash)
 
     # Take注文（買）：投資家
@@ -2432,13 +2432,13 @@ def test_withdrawAll_normal_4(web3, chain, users,
 
     # 引き出し：発行体
     web3.eth.defaultAccount = _issuer
-    txn_hash = otc_exchange.transact().withdrawAll(bs_token.address)
+    txn_hash = otc_exchange.transact().withdrawAll(share_token.address)
     chain.wait.for_receipt(txn_hash)
 
-    balance_exchange = otc_exchange.call().balanceOf(_issuer, bs_token.address)
-    balance_issuer = bs_token.call().balanceOf(_issuer)
-    balance_trader = bs_token.call().balanceOf(_trader)
-    commitment = otc_exchange.call().commitmentOf(_issuer, bs_token.address)
+    balance_exchange = otc_exchange.call().balanceOf(_issuer, share_token.address)
+    balance_issuer = share_token.call().balanceOf(_issuer)
+    balance_trader = share_token.call().balanceOf(_trader)
+    commitment = otc_exchange.call().commitmentOf(_issuer, share_token.address)
 
     # 約定済みのトークンはそのまま。
     assert balance_exchange == 0
@@ -2466,13 +2466,13 @@ def test_withdrawAll_normal_5(web3, chain, users,
 
     # 新規発行
     web3.eth.defaultAccount = _issuer
-    bs_token, deploy_args = utils. \
-        issue_bs_token(web3, chain, users, otc_exchange.address, personal_info.address)
+    share_token, deploy_args = utils. \
+        issue_share_token(web3, chain, users, otc_exchange.address, personal_info.address)
 
     # Exchangeへのデポジット：発行体
     web3.eth.defaultAccount = _issuer
     _amount_transfer = 100
-    txn_hash = bs_token.transact().transfer(otc_exchange.address, _amount_transfer)
+    txn_hash = share_token.transact().transfer(otc_exchange.address, _amount_transfer)
     chain.wait.for_receipt(txn_hash)
 
     # Make注文：発行体
@@ -2480,7 +2480,7 @@ def test_withdrawAll_normal_5(web3, chain, users,
     _amount_make = 70  # 100のうち70だけ売注文
     _price = 123
     txn_hash = otc_exchange.transact().createOrder(
-        _trader, bs_token.address, _amount_make, _price, _agent)
+        _trader, share_token.address, _amount_make, _price, _agent)
     chain.wait.for_receipt(txn_hash)
 
     # Take注文（買）：投資家
@@ -2499,14 +2499,14 @@ def test_withdrawAll_normal_5(web3, chain, users,
 
     # 引き出し：発行体
     web3.eth.defaultAccount = _issuer
-    txn_hash = otc_exchange.transact().withdrawAll(bs_token.address)
+    txn_hash = otc_exchange.transact().withdrawAll(share_token.address)
     chain.wait.for_receipt(txn_hash)
 
-    balance_issuer_exchange = otc_exchange.call().balanceOf(_issuer, bs_token.address)
-    balance_issuer_token = bs_token.call().balanceOf(_issuer)
-    balance_trader_exchange = otc_exchange.call().balanceOf(_trader, bs_token.address)
-    balance_trader_token = bs_token.call().balanceOf(_trader)
-    commitment = otc_exchange.call().commitmentOf(_issuer, bs_token.address)
+    balance_issuer_exchange = otc_exchange.call().balanceOf(_issuer, share_token.address)
+    balance_issuer_token = share_token.call().balanceOf(_issuer)
+    balance_trader_exchange = otc_exchange.call().balanceOf(_trader, share_token.address)
+    balance_trader_token = share_token.call().balanceOf(_trader)
+    commitment = otc_exchange.call().commitmentOf(_issuer, share_token.address)
 
     assert balance_issuer_exchange == 0
     assert balance_issuer_token == deploy_args[5] - _amount_make
@@ -2538,30 +2538,30 @@ def test_withdrawAll_error_2_1(web3, chain, users, otc_exchange, personal_info):
 
     # 新規発行
     web3.eth.defaultAccount = _issuer
-    bs_token, deploy_args = utils. \
-        issue_bs_token(web3, chain, users, otc_exchange.address, personal_info.address)
+    share_token, deploy_args = utils. \
+        issue_share_token(web3, chain, users, otc_exchange.address, personal_info.address)
 
     # Exchangeへのデポジット：発行体
     web3.eth.defaultAccount = _issuer
     _amount_make = 100
-    txn_hash = bs_token.transact().transfer(otc_exchange.address, _amount_make)
+    txn_hash = share_token.transact().transfer(otc_exchange.address, _amount_make)
     chain.wait.for_receipt(txn_hash)
 
     # 引き出し：発行体
     web3.eth.defaultAccount = _issuer
-    txn_hash = otc_exchange.transact().withdrawAll(bs_token.address)
+    txn_hash = otc_exchange.transact().withdrawAll(share_token.address)
     chain.wait.for_receipt(txn_hash)
 
     # 引き出し（2回目)：発行体
     web3.eth.defaultAccount = _issuer
     try:
-        txn_hash = otc_exchange.transact().withdrawAll(bs_token.address)  # エラーになる
+        txn_hash = otc_exchange.transact().withdrawAll(share_token.address)  # エラーになる
         chain.wait.for_receipt(txn_hash)
     except ValueError:
         pass
 
-    balance_exchange = otc_exchange.call().balanceOf(_issuer, bs_token.address)
-    balance_token = bs_token.call().balanceOf(_issuer)
+    balance_exchange = otc_exchange.call().balanceOf(_issuer, share_token.address)
+    balance_token = share_token.call().balanceOf(_issuer)
 
     assert balance_exchange == 0
     assert balance_token == deploy_args[5]
@@ -2576,26 +2576,26 @@ def test_withdrawAll_error_2_2(web3, chain, users, otc_exchange, personal_info):
 
     # 新規発行
     web3.eth.defaultAccount = _issuer
-    bs_token, deploy_args = utils. \
-        issue_bs_token(web3, chain, users, otc_exchange.address, personal_info.address)
+    share_token, deploy_args = utils. \
+        issue_share_token(web3, chain, users, otc_exchange.address, personal_info.address)
 
     # Exchangeへのデポジット：発行体
     web3.eth.defaultAccount = _issuer
     _amount_transfer = 100
-    txn_hash = bs_token.transact().transfer(
+    txn_hash = share_token.transact().transfer(
         otc_exchange.address, _amount_transfer)
     chain.wait.for_receipt(txn_hash)
 
     # 引き出し：異なるアドレス
     web3.eth.defaultAccount = _trader
     try:
-        txn_hash = otc_exchange.transact().withdrawAll(bs_token.address)  # エラーになる
+        txn_hash = otc_exchange.transact().withdrawAll(share_token.address)  # エラーになる
         chain.wait.for_receipt(txn_hash)
     except ValueError:
         pass
 
-    balance_exchange = otc_exchange.call().balanceOf(_issuer, bs_token.address)
-    balance_token = bs_token.call().balanceOf(_issuer)
+    balance_exchange = otc_exchange.call().balanceOf(_issuer, share_token.address)
+    balance_token = share_token.call().balanceOf(_issuer)
 
     assert balance_exchange == _amount_transfer
     assert balance_token == deploy_args[5] - _amount_transfer
@@ -2621,13 +2621,13 @@ def test_updateExchange_normal_1(web3, chain, users,
 
     # 新規発行
     web3.eth.defaultAccount = issuer
-    bs_token, deploy_args = utils. \
-        issue_bs_token(web3, chain, users, otc_exchange.address, personal_info.address)
+    share_token, deploy_args = utils. \
+        issue_share_token(web3, chain, users, otc_exchange.address, personal_info.address)
 
     # Exchangeへのデポジット
     web3.eth.defaultAccount = issuer
     deposit_amount = 100
-    txn_hash = bs_token.transact().transfer(otc_exchange.address, deposit_amount)
+    txn_hash = share_token.transact().transfer(otc_exchange.address, deposit_amount)
     chain.wait.for_receipt(txn_hash)
 
     # 新規注文
@@ -2635,7 +2635,7 @@ def test_updateExchange_normal_1(web3, chain, users,
     amount_make = 10
     price = 123
     txn_hash = otc_exchange.transact().\
-        createOrder(trader, bs_token.address, amount_make, price, agent)
+        createOrder(trader, share_token.address, amount_make, price, agent)
     chain.wait.for_receipt(txn_hash)
 
     # Exchange（新）
@@ -2656,12 +2656,12 @@ def test_updateExchange_normal_1(web3, chain, users,
     web3.eth.defaultAccount = issuer
     order_id = otc_exchange_new.call().latestOrderId()
     orderbook = otc_exchange_new.call().getOrder(order_id)
-    commitment = otc_exchange_new.call().commitmentOf(issuer, bs_token.address)
-    balance_exchange = otc_exchange_new.call().balanceOf(issuer, bs_token.address)
-    balance_token = bs_token.call().balanceOf(issuer)
+    commitment = otc_exchange_new.call().commitmentOf(issuer, share_token.address)
+    balance_exchange = otc_exchange_new.call().balanceOf(issuer, share_token.address)
+    balance_token = share_token.call().balanceOf(issuer)
 
     assert orderbook == [
-        issuer, trader, to_checksum_address(bs_token.address),
+        issuer, trader, to_checksum_address(share_token.address),
         amount_make, price, agent, False
     ]
     assert balance_token == deploy_args[5] - deposit_amount
