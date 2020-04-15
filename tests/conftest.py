@@ -120,26 +120,27 @@ def coupon_exchange(web3, chain, users, payment_gateway, coupon_exchange_storage
 
 
 @pytest.yield_fixture()
-def bs_exchange_storage(web3, chain, users):
+def share_exchange_storage(web3, chain, users):
     web3.eth.defaultAccount = users['admin']
-    bs_exchange_storage, _ = chain.provider.get_or_deploy_contract('ExchangeStorage')
-    return bs_exchange_storage
+    # ToDo: 相対取引コントラクトに変更
+    share_exchange_storage, _ = chain.provider.get_or_deploy_contract('ExchangeStorage')
+    return share_exchange_storage
 
 
 @pytest.yield_fixture()
-def bs_exchange(web3, chain, users,
-                  personal_info, payment_gateway, bs_exchange_storage, exchange_regulator_service):
+def share_exchange(web3, chain, users,
+                  personal_info, payment_gateway, share_exchange_storage, exchange_regulator_service):
     web3.eth.defaultAccount = users['admin']
     deploy_args = [
         payment_gateway.address,
         personal_info.address,
-        bs_exchange_storage.address,
+        share_exchange_storage.address,
         exchange_regulator_service.address
     ]
-    # ToDo: 受益証券取引コントラクトに変更
-    bs_exchange, _ = chain.provider.get_or_deploy_contract(
+    # ToDo: 相対取引コントラクトに変更
+    share_exchange, _ = chain.provider.get_or_deploy_contract(
         'IbetStraightBondExchange',
         deploy_args=deploy_args
     )
-    bs_exchange_storage.transact().upgradeVersion(bs_exchange.address)
-    return bs_exchange
+    share_exchange_storage.transact().upgradeVersion(share_exchange.address)
+    return share_exchange
