@@ -7,7 +7,7 @@ import "./IbetStandardTokenInterface.sol";
 import "./PersonalInfo.sol";
 
 
-contract IbetBeneficiarySecurity is Ownable, IbetStandardTokenInterface {
+contract IbetShare is Ownable, IbetStandardTokenInterface {
     using SafeMath for uint256;
 
     // 関連アドレス情報

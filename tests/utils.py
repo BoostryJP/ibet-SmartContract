@@ -31,9 +31,9 @@ def issue_bond_token(web3, chain, users, exchange_address, personal_info_address
     )
     return bond_token, deploy_args
 
-# 受益証券新規発行
-def issue_bs_token(web3, chain, users, exchange_address, personal_info_address):
-    name = 'test_bs'
+# 株式新規発行
+def issue_share_token(web3, chain, users, exchange_address, personal_info_address):
+    name = 'test_share'
     symbol = 'IBS'
     issue_price = 10000
     total_supply = 10000
@@ -53,11 +53,11 @@ def issue_bs_token(web3, chain, users, exchange_address, personal_info_address):
     ]
 
     web3.eth.defaultAccount = users['issuer']
-    bs_token, _ = chain.provider.get_or_deploy_contract(
-        'IbetBeneficiarySecurity',
+    share_token, _ = chain.provider.get_or_deploy_contract(
+        'IbetShare',
         deploy_args=deploy_args
     )
-    return bs_token, deploy_args
+    return share_token, deploy_args
 
 # 会員権（譲渡可能）新規発行
 def issue_transferable_membership(web3,chain,exchange_address):
