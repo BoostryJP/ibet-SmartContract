@@ -93,15 +93,19 @@ contract IbetOTCExchange is Ownable, ExchangeStorageModel {
     address public personalInfoAddress;
     address public paymentGatewayAddress;
     address public storageAddress;
+    address public regulatorServiceAddress;
 
     constructor(
         address _paymentGatewayAddress,
         address _personalInfoAddress,
-        address _storageAddress
+        address _storageAddress,
+        address _regulatorServiceAddress
+
     ) public {
         paymentGatewayAddress = _paymentGatewayAddress;
         personalInfoAddress = _personalInfoAddress;
         storageAddress = _storageAddress;
+        regulatorServiceAddress = _regulatorServiceAddress;
     }
 
     // -------------------------------------------------------------------
@@ -298,6 +302,12 @@ contract IbetOTCExchange is Ownable, ExchangeStorageModel {
         address _agent
     ) public returns (bool) {
         // <CHK>
+        //  取引参加者チェック
+        if (regulatorServiceAddress != 0x0000000000000000000000000000000000000000) {
+            require(RegulatorService(regulatorServiceAddress).check(msg.sender) == 0 || RegulatorService(regulatorServiceAddress).check(_counterpart) == 0);
+        }
+
+        // <CHK>
         //  1) 注文数量が0の場合
         //  2) 残高数量が発注数量に満たない場合
         //  3) 認可されたアドレスではない場合
@@ -431,6 +441,13 @@ contract IbetOTCExchange is Ownable, ExchangeStorageModel {
 
         ExchangeStorageModel.OTCOrder memory order = OTCExchangeStorage(storageAddress).getOrder(_orderId);
 
+        // <CHK>
+        //  取引参加者チェック
+        if (regulatorServiceAddress != 0x0000000000000000000000000000000000000000) {
+            require(RegulatorService(regulatorServiceAddress).check(msg.sender) == 0 || RegulatorService(regulatorServiceAddress).check(order.owner) == 0);
+        }
+
+        
         // <CHK>
         // 取引関係者限定
         require(order.owner == msg.sender || order.counterpart == msg.sender || order.agent == msg.sender);

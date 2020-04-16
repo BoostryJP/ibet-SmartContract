@@ -53,6 +53,7 @@ def exchange_regulator_service(web3, chain, users):
     exchange_regulator_service, _ = chain.provider.get_or_deploy_contract('ExchangeRegulatorService')
     exchange_regulator_service.transact().register(users['issuer'], False)
     exchange_regulator_service.transact().register(users['trader'], False)
+    exchange_regulator_service.transact().register(users['admin'], False)
     return exchange_regulator_service
 
 
@@ -133,7 +134,8 @@ def share_exchange(web3, chain, users,
     deploy_args = [
         payment_gateway.address,
         personal_info.address,
-        share_exchange_storage.address
+        share_exchange_storage.address,
+        exchange_regulator_service.address
     ]
     share_exchange, _ = chain.provider.get_or_deploy_contract(
         'IbetOTCExchange',
@@ -153,12 +155,13 @@ def otc_exchange_storage(web3, chain, users):
 
 @pytest.yield_fixture()
 def otc_exchange(web3, chain, users,
-                  personal_info, payment_gateway, otc_exchange_storage):
+                  personal_info, payment_gateway, otc_exchange_storage, exchange_regulator_service):
     web3.eth.defaultAccount = users['admin']
     deploy_args = [
         payment_gateway.address,
         personal_info.address,
         otc_exchange_storage.address,
+        exchange_regulator_service.address
     ]
     otc_exchange, _ = chain.provider.get_or_deploy_contract(
         'IbetOTCExchange',
