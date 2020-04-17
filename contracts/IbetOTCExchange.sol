@@ -125,9 +125,8 @@ contract IbetOTCExchange is Ownable, ExchangeStorageModel {
         bool _canceled
         )
     {
-        // 取引関係者限定
         ExchangeStorageModel.OTCOrder memory _order = OTCExchangeStorage(storageAddress).getOrder(_orderId);
-        require(_order.owner == msg.sender || _order.counterpart == msg.sender || _order.agent == msg.sender);
+
         return (
            _order.owner,
            _order.counterpart,
@@ -177,10 +176,6 @@ contract IbetOTCExchange is Ownable, ExchangeStorageModel {
             uint256 _expiry
         )
     {
-        // 取引関係者限定
-        ExchangeStorageModel.OTCOrder memory _order = OTCExchangeStorage(storageAddress).getOrder(_orderId);
-        require(_order.owner == msg.sender || _order.counterpart == msg.sender || _order.agent == msg.sender);
-        
         ExchangeStorageModel.OTCAgreement memory _agreement = OTCExchangeStorage(storageAddress).getAgreement(_orderId, _agreementId);
         return (
            _agreement.counterpart,
@@ -310,15 +305,13 @@ contract IbetOTCExchange is Ownable, ExchangeStorageModel {
         // <CHK>
         //  1) 注文数量が0の場合
         //  2) 残高数量が発注数量に満たない場合
-        //  3) 認可されたアドレスではない場合
-        //  4) 名簿用個人情報が登録されていない場合
-        //  5) 取扱ステータスがFalseの場合
-        //  6) 有効な収納代行業者（Agent）を指定していない場合
+        //  3) 名簿用個人情報が登録されていない場合
+        //  4) 取扱ステータスがFalseの場合
+        //  5) 有効な収納代行業者（Agent）を指定していない場合
         //   -> 更新処理: 全ての残高を投資家のアカウントに戻し、falseを返す
         if (
             _amount == 0 ||
             balanceOf(msg.sender, _token) < _amount ||
-            PaymentGateway(paymentGatewayAddress).accountApproved(msg.sender, _agent) == false ||
             PersonalInfo(personalInfoAddress).isRegistered(msg.sender, IbetStandardTokenInterface(_token).owner()) == false ||
             IbetStandardTokenInterface(_token).status() == false ||
             validateAgent(_agent) == false
@@ -447,15 +440,13 @@ contract IbetOTCExchange is Ownable, ExchangeStorageModel {
         // <CHK>
         //  1) 元注文の発注者と同一のアドレスからの発注の場合
         //  2) 元注文がキャンセル済の場合
-        //  3) 認可されたアドレスではない場合
-        //  4) 名簿用個人情報が登録されていない場合
-        //  5) 買注文者がコントラクトアドレスの場合
-        //  6) 取扱ステータスがFalseの場合
+        //  3) 名簿用個人情報が登録されていない場合
+        //  4) 買注文者がコントラクトアドレスの場合
+        //  5) 取扱ステータスがFalseの場合
         //   -> REVERT
         if (
             msg.sender == order.owner ||
             order.canceled == true ||
-            PaymentGateway(paymentGatewayAddress).accountApproved(msg.sender,order.agent) == false ||
             PersonalInfo(personalInfoAddress).isRegistered(msg.sender,IbetStandardTokenInterface(order.token).owner()) == false ||
             isContract(msg.sender) == true ||
             IbetStandardTokenInterface(order.token).status() == false

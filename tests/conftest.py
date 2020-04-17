@@ -142,8 +142,6 @@ def share_exchange(web3, chain, users,
         deploy_args=deploy_args
     )
     share_exchange_storage.transact().upgradeVersion(share_exchange.address)
-    # storage参照可能コントラクトの設定
-    share_exchange_storage.transact().register(share_exchange.address, True)
     return share_exchange
 
 @pytest.yield_fixture()
@@ -168,6 +166,4 @@ def otc_exchange(web3, chain, users,
         deploy_args=deploy_args
     )
     otc_exchange_storage.transact().upgradeVersion(otc_exchange.address)
-    # storage参照可能コントラクトの設定
-    otc_exchange_storage.transact().register(otc_exchange.address, True)
     return otc_exchange

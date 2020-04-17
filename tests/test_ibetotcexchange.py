@@ -21,12 +21,6 @@ def payment_gateway_register(web3, chain, payment_gateway, trader, agent):
     txn_hash = payment_gateway.transact().register(agent, message)
     chain.wait.for_receipt(txn_hash)
 
-# PaymentGatewayアカウント認可
-def payment_gateway_approve(web3, chain, payment_gateway, trader, agent):
-    web3.eth.defaultAccount = agent
-    txn_hash = payment_gateway.transact().approve(trader)
-    chain.wait.for_receipt(txn_hash)
-
 # トークンを取引所にデポジット
 def transfer(web3, chain, token, otc_exchange, trader, amount):
     web3.eth.defaultAccount = trader
@@ -117,7 +111,6 @@ def test_createorder_normal_1(web3, chain, users, otc_exchange, personal_info, p
 
     personalinfo_register(web3, chain, personal_info, issuer, issuer)
     payment_gateway_register(web3, chain, payment_gateway, issuer, agent)
-    payment_gateway_approve(web3, chain, payment_gateway, issuer, agent)
 
     # 新規発行
     web3.eth.defaultAccount = issuer
@@ -316,7 +309,6 @@ def test_createorder_error_07(web3, chain, users,
 
     personalinfo_register(web3, chain, personal_info, issuer, issuer)
     payment_gateway_register(web3, chain, payment_gateway, issuer, agent)
-    payment_gateway_approve(web3, chain, payment_gateway, issuer, agent)
 
     # 新規発行
     web3.eth.defaultAccount = issuer
@@ -329,7 +321,7 @@ def test_createorder_error_07(web3, chain, users,
     txn_hash = share_token.transact().transfer(otc_exchange.address, _amount)
     chain.wait.for_receipt(txn_hash)
 
-    # 新規注文（売）
+    # 新規注文
     web3.eth.defaultAccount = issuer
     _amount = 0
     _price = 123
@@ -345,14 +337,14 @@ def test_createorder_error_07(web3, chain, users,
 
 
 # エラー系8
-# agent未認可のアカウントアドレスからの注文（売）
+# 名簿用個人情報が登録されていない場合
 def test_createorder_error_08(web3, chain, users,
-                               otc_exchange, personal_info):
+                               otc_exchange, payment_gateway, personal_info):
     issuer = users['issuer']
     agent = users['agent']
     trader = users['trader']
 
-    personalinfo_register(web3, chain, personal_info, issuer, issuer)  # 未認可状態
+    payment_gateway_register(web3, chain, payment_gateway, issuer, agent)
 
     # 新規発行
     web3.eth.defaultAccount = issuer
@@ -365,9 +357,9 @@ def test_createorder_error_08(web3, chain, users,
     txn_hash = share_token.transact().transfer(otc_exchange.address, _amount)
     chain.wait.for_receipt(txn_hash)
 
-    # 新規注文（売）
+    # 新規注文
     web3.eth.defaultAccount = issuer
-    _amount = 0
+    _amount = 100
     _price = 123
     txn_hash = otc_exchange.transact().createOrder(
         trader, share_token.address, _amount, _price, agent)  # エラーになる
@@ -381,45 +373,8 @@ def test_createorder_error_08(web3, chain, users,
 
 
 # エラー系9
-# 名簿用個人情報が登録されていない場合（売注文）
-def test_createorder_error_09(web3, chain, users,
-                               otc_exchange, payment_gateway, personal_info):
-    issuer = users['issuer']
-    agent = users['agent']
-    trader = users['trader']
-
-    payment_gateway_register(web3, chain, payment_gateway, issuer, agent)
-    payment_gateway_approve(web3, chain, payment_gateway, issuer, agent)
-
-    # 新規発行
-    web3.eth.defaultAccount = issuer
-    share_token, deploy_args = utils. \
-        issue_share_token(web3, chain, users, otc_exchange.address, personal_info.address)
-
-    # Exchangeへのデポジット
-    web3.eth.defaultAccount = issuer
-    _amount = 100
-    txn_hash = share_token.transact().transfer(otc_exchange.address, _amount)
-    chain.wait.for_receipt(txn_hash)
-
-    # 新規注文（売）
-    web3.eth.defaultAccount = issuer
-    _amount = 100
-    _price = 123
-    txn_hash = otc_exchange.transact().createOrder(
-        trader, share_token.address, _amount, _price, agent)  # エラーになる
-    chain.wait.for_receipt(txn_hash)
-
-    commitment = otc_exchange.call().commitmentOf(issuer, share_token.address)
-    balance = share_token.call().balanceOf(issuer)
-
-    assert balance == deploy_args[5]
-    assert commitment == 0
-
-
-# エラー系10
 # 残高不足
-def test_createorder_error_10(web3, chain, users,
+def test_createorder_error_09(web3, chain, users,
                               otc_exchange, personal_info, payment_gateway):
     issuer = users['issuer']
     agent = users['agent']
@@ -427,7 +382,6 @@ def test_createorder_error_10(web3, chain, users,
 
     personalinfo_register(web3, chain, personal_info, issuer, issuer)
     payment_gateway_register(web3, chain, payment_gateway, issuer, agent)
-    payment_gateway_approve(web3, chain, payment_gateway, issuer, agent)
 
     # 新規発行
     web3.eth.defaultAccount = issuer
@@ -440,7 +394,7 @@ def test_createorder_error_10(web3, chain, users,
     txn_hash = share_token.transact().transfer(otc_exchange.address, _amount)
     chain.wait.for_receipt(txn_hash)
 
-    # 新規注文（売）
+    # 新規注文
     web3.eth.defaultAccount = issuer
     _price = 123
     txn_hash = otc_exchange.transact().createOrder(
@@ -454,9 +408,9 @@ def test_createorder_error_10(web3, chain, users,
     assert commitment == 0
 
 
-# エラー系11
+# エラー系10
 # 無効な収納代行業者（Agent）の指定
-def test_createorder_error_11(web3, chain, users,
+def test_createorder_error_10(web3, chain, users,
                                 otc_exchange, payment_gateway, personal_info):
     issuer = users['issuer']
     agent = users['agent']
@@ -464,7 +418,6 @@ def test_createorder_error_11(web3, chain, users,
     attacker = users['admin']
 
     payment_gateway_register(web3, chain, payment_gateway, issuer, agent)
-    payment_gateway_approve(web3, chain, payment_gateway, issuer, agent)
 
     # 新規発行
     web3.eth.defaultAccount = issuer
@@ -477,7 +430,7 @@ def test_createorder_error_11(web3, chain, users,
     txn_hash = share_token.transact().transfer(otc_exchange.address, _amount)
     chain.wait.for_receipt(txn_hash)
 
-    # 新規注文（売）
+    # 新規注文
     web3.eth.defaultAccount = issuer
     _amount = 100
     _price = 123
@@ -492,16 +445,15 @@ def test_createorder_error_11(web3, chain, users,
     assert commitment == 0
 
 
-# エラー系12
+# エラー系11
 # 取扱ステータスがFalseの場合
-def test_createorder_error_12(web3, chain, users, otc_exchange, personal_info, payment_gateway):
+def test_createorder_error_11(web3, chain, users, otc_exchange, personal_info, payment_gateway):
     issuer = users['issuer']
     trader = users['trader']
     agent = users['agent']
 
     personalinfo_register(web3, chain, personal_info, issuer, issuer)
     payment_gateway_register(web3, chain, payment_gateway, issuer, agent)
-    payment_gateway_approve(web3, chain, payment_gateway, issuer, agent)
 
     # 新規発行
     web3.eth.defaultAccount = issuer
@@ -544,7 +496,6 @@ def test_getOrder_error_1(web3, chain, users, otc_exchange, personal_info, payme
 
     personalinfo_register(web3, chain, personal_info, issuer, issuer)
     payment_gateway_register(web3, chain, payment_gateway, issuer, agent)
-    payment_gateway_approve(web3, chain, payment_gateway, issuer, agent)
 
     web3.eth.defaultAccount = issuer
     with pytest.raises(TypeError):
@@ -555,67 +506,6 @@ def test_getOrder_error_1(web3, chain, users, otc_exchange, personal_info, payme
         otc_exchange.transact().getOrder(-1)
     with pytest.raises(TypeError):
         otc_exchange.transact().getOrder(2 ** 256)
-
-
-# 異常系2
-# 取引関係者外からの参照
-def test_getOrder_error_2(web3, chain, users, otc_exchange, personal_info, payment_gateway):
-    issuer = users['issuer']
-    trader = users['trader']
-    attacker = users['admin']
-    agent = users['agent']
-
-    personalinfo_register(web3, chain, personal_info, issuer, issuer)
-    payment_gateway_register(web3, chain, payment_gateway, issuer, agent)
-    payment_gateway_approve(web3, chain, payment_gateway, issuer, agent)
-
-    # 新規発行
-    web3.eth.defaultAccount = issuer
-    share_token, deploy_args = utils. \
-        issue_share_token(web3, chain, users, otc_exchange.address, personal_info.address)
-
-    # Exchangeへのデポジット
-    _amount = 100
-    txn_hash = share_token.transact().transfer(otc_exchange.address, _amount)
-    chain.wait.for_receipt(txn_hash)
-
-    # 新規注文
-    _amount = 100
-    _price = 123
-    txn_hash = otc_exchange.transact().createOrder(trader, share_token.address, _amount, _price, agent)
-    chain.wait.for_receipt(txn_hash)
-
-
-    web3.eth.defaultAccount = attacker
-    order_id = otc_exchange.call().latestOrderId()
-    try:
-        orderbook = otc_exchange.call().getOrder(order_id)
-    except ValueError:
-        pass
-
-    web3.eth.defaultAccount = issuer
-    orderbook = otc_exchange.call().getOrder(order_id)
-
-    assert orderbook == [
-        issuer, trader, to_checksum_address(share_token.address), _amount, _price,
-        agent, False
-    ]
-
-    web3.eth.defaultAccount = trader
-    orderbook = otc_exchange.call().getOrder(order_id)
-
-    assert orderbook == [
-        issuer, trader, to_checksum_address(share_token.address), _amount, _price,
-        agent, False
-    ]
-
-    web3.eth.defaultAccount = agent
-    orderbook = otc_exchange.call().getOrder(order_id)
-
-    assert orderbook == [
-        issuer, trader, to_checksum_address(share_token.address), _amount, _price,
-        agent, False
-    ]
 
 '''
 TEST_注文キャンセル（cancelOrder）
@@ -633,7 +523,6 @@ def test_cancelOrder_normal_1(web3, chain, users,
 
     personalinfo_register(web3, chain, personal_info, issuer, issuer)
     payment_gateway_register(web3, chain, payment_gateway, issuer, agent)
-    payment_gateway_approve(web3, chain, payment_gateway, issuer, agent)
 
     # 新規発行
     web3.eth.defaultAccount = issuer
@@ -646,7 +535,7 @@ def test_cancelOrder_normal_1(web3, chain, users,
     txn_hash = share_token.transact().transfer(otc_exchange.address, _amount)
     chain.wait.for_receipt(txn_hash)
 
-    # 新規注文（売）
+    # 新規注文
     web3.eth.defaultAccount = issuer
     _price = 123
     txn_hash = otc_exchange.transact().createOrder(
@@ -700,7 +589,6 @@ def test_cancelOrder_error_2(web3, chain, users,
 
     personalinfo_register(web3, chain, personal_info, issuer, issuer)
     payment_gateway_register(web3, chain, payment_gateway, issuer, agent)
-    payment_gateway_approve(web3, chain, payment_gateway, issuer, agent)
 
     # 新規発行
     web3.eth.defaultAccount = issuer
@@ -752,7 +640,6 @@ def test_cancelOrder_error_3(web3, chain, users,
 
     personalinfo_register(web3, chain, personal_info, issuer, issuer)
     payment_gateway_register(web3, chain, payment_gateway, issuer, agent)
-    payment_gateway_approve(web3, chain, payment_gateway, issuer, agent)
 
     # 新規発行
     web3.eth.defaultAccount = issuer
@@ -807,7 +694,6 @@ def test_cancelOrder_error_4(web3, chain, users,
 
     personalinfo_register(web3, chain, personal_info, issuer, issuer)
     payment_gateway_register(web3, chain, payment_gateway, issuer, agent)
-    payment_gateway_approve(web3, chain, payment_gateway, issuer, agent)
 
     # 新規発行
     web3.eth.defaultAccount = issuer
@@ -864,11 +750,9 @@ def test_executeOrder_normal_1(web3, chain, users,
 
     personalinfo_register(web3, chain, personal_info, _issuer, _issuer)
     payment_gateway_register(web3, chain, payment_gateway, _issuer, _agent)
-    payment_gateway_approve(web3, chain, payment_gateway, _issuer, _agent)
 
     personalinfo_register(web3, chain, personal_info, _trader, _issuer)
     payment_gateway_register(web3, chain, payment_gateway, _trader, _agent)
-    payment_gateway_approve(web3, chain, payment_gateway, _trader, _agent)
 
     # 新規発行
     web3.eth.defaultAccount = _issuer
@@ -943,11 +827,9 @@ def test_executeOrder_error_02(web3, chain, users,
 
     personalinfo_register(web3, chain, personal_info, _issuer, _issuer)
     payment_gateway_register(web3, chain, payment_gateway, _issuer, _agent)
-    payment_gateway_approve(web3, chain, payment_gateway, _issuer, _agent)
 
     personalinfo_register(web3, chain, personal_info, _trader, _issuer)
     payment_gateway_register(web3, chain, payment_gateway, _trader, _agent)
-    payment_gateway_approve(web3, chain, payment_gateway, _trader, _agent)
 
     # 新規発行
     web3.eth.defaultAccount = _issuer
@@ -970,7 +852,7 @@ def test_executeOrder_error_02(web3, chain, users,
     latest_order_id_error = otc_exchange.call().latestOrderId() + 1
     latest_order_id = otc_exchange.call().latestOrderId()
 
-    # Take注文（売）
+    # Take注文
     web3.eth.defaultAccount = _trader
     order_id = latest_order_id_error
     _amount = 123
@@ -1008,7 +890,6 @@ def test_executeOrder_error_03(web3, chain, users,
 
     personalinfo_register(web3, chain, personal_info, _issuer, _issuer)
     payment_gateway_register(web3, chain, payment_gateway, _issuer, _agent)
-    payment_gateway_approve(web3, chain, payment_gateway, _issuer, _agent)
 
     # 新規発行
     web3.eth.defaultAccount = _issuer
@@ -1062,11 +943,9 @@ def test_executeOrder_error_04(web3, chain, users,
 
     personalinfo_register(web3, chain, personal_info, _issuer, _issuer)
     payment_gateway_register(web3, chain, payment_gateway, _issuer, _agent)
-    payment_gateway_approve(web3, chain, payment_gateway, _issuer, _agent)
 
     personalinfo_register(web3, chain, personal_info, _trader, _issuer)
     payment_gateway_register(web3, chain, payment_gateway, _trader, _agent)
-    payment_gateway_approve(web3, chain, payment_gateway, _trader, _agent)
 
     # 新規発行
     web3.eth.defaultAccount = _issuer
@@ -1116,20 +995,18 @@ def test_executeOrder_error_04(web3, chain, users,
     assert commitment == 0
 
 # エラー系5
-# 認可されたアドレスではない場合
+# 名簿用個人情報が登録されていない場合
 # Take買注文
 def test_executeOrder_error_05(web3, chain, users,
-                                otc_exchange, personal_info, payment_gateway):
+                                 otc_exchange, personal_info, payment_gateway):
     _issuer = users['issuer']
     _trader = users['trader']
     _agent = users['agent']
 
     personalinfo_register(web3, chain, personal_info, _issuer, _issuer)
     payment_gateway_register(web3, chain, payment_gateway, _issuer, _agent)
-    payment_gateway_approve(web3, chain, payment_gateway, _issuer, _agent)
 
-    personalinfo_register(web3, chain, personal_info, _trader, _issuer)
-    payment_gateway_register(web3, chain, payment_gateway, _trader, _agent)  # 未認可状態
+    payment_gateway_register(web3, chain, payment_gateway, _trader, _agent)
 
     # 新規発行
     web3.eth.defaultAccount = _issuer
@@ -1175,78 +1052,17 @@ def test_executeOrder_error_05(web3, chain, users,
 
 
 # エラー系6
-# 名簿用個人情報が登録されていない場合
-# Take買注文
-def test_executeOrder_error_06(web3, chain, users,
-                                 otc_exchange, personal_info, payment_gateway):
-    _issuer = users['issuer']
-    _trader = users['trader']
-    _agent = users['agent']
-
-    personalinfo_register(web3, chain, personal_info, _issuer, _issuer)
-    payment_gateway_register(web3, chain, payment_gateway, _issuer, _agent)
-    payment_gateway_approve(web3, chain, payment_gateway, _issuer, _agent)
-
-    payment_gateway_register(web3, chain, payment_gateway, _trader, _agent)
-    payment_gateway_approve(web3, chain, payment_gateway, _trader, _agent)
-
-    # 新規発行
-    web3.eth.defaultAccount = _issuer
-    share_token, deploy_args = utils. \
-        issue_share_token(web3, chain, users, otc_exchange.address, personal_info.address)
-
-    # 預かりをExchangeへのデポジット：発行体
-    web3.eth.defaultAccount = _issuer
-    _amount_make = 100
-    txn_hash = share_token.transact().transfer(otc_exchange.address, _amount_make)
-    chain.wait.for_receipt(txn_hash)
-
-    # Make注文（売）：発行体
-    web3.eth.defaultAccount = _issuer
-    _price = 123
-    txn_hash = otc_exchange.transact().createOrder(
-        _trader, share_token.address, _amount_make, _price, _agent)
-    chain.wait.for_receipt(txn_hash)
-
-    order_id = otc_exchange.call().latestOrderId()
-
-    # Take注文（買）：投資家
-    web3.eth.defaultAccount = _trader
-    try:
-        txn_hash = otc_exchange.transact().executeOrder(order_id)  # エラーになる
-        chain.wait.for_receipt(txn_hash)
-    except ValueError:
-        pass
-
-    orderbook = otc_exchange.call().getOrder(order_id)
-    balance_maker = share_token.call().balanceOf(_issuer)
-    balance_taker = share_token.call().balanceOf(_trader)
-    commitment = otc_exchange.call().commitmentOf(_issuer, share_token.address)
-
-    assert orderbook == [
-        _issuer, _trader, to_checksum_address(share_token.address),
-        _amount_make,  # Make注文の件数から減っていない状態
-        _price, _agent, False
-    ]
-    assert balance_maker == deploy_args[5] - _amount_make
-    assert balance_taker == 0
-    assert commitment == _amount_make
-
-
-# エラー系7
 # 取扱ステータスがFalseの場合
-def test_executeOrder_error_07(web3, chain, users, otc_exchange, personal_info, payment_gateway):
+def test_executeOrder_error_06(web3, chain, users, otc_exchange, personal_info, payment_gateway):
     _issuer = users['issuer']
     _trader = users['trader']
     _agent = users['agent']
 
     personalinfo_register(web3, chain, personal_info, _issuer, _issuer)
     payment_gateway_register(web3, chain, payment_gateway, _issuer, _agent)
-    payment_gateway_approve(web3, chain, payment_gateway, _issuer, _agent)
 
     personalinfo_register(web3, chain, personal_info, _trader, _issuer)
     payment_gateway_register(web3, chain, payment_gateway, _trader, _agent)
-    payment_gateway_approve(web3, chain, payment_gateway, _trader, _agent)
 
     # 新規発行
     web3.eth.defaultAccount = _issuer
@@ -1294,9 +1110,9 @@ def test_executeOrder_error_07(web3, chain, users, otc_exchange, personal_info, 
     assert commitment == _amount_make
 
 
-# エラー系8
+# エラー系7
 # 第三者からtake注文があった場合
-def test_executeOrder_error_08(web3, chain, users, otc_exchange, personal_info, payment_gateway):
+def test_executeOrder_error_07(web3, chain, users, otc_exchange, personal_info, payment_gateway):
     _issuer = users['issuer']
     _trader = users['trader']
     _attacker = users['admin']
@@ -1304,11 +1120,9 @@ def test_executeOrder_error_08(web3, chain, users, otc_exchange, personal_info, 
 
     personalinfo_register(web3, chain, personal_info, _issuer, _issuer)
     payment_gateway_register(web3, chain, payment_gateway, _issuer, _agent)
-    payment_gateway_approve(web3, chain, payment_gateway, _issuer, _agent)
 
     personalinfo_register(web3, chain, personal_info, _trader, _issuer)
     payment_gateway_register(web3, chain, payment_gateway, _trader, _agent)
-    payment_gateway_approve(web3, chain, payment_gateway, _trader, _agent)
 
     # 新規発行
     web3.eth.defaultAccount = _issuer
@@ -1375,11 +1189,9 @@ def test_confirmAgreement_normal_1(web3, chain, users,
 
     personalinfo_register(web3, chain, personal_info, _issuer, _issuer)
     payment_gateway_register(web3, chain, payment_gateway, _issuer, _agent)
-    payment_gateway_approve(web3, chain, payment_gateway, _issuer, _agent)
 
     personalinfo_register(web3, chain, personal_info, _trader, _issuer)
     payment_gateway_register(web3, chain, payment_gateway, _trader, _agent)
-    payment_gateway_approve(web3, chain, payment_gateway, _trader, _agent)
 
     # 新規発行
     web3.eth.defaultAccount = _issuer
@@ -1392,14 +1204,14 @@ def test_confirmAgreement_normal_1(web3, chain, users,
     txn_hash = share_token.transact().transfer(otc_exchange.address, _amount_make)
     chain.wait.for_receipt(txn_hash)
 
-    # Make注文（売）：発行体
+    # Make注文：発行体
     web3.eth.defaultAccount = _issuer
     _price = 123
     txn_hash = otc_exchange.transact().createOrder(
         _trader, share_token.address, _amount_make, _price, _agent)
     chain.wait.for_receipt(txn_hash)
 
-    # Take注文（買）：投資家
+    # Take注文：投資家
     web3.eth.defaultAccount = _trader
     order_id = otc_exchange.call().latestOrderId()
     txn_hash = otc_exchange.transact().executeOrder(order_id)
@@ -1481,11 +1293,9 @@ def test_confirmAgreement_error_03(web3, chain, users,
 
     personalinfo_register(web3, chain, personal_info, _issuer, _issuer)
     payment_gateway_register(web3, chain, payment_gateway, _issuer, _agent)
-    payment_gateway_approve(web3, chain, payment_gateway, _issuer, _agent)
 
     personalinfo_register(web3, chain, personal_info, _trader, _issuer)
     payment_gateway_register(web3, chain, payment_gateway, _trader, _agent)
-    payment_gateway_approve(web3, chain, payment_gateway, _trader, _agent)
 
     # 新規発行
     web3.eth.defaultAccount = _issuer
@@ -1505,7 +1315,7 @@ def test_confirmAgreement_error_03(web3, chain, users,
         _trader, share_token.address, _amount_make, _price, _agent)
     chain.wait.for_receipt(txn_hash)
 
-    # Take注文（買）：投資家
+    # Take注文：投資家
     web3.eth.defaultAccount = _trader
     order_id = otc_exchange.call().latestOrderId()
     txn_hash = otc_exchange.transact().executeOrder(order_id)
@@ -1549,11 +1359,9 @@ def test_confirmAgreement_error_04(web3, chain, users,
 
     personalinfo_register(web3, chain, personal_info, _issuer, _issuer)
     payment_gateway_register(web3, chain, payment_gateway, _issuer, _agent)
-    payment_gateway_approve(web3, chain, payment_gateway, _issuer, _agent)
 
     personalinfo_register(web3, chain, personal_info, _trader, _issuer)
     payment_gateway_register(web3, chain, payment_gateway, _trader, _agent)
-    payment_gateway_approve(web3, chain, payment_gateway, _trader, _agent)
 
     # 新規発行
     web3.eth.defaultAccount = _issuer
@@ -1573,7 +1381,7 @@ def test_confirmAgreement_error_04(web3, chain, users,
         _trader, share_token.address, _amount_make, _price, _agent)
     chain.wait.for_receipt(txn_hash)
 
-    # Take注文（買）：投資家
+    # Take注文：投資家
     web3.eth.defaultAccount = _trader
     order_id = otc_exchange.call().latestOrderId()
     txn_hash = otc_exchange.transact().executeOrder(order_id)
@@ -1617,11 +1425,9 @@ def test_confirmAgreement_error_05(web3, chain, users,
 
     personalinfo_register(web3, chain, personal_info, _issuer, _issuer)
     payment_gateway_register(web3, chain, payment_gateway, _issuer, _agent)
-    payment_gateway_approve(web3, chain, payment_gateway, _issuer, _agent)
 
     personalinfo_register(web3, chain, personal_info, _trader, _issuer)
     payment_gateway_register(web3, chain, payment_gateway, _trader, _agent)
-    payment_gateway_approve(web3, chain, payment_gateway, _trader, _agent)
 
     # 新規発行
     web3.eth.defaultAccount = _issuer
@@ -1689,11 +1495,9 @@ def test_confirmAgreement_error_06(web3, chain, users,
 
     personalinfo_register(web3, chain, personal_info, _issuer, _issuer)
     payment_gateway_register(web3, chain, payment_gateway, _issuer, _agent)
-    payment_gateway_approve(web3, chain, payment_gateway, _issuer, _agent)
 
     personalinfo_register(web3, chain, personal_info, _trader, _issuer)
     payment_gateway_register(web3, chain, payment_gateway, _trader, _agent)
-    payment_gateway_approve(web3, chain, payment_gateway, _trader, _agent)
 
     # 新規発行
     web3.eth.defaultAccount = _issuer
@@ -1706,14 +1510,14 @@ def test_confirmAgreement_error_06(web3, chain, users,
     txn_hash = share_token.transact().transfer(otc_exchange.address, _amount_make)
     chain.wait.for_receipt(txn_hash)
 
-    # Make注文（売）：発行体
+    # Make注文：発行体
     web3.eth.defaultAccount = _issuer
     _price = 123
     txn_hash = otc_exchange.transact().createOrder(
         _trader, share_token.address, _amount_make, _price, _agent)
     chain.wait.for_receipt(txn_hash)
 
-    # Take注文（買）：投資家
+    # Take注文：投資家
     web3.eth.defaultAccount = _trader
     order_id = otc_exchange.call().latestOrderId()
     txn_hash = otc_exchange.transact().executeOrder(order_id)
@@ -1756,11 +1560,9 @@ def test_confirmAgreement_error_07(web3, chain, users,
 
     personalinfo_register(web3, chain, personal_info, _issuer, _issuer)
     payment_gateway_register(web3, chain, payment_gateway, _issuer, _agent)
-    payment_gateway_approve(web3, chain, payment_gateway, _issuer, _agent)
 
     personalinfo_register(web3, chain, personal_info, _trader, _issuer)
     payment_gateway_register(web3, chain, payment_gateway, _trader, _agent)
-    payment_gateway_approve(web3, chain, payment_gateway, _trader, _agent)
 
     # 新規発行
     web3.eth.defaultAccount = _issuer
@@ -1831,7 +1633,6 @@ def test_getAgreement_error_1(web3, chain, users, otc_exchange, personal_info, p
 
     personalinfo_register(web3, chain, personal_info, issuer, issuer)
     payment_gateway_register(web3, chain, payment_gateway, issuer, agent)
-    payment_gateway_approve(web3, chain, payment_gateway, issuer, agent)
 
     web3.eth.defaultAccount = issuer
     with pytest.raises(TypeError):
@@ -1852,70 +1653,6 @@ def test_getAgreement_error_1(web3, chain, users, otc_exchange, personal_info, p
         otc_exchange.transact().getAgreement(1, 2 ** 256)
 
 
-# 異常系2
-# 取引関係者外からの参照
-def test_getAgreement_error_2(web3, chain, users, otc_exchange, personal_info, payment_gateway):
-    _issuer = users['issuer']
-    _attacker = users['admin']
-    _trader = users['trader']
-    _agent = users['agent']
-
-    personalinfo_register(web3, chain, personal_info, _issuer, _issuer)
-    payment_gateway_register(web3, chain, payment_gateway, _issuer, _agent)
-    payment_gateway_approve(web3, chain, payment_gateway, _issuer, _agent)
-
-    personalinfo_register(web3, chain, personal_info, _trader, _issuer)
-    payment_gateway_register(web3, chain, payment_gateway, _trader, _agent)
-    payment_gateway_approve(web3, chain, payment_gateway, _trader, _agent)
-
-    # 新規発行
-    web3.eth.defaultAccount = _issuer
-    share_token, deploy_args = utils. \
-        issue_share_token(web3, chain, users, otc_exchange.address, personal_info.address)
-
-    # Exchangeへのデポジット：発行体
-    web3.eth.defaultAccount = _issuer
-    _amount_make = 100
-    txn_hash = share_token.transact().transfer(otc_exchange.address, _amount_make)
-    chain.wait.for_receipt(txn_hash)
-
-    # Make注文（売）：発行体
-    web3.eth.defaultAccount = _issuer
-    _price = 123
-    txn_hash = otc_exchange.transact().createOrder(
-        _trader, share_token.address, _amount_make, _price, _agent)
-    chain.wait.for_receipt(txn_hash)
-
-    # Take注文（買）：投資家
-    web3.eth.defaultAccount = _trader
-    order_id = otc_exchange.call().latestOrderId()
-    txn_hash = otc_exchange.transact().executeOrder(order_id)
-    chain.wait.for_receipt(txn_hash)
-
-    agreement_id = otc_exchange.call().latestAgreementId(order_id)
-
-    web3.eth.defaultAccount = _attacker
-    try:
-        agreement = otc_exchange.call().getAgreement(order_id, agreement_id)
-    except ValueError:
-        pass
-
-    web3.eth.defaultAccount = _issuer
-    agreement = otc_exchange.call().getAgreement(order_id, agreement_id)
-
-    assert agreement[0:5] == [_trader, _amount_make, _price, False, False]
-
-    web3.eth.defaultAccount = _trader
-    agreement = otc_exchange.call().getAgreement(order_id, agreement_id)
-
-    assert agreement[0:5] == [_trader, _amount_make, _price, False, False]
-
-    web3.eth.defaultAccount = _agent
-    agreement = otc_exchange.call().getAgreement(order_id, agreement_id)
-
-    assert agreement[0:5] == [_trader, _amount_make, _price, False, False]
-
-
 '''
 TEST_決済非承認（cancelAgreement）
 '''
@@ -1933,11 +1670,9 @@ def test_cancelAgreement_normal_1(web3, chain, users,
 
     personalinfo_register(web3, chain, personal_info, _issuer, _issuer)
     payment_gateway_register(web3, chain, payment_gateway, _issuer, _agent)
-    payment_gateway_approve(web3, chain, payment_gateway, _issuer, _agent)
 
     personalinfo_register(web3, chain, personal_info, _trader, _issuer)
     payment_gateway_register(web3, chain, payment_gateway, _trader, _agent)
-    payment_gateway_approve(web3, chain, payment_gateway, _trader, _agent)
 
     # 新規発行
     web3.eth.defaultAccount = _issuer
@@ -1950,14 +1685,14 @@ def test_cancelAgreement_normal_1(web3, chain, users,
     txn_hash = share_token.transact().transfer(otc_exchange.address, _amount_make)
     chain.wait.for_receipt(txn_hash)
 
-    # Make注文（売）：発行体
+    # Make注文：発行体
     web3.eth.defaultAccount = _issuer
     _price = 123
     txn_hash = otc_exchange.transact().createOrder(
         _trader, share_token.address, _amount_make, _price, _agent)
     chain.wait.for_receipt(txn_hash)
 
-    # Take注文（買）：投資家
+    # Take注文：投資家
     web3.eth.defaultAccount = _trader
     order_id = otc_exchange.call().latestOrderId()
     txn_hash = otc_exchange.transact().executeOrder(order_id)
@@ -2039,11 +1774,9 @@ def test_cancelAgreement_error_03(web3, chain, users,
 
     personalinfo_register(web3, chain, personal_info, _issuer, _issuer)
     payment_gateway_register(web3, chain, payment_gateway, _issuer, _agent)
-    payment_gateway_approve(web3, chain, payment_gateway, _issuer, _agent)
 
     personalinfo_register(web3, chain, personal_info, _trader, _issuer)
     payment_gateway_register(web3, chain, payment_gateway, _trader, _agent)
-    payment_gateway_approve(web3, chain, payment_gateway, _trader, _agent)
 
     # 新規発行
     web3.eth.defaultAccount = _issuer
@@ -2106,11 +1839,9 @@ def test_cancelAgreement_error_04(web3, chain, users,
 
     personalinfo_register(web3, chain, personal_info, _issuer, _issuer)
     payment_gateway_register(web3, chain, payment_gateway, _issuer, _agent)
-    payment_gateway_approve(web3, chain, payment_gateway, _issuer, _agent)
 
     personalinfo_register(web3, chain, personal_info, _trader, _issuer)
     payment_gateway_register(web3, chain, payment_gateway, _trader, _agent)
-    payment_gateway_approve(web3, chain, payment_gateway, _trader, _agent)
 
     # 新規発行
     web3.eth.defaultAccount = _issuer
@@ -2123,14 +1854,14 @@ def test_cancelAgreement_error_04(web3, chain, users,
     txn_hash = share_token.transact().transfer(otc_exchange.address, _amount_make)
     chain.wait.for_receipt(txn_hash)
 
-    # Make注文（売）：発行体
+    # Make注文：発行体
     web3.eth.defaultAccount = _issuer
     _price = 123
     txn_hash = otc_exchange.transact().createOrder(
         _trader, share_token.address, _amount_make, _price, _agent)
     chain.wait.for_receipt(txn_hash)
 
-    # Take注文（買）：投資家
+    # Take注文：投資家
     web3.eth.defaultAccount = _trader
     order_id = otc_exchange.call().latestOrderId()
     txn_hash = otc_exchange.transact().executeOrder(order_id)
@@ -2173,11 +1904,9 @@ def test_cancelAgreement_error_05(web3, chain, users,
 
     personalinfo_register(web3, chain, personal_info, _issuer, _issuer)
     payment_gateway_register(web3, chain, payment_gateway, _issuer, _agent)
-    payment_gateway_approve(web3, chain, payment_gateway, _issuer, _agent)
 
     personalinfo_register(web3, chain, personal_info, _trader, _issuer)
     payment_gateway_register(web3, chain, payment_gateway, _trader, _agent)
-    payment_gateway_approve(web3, chain, payment_gateway, _trader, _agent)
 
     # 新規発行
     web3.eth.defaultAccount = _issuer
@@ -2190,14 +1919,14 @@ def test_cancelAgreement_error_05(web3, chain, users,
     txn_hash = share_token.transact().transfer(otc_exchange.address, _amount_make)
     chain.wait.for_receipt(txn_hash)
 
-    # Make注文（売）：発行体
+    # Make注文：発行体
     web3.eth.defaultAccount = _issuer
     _price = 123
     txn_hash = otc_exchange.transact().createOrder(
         _trader, share_token.address, _amount_make, _price, _agent)
     chain.wait.for_receipt(txn_hash)
 
-    # Take注文（買）：投資家
+    # Take注文：投資家
     web3.eth.defaultAccount = _trader
     order_id = otc_exchange.call().latestOrderId()
     txn_hash = otc_exchange.transact().executeOrder(order_id)
@@ -2245,11 +1974,9 @@ def test_cancelAgreement_error_06(web3, chain, users,
 
     personalinfo_register(web3, chain, personal_info, _issuer, _issuer)
     payment_gateway_register(web3, chain, payment_gateway, _issuer, _agent)
-    payment_gateway_approve(web3, chain, payment_gateway, _issuer, _agent)
 
     personalinfo_register(web3, chain, personal_info, _trader, _issuer)
     payment_gateway_register(web3, chain, payment_gateway, _trader, _agent)
-    payment_gateway_approve(web3, chain, payment_gateway, _trader, _agent)
 
     # 新規発行
     web3.eth.defaultAccount = _issuer
@@ -2269,7 +1996,7 @@ def test_cancelAgreement_error_06(web3, chain, users,
         _trader, share_token.address, _amount_make, _price, _agent)
     chain.wait.for_receipt(txn_hash)
 
-    # Take注文（買）：投資家
+    # Take注文：投資家
     web3.eth.defaultAccount = _trader
     order_id = otc_exchange.call().latestOrderId()
     txn_hash = otc_exchange.transact().executeOrder(order_id)
@@ -2311,11 +2038,9 @@ def test_cancelAgreement_error_07(web3, chain, users,
 
     personalinfo_register(web3, chain, personal_info, _issuer, _issuer)
     payment_gateway_register(web3, chain, payment_gateway, _issuer, _agent)
-    payment_gateway_approve(web3, chain, payment_gateway, _issuer, _agent)
 
     personalinfo_register(web3, chain, personal_info, _trader, _issuer)
     payment_gateway_register(web3, chain, payment_gateway, _trader, _agent)
-    payment_gateway_approve(web3, chain, payment_gateway, _trader, _agent)
 
     # 新規発行
     web3.eth.defaultAccount = _issuer
@@ -2441,7 +2166,7 @@ def test_withdrawAll_normal_2(web3, chain, users, otc_exchange, personal_info):
 
 
 # 正常系3
-# ＜発行体＞新規発行 -> ＜発行体＞Make注文（売） ※売注文中状態
+# ＜発行体＞新規発行 -> ＜発行体＞Make注文 ※売注文中状態
 #  -> ＜発行体＞引き出し
 def test_withdrawAll_normal_3(web3, chain, users,
                               otc_exchange, personal_info, payment_gateway):
@@ -2451,7 +2176,6 @@ def test_withdrawAll_normal_3(web3, chain, users,
 
     personalinfo_register(web3, chain, personal_info, _issuer, _issuer)
     payment_gateway_register(web3, chain, payment_gateway, _issuer, _agent)
-    payment_gateway_approve(web3, chain, payment_gateway, _issuer, _agent)
 
     # 新規発行
     web3.eth.defaultAccount = _issuer
@@ -2497,11 +2221,9 @@ def test_withdrawAll_normal_4(web3, chain, users,
 
     personalinfo_register(web3, chain, personal_info, _issuer, _issuer)
     payment_gateway_register(web3, chain, payment_gateway, _issuer, _agent)
-    payment_gateway_approve(web3, chain, payment_gateway, _issuer, _agent)
 
     personalinfo_register(web3, chain, personal_info, _trader, _issuer)
     payment_gateway_register(web3, chain, payment_gateway, _trader, _agent)
-    payment_gateway_approve(web3, chain, payment_gateway, _trader, _agent)
 
     # 新規発行
     web3.eth.defaultAccount = _issuer
@@ -2522,7 +2244,7 @@ def test_withdrawAll_normal_4(web3, chain, users,
         _trader, share_token.address, _amount_make, _price, _agent)
     chain.wait.for_receipt(txn_hash)
 
-    # Take注文（買）：投資家
+    # Take注文：投資家
     web3.eth.defaultAccount = _trader
     order_id = otc_exchange.call().latestOrderId()
     txn_hash = otc_exchange.transact().executeOrder(order_id)
@@ -2546,7 +2268,7 @@ def test_withdrawAll_normal_4(web3, chain, users,
 
 
 # 正常系5
-# ＜発行体＞新規発行 -> ＜発行体＞Make注文（売） -> ＜投資家＞Take注文（買）
+# ＜発行体＞新規発行 -> ＜発行体＞Make注文 -> ＜投資家＞Take注文
 #  -> ＜決済業者＞決済承認 -> ＜発行体＞引き出し
 def test_withdrawAll_normal_5(web3, chain, users,
                               otc_exchange, personal_info, payment_gateway):
@@ -2556,11 +2278,9 @@ def test_withdrawAll_normal_5(web3, chain, users,
 
     personalinfo_register(web3, chain, personal_info, _issuer, _issuer)
     payment_gateway_register(web3, chain, payment_gateway, _issuer, _agent)
-    payment_gateway_approve(web3, chain, payment_gateway, _issuer, _agent)
 
     personalinfo_register(web3, chain, personal_info, _trader, _issuer)
     payment_gateway_register(web3, chain, payment_gateway, _trader, _agent)
-    payment_gateway_approve(web3, chain, payment_gateway, _trader, _agent)
 
     # 新規発行
     web3.eth.defaultAccount = _issuer
@@ -2581,7 +2301,7 @@ def test_withdrawAll_normal_5(web3, chain, users,
         _trader, share_token.address, _amount_make, _price, _agent)
     chain.wait.for_receipt(txn_hash)
 
-    # Take注文（買）：投資家
+    # Take注文：投資家
     web3.eth.defaultAccount = _trader
     order_id = otc_exchange.call().latestOrderId()
     txn_hash = otc_exchange.transact().executeOrder(order_id)
@@ -2715,7 +2435,6 @@ def test_updateExchange_normal_1(web3, chain, users,
 
     personalinfo_register(web3, chain, personal_info, issuer, issuer)
     payment_gateway_register(web3, chain, payment_gateway, issuer, agent)
-    payment_gateway_approve(web3, chain, payment_gateway, issuer, agent)
 
     # 新規発行
     web3.eth.defaultAccount = issuer

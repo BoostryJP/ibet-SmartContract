@@ -18,17 +18,6 @@ contract OTCExchangeStorage is Ownable, ExchangeStorageModel {
     // -------------------------------------------------------------------
     mapping(address => bool) public registeredAddress;
 
-    // ファンクション：アドレス認可
-    // オーナーのみ実行可能
-    function register(address _address, bool _auth) public onlyOwner() {
-        registeredAddress[_address] = _auth;
-    }
-
-    modifier onlyAuthorized() {
-        require(registeredAddress[msg.sender]);
-        _;
-    }
-
     // -------------------------------------------------------------------
     // 最新バージョンのExchangeコントラクトアドレス
     // -------------------------------------------------------------------
@@ -55,7 +44,6 @@ contract OTCExchangeStorage is Ownable, ExchangeStorageModel {
 
     function setBalance(address _account, address _token, uint256 _value)
         public
-        onlyAuthorized()
         returns (bool)
     {
         balances[_account][_token] = _value;
@@ -64,7 +52,6 @@ contract OTCExchangeStorage is Ownable, ExchangeStorageModel {
     function getBalance(address _account, address _token)
         public
         view
-        onlyAuthorized()
         returns (uint256)
     {
         return balances[_account][_token];
@@ -90,7 +77,6 @@ contract OTCExchangeStorage is Ownable, ExchangeStorageModel {
     function getCommitment(address _account, address _token)
         public
         view
-        onlyAuthorized()
         returns (uint256)
     {
         return commitments[_account][_token];
@@ -131,7 +117,6 @@ contract OTCExchangeStorage is Ownable, ExchangeStorageModel {
     function getOrder(uint256 _orderId)
         public
         view
-        onlyAuthorized()
         returns (ExchangeStorageModel.OTCOrder)
     {
         return orderBook[_orderId];
@@ -149,7 +134,7 @@ contract OTCExchangeStorage is Ownable, ExchangeStorageModel {
         latestOrderId = _latestOrderId;
     }
 
-    function getLatestOrderId() public view onlyAuthorized() returns (uint256) {
+    function getLatestOrderId() public view returns (uint256) {
         return latestOrderId;
     }
 
@@ -190,7 +175,6 @@ contract OTCExchangeStorage is Ownable, ExchangeStorageModel {
     function getAgreement(uint256 _orderId, uint256 _agreementId)
         public
         view
-        onlyAuthorized()
         returns (ExchangeStorageModel.OTCAgreement)
     {
         return agreements[_orderId][_agreementId];
@@ -212,7 +196,6 @@ contract OTCExchangeStorage is Ownable, ExchangeStorageModel {
     function getLatestAgreementId(uint256 _orderId)
         public
         view
-        onlyAuthorized()
         returns (uint256)
     {
         return latestAgreementIds[_orderId];
