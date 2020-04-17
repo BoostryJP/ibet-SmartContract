@@ -303,7 +303,7 @@ contract IbetOTCExchange is Ownable, ExchangeStorageModel {
     ) public returns (bool) {
         // <CHK>
         //  取引参加者チェック
-        if (regulatorServiceAddress != 0x0000000000000000000000000000000000000000) {
+        if (regulatorServiceAddress != address(0)) {
             require(RegulatorService(regulatorServiceAddress).check(msg.sender) == 0 || RegulatorService(regulatorServiceAddress).check(_counterpart) == 0);
         }
 
@@ -318,16 +318,8 @@ contract IbetOTCExchange is Ownable, ExchangeStorageModel {
         if (
             _amount == 0 ||
             balanceOf(msg.sender, _token) < _amount ||
-            PaymentGateway(paymentGatewayAddress).accountApproved(
-                msg.sender,
-                _agent
-            ) ==
-            false ||
-            PersonalInfo(personalInfoAddress).isRegistered(
-                msg.sender,
-                IbetStandardTokenInterface(_token).owner()
-            ) ==
-            false ||
+            PaymentGateway(paymentGatewayAddress).accountApproved(msg.sender, _agent) == false ||
+            PersonalInfo(personalInfoAddress).isRegistered(msg.sender, IbetStandardTokenInterface(_token).owner()) == false ||
             IbetStandardTokenInterface(_token).status() == false ||
             validateAgent(_agent) == false
         ) {
@@ -443,7 +435,7 @@ contract IbetOTCExchange is Ownable, ExchangeStorageModel {
 
         // <CHK>
         //  取引参加者チェック
-        if (regulatorServiceAddress != 0x0000000000000000000000000000000000000000) {
+        if (regulatorServiceAddress != address(0)) {
             require(RegulatorService(regulatorServiceAddress).check(msg.sender) == 0 || RegulatorService(regulatorServiceAddress).check(order.owner) == 0);
         }
 
@@ -451,9 +443,6 @@ contract IbetOTCExchange is Ownable, ExchangeStorageModel {
         // <CHK>
         // 取引関係者限定
         require(order.owner == msg.sender || order.counterpart == msg.sender || order.agent == msg.sender);
-    
-
-        require(order.owner != 0x0000000000000000000000000000000000000000);
 
         // <CHK>
         //  1) 元注文の発注者と同一のアドレスからの発注の場合
@@ -467,8 +456,7 @@ contract IbetOTCExchange is Ownable, ExchangeStorageModel {
             msg.sender == order.owner ||
             order.canceled == true ||
             PaymentGateway(paymentGatewayAddress).accountApproved(msg.sender,order.agent) == false ||
-            PersonalInfo(personalInfoAddress).isRegistered(
-                    msg.sender,IbetStandardTokenInterface(order.token).owner()) == false ||
+            PersonalInfo(personalInfoAddress).isRegistered(msg.sender,IbetStandardTokenInterface(order.token).owner()) == false ||
             isContract(msg.sender) == true ||
             IbetStandardTokenInterface(order.token).status() == false
             )
