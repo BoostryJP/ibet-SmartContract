@@ -377,11 +377,13 @@ contract IbetOTCExchange is Ownable, ExchangeStorageModel {
         //  1) 元注文の残注文数量が0の場合
         //  2) 注文がキャンセル済みの場合
         //  3) 元注文の発注者と、注文キャンセルの実施者が異なる場合
+        //  4) 取扱ステータスがFalseの場合
         //   -> REVERT
         if (
             order.amount == 0 ||
             order.canceled == true ||
-            order.owner != msg.sender
+            order.owner != msg.sender ||
+            IbetStandardTokenInterface(order.token).status() == false
         ) {
             revert();
         }
@@ -507,8 +509,14 @@ contract IbetOTCExchange is Ownable, ExchangeStorageModel {
         //  1) すでに決済承認済み（支払い済み）の場合
         //  2) すでに決済非承認済み（キャンセル済み）の場合
         //  3) 元注文で指定した決済業者ではない場合
+        //  4) 取扱ステータスがFalseの場合
         //   -> REVERT
-        if (agreement.paid || agreement.canceled || msg.sender != order.agent) {
+        if (
+            agreement.paid ||
+            agreement.canceled ||
+            msg.sender != order.agent ||
+            IbetStandardTokenInterface(order.token).status() == false
+            ) {
             revert();
         }
 
@@ -562,13 +570,15 @@ contract IbetOTCExchange is Ownable, ExchangeStorageModel {
             //  1) すでに決済承認済み（支払い済み）の場合
             //  2) すでに決済非承認済み（キャンセル済み）の場合
             //  3) msg.senderが、 決済代行（agent）、発注者（owner）、約定相手（counterpart）以外の場合
+            //  4) 取扱ステータスがFalseの場合
             //   -> REVERT
             if (
                 agreement.paid ||
                 agreement.canceled ||
                 (msg.sender != order.agent &&
                     msg.sender != order.owner &&
-                    msg.sender != agreement.counterpart)
+                    msg.sender != agreement.counterpart) ||
+                IbetStandardTokenInterface(order.token).status() == false
             ) {
                 revert();
             }
@@ -582,7 +592,8 @@ contract IbetOTCExchange is Ownable, ExchangeStorageModel {
             if (
                 agreement.paid ||
                 agreement.canceled ||
-                msg.sender != order.agent
+                msg.sender != order.agent ||
+                IbetStandardTokenInterface(order.token).status() == false
             ) {
                 revert();
             }
@@ -626,8 +637,9 @@ contract IbetOTCExchange is Ownable, ExchangeStorageModel {
         uint256 balance = balanceOf(msg.sender, _token);
 
         // <CHK>
-        //  残高がゼロの場合、REVERT
-        if (balance == 0) {
+        //  1) 残高がゼロの場合、REVERT
+        //  2) 取扱ステータスがFalseの場合
+        if (balance == 0 || IbetStandardTokenInterface(_token).status() == false) {
             revert();
         }
 

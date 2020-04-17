@@ -734,6 +734,61 @@ def test_cancelOrder_error_4(web3, chain, users,
     assert balance == deploy_args[5] - _amount
     assert commitment == _amount
 
+# エラー系5
+# トークンのstatusが取扱不可となっている場合
+def test_cancelOrder_error_5(web3, chain, users,
+                               otc_exchange, personal_info, payment_gateway):
+    issuer = users['issuer']
+    trader = users['trader']
+    other = users['admin']
+    agent = users['agent']
+
+    personalinfo_register(web3, chain, personal_info, issuer, issuer)
+    payment_gateway_register(web3, chain, payment_gateway, issuer, agent)
+
+    # 新規発行
+    web3.eth.defaultAccount = issuer
+    share_token, deploy_args = utils. \
+        issue_share_token(web3, chain, users, otc_exchange.address, personal_info.address)
+
+    # Exchangeへのデポジット
+    web3.eth.defaultAccount = issuer
+    _amount = 100
+    txn_hash = share_token.transact().transfer(otc_exchange.address, _amount)
+    chain.wait.for_receipt(txn_hash)
+
+    # 新規注文
+    web3.eth.defaultAccount = issuer
+    _price = 123
+    txn_hash = otc_exchange.transact().createOrder(
+        trader, share_token.address, _amount, _price, agent)
+    chain.wait.for_receipt(txn_hash)
+
+    # トークンの取扱不可
+    web3.eth.defaultAccount = issuer
+    chain.wait.for_receipt(share_token.transact().setStatus(False))
+
+    # 注文キャンセル
+    web3.eth.defaultAccount = other
+    order_id = otc_exchange.call().latestOrderId()
+    try:
+        txn_hash = otc_exchange.transact().cancelOrder(order_id)  # エラーになる
+        chain.wait.for_receipt(txn_hash)
+    except ValueError:
+        pass
+
+    # assert
+    web3.eth.defaultAccount = issuer
+    orderbook = otc_exchange.call().getOrder(order_id)
+    balance = share_token.call().balanceOf(issuer)
+    commitment = otc_exchange.call().commitmentOf(issuer, share_token.address)
+
+    assert orderbook == [
+        issuer, trader, to_checksum_address(share_token.address), _amount, _price, agent, False
+    ]
+    assert balance == deploy_args[5] - _amount
+    assert commitment == _amount
+
 
 '''
 TEST_Take注文（executeOrder）
@@ -1620,6 +1675,74 @@ def test_confirmAgreement_error_07(web3, chain, users,
     assert commitment == 0
 
 
+# エラー系8
+# トークンの取扱ステータスがFalse（不可）の場合
+def test_confirmAgreement_error_08(web3, chain, users,
+                                  otc_exchange, personal_info, payment_gateway):
+    _issuer = users['issuer']
+    _trader = users['trader']
+    _agent = users['agent']
+
+    personalinfo_register(web3, chain, personal_info, _issuer, _issuer)
+    payment_gateway_register(web3, chain, payment_gateway, _issuer, _agent)
+
+    personalinfo_register(web3, chain, personal_info, _trader, _issuer)
+    payment_gateway_register(web3, chain, payment_gateway, _trader, _agent)
+
+    # 新規発行
+    web3.eth.defaultAccount = _issuer
+    share_token, deploy_args = utils. \
+        issue_share_token(web3, chain, users, otc_exchange.address, personal_info.address)
+
+    # Exchangeへのデポジット：発行体
+    web3.eth.defaultAccount = _issuer
+    _amount_make = 100
+    txn_hash = share_token.transact().transfer(otc_exchange.address, _amount_make)
+    chain.wait.for_receipt(txn_hash)
+
+    # Make注文：発行体
+    web3.eth.defaultAccount = _issuer
+    _price = 123
+    txn_hash = otc_exchange.transact().createOrder(
+        _trader, share_token.address, _amount_make, _price, _agent)
+    chain.wait.for_receipt(txn_hash)
+
+    # Take注文：投資家
+    web3.eth.defaultAccount = _trader
+    order_id = otc_exchange.call().latestOrderId()
+    txn_hash = otc_exchange.transact().executeOrder(order_id)
+    chain.wait.for_receipt(txn_hash)
+
+    agreement_id = otc_exchange.call().latestAgreementId(order_id)
+
+    # トークンの取扱不可
+    web3.eth.defaultAccount = _issuer
+    chain.wait.for_receipt(share_token.transact().setStatus(False))
+
+    # 決済承認：決済業者
+    web3.eth.defaultAccount = _agent
+    try:
+        txn_hash = otc_exchange.transact().confirmAgreement(order_id, agreement_id)  # エラーになる
+        chain.wait.for_receipt(txn_hash)
+    except ValueError:
+        pass
+
+    orderbook = otc_exchange.call().getOrder(order_id)
+    agreement = otc_exchange.call().getAgreement(order_id, agreement_id)
+    balance_maker = share_token.call().balanceOf(_issuer)
+    balance_taker = share_token.call().balanceOf(_trader)
+    commitment = otc_exchange.call().commitmentOf(_issuer, share_token.address)
+
+    assert orderbook == [
+        _issuer, _trader, to_checksum_address(share_token.address),
+        0, _price, _agent, False
+    ]
+    assert agreement[0:5] == [_trader, _amount_make, _price, False, False]
+    assert balance_maker == deploy_args[5] - _amount_make
+    assert balance_taker == 0
+    assert commitment == _amount_make
+
+
 '''
 TEST_getAgreement
 '''
@@ -2098,6 +2221,76 @@ def test_cancelAgreement_error_07(web3, chain, users,
     assert commitment == 0
 
 
+# エラー系8
+# トークンが取扱不可の場合
+def test_cancelAgreement_error_08(web3, chain, users,
+                                 otc_exchange, personal_info, payment_gateway):
+    _issuer = users['issuer']
+    _trader = users['trader']
+    _agent = users['agent']
+
+    personalinfo_register(web3, chain, personal_info, _issuer, _issuer)
+    payment_gateway_register(web3, chain, payment_gateway, _issuer, _agent)
+
+    personalinfo_register(web3, chain, personal_info, _trader, _issuer)
+    payment_gateway_register(web3, chain, payment_gateway, _trader, _agent)
+
+    # 新規発行
+    web3.eth.defaultAccount = _issuer
+    share_token, deploy_args = utils. \
+        issue_share_token(web3, chain, users, otc_exchange.address, personal_info.address)
+
+    # Exchangeへのデポジット：発行体
+    web3.eth.defaultAccount = _issuer
+    _amount_make = 100
+    txn_hash = share_token.transact().transfer(otc_exchange.address, _amount_make)
+    chain.wait.for_receipt(txn_hash)
+
+    # Make注文：発行体
+    web3.eth.defaultAccount = _issuer
+    _price = 123
+    txn_hash = otc_exchange.transact().createOrder(
+        _trader, share_token.address, _amount_make, _price, _agent)
+    chain.wait.for_receipt(txn_hash)
+
+    # Take注文：投資家
+    web3.eth.defaultAccount = _trader
+    order_id = otc_exchange.call().latestOrderId()
+    txn_hash = otc_exchange.transact().executeOrder(order_id)
+    chain.wait.for_receipt(txn_hash)
+
+    agreement_id = otc_exchange.call().latestAgreementId(order_id)
+
+    # トークンの取扱不可
+    web3.eth.defaultAccount = _issuer
+    chain.wait.for_receipt(share_token.transact().setStatus(False))
+
+    agreement = otc_exchange.call().getAgreement(order_id, agreement_id)
+
+    # 決済非承認
+    web3.eth.defaultAccount = _agent
+    try:
+        txn_hash = otc_exchange.transact().cancelAgreement(order_id, agreement_id)  # エラーになる
+        chain.wait.for_receipt(txn_hash)
+    except ValueError:
+        pass
+
+    orderbook = otc_exchange.call().getOrder(order_id)
+    agreement = otc_exchange.call().getAgreement(order_id, agreement_id)
+    balance_maker = share_token.call().balanceOf(_issuer)
+    balance_taker = share_token.call().balanceOf(_trader)
+    commitment = otc_exchange.call().commitmentOf(_issuer, share_token.address)
+
+    assert orderbook == [
+        _issuer, _trader, to_checksum_address(share_token.address),
+        0, _price, _agent, False
+    ]
+    assert agreement[0:5] == [_trader, _amount_make, _price, False, False]
+    assert balance_maker == deploy_args[5] - _amount_make
+    assert balance_taker == 0
+    assert commitment == _amount_make
+
+
 '''
 TEST_引き出し（withdrawAll）
 '''
@@ -2406,6 +2599,44 @@ def test_withdrawAll_error_2_2(web3, chain, users, otc_exchange, personal_info):
 
     # 引き出し：異なるアドレス
     web3.eth.defaultAccount = _trader
+    try:
+        txn_hash = otc_exchange.transact().withdrawAll(share_token.address)  # エラーになる
+        chain.wait.for_receipt(txn_hash)
+    except ValueError:
+        pass
+
+    balance_exchange = otc_exchange.call().balanceOf(_issuer, share_token.address)
+    balance_token = share_token.call().balanceOf(_issuer)
+
+    assert balance_exchange == _amount_transfer
+    assert balance_token == deploy_args[5] - _amount_transfer
+
+
+# エラー系3
+# トークンの取扱が不可の場合
+# ＜発行体＞新規発行 -> ＜発行体＞デポジット -> 異なるアドレスからの引き出し
+def test_withdrawAll_error_3(web3, chain, users, otc_exchange, personal_info):
+    _issuer = users['issuer']
+    _trader = users['trader']
+
+    # 新規発行
+    web3.eth.defaultAccount = _issuer
+    share_token, deploy_args = utils. \
+        issue_share_token(web3, chain, users, otc_exchange.address, personal_info.address)
+
+    # Exchangeへのデポジット：発行体
+    web3.eth.defaultAccount = _issuer
+    _amount_transfer = 100
+    txn_hash = share_token.transact().transfer(
+        otc_exchange.address, _amount_transfer)
+    chain.wait.for_receipt(txn_hash)
+
+     # トークンの取扱不可
+    web3.eth.defaultAccount = _issuer
+    chain.wait.for_receipt(share_token.transact().setStatus(False))
+
+    # 引き出し
+    web3.eth.defaultAccount = _issuer
     try:
         txn_hash = otc_exchange.transact().withdrawAll(share_token.address)  # エラーになる
         chain.wait.for_receipt(txn_hash)
