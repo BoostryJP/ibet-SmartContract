@@ -4,6 +4,7 @@ from eth_utils import to_checksum_address
 
 zero_address = '0x0000000000000000000000000000000000000000'
 
+
 def init_args(exchange_address, personal_info_address):
     name = 'test_share'
     symbol = 'IBS'
@@ -12,7 +13,7 @@ def init_args(exchange_address, personal_info_address):
     devidends = 1000
     devidend_record_date = '20200829'
     devidend_payment_date = '20200831'
-    cansellation_date = '20191231'
+    cancellation_date = '20191231'
     contact_information = 'some_contact_information'
     privacy_policy = 'some_privacy_policy'
     memo = 'some_memo'
@@ -20,7 +21,7 @@ def init_args(exchange_address, personal_info_address):
 
     deploy_args = [
         name, symbol, exchange_address, personal_info_address, issue_price, total_supply,
-        devidends, devidend_record_date, devidend_payment_date, cansellation_date,
+        devidends, devidend_record_date, devidend_payment_date, cancellation_date,
         contact_information, privacy_policy, memo, transferable
     ]
     return deploy_args
@@ -49,8 +50,8 @@ def test_deploy_normal_1(web3, chain, users, share_exchange, personal_info):
     personal_info_address = share_contract.call().personalInfoAddress()
     issue_price = share_contract.call().issuePrice()
     total_supply = share_contract.call().totalSupply()
-    dividend_infomation = share_contract.call().dividendInfomation()
-    cansellation_date = share_contract.call().cansellationDate()
+    dividend_information = share_contract.call().dividendInformation()
+    cancellation_date = share_contract.call().cancellationDate()
     contact_information = share_contract.call().contactInformation()
     privacy_policy = share_contract.call().privacyPolicy()
     memo = share_contract.call().memo()
@@ -63,10 +64,10 @@ def test_deploy_normal_1(web3, chain, users, share_exchange, personal_info):
     assert personal_info_address == to_checksum_address(deploy_args[3])
     assert issue_price == deploy_args[4]
     assert total_supply == deploy_args[5]
-    assert dividend_infomation[0] == deploy_args[6]
-    assert dividend_infomation[1] == deploy_args[7]
-    assert dividend_infomation[2] == deploy_args[8]
-    assert cansellation_date == deploy_args[9]
+    assert dividend_information[0] == deploy_args[6]
+    assert dividend_information[1] == deploy_args[7]
+    assert dividend_information[2] == deploy_args[8]
+    assert cancellation_date == deploy_args[9]
     assert contact_information == deploy_args[10]
     assert privacy_policy == deploy_args[11]
     assert memo == deploy_args[12]
@@ -145,7 +146,7 @@ def test_deploy_error_9(chain, share_exchange, personal_info):
         chain.provider.get_or_deploy_contract('IbetShare', deploy_args=deploy_args)
 
 
-# エラー系7: 入力値の型誤り（cansellationDate）
+# エラー系7: 入力値の型誤り（cancellationDate）
 def test_deploy_error_10(chain, share_exchange, personal_info):
     deploy_args = init_args(share_exchange.address, personal_info.address)
     deploy_args[9] = 20191231
@@ -324,12 +325,12 @@ def test_setPersonalInfoAddress_error_2(web3, chain, users, share_exchange, pers
 
 
 '''
-TEST_配当情報の更新（setDividendInfomation）
+TEST_配当情報の更新（setDividendInformation）
 '''
 
 
 # 正常系1: 発行（デプロイ） -> 修正
-def test_setDividendInfomation_normal_1(web3, chain, users, share_exchange, personal_info):
+def test_setDividendInformation_normal_1(web3, chain, users, share_exchange, personal_info):
     issuer = users['issuer']
 
     # 株式トークン新規発行
@@ -339,17 +340,17 @@ def test_setDividendInfomation_normal_1(web3, chain, users, share_exchange, pers
 
     # 修正 -> Success
     web3.eth.defaultAccount = issuer
-    txn_hash = share_token.transact().setDividendInfomation(22000, '20200829', '20200831')
+    txn_hash = share_token.transact().setDividendInformation(22000, '20200829', '20200831')
     chain.wait.for_receipt(txn_hash)
 
-    dividend_infomation = share_token.call().dividendInfomation()
-    assert dividend_infomation[0] == 22000
-    assert dividend_infomation[1] == '20200829'
-    assert dividend_infomation[2] == '20200831'
+    dividend_information = share_token.call().dividendInformation()
+    assert dividend_information[0] == 22000
+    assert dividend_information[1] == '20200829'
+    assert dividend_information[2] == '20200831'
 
 
 # エラー系1: 入力値の型誤り
-def test_setDividendInfomation_error_1(web3, chain, users, share_exchange, personal_info):
+def test_setDividendInformation_error_1(web3, chain, users, share_exchange, personal_info):
     issuer = users['issuer']
 
     # 株式トークン新規発行
@@ -359,15 +360,15 @@ def test_setDividendInfomation_error_1(web3, chain, users, share_exchange, perso
 
     web3.eth.defaultAccount = issuer
     with pytest.raises(TypeError):
-        share_token.transact().setDividendInfomation("1234", '20200829', '20200831')
+        share_token.transact().setDividendInformation("1234", '20200829', '20200831')
     with pytest.raises(TypeError):
-        share_token.transact().setDividendInfomation(1234, 20200829, '20200831')
+        share_token.transact().setDividendInformation(1234, 20200829, '20200831')
     with pytest.raises(TypeError):
-        share_token.transact().setDividendInfomation(1234, '20200829', 20200831)
+        share_token.transact().setDividendInformation(1234, '20200829', 20200831)
 
 
 # エラー系2: 権限エラー
-def test_setDividendInfomation_error_2(web3, chain, users, share_exchange, personal_info):
+def test_setDividendInformation_error_2(web3, chain, users, share_exchange, personal_info):
     issuer = users['issuer']
     other = users['admin']
 
@@ -379,22 +380,23 @@ def test_setDividendInfomation_error_2(web3, chain, users, share_exchange, perso
     # Owner以外のアドレスから更新 -> Failure
     web3.eth.defaultAccount = other
     try:
-        chain.wait.for_receipt(share_token.transact().setDividendInfomation(33000, '20200830', '20200901'))
+        chain.wait.for_receipt(share_token.transact().setDividendInformation(33000, '20200830', '20200901'))
     except ValueError:
         pass
 
-    dividend_infomation = share_token.call().dividendInfomation()
-    assert dividend_infomation[0] == 1000
-    assert dividend_infomation[1] == '20200830'
-    assert dividend_infomation[2] == '20200831'
+    dividend_information = share_token.call().dividendInformation()
+    assert dividend_information[0] == 1000
+    assert dividend_information[1] == '20200830'
+    assert dividend_information[2] == '20200831'
+
 
 '''
-TEST_消却日の更新（setCansellationDate）
+TEST_消却日の更新（setCancellationDate）
 '''
 
 
 # 正常系1: 発行（デプロイ） -> 修正
-def test_setCansellationDate_normal_1(web3, chain, users, share_exchange, personal_info):
+def test_setCancellationDate_normal_1(web3, chain, users, share_exchange, personal_info):
     issuer = users['issuer']
 
     # 株式トークン新規発行
@@ -404,15 +406,15 @@ def test_setCansellationDate_normal_1(web3, chain, users, share_exchange, person
 
     # 修正 -> Success
     web3.eth.defaultAccount = issuer
-    txn_hash = share_token.transact().setCansellationDate('20200831')
+    txn_hash = share_token.transact().setCancellationDate('20200831')
     chain.wait.for_receipt(txn_hash)
 
-    cansellation_date = share_token.call().cansellationDate()
-    assert cansellation_date == '20200831'
+    cancellation_date = share_token.call().cancellationDate()
+    assert cancellation_date == '20200831'
 
 
 # エラー系1: 入力値の型誤り
-def test_setCansellationDate_error_1(web3, chain, users, share_exchange, personal_info):
+def test_setCancellationDate_error_1(web3, chain, users, share_exchange, personal_info):
     issuer = users['issuer']
 
     # 株式トークン新規発行
@@ -422,11 +424,11 @@ def test_setCansellationDate_error_1(web3, chain, users, share_exchange, persona
 
     web3.eth.defaultAccount = issuer
     with pytest.raises(TypeError):
-        share_token.transact().setCansellationDate(1234)
+        share_token.transact().setCancellationDate(1234)
 
 
 # エラー系2: 権限エラー
-def test_setCansellationDate_error_2(web3, chain, users, share_exchange, personal_info):
+def test_setCancellationDate_error_2(web3, chain, users, share_exchange, personal_info):
     issuer = users['issuer']
     other = users['admin']
 
@@ -438,12 +440,12 @@ def test_setCansellationDate_error_2(web3, chain, users, share_exchange, persona
     # Owner以外のアドレスから更新 -> Failure
     web3.eth.defaultAccount = other
     try:
-        chain.wait.for_receipt(share_token.transact().setCansellationDate('20200930'))
+        chain.wait.for_receipt(share_token.transact().setCancellationDate('20200930'))
     except ValueError:
         pass
 
-    cansellation_date = share_token.call().cansellationDate()
-    assert cansellation_date == '20211231'
+    cancellation_date = share_token.call().cancellationDate()
+    assert cancellation_date == '20211231'
 
 
 '''
@@ -938,10 +940,9 @@ def test_authorize_normal_1(web3, chain, users, share_exchange, personal_info):
     txn_hash = share_token.transact().authorize(trader, True)
     chain.wait.for_receipt(txn_hash)
 
-
-    auth_trader= share_token.call().authorizedAddress(trader)
+    auth_trader = share_token.call().authorizedAddress(trader)
     auth_issuer = share_token.call().authorizedAddress(issuer)
-    assert auth_trader== True
+    assert auth_trader == True
     assert auth_issuer == False
 
     # 変更
@@ -961,15 +962,13 @@ def test_authorize_error_1(web3, chain, users, share_exchange, personal_info):
     share_token, deploy_args = utils. \
         issue_share_token(web3, chain, users, share_exchange.address, personal_info.address)
 
-    account_address = 1234
-
     # アドレス指定誤り
     with pytest.raises(TypeError):
         share_token.transact().authorize('0x1234', True)
 
     # アドレス指定誤り
     with pytest.raises(TypeError):
-        share_token.transact().authorize(issuer, 'True')     
+        share_token.transact().authorize(issuer, 'True')
 
 
 '''
@@ -985,12 +984,11 @@ def test_lock_normal_1(web3, chain, users, share_exchange, personal_info):
     transfer_amount = 30
     lock_amount = 10
 
-
     # 株式トークン新規発行
     web3.eth.defaultAccount = issuer
     share_token, deploy_args = utils. \
         issue_share_token(web3, chain, users, share_exchange.address, personal_info.address)
-    
+
     # 投資家に移管
     txn_hash = share_token.transact().transferFrom(issuer, trader, transfer_amount)
     chain.wait.for_receipt(txn_hash)
@@ -1010,6 +1008,7 @@ def test_lock_normal_1(web3, chain, users, share_exchange, personal_info):
     assert trader_amount == transfer_amount - lock_amount
     assert trader_locked_amount == lock_amount
 
+
 # 正常系2: 発行体に対するロック（商品コントラクト作成 -> 移管 -> ロック）
 def test_lock_normal_2(web3, chain, users, share_exchange, personal_info):
     issuer = users['issuer']
@@ -1022,7 +1021,7 @@ def test_lock_normal_2(web3, chain, users, share_exchange, personal_info):
     web3.eth.defaultAccount = issuer
     share_token, deploy_args = utils. \
         issue_share_token(web3, chain, users, share_exchange.address, personal_info.address)
-    
+
     # 投資家に移管
     txn_hash = share_token.transact().transferFrom(issuer, trader, transfer_amount)
     chain.wait.for_receipt(txn_hash)
@@ -1038,6 +1037,7 @@ def test_lock_normal_2(web3, chain, users, share_exchange, personal_info):
     assert trader_amount == transfer_amount - lock_amount
     assert trader_locked_amount == lock_amount
 
+
 # 異常系1: 入力値の型誤り
 def test_lock_error_1(web3, chain, users, share_exchange, personal_info):
     issuer = users['issuer']
@@ -1050,7 +1050,7 @@ def test_lock_error_1(web3, chain, users, share_exchange, personal_info):
     web3.eth.defaultAccount = issuer
     share_token, deploy_args = utils. \
         issue_share_token(web3, chain, users, share_exchange.address, personal_info.address)
-    
+
     # 投資家に移管
     txn_hash = share_token.transact().transferFrom(issuer, trader, transfer_amount)
     chain.wait.for_receipt(txn_hash)
@@ -1063,12 +1063,13 @@ def test_lock_error_1(web3, chain, users, share_exchange, personal_info):
     # 数量指定誤り
     with pytest.raises(TypeError):
         share_token.transact().lock(issuer, '10')
-    
+
     trader_amount = share_token.call().balanceOf(trader)
     trader_locked_amount = share_token.call().lockedOf(issuer, trader)
 
     assert trader_amount == transfer_amount
     assert trader_locked_amount == 0
+
 
 # 異常系2: 数量超過
 def test_lock_error_2(web3, chain, users, share_exchange, personal_info):
@@ -1082,7 +1083,7 @@ def test_lock_error_2(web3, chain, users, share_exchange, personal_info):
     web3.eth.defaultAccount = issuer
     share_token, deploy_args = utils. \
         issue_share_token(web3, chain, users, share_exchange.address, personal_info.address)
-    
+
     # 投資家に移管
     txn_hash = share_token.transact().transferFrom(issuer, trader, transfer_amount)
     chain.wait.for_receipt(txn_hash)
@@ -1097,6 +1098,7 @@ def test_lock_error_2(web3, chain, users, share_exchange, personal_info):
     assert trader_amount == transfer_amount
     assert trader_locked_amount == 0
 
+
 # 異常系3: 認可外アドレスに対するlock（認可はあるがFalse）
 def test_lock_error_3(web3, chain, users, share_exchange, personal_info):
     issuer = users['issuer']
@@ -1109,7 +1111,7 @@ def test_lock_error_3(web3, chain, users, share_exchange, personal_info):
     web3.eth.defaultAccount = issuer
     share_token, deploy_args = utils. \
         issue_share_token(web3, chain, users, share_exchange.address, personal_info.address)
-    
+
     # 投資家に移管
     txn_hash = share_token.transact().transferFrom(issuer, trader, transfer_amount)
     chain.wait.for_receipt(txn_hash)
@@ -1121,13 +1123,14 @@ def test_lock_error_3(web3, chain, users, share_exchange, personal_info):
     # agentに対してtraderが自身の保有をロック
     web3.eth.defaultAccount = trader
     with pytest.raises(ValueError):
-        txn_hash = share_token.transact().lock(agent, lock_amount)
+        share_token.transact().lock(agent, lock_amount)
 
     trader_amount = share_token.call().balanceOf(trader)
     trader_locked_amount = share_token.call().lockedOf(agent, trader)
 
     assert trader_amount == transfer_amount
     assert trader_locked_amount == 0
+
 
 # 異常系4: 認可外アドレスに対するlock（認可が存在しない）
 def test_lock_error_4(web3, chain, users, share_exchange, personal_info):
@@ -1141,7 +1144,7 @@ def test_lock_error_4(web3, chain, users, share_exchange, personal_info):
     web3.eth.defaultAccount = issuer
     share_token, deploy_args = utils. \
         issue_share_token(web3, chain, users, share_exchange.address, personal_info.address)
-    
+
     # 投資家に移管
     txn_hash = share_token.transact().transferFrom(issuer, trader, transfer_amount)
     chain.wait.for_receipt(txn_hash)
@@ -1149,7 +1152,7 @@ def test_lock_error_4(web3, chain, users, share_exchange, personal_info):
     # agentに対してtraderが自身の保有をロック
     web3.eth.defaultAccount = trader
     with pytest.raises(ValueError):
-        txn_hash = share_token.transact().lock(agent, lock_amount)
+        share_token.transact().lock(agent, lock_amount)
 
     trader_amount = share_token.call().balanceOf(trader)
     trader_locked_amount = share_token.call().lockedOf(agent, trader)
@@ -1174,7 +1177,7 @@ def test_lockedOf_error_1(web3, chain, users, share_exchange, personal_info):
     web3.eth.defaultAccount = issuer
     share_token, deploy_args = utils. \
         issue_share_token(web3, chain, users, share_exchange.address, personal_info.address)
-        
+
     # 投資家に移管
     txn_hash = share_token.transact().transferFrom(issuer, trader, transfer_amount)
     chain.wait.for_receipt(txn_hash)
@@ -1211,7 +1214,7 @@ def test_unlock_normal_1(web3, chain, users, share_exchange, personal_info):
     web3.eth.defaultAccount = issuer
     share_token, deploy_args = utils. \
         issue_share_token(web3, chain, users, share_exchange.address, personal_info.address)
-    
+
     # 投資家に移管
     txn_hash = share_token.transact().transferFrom(issuer, trader, transfer_amount)
     chain.wait.for_receipt(txn_hash)
@@ -1242,6 +1245,7 @@ def test_unlock_normal_1(web3, chain, users, share_exchange, personal_info):
     assert agent_amount == unlock_amount
     assert trader_locked_amount == lock_amount - unlock_amount - unlock_amount
 
+
 # 正常系2: 発行体によるアンロック（商品コントラクト作成 -> 移管 -> 認可 -> ロック -> アンロック）
 def test_unlock_normal_2(web3, chain, users, share_exchange, personal_info):
     issuer = users['issuer']
@@ -1255,7 +1259,7 @@ def test_unlock_normal_2(web3, chain, users, share_exchange, personal_info):
     web3.eth.defaultAccount = issuer
     share_token, deploy_args = utils. \
         issue_share_token(web3, chain, users, share_exchange.address, personal_info.address)
-    
+
     # 投資家に移管
     txn_hash = share_token.transact().transferFrom(issuer, trader, transfer_amount)
     chain.wait.for_receipt(txn_hash)
@@ -1282,6 +1286,7 @@ def test_unlock_normal_2(web3, chain, users, share_exchange, personal_info):
     assert issuer_amount == deploy_args[5] - transfer_amount + unlock_amount
     assert trader_locked_amount == lock_amount - unlock_amount - unlock_amount
 
+
 # 異常系1: 入力値の型誤り
 def test_unlock_error_1(web3, chain, users, share_exchange, personal_info):
     issuer = users['issuer']
@@ -1295,7 +1300,7 @@ def test_unlock_error_1(web3, chain, users, share_exchange, personal_info):
     web3.eth.defaultAccount = issuer
     share_token, deploy_args = utils. \
         issue_share_token(web3, chain, users, share_exchange.address, personal_info.address)
-    
+
     # 投資家に移管
     txn_hash = share_token.transact().transferFrom(issuer, trader, transfer_amount)
     chain.wait.for_receipt(txn_hash)
@@ -1323,6 +1328,7 @@ def test_unlock_error_1(web3, chain, users, share_exchange, personal_info):
     assert trader_amount == transfer_amount - lock_amount
     assert trader_locked_amount == lock_amount
 
+
 # 異常系2: 数量超過
 def test_unlock_error_2(web3, chain, users, share_exchange, personal_info):
     issuer = users['issuer']
@@ -1336,7 +1342,7 @@ def test_unlock_error_2(web3, chain, users, share_exchange, personal_info):
     web3.eth.defaultAccount = issuer
     share_token, deploy_args = utils. \
         issue_share_token(web3, chain, users, share_exchange.address, personal_info.address)
-    
+
     # 投資家に移管
     txn_hash = share_token.transact().transferFrom(issuer, trader, transfer_amount)
     chain.wait.for_receipt(txn_hash)
@@ -1357,6 +1363,7 @@ def test_unlock_error_2(web3, chain, users, share_exchange, personal_info):
     assert trader_amount == transfer_amount - lock_amount
     assert trader_locked_amount == lock_amount
 
+
 # 異常系3: 認可外アドレスによるunlock（認可はあるがFalse）
 def test_unlock_error_3(web3, chain, users, share_exchange, personal_info):
     issuer = users['issuer']
@@ -1367,12 +1374,11 @@ def test_unlock_error_3(web3, chain, users, share_exchange, personal_info):
     lock_amount = 10
     unlock_amount = 3
 
-
     # 株式トークン新規発行
     web3.eth.defaultAccount = issuer
     share_token, deploy_args = utils. \
         issue_share_token(web3, chain, users, share_exchange.address, personal_info.address)
-    
+
     # 投資家に移管
     txn_hash = share_token.transact().transferFrom(issuer, trader, transfer_amount)
     chain.wait.for_receipt(txn_hash)
@@ -1397,6 +1403,7 @@ def test_unlock_error_3(web3, chain, users, share_exchange, personal_info):
     assert trader_amount == transfer_amount - lock_amount
     assert trader_locked_amount == lock_amount
 
+
 # 異常系4: 認可外アドレスによるunlock（認可がない）
 def test_unlock_error_4(web3, chain, users, share_exchange, personal_info):
     issuer = users['issuer']
@@ -1407,12 +1414,11 @@ def test_unlock_error_4(web3, chain, users, share_exchange, personal_info):
     lock_amount = 10
     unlock_amount = 3
 
-
     # 株式トークン新規発行
     web3.eth.defaultAccount = issuer
     share_token, deploy_args = utils. \
         issue_share_token(web3, chain, users, share_exchange.address, personal_info.address)
-    
+
     # 投資家に移管
     txn_hash = share_token.transact().transferFrom(issuer, trader, transfer_amount)
     chain.wait.for_receipt(txn_hash)
@@ -1871,6 +1877,7 @@ def test_applyForOffering_normal_1(web3, chain, users):
     assert application[0] == 0
     assert application[1] == ''
 
+
 # 正常系2
 #   発行：発行体 -> 投資家：募集申込
 def test_applyForOffering_normal_2(web3, chain, users, personal_info):
@@ -2040,7 +2047,7 @@ def test_issueFrom_normal_1(web3, chain, users):
 
 
 # 正常系2: 発行 -> 増資（投資家想定のEOAアドレスのアドレスを増資）
-def test_issueFrom_normal_2(web3, chain, users, share_exchange):
+def test_issueFrom_normal_2(web3, chain, users):
     issuer = users['issuer']
     trader = users['trader']
     value = 10
@@ -2062,6 +2069,7 @@ def test_issueFrom_normal_2(web3, chain, users, share_exchange):
     assert balance_issuer == deploy_args[5]
     assert balance_trader == value
 
+
 # 正常系3: 発行 -> 譲渡 -> ロック -> ロック済み数量の増資（from issuer）
 def test_issueFrom_normal_3(web3, chain, users, share_exchange):
     issuer = users['issuer']
@@ -2076,7 +2084,7 @@ def test_issueFrom_normal_3(web3, chain, users, share_exchange):
     web3.eth.defaultAccount = issuer
     share_token, deploy_args = utils. \
         issue_share_token(web3, chain, users, share_exchange.address, zero_address)
-    
+
     # 投資家に移管
     txn_hash = share_token.transact().transferFrom(issuer, trader, transfer_amount)
     chain.wait.for_receipt(txn_hash)
@@ -2108,7 +2116,7 @@ def test_issueFrom_error_1(web3, chain, users):
 
     # String
     with pytest.raises(TypeError):
-        share_token.transact().issueFrom(issuer, zero_address,  "1")
+        share_token.transact().issueFrom(issuer, zero_address, "1")
 
     # 小数
     with pytest.raises(TypeError):
@@ -2139,6 +2147,7 @@ def test_issueFrom_error_2(web3, chain, users):
     with pytest.raises(TypeError):
         share_token.transact().issueFrom(issuer, zero_address, -1)
 
+
 # エラー系3 限界値超（locked）
 def test_issueFrom_error_3(web3, chain, users):
     issuer = users['issuer']
@@ -2166,7 +2175,7 @@ def test_issueFrom_error_4(web3, chain, users):
     web3.eth.defaultAccount = issuer
     share_token, deploy_args = utils.issue_share_token(web3, chain, users, zero_address, zero_address)
 
-    issue_amount = 2**256 - deploy_args[5]
+    issue_amount = 2 ** 256 - deploy_args[5]
 
     # 増資（限界値超）
     web3.eth.defaultAccount = issuer
@@ -2240,7 +2249,7 @@ def test_redeemFrom_normal_1(web3, chain, users):
 
 
 # 正常系2: 発行 -> 減資（投資家想定のEOAアドレスの保有を減資）
-def test_redeemFrom_normal_2(web3, chain, users, share_exchange):
+def test_redeemFrom_normal_2(web3, chain, users):
     issuer = users['issuer']
     trader = users['trader']
     transfer_amount = 30
@@ -2267,8 +2276,9 @@ def test_redeemFrom_normal_2(web3, chain, users, share_exchange):
     assert balance_issuer == deploy_args[5] - transfer_amount
     assert balance_trader == transfer_amount - value
 
+
 # 正常系3: 発行 -> ロック -> 減資（投資家想定のEOAアドレスのロック数量を減資）
-def test_redeemFrom_normal_3(web3, chain, users, share_exchange):
+def test_redeemFrom_normal_3(web3, chain, users):
     issuer = users['issuer']
     trader = users['trader']
     transfer_amount = 30
@@ -2303,6 +2313,7 @@ def test_redeemFrom_normal_3(web3, chain, users, share_exchange):
     assert balance_trader == transfer_amount - lock_amount
     assert balance_trader_lock == lock_amount - value
 
+
 # エラー系1: 入力値の型誤り
 def test_redeemFrom_error_1(web3, chain, users):
     issuer = users['issuer']
@@ -2326,6 +2337,7 @@ def test_redeemFrom_error_1(web3, chain, users):
     # アドレス不正
     with pytest.raises(TypeError):
         share_token.transact().redeemFrom(issuer, "0x00", 1)
+
 
 # エラー系2: 限界値超
 def test_redeemFrom_error_2(web3, chain, users):
@@ -2364,6 +2376,7 @@ def test_redeemFrom_error_3(web3, chain, users):
     assert total_supply == deploy_args[5]
     assert balance == deploy_args[5]
 
+
 # エラー系4: 発行→ロック→減資→ロック数量より下限を超過
 def test_redeemFrom_error_4(web3, chain, users):
     issuer = users['issuer']
@@ -2396,12 +2409,13 @@ def test_redeemFrom_error_4(web3, chain, users):
     total_supply = share_token.call().totalSupply()
     issuer_balance = share_token.call().balanceOf(issuer)
     trader_balance = share_token.call().balanceOf(trader)
-    trader_locked =  share_token.call().locked(issuer, trader)
+    trader_locked = share_token.call().locked(issuer, trader)
 
     assert total_supply == deploy_args[5]
     assert issuer_balance == deploy_args[5] - transfer_amount
     assert trader_balance == transfer_amount - lock_amount
     assert trader_locked == lock_amount
+
 
 # エラー系5: 権限エラー
 def test_redeemFrom_error_5(web3, chain, users):
