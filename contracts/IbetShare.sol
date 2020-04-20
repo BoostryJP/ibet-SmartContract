@@ -7,7 +7,6 @@ import "./IbetStandardTokenInterface.sol";
 import "./PersonalInfo.sol";
 
 // @title ibet Share Token Contract
-// @author BOOSTRY Co., Ltd.
 contract IbetShare is Ownable, IbetStandardTokenInterface {
     using SafeMath for uint256;
 
