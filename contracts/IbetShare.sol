@@ -462,7 +462,7 @@ contract IbetShare is Ownable, IbetStandardTokenInterface {
     {
         // locked_addressを指定した場合：ロック資産に対して追加発行を行う
         // locked_addressを指定しない場合：アカウントアドレスの残高に対して追加発行を行う
-        if (_locked_address != 0) {
+        if (_locked_address != address(0)) {
             // ロック資産の更新
             locked[_target_address][_locked_address] = lockedOf(_target_address, _locked_address).add(_amount);
             // 総発行数量の更新
