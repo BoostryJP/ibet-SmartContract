@@ -47,6 +47,7 @@ contract OTCExchangeStorage is Ownable, ExchangeStorageModel {
         returns (bool)
     {
         balances[_account][_token] = _value;
+        return true;
     }
 
     function getBalance(address _account, address _token)
