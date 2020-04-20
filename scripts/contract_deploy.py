@@ -26,6 +26,27 @@ with project.get_chain(chain_env) as chain:
     payment_gateway, _ = chain.provider.deploy_contract('PaymentGateway')
 
     # ------------------------------------
+    # IbetOTC
+    # ------------------------------------
+    # Storage
+    otc_exchange_storage, _ = chain.provider.deploy_contract('OTCExchangeStorage')
+
+    # IbetOTCExchange
+    deploy_args = [
+        payment_gateway.address,
+        personal_info.address,
+        otc_exchange_storage.address,
+        "0x0000000000000000000000000000000000000000"
+    ]
+    otc_exchange, _ = chain.provider.deploy_contract(
+        'IbetOTCExchange',
+        deploy_args=deploy_args
+    )
+
+    # Upgrade Version
+    otc_exchange_storage.transact().upgradeVersion(otc_exchange.address)
+
+    # ------------------------------------
     # IbetStraightBond
     # ------------------------------------
     # ExchangeRegulatorService
@@ -90,6 +111,8 @@ with project.get_chain(chain_env) as chain:
     print('TokenList : ' + to_checksum_address(token_list.address))
     print('PersonalInfo : ' + to_checksum_address(personal_info.address))
     print('PaymentGateway : ' + to_checksum_address(payment_gateway.address))
+    print('OTCExchangeStorage: ' + to_checksum_address(otc_exchange_storage.address))
+    print('IbetOTCExchange : ' + to_checksum_address(otc_exchange.address))
     print('ExchangeStorage - Bond : ' + to_checksum_address(bond_exchange_storage.address))
     print('ExchangeRegulatorService - Bond : ' + to_checksum_address(exchange_regulator_service.address))
     print('IbetStraightBondExchange : ' + to_checksum_address(bond_exchange.address))
