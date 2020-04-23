@@ -38,7 +38,8 @@ contract IbetShare is Ownable, IbetStandardTokenInterface {
     // 募集申込情報
     struct Application {
         uint256 requestedAmount; // 申込数量
-        string data; // 任意のデータ
+        uint256 allottedAmount; // 割当数量
+        string data; // その他データ
     }
     // 募集申込 account_address => data
     mapping(address => Application) public applications;
@@ -70,6 +71,9 @@ contract IbetShare is Ownable, IbetStandardTokenInterface {
 
     // イベント：募集申込
     event ApplyFor(address indexed accountAddress, uint256 amount);
+
+    // イベント：割当
+    event Allot(address indexed accountAddress, uint256 amuont);
 
     // イベント：増資
     event Issue(address indexed from, address indexed target_address, address indexed locked_address, uint256 amount);
@@ -447,6 +451,18 @@ contract IbetShare is Ownable, IbetStandardTokenInterface {
         applications[msg.sender].data = _data;
 
         emit ApplyFor(msg.sender, _amount);
+    }
+
+    // @dev 募集割当
+    // @dev オーナーのみ実行可能
+    // @param _address 割当先アドレス
+    // @param _amount 割当数量
+    function allot(address _address, uint256 _amount)
+        public
+        onlyOwner()
+    {
+        applications[_address].allottedAmount = _amount;
+        emit Allot(_address, _amount);
     }
 
     // @dev 追加発行

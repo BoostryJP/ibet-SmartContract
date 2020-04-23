@@ -1875,7 +1875,8 @@ def test_applyForOffering_normal_1(web3, chain, users):
 
     application = share_token.call().applications(trader)
     assert application[0] == 0
-    assert application[1] == ''
+    assert application[1] == 0
+    assert application[2] == ''
 
 
 # 正常系2
@@ -1905,7 +1906,8 @@ def test_applyForOffering_normal_2(web3, chain, users, personal_info):
 
     application = share_token.call().applications(trader)
     assert application[0] == 10
-    assert application[1] == 'abcdefgh'
+    assert application[1] == 0
+    assert application[2] == 'abcdefgh'
 
 
 # 正常系3
@@ -1940,7 +1942,8 @@ def test_applyForOffering_normal_3(web3, chain, users, personal_info):
 
     application = share_token.call().applications(trader)
     assert application[0] == 20
-    assert application[1] == 'vwxyz'
+    assert application[1] == 0
+    assert application[2] == 'vwxyz'
 
 
 # エラー系1:
@@ -1986,7 +1989,8 @@ def test_applyForOffering_error_2(web3, chain, users):
 
     application = share_token.call().applications(trader)
     assert application[0] == 0
-    assert application[1] == ''
+    assert application[1] == 0
+    assert application[2] == ''
 
 
 # エラー系3
@@ -2017,7 +2021,103 @@ def test_applyForOffering_error_3(web3, chain, users, personal_info):
 
     application = share_token.call().applications(trader)
     assert application[0] == 0
-    assert application[1] == ''
+    assert application[1] == 0
+    assert application[2] == ''
+
+
+'''
+TEST_募集割当（allot）
+'''
+
+
+# 正常系1
+#   発行：発行体 -> 投資家：募集申込 -> 発行体：募集割当
+def test_allot_normal_1(web3, chain, users, personal_info):
+    issuer = users['issuer']
+    trader = users['trader']
+
+    # トークン新規発行
+    web3.eth.defaultAccount = issuer
+    share_token, deploy_args = utils.issue_share_token(web3, chain, users, zero_address, personal_info.address)
+
+    # 新規募集ステータスの更新
+    web3.eth.defaultAccount = issuer
+    txn_hash = share_token.transact().setOfferingStatus(True)
+    chain.wait.for_receipt(txn_hash)
+
+    # 個人情報登録
+    web3.eth.defaultAccount = trader
+    utils.register_personal_info(chain, personal_info, issuer)
+
+    # 募集申込
+    web3.eth.defaultAccount = trader
+    txn_hash = share_token.transact().applyForOffering(10, 'abcdefgh')
+    chain.wait.for_receipt(txn_hash)
+
+    # 割当
+    web3.eth.defaultAccount = issuer
+    txn_hash = share_token.transact().allot(trader, 5)
+    chain.wait.for_receipt(txn_hash)
+
+    application = share_token.call().applications(trader)
+    assert application[0] == 10
+    assert application[1] == 5
+    assert application[2] == 'abcdefgh'
+
+
+# エラー系1
+#   発行：発行体 -> 投資家：募集申込 -> 発行体：募集割当（入力値の型誤り）
+def test_allot_error_1(web3, chain, users):
+    issuer = users['issuer']
+    trader = users['trader']
+
+    # トークン新規発行
+    web3.eth.defaultAccount = issuer
+    share_token, deploy_args = utils.issue_share_token(web3, chain, users, zero_address, zero_address)
+
+    # 新規募集ステータスの更新
+    web3.eth.defaultAccount = issuer
+    txn_hash = share_token.transact().setOfferingStatus(True)
+    chain.wait.for_receipt(txn_hash)
+
+    # 割当（エラー）：address 数値型
+    web3.eth.defaultAccount = issuer
+    with pytest.raises(TypeError):
+        share_token.transact().allot(1234, 5)
+
+    # 割当（エラー）：amount 文字型
+    web3.eth.defaultAccount = issuer
+    with pytest.raises(TypeError):
+        share_token.transact().allot(trader, "5")
+
+
+# エラー系2
+#   発行：発行体 -> 投資家：募集申込 -> 発行体：募集割当（権限エラー）
+def test_allot_error_2(web3, chain, users):
+    issuer = users['issuer']
+    trader = users['trader']
+
+    # トークン新規発行
+    web3.eth.defaultAccount = issuer
+    share_token, deploy_args = utils.issue_share_token(web3, chain, users, zero_address, zero_address)
+
+    # 新規募集ステータスの更新
+    web3.eth.defaultAccount = issuer
+    txn_hash = share_token.transact().setOfferingStatus(True)
+    chain.wait.for_receipt(txn_hash)
+
+    # 割当（エラー）：権限エラー
+    web3.eth.defaultAccount = trader
+    try:
+        txn_hash = share_token.transact().allot(trader, 5)
+        chain.wait.for_receipt(txn_hash)
+    except ValueError:
+        pass
+
+    application = share_token.call().applications(trader)
+    assert application[0] == 0
+    assert application[1] == 0
+    assert application[2] == ''
 
 
 '''
