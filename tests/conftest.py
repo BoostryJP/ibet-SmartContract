@@ -43,7 +43,7 @@ def personal_info(web3, chain, users):
 def payment_gateway(web3, chain, users):
     web3.eth.defaultAccount = users['admin']
     payment_gateway, _ = chain.provider.get_or_deploy_contract('PaymentGateway')
-    payment_gateway.transact().addAgent(0, users['agent'])
+    payment_gateway.transact().addAgent(users['agent'])
     return payment_gateway
 
 
@@ -53,6 +53,7 @@ def exchange_regulator_service(web3, chain, users):
     exchange_regulator_service, _ = chain.provider.get_or_deploy_contract('ExchangeRegulatorService')
     exchange_regulator_service.transact().register(users['issuer'], False)
     exchange_regulator_service.transact().register(users['trader'], False)
+    exchange_regulator_service.transact().register(users['admin'], False)
     return exchange_regulator_service
 
 
@@ -117,3 +118,52 @@ def coupon_exchange(web3, chain, users, payment_gateway, coupon_exchange_storage
     )
     coupon_exchange_storage.transact().upgradeVersion(coupon_exchange.address)
     return coupon_exchange
+
+
+@pytest.yield_fixture()
+def share_exchange_storage(web3, chain, users):
+    web3.eth.defaultAccount = users['admin']
+    share_exchange_storage, _ = chain.provider.get_or_deploy_contract('OTCExchangeStorage')
+    return share_exchange_storage
+
+
+@pytest.yield_fixture()
+def share_exchange(web3, chain, users,
+                  personal_info, payment_gateway, share_exchange_storage, exchange_regulator_service):
+    web3.eth.defaultAccount = users['admin']
+    deploy_args = [
+        payment_gateway.address,
+        personal_info.address,
+        share_exchange_storage.address,
+        exchange_regulator_service.address
+    ]
+    share_exchange, _ = chain.provider.get_or_deploy_contract(
+        'IbetOTCExchange',
+        deploy_args=deploy_args
+    )
+    share_exchange_storage.transact().upgradeVersion(share_exchange.address)
+    return share_exchange
+
+@pytest.yield_fixture()
+def otc_exchange_storage(web3, chain, users):
+    web3.eth.defaultAccount = users['admin']
+    otc_exchange_storage, _ = chain.provider.get_or_deploy_contract('OTCExchangeStorage')
+    return otc_exchange_storage
+
+
+@pytest.yield_fixture()
+def otc_exchange(web3, chain, users,
+                  personal_info, payment_gateway, otc_exchange_storage, exchange_regulator_service):
+    web3.eth.defaultAccount = users['admin']
+    deploy_args = [
+        payment_gateway.address,
+        personal_info.address,
+        otc_exchange_storage.address,
+        exchange_regulator_service.address
+    ]
+    otc_exchange, _ = chain.provider.get_or_deploy_contract(
+        'IbetOTCExchange',
+        deploy_args=deploy_args
+    )
+    otc_exchange_storage.transact().upgradeVersion(otc_exchange.address)
+    return otc_exchange

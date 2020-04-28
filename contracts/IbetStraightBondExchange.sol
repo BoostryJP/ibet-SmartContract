@@ -641,13 +641,7 @@ contract IbetStraightBondExchange is Ownable {
         view
         returns (bool)
     {
-        address[30] memory agents = PaymentGateway(paymentGatewayAddress).getAgents();
-        for (uint i=0; i<30; i++) {
-            if (agents[i] == _addr) {
-                return true;
-            }
-        }
-        return false;
+        return PaymentGateway(paymentGatewayAddress).getAgent(_addr);
     }
 
 }
