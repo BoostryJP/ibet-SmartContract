@@ -1,6 +1,7 @@
 # -*- coding:utf-8 -*-
 import os
 from populus import Project
+from eth_utils import to_checksum_address
 
 APP_ENV = os.environ.get('APP_ENV') or 'local'
 ETH_ACCOUNT_PASSWORD = os.environ.get('ETH_ACCOUNT_PASSWORD') or 'password'
@@ -23,6 +24,27 @@ with project.get_chain(chain_env) as chain:
 
     # PaymentGateway
     payment_gateway, _ = chain.provider.deploy_contract('PaymentGateway')
+
+    # ------------------------------------
+    # IbetOTC
+    # ------------------------------------
+    # Storage
+    otc_exchange_storage, _ = chain.provider.deploy_contract('OTCExchangeStorage')
+
+    # IbetOTCExchange
+    deploy_args = [
+        payment_gateway.address,
+        personal_info.address,
+        otc_exchange_storage.address,
+        "0x0000000000000000000000000000000000000000"
+    ]
+    otc_exchange, _ = chain.provider.deploy_contract(
+        'IbetOTCExchange',
+        deploy_args=deploy_args
+    )
+
+    # Upgrade Version
+    otc_exchange_storage.transact().upgradeVersion(otc_exchange.address)
 
     # ------------------------------------
     # IbetStraightBond
@@ -86,13 +108,15 @@ with project.get_chain(chain_env) as chain:
     # Upgrade Version
     membership_exchange_storage.transact().upgradeVersion(membership_exchange.address)
 
-    print('TokenList : ' + token_list.address)
-    print('PersonalInfo : ' + personal_info.address)
-    print('PaymentGateway : ' + payment_gateway.address)
-    print('ExchangeStorage - Bond : ' + bond_exchange_storage.address)
-    print('ExchangeRegulatorService - Bond : ' + exchange_regulator_service.address)
-    print('IbetStraightBondExchange : ' + bond_exchange.address)
-    print('ExchangeStorage - Coupon : ' + coupon_exchange_storage.address)
-    print('IbetCouponExchange : ' + coupon_exchange.address)
-    print('ExchangeStorage - Membership : ' + membership_exchange_storage.address)
-    print('IbetMembershipExchange : ' + membership_exchange.address)
+    print('TokenList : ' + to_checksum_address(token_list.address))
+    print('PersonalInfo : ' + to_checksum_address(personal_info.address))
+    print('PaymentGateway : ' + to_checksum_address(payment_gateway.address))
+    print('OTCExchangeStorage: ' + to_checksum_address(otc_exchange_storage.address))
+    print('IbetOTCExchange : ' + to_checksum_address(otc_exchange.address))
+    print('ExchangeStorage - Bond : ' + to_checksum_address(bond_exchange_storage.address))
+    print('ExchangeRegulatorService - Bond : ' + to_checksum_address(exchange_regulator_service.address))
+    print('IbetStraightBondExchange : ' + to_checksum_address(bond_exchange.address))
+    print('ExchangeStorage - Coupon : ' + to_checksum_address(coupon_exchange_storage.address))
+    print('IbetCouponExchange : ' + to_checksum_address(coupon_exchange.address))
+    print('ExchangeStorage - Membership : ' + to_checksum_address(membership_exchange_storage.address))
+    print('IbetMembershipExchange : ' + to_checksum_address(membership_exchange.address))

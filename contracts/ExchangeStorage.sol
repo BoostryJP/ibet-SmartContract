@@ -42,6 +42,7 @@ contract ExchangeStorage is Ownable {
         returns (bool)
     {
         balances[_account][_token] = _value;
+        return true;
     }
 
     function getBalance(address _account, address _token)
