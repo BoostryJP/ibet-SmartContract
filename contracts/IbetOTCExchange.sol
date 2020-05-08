@@ -445,13 +445,15 @@ contract IbetOTCExchange is Ownable, ExchangeStorageModel {
         //  3) 名簿用個人情報が登録されていない場合
         //  4) 買注文者がコントラクトアドレスの場合
         //  5) 取扱ステータスがFalseの場合
+        //  6) 元注文の残注文数量が0の場合
         //   -> REVERT
         if (
             msg.sender == order.owner ||
             order.canceled == true ||
             PersonalInfo(personalInfoAddress).isRegistered(msg.sender,IbetStandardTokenInterface(order.token).owner()) == false ||
             isContract(msg.sender) == true ||
-            IbetStandardTokenInterface(order.token).status() == false
+            IbetStandardTokenInterface(order.token).status() == false ||
+            order.amount == 0
             )
         {
             revert();

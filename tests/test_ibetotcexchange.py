@@ -1158,6 +1158,69 @@ def test_executeOrder_error_7(web3, chain, users, otc_exchange, personal_info):
     assert commitment == _amount_make
 
 
+# エラー系8
+# 複数回take注文があった場合
+def test_executeOrder_error_8(web3, chain, users, otc_exchange, personal_info):
+    _issuer = users['issuer']
+    _trader = users['trader']
+    _agent = users['agent']
+
+    personalinfo_register(web3, chain, personal_info, _issuer, _issuer)
+    personalinfo_register(web3, chain, personal_info, _trader, _issuer)
+
+    # 新規発行
+    web3.eth.defaultAccount = _issuer
+    share_token, deploy_args = utils. \
+        issue_share_token(web3, chain, users, otc_exchange.address, personal_info.address)
+
+    # Exchangeへのデポジット
+    web3.eth.defaultAccount = _issuer
+    _amount_make = 100
+    txn_hash = share_token.transact().transfer(otc_exchange.address, _amount_make)
+    chain.wait.for_receipt(txn_hash)
+
+    # make
+    web3.eth.defaultAccount = _issuer
+    _price = 123
+    txn_hash = otc_exchange.transact().\
+        createOrder(_trader, share_token.address, _amount_make, _price, _agent)
+    chain.wait.for_receipt(txn_hash)
+
+    # take (1回目)
+    web3.eth.defaultAccount = _trader
+    order_id = otc_exchange.call().latestOrderId()
+    txn_hash = otc_exchange.transact().executeOrder(order_id)
+    chain.wait.for_receipt(txn_hash)
+
+    first_agreement_id = otc_exchange.call().latestAgreementId(order_id)
+
+    # take (2回目)
+    web3.eth.defaultAccount = _trader
+    order_id = otc_exchange.call().latestOrderId()
+    with pytest.raises(ValueError):
+        txn_hash = otc_exchange.transact().executeOrder(order_id)
+        chain.wait.for_receipt(txn_hash)
+
+    agreement_id = otc_exchange.call().latestAgreementId(order_id)
+    orderbook = otc_exchange.call().getOrder(order_id)
+    agree = otc_exchange.call().getAgreement(order_id, agreement_id)
+    balance_maker = share_token.call().balanceOf(_issuer)
+    balance_taker = share_token.call().balanceOf(_trader)
+    commitment = otc_exchange.call().commitmentOf(_issuer, share_token.address)
+
+    assert agreement_id == first_agreement_id
+
+    assert orderbook == [
+        _issuer, _trader, to_checksum_address(share_token.address),
+        0, _price, _agent, False
+    ]
+
+    assert agree[0:5] == [_trader, _amount_make, _price, False, False]
+    assert balance_maker == deploy_args[5] - _amount_make
+    assert balance_taker == 0
+    assert commitment == _amount_make
+
+
 '''
 TEST_決済承認（confirmAgreement）
 '''

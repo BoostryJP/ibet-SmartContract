@@ -3,11 +3,12 @@ name: Bug report
 about: バグに関するレポート
 title: "[BUG]"
 labels: bug
-assignees: horsewin, kyken, r-kozu, YoshihitoAso
+assignees: YoshihitoAso
 
 ---
 
 ## 対象
+:sob: 株式
 :sob: 債券
 :sob: 会員権
 :sob: クーポン
