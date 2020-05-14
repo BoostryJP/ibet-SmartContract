@@ -1,9 +1,9 @@
 pragma solidity ^0.4.24;
 
 import "./SafeMath.sol";
-import "./Ownable.sol";
-import "./ContractReceiver.sol";
-import "./IbetStandardTokenInterface.sol";
+import "../interfaces/Ownable.sol";
+import "../interfaces/ContractReceiver.sol";
+import "../interfaces/IbetStandardTokenInterface.sol";
 import "./PersonalInfo.sol";
 
 contract IbetStraightBond is Ownable, IbetStandardTokenInterface {
