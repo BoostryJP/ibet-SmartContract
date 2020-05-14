@@ -100,6 +100,9 @@ COPY . /app/ibet-SmartContract/
 RUN chown -R apl:apl /app/ibet-SmartContract && \
     chmod 755 /app/ibet-SmartContract
 USER apl
+RUN . ~/.bash_profile \
+  && cd /app/ibet-SmartContract/ \
+  && brownie networks import data/test_networks.yml
 COPY qa.sh /app/ibet-SmartContract/
 
 CMD /app/ibet-SmartContract/qa.sh

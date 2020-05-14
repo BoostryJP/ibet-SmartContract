@@ -1,10 +1,4 @@
 # -*- coding:utf-8 -*-
-import sys
-import json
-import os
-from eth_utils import to_checksum_address
-from populus import Project
-
 """
 収納代行業者（Agent）アドレス登録
 ・認可されたAgentアドレスをPaymentGatewayコントラクトに登録する。
@@ -18,35 +12,37 @@ agent_address : str
     収納代行業者のアカウントアドレス。
 
 """
+import os
+
+import sys
+from brownie import accounts, project, network
+
+# brownieプロジェクトを読み込む
+p = project.load('.', name="ibet_smart_contract")
+p.load_config()
+from brownie.project.ibet_smart_contract import PaymentGateway
 
 APP_ENV = os.environ.get('APP_ENV') or 'local'
 if APP_ENV == 'local':
-    chain_env = 'local_chain'
+    network_id = 'development'
 else:
-    chain_env = 'dev_chain'
+    network_id = 'ganache'
+network.connect(network_id)
 
-project = Project()
-with project.get_chain(chain_env) as chain:
-    web3 = chain.web3
-    web3.eth.defaultAccount = web3.eth.accounts[0]
-    web3.personal.unlockAccount(
-        web3.eth.defaultAccount,
-        os.environ.get('ETH_ACCOUNT_PASSWORD'),
-        1000
-    )
+contract_address = sys.argv[1]
+agent_address = sys.argv[2]
 
-    contracts = json.load(open('build/contracts.json', 'r'))
 
-    contract_address = sys.argv[1]
-    agent_address = sys.argv[2]
+def main():
+    deployer = accounts[0]
 
-    payment_gateway = web3.eth.contract(
-        address=to_checksum_address(contract_address),
-        abi=contracts['PaymentGateway']['abi'],
-    )
+    payment_gateway = PaymentGateway(contract_address)
 
-    txn_hash = payment_gateway.transact().addAgent(agent_address)
-    chain.wait.for_receipt(txn_hash)
+    payment_gateway.addAgent.transact(agent_address, {'from': deployer})
 
-    agent_available = payment_gateway.call().getAgent(agent_address)
+    agent_available = payment_gateway.getAgent(agent_address)
     print(agent_available)
+
+
+if __name__ == '__main__':
+    main()

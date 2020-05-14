@@ -1,28 +1,12 @@
 import pytest
-import os
 
 
-@pytest.yield_fixture()
-def chain(project):
-    app_env = os.environ.get('APP_ENV') or 'local'
-    if app_env == 'local':
-        with project.get_chain('local_chain') as chain:
-            yield chain
-    else:
-        with project.get_chain('dev_chain') as chain:
-            yield chain
-
-
-@pytest.yield_fixture()
-def users(web3, accounts):
+@pytest.fixture()
+def users(accounts):
     admin = accounts[0]
     trader = accounts[1]
     issuer = accounts[2]
     agent = accounts[3]
-    web3.personal.unlockAccount(accounts[0], "password", 0)
-    web3.personal.unlockAccount(accounts[1], "password", 0)
-    web3.personal.unlockAccount(accounts[2], "password", 0)
-    web3.personal.unlockAccount(accounts[3], "password", 0)
     users = {
         'admin': admin,
         'trader': trader,
@@ -32,13 +16,14 @@ def users(web3, accounts):
     return users
 
 
-@pytest.yield_fixture()
-def personal_info(web3, chain, users):
-    web3.eth.defaultAccount = users['admin']
-    personal_info, _ = chain.provider.get_or_deploy_contract('PersonalInfo')
+@pytest.fixture()
+def personal_info(PersonalInfo, users):
+    personal_info = users['admin'].deploy(PersonalInfo)
     return personal_info
 
 
+# TODO: アンコメントしてbrownie移行
+"""
 @pytest.yield_fixture()
 def payment_gateway(web3, chain, users):
     web3.eth.defaultAccount = users['admin']
@@ -167,3 +152,4 @@ def otc_exchange(web3, chain, users,
     )
     otc_exchange_storage.transact().upgradeVersion(otc_exchange.address)
     return otc_exchange
+"""
