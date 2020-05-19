@@ -5,7 +5,7 @@ live:
     host: http://localhost:8545
     id: ganache
     name: ganache
-- name: Local
+- name: Test
   networks:
   - chainid: 2017
     host: http://quorum:8545

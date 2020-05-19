@@ -102,7 +102,7 @@ RUN chown -R apl:apl /app/ibet-SmartContract && \
 USER apl
 RUN . ~/.bash_profile \
   && cd /app/ibet-SmartContract/ \
-  && brownie networks import data/test_networks.yml
+  && brownie networks import data/networks.yml
 COPY qa.sh /app/ibet-SmartContract/
 
 CMD /app/ibet-SmartContract/qa.sh
