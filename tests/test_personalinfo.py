@@ -1,4 +1,3 @@
-import brownie
 import pytest
 
 encrypted_message = 'encrypted_message'
@@ -76,3 +75,14 @@ def test_register_error_1(users, personal_info):
     # 登録 -> Failure
     with pytest.raises(ValueError):
         personal_info.register.transact(link, encrypted_message, {'from': account})
+
+
+# エラー系2: 入力値の型誤り（暗号化情報）
+def test_register_error_2(users, personal_info):
+    account = users['trader']
+    link = users['issuer']  # issuerのアドレスに公開する
+
+    # 登録 -> Failure
+    with pytest.raises(ValueError):
+        invalid_str = '0x66aB6D9362d4F35596279692F0251Db635165871'
+        personal_info.register.transact(link.address, invalid_str, {'from': account})
