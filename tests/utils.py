@@ -52,7 +52,7 @@ def issue_share_token(issuer, exchange_address, personal_info_address):
         contact_information, privacy_policy, memo, transferable
     ]
 
-    share_token, _ = issuer.deploy(IbetShare, *deploy_args)
+    share_token = issuer.deploy(IbetShare, *deploy_args)
     return share_token, deploy_args
 
 
