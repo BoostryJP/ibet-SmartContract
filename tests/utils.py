@@ -1,8 +1,10 @@
 from brownie import IbetShare, IbetStraightBond, IbetMembership, IbetCoupon
 
+import brownie_utils
+
 
 # 普通社債新規発行
-def issue_bond_token(issuer, exchange_address, personal_info_address):
+def issue_bond_token(web3, issuer, exchange_address, personal_info_address):
     name = 'test_bond'
     symbol = 'BND'
     total_supply = 10000
@@ -27,7 +29,7 @@ def issue_bond_token(issuer, exchange_address, personal_info_address):
         personal_info_address
     ]
 
-    bond_token = issuer.deploy(IbetStraightBond, *deploy_args)
+    bond_token = brownie_utils.force_deploy(web3, issuer, IbetStraightBond, *deploy_args)
     return bond_token, deploy_args
 
 
