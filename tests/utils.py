@@ -34,7 +34,7 @@ def issue_bond_token(web3, issuer, exchange_address, personal_info_address):
 
 
 # 株式新規発行
-def issue_share_token(issuer, exchange_address, personal_info_address):
+def issue_share_token(users, exchange_address, personal_info_address):
     name = 'test_share'
     symbol = 'IBS'
     issue_price = 10000
@@ -54,7 +54,7 @@ def issue_share_token(issuer, exchange_address, personal_info_address):
         contact_information, privacy_policy, memo, transferable
     ]
 
-    share_token = issuer.deploy(IbetShare, *deploy_args)
+    share_token = users['issuer'].deploy(IbetShare, *deploy_args)
     return share_token, deploy_args
 
 
