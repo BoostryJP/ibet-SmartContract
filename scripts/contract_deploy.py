@@ -11,9 +11,9 @@ from brownie.project.ibet_smart_contract import TokenList, PersonalInfo, Payment
 
 APP_ENV = os.environ.get('APP_ENV') or 'local'
 if APP_ENV == 'local':
-    network_id = 'development'
+    network_id = 'local_network'
 else:
-    network_id = 'ganache'
+    network_id = 'dev_network'
 network.connect(network_id)
 
 

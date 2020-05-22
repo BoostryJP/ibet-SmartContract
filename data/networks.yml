@@ -1,14 +1,12 @@
 live:
-- name: Local
+- name: ibet
   networks:
   - chainid: 2017
     host: http://localhost:8545
-    id: ganache
-    name: ganache
-- name: Test
-  networks:
+    id: local_network
+    name: local_network
   - chainid: 2017
     host: http://quorum:8545
-    id: quorum
-    name: quorum
+    id: dev_network
+    name: dev_network
 

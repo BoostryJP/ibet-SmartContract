@@ -9,7 +9,7 @@ brownie compile --all
 TEST_LOG=$(mktemp)
 
 # test実施
-brownie test --disable-warnings -v --network quorum | tee "${TEST_LOG}"
+brownie test --disable-warnings -v --network dev_network | tee "${TEST_LOG}"
 
 # `brownie test`のリターンコードはテスト結果に関わらず常に正常となるので、
 # コンソール出力内容からテスト結果を判定する
