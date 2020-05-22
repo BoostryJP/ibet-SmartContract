@@ -1,4 +1,5 @@
 import brownie
+from brownie import web3
 from brownie.network.contract import Contract, ContractTx, ContractCall
 
 
@@ -11,28 +12,29 @@ Brownieコントラクトに定義済みのプロパティ名。
 """
 
 
-def force_deploy(web3, deployer, contract, *deploy_args):
+def force_deploy(deployer, contract, *deploy_args):
     """
     Brownieだとエラーが発生するコントラクトを強制的にデプロイする。
 
-    Brownieでは brownie.network.contract.Contract に定義済みのメソッドと同名の公開メソッドを持つコントラクトはエラーとなりデプロイできない。
-    この関数はBrownieを利用せずweb3を直接用いてデプロイすることでエラーを回避する。
+    Brownieでは brownie.network.contract.Contract に定義済みプロパティと
+    同名の公開関数を持つコントラクトはエラーとなりデプロイできない。
+    この関数はBrownieを利用せずweb3で直接デプロイすることでエラーを回避する。
+    なお、この関数により生成したContractオブジェクトではBrownieが提供する一部のDebug機能は使用できない。
 
-    エラーの原因となる関数は `.functions.FUNC_NAME` でアクセスする。
-
-    >>> returned_contract = force_deploy(web3, deployer, contract, *deploy_args)
+    使用例
+    >>> returned_contract = force_deploy(deployer, contract, *deploy_args)
+    >>> # 普通の関数はそのまま使用できる。
+    >>> returned_contract.nameOfFunction.transact({'from': deployer})
+    >>> # エラーの原因となる関数は `.functions` 経由でアクセスする。
     >>> returned_contract.functions.signatures()
     >>> returned_contract.functions.remove.transact({'from': deployer})
 
-    なお、この関数により生成したContractオブジェクトではBrownieが提供する一部のDebug機能は使用できない。
-
-    :param web3: web3
     :param deployer: コントラクトをデプロイするアカウント
     :param contract: Brownieのコントラクトオブジェクト
-    :param deploy_args:
-    :return: コントラクト
+    :param deploy_args: コントラクトのコンストラクタ引数
+    :return: Brownieのコントラクトインスタンス
     """
-    # 引数の型変換 (web3.pyとBrownieでは型変換規則が異なる)
+    # 引数の型変換 (Note: web3.pyとBrownieでは型変換規則が異なる)
     constructor_abi = list(filter(lambda entry: entry['type'] == 'constructor', contract.abi))
     if len(constructor_abi) == 1:
         deploy_args = brownie.convert.normalize.format_input(constructor_abi[0], deploy_args)
@@ -53,7 +55,8 @@ def force_deploy(web3, deployer, contract, *deploy_args):
         else:
             brownie_safe_abi.append(abi_entry)
 
-    brownie_contract = Contract.from_abi('TODO: set name', contract_address, brownie_safe_abi)
+    contract_name = _resolve_contract_name(contract) + '__brownie_utils'
+    brownie_contract = Contract.from_abi(contract_name, contract_address, brownie_safe_abi)
 
     # ABIから削除したメソッドを復元する
     # （オーバロードには未対応）
@@ -72,6 +75,14 @@ def force_deploy(web3, deployer, contract, *deploy_args):
 class _BrownieUnsafeFunctionContainer:
     """Brownieでエラーとなるスマートコントラクトの関数を保持するクラス"""
     pass
+
+
+def _resolve_contract_name(contract):
+    # コントラクト名は非公開となっているため、存在確認してから取得する
+    if hasattr(contract, '_name'):
+        return str(contract._name)
+    else:
+        return 'None'
 
 
 def _is_constant(abi):
