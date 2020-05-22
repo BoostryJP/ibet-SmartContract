@@ -1,5 +1,9 @@
 import pytest
 from brownie.exceptions import VirtualMachineError
+from brownie import web3
+from web3.middleware import geth_poa_middleware
+
+web3.middleware_onion.inject(geth_poa_middleware, layer=0)
 
 
 @pytest.fixture(scope='session')
