@@ -19,7 +19,7 @@ def test_register_normal_1(TokenList, users, otc_exchange, personal_info):
 
     # Token新規発行
     share_token, deploy_args = \
-        utils.issue_share_token(issuer, otc_exchange.address, personal_info.address)
+        utils.issue_share_token(users, otc_exchange.address, personal_info.address)
     token_address = share_token.address
 
     # TokenListに追加
@@ -98,7 +98,7 @@ def test_register_error_1(TokenList, users):
 
 
 # エラー系2: トークンテンプレートの型（string）が正しくない場合
-def test_register_error_2(web3, TokenList, users, share_exchange, personal_info):
+def test_register_error_2(TokenList, users, share_exchange, personal_info):
     admin = users['admin']
     issuer = users['issuer']
 
@@ -107,12 +107,13 @@ def test_register_error_2(web3, TokenList, users, share_exchange, personal_info)
 
     # Token新規発行
     share_token, deploy_args = \
-        utils.issue_share_token(issuer, share_exchange.address, personal_info.address)
+        utils.issue_share_token(users, share_exchange.address, personal_info.address)
     token_address = share_token.address
 
     # 新規登録 -> Failure
     with pytest.raises(ValueError):
-        tokenlist_contract.register.transact(token_address, '0xb6286fAFd0451320ad6A8143089b216C2152c025', {'from': issuer})
+        tokenlist_contract.register. \
+            transact(token_address, '0xb6286fAFd0451320ad6A8143089b216C2152c025', {'from': issuer})
 
 
 # エラー系3: 同一トークンを複数回登録
@@ -125,7 +126,7 @@ def test_register_error_3(TokenList, users, share_exchange, personal_info):
 
     # Token新規発行
     share_token, deploy_args = \
-        utils.issue_share_token(issuer, share_exchange.address, personal_info.address)
+        utils.issue_share_token(users, share_exchange.address, personal_info.address)
     token_address = share_token.address
 
     # 新規登録（1回目） -> Success
@@ -161,7 +162,7 @@ def test_register_error_4(TokenList, users, share_exchange, personal_info):
 
     # Token新規発行
     share_token, deploy_args = \
-        utils.issue_share_token(issuer, share_exchange.address, personal_info.address)
+        utils.issue_share_token(users, share_exchange.address, personal_info.address)
     token_address = share_token.address
 
     # 新規登録（account_1） -> Success
@@ -203,7 +204,7 @@ def test_changeOwner_normal_1(TokenList, users, share_exchange, personal_info):
 
     # Token新規発行
     share_token, deploy_args = \
-        utils.issue_share_token(issuer, share_exchange.address, personal_info.address)
+        utils.issue_share_token(users, share_exchange.address, personal_info.address)
     token_address = share_token.address
 
     # 新規登録 -> Success
@@ -258,7 +259,7 @@ def test_changeOwner_error_2(TokenList, users, share_exchange, personal_info):
 
     # Token新規発行
     share_token, deploy_args = \
-        utils.issue_share_token(issuer, share_exchange.address, personal_info.address)
+        utils.issue_share_token(users, share_exchange.address, personal_info.address)
     token_address = share_token.address
 
     new_owner_address = 'some_address'
@@ -279,7 +280,7 @@ def test_changeOwner_error_3(TokenList, users, share_exchange, personal_info):
 
     # Token新規発行
     share_token, deploy_args = \
-        utils.issue_share_token(issuer, share_exchange.address, personal_info.address)
+        utils.issue_share_token(users, share_exchange.address, personal_info.address)
     token_address = share_token.address
 
     # オーナー変更 -> Failure
@@ -300,7 +301,7 @@ def test_changeOwner_error_4(TokenList, users, share_exchange, personal_info):
 
     # Token新規発行
     share_token, deploy_args = \
-        utils.issue_share_token(issuer, share_exchange.address, personal_info.address)
+        utils.issue_share_token(users, share_exchange.address, personal_info.address)
     token_address = share_token.address
 
     # 新規登録 -> Success

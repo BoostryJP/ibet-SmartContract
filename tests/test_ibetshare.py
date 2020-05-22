@@ -198,7 +198,7 @@ def test_setTradableExchange_normal_1(users, share_exchange, personal_info,
 
     # 株式トークン新規発行
     share_token, deploy_args = utils. \
-        issue_share_token(issuer, share_exchange.address, personal_info.address)
+        issue_share_token(users, share_exchange.address, personal_info.address)
 
     # その他Exchange
     other_exchange = users['admin'].deploy(
@@ -219,7 +219,7 @@ def test_setTradableExchange_error_1(users, share_exchange, personal_info):
 
     # 株式トークン新規発行
     share_token, deploy_args = utils. \
-        issue_share_token(issuer, share_exchange.address, personal_info.address)
+        issue_share_token(users, share_exchange.address, personal_info.address)
 
     # Exchangeの更新
     with pytest.raises(ValueError):
@@ -230,12 +230,11 @@ def test_setTradableExchange_error_1(users, share_exchange, personal_info):
 def test_setTradableExchange_error_2(users, share_exchange, personal_info,
                                      coupon_exchange_storage, payment_gateway,
                                      IbetCouponExchange):
-    issuer = users['issuer']
     trader = users['trader']
 
     # 株式トークン新規発行
     share_token, deploy_args = utils. \
-        issue_share_token(issuer, share_exchange.address, personal_info.address)
+        issue_share_token(users, share_exchange.address, personal_info.address)
 
     # その他Exchange
     other_exchange = users['admin'].deploy(
@@ -261,7 +260,7 @@ def test_setPersonalInfoAddress_normal_1(users, share_exchange, personal_info):
 
     # 株式トークン新規発行
     share_token, deploy_args = utils. \
-        issue_share_token(issuer, share_exchange.address, personal_info.address)
+        issue_share_token(users, share_exchange.address, personal_info.address)
 
     # 更新
     share_token.setPersonalInfoAddress.transact('0x0000000000000000000000000000000000000000', {'from': issuer})
@@ -275,7 +274,7 @@ def test_setPersonalInfoAddress_error_1(users, share_exchange, personal_info):
 
     # 株式トークン新規発行
     share_token, deploy_args = utils. \
-        issue_share_token(issuer, share_exchange.address, personal_info.address)
+        issue_share_token(users, share_exchange.address, personal_info.address)
 
     # 更新
     with pytest.raises(ValueError):
@@ -284,12 +283,11 @@ def test_setPersonalInfoAddress_error_1(users, share_exchange, personal_info):
 
 # エラー系2: トークン発行 -> 更新（権限エラー）
 def test_setPersonalInfoAddress_error_2(users, share_exchange, personal_info):
-    issuer = users['issuer']
     attacker = users['trader']
 
     # 株式トークン新規発行
     share_token, deploy_args = utils. \
-        issue_share_token(issuer, share_exchange.address, personal_info.address)
+        issue_share_token(users, share_exchange.address, personal_info.address)
 
     # 更新
     share_token.setPersonalInfoAddress.transact('0x0000000000000000000000000000000000000000', {'from': attacker})
@@ -308,7 +306,7 @@ def test_setDividendInformation_normal_1(users, share_exchange, personal_info):
 
     # 株式トークン新規発行
     share_token, deploy_args = utils. \
-        issue_share_token(issuer, share_exchange.address, personal_info.address)
+        issue_share_token(users, share_exchange.address, personal_info.address)
 
     # 修正 -> Success
     share_token.setDividendInformation.transact(22000, '20200829', '20200831', {'from': issuer})
@@ -325,7 +323,7 @@ def test_setDividendInformation_error_1(users, share_exchange, personal_info):
 
     # 株式トークン新規発行
     share_token, deploy_args = utils. \
-        issue_share_token(issuer, share_exchange.address, personal_info.address)
+        issue_share_token(users, share_exchange.address, personal_info.address)
 
     invalid_str = '0x1596Ff8ED308a83897a731F3C1e814B19E11D68c'
     with pytest.raises(TypeError):
@@ -338,12 +336,11 @@ def test_setDividendInformation_error_1(users, share_exchange, personal_info):
 
 # エラー系2: 権限エラー
 def test_setDividendInformation_error_2(users, share_exchange, personal_info):
-    issuer = users['issuer']
     other = users['admin']
 
     # 株式トークン新規発行
     share_token, deploy_args = utils. \
-        issue_share_token(issuer, share_exchange.address, personal_info.address)
+        issue_share_token(users, share_exchange.address, personal_info.address)
 
     # Owner以外のアドレスから更新 -> Failure
     share_token.setDividendInformation.transact(33000, '20200830', '20200901', {'from': other})
@@ -365,7 +362,7 @@ def test_setCancellationDate_normal_1(users, share_exchange, personal_info):
 
     # 株式トークン新規発行
     share_token, deploy_args = utils. \
-        issue_share_token(issuer, share_exchange.address, personal_info.address)
+        issue_share_token(users, share_exchange.address, personal_info.address)
 
     # 修正 -> Success
     share_token.setCancellationDate.transact('20200831', {'from': issuer})
@@ -380,7 +377,7 @@ def test_setCancellationDate_error_1(users, share_exchange, personal_info):
 
     # 株式トークン新規発行
     share_token, deploy_args = utils. \
-        issue_share_token(issuer, share_exchange.address, personal_info.address)
+        issue_share_token(users, share_exchange.address, personal_info.address)
 
     with pytest.raises(ValueError):
         share_token.setCancellationDate.transact('0x1596Ff8ED308a83897a731F3C1e814B19E11D68c', {'from': issuer})
@@ -388,12 +385,11 @@ def test_setCancellationDate_error_1(users, share_exchange, personal_info):
 
 # エラー系2: 権限エラー
 def test_setCancellationDate_error_2(users, share_exchange, personal_info):
-    issuer = users['issuer']
     other = users['admin']
 
     # 株式トークン新規発行
     share_token, deploy_args = utils. \
-        issue_share_token(issuer, share_exchange.address, personal_info.address)
+        issue_share_token(users, share_exchange.address, personal_info.address)
 
     # Owner以外のアドレスから更新 -> Failure
     share_token.setCancellationDate.transact('20200930', {'from': other})
@@ -413,7 +409,7 @@ def test_setReferenceUrls_normal_1(users, share_exchange, personal_info):
 
     # 株式トークン新規発行
     share_token, deploy_args = utils. \
-        issue_share_token(issuer, share_exchange.address, personal_info.address)
+        issue_share_token(users, share_exchange.address, personal_info.address)
 
     reference_url = 'https://some_reference_url.com/image.png'
 
@@ -430,7 +426,7 @@ def test_setReferenceUrls_normal_2(users, share_exchange, personal_info):
 
     # 株式トークン新規発行
     share_token, deploy_args = utils. \
-        issue_share_token(issuer, share_exchange.address, personal_info.address)
+        issue_share_token(users, share_exchange.address, personal_info.address)
 
     reference_url = 'https://some_reference_url.com/image.png'
 
@@ -452,7 +448,7 @@ def test_setReferenceUrls_normal_3(users, share_exchange, personal_info):
 
     # 株式トークン新規発行
     share_token, deploy_args = utils. \
-        issue_share_token(issuer, share_exchange.address, personal_info.address)
+        issue_share_token(users, share_exchange.address, personal_info.address)
 
     reference_url = 'https://some_reference_url.com/image.png'
     reference_url_after = 'https://some_reference_url.com/image_after.png'
@@ -473,7 +469,7 @@ def test_setReferenceUrls_error_1(users, share_exchange, personal_info):
 
     # 株式トークン新規発行
     share_token, deploy_args = utils. \
-        issue_share_token(issuer, share_exchange.address, personal_info.address)
+        issue_share_token(users, share_exchange.address, personal_info.address)
 
     reference_url = 'https://some_reference_url.com/image.png'
 
@@ -493,7 +489,7 @@ def test_setReferenceUrls_error_2(users, share_exchange, personal_info):
 
     # 株式トークン新規発行
     share_token, deploy_args = utils. \
-        issue_share_token(issuer, share_exchange.address, personal_info.address)
+        issue_share_token(users, share_exchange.address, personal_info.address)
 
     reference_url = '0x1596Ff8ED308a83897a731F3C1e814B19E11D68c'
 
@@ -503,12 +499,11 @@ def test_setReferenceUrls_error_2(users, share_exchange, personal_info):
 
 # エラー系3: Issuer以外のアドレスからリファレンス設定を実施した場合
 def test_setReferenceUrls_error_3(users, share_exchange, personal_info):
-    issuer = users['issuer']
     other = users['admin']
 
     # 株式トークン新規発行
     share_token, deploy_args = utils. \
-        issue_share_token(issuer, share_exchange.address, personal_info.address)
+        issue_share_token(users, share_exchange.address, personal_info.address)
 
     reference_url = 'https://some_reference_url.com/image.png'
 
@@ -530,7 +525,7 @@ def test_setContactInformation_normal_1(users, share_exchange, personal_info):
 
     # 株式トークン新規発行
     share_token, deploy_args = utils. \
-        issue_share_token(issuer, share_exchange.address, personal_info.address)
+        issue_share_token(users, share_exchange.address, personal_info.address)
 
     # 修正 -> Success
     share_token.setContactInformation.transact('updated contact information', {'from': issuer})
@@ -545,7 +540,7 @@ def test_setContactInformation_error_1(users, share_exchange, personal_info):
 
     # 株式トークン新規発行
     share_token, deploy_args = utils. \
-        issue_share_token(issuer, share_exchange.address, personal_info.address)
+        issue_share_token(users, share_exchange.address, personal_info.address)
 
     with pytest.raises(ValueError):
         share_token.setContactInformation.transact('0x1596Ff8ED308a83897a731F3C1e814B19E11D68c', {'from': issuer})
@@ -553,12 +548,11 @@ def test_setContactInformation_error_1(users, share_exchange, personal_info):
 
 # エラー系2: 権限エラー
 def test_setContactInformation_error_2(users, share_exchange, personal_info):
-    issuer = users['issuer']
     other = users['admin']
 
     # 株式トークン新規発行
     share_token, deploy_args = utils. \
-        issue_share_token(issuer, share_exchange.address, personal_info.address)
+        issue_share_token(users, share_exchange.address, personal_info.address)
 
     # Owner以外のアドレスから更新 -> Failure
     share_token.setContactInformation.transact('updated contact information', {'from': other})
@@ -578,7 +572,7 @@ def test_setPrivacyPolicy_normal_1(users, share_exchange, personal_info):
 
     # 株式トークン新規発行
     share_token, deploy_args = utils. \
-        issue_share_token(issuer, share_exchange.address, personal_info.address)
+        issue_share_token(users, share_exchange.address, personal_info.address)
 
     # 修正 -> Success
     share_token.setPrivacyPolicy.transact('updated privacy policy', {'from': issuer})
@@ -593,7 +587,7 @@ def test_setPrivacyPolicy_error_1(users, share_exchange, personal_info):
 
     # 株式トークン新規発行
     share_token, deploy_args = utils. \
-        issue_share_token(issuer, share_exchange.address, personal_info.address)
+        issue_share_token(users, share_exchange.address, personal_info.address)
 
     with pytest.raises(ValueError):
         share_token.setPrivacyPolicy.transact('0x1596Ff8ED308a83897a731F3C1e814B19E11D68c', {'from': issuer})
@@ -601,12 +595,11 @@ def test_setPrivacyPolicy_error_1(users, share_exchange, personal_info):
 
 # エラー系2: 権限エラー
 def test_setPrivacyPolicy_error_2(users, share_exchange, personal_info):
-    issuer = users['issuer']
     other = users['admin']
 
     # 株式トークン新規発行
     share_token, deploy_args = utils. \
-        issue_share_token(issuer, share_exchange.address, personal_info.address)
+        issue_share_token(users, share_exchange.address, personal_info.address)
 
     # Owner以外のアドレスから更新 -> Failure
     share_token.setPrivacyPolicy.transact('updated privacy policy', {'from': other})
@@ -626,7 +619,7 @@ def test_setMemo_normal_1(users, share_exchange, personal_info):
 
     # 株式トークン新規発行
     share_token, deploy_args = utils. \
-        issue_share_token(issuer, share_exchange.address, personal_info.address)
+        issue_share_token(users, share_exchange.address, personal_info.address)
 
     # メモ欄の修正 -> Success
     share_token.setMemo.transact('updated memo', {'from': issuer})
@@ -641,7 +634,7 @@ def test_setMemo_error_1(users, share_exchange, personal_info):
 
     # 株式トークン新規発行
     share_token, deploy_args = utils. \
-        issue_share_token(issuer, share_exchange.address, personal_info.address)
+        issue_share_token(users, share_exchange.address, personal_info.address)
 
     with pytest.raises(ValueError):
         share_token.setMemo.transact('0x1596Ff8ED308a83897a731F3C1e814B19E11D68c', {'from': issuer})
@@ -649,12 +642,11 @@ def test_setMemo_error_1(users, share_exchange, personal_info):
 
 # エラー系2: Owner以外のアドレスからメモ欄の修正を実施した場合
 def test_setMemo_error_2(users, share_exchange, personal_info):
-    issuer = users['issuer']
     other = users['admin']
 
     # 株式トークン新規発行
     share_token, deploy_args = utils. \
-        issue_share_token(issuer, share_exchange.address, personal_info.address)
+        issue_share_token(users, share_exchange.address, personal_info.address)
 
     # Owner以外のアドレスからメモ欄の修正を実施 -> Failure
     share_token.setMemo.transact('updated memo', {'from': other})
@@ -675,7 +667,7 @@ def test_setTransferable_normal_1(users, share_exchange, personal_info):
 
     # 新規発行
     share_contract, deploy_args = \
-        utils.issue_share_token(issuer, share_exchange.address, personal_info.address)
+        utils.issue_share_token(users, share_exchange.address, personal_info.address)
 
     # 譲渡可能更新
     share_contract.setTransferable.transact(after_transferable, {'from': issuer})
@@ -690,7 +682,7 @@ def test_setTransferable_error_1(users, share_exchange, personal_info):
 
     # 新規発行
     share_contract, deploy_args = \
-        utils.issue_share_token(issuer, share_exchange.address, personal_info.address)
+        utils.issue_share_token(users, share_exchange.address, personal_info.address)
 
     # 型誤り
     with pytest.raises(ValueError):
@@ -699,13 +691,12 @@ def test_setTransferable_error_1(users, share_exchange, personal_info):
 
 # エラー系2: 権限エラー
 def test_setTransferable_error_2(users, share_exchange, personal_info):
-    issuer = users['issuer']
     attacker = users['trader']
     after_transferable = False
 
     # 新規発行
     share_contract, deploy_args = \
-        utils.issue_share_token(issuer, share_exchange.address, personal_info.address)
+        utils.issue_share_token(users, share_exchange.address, personal_info.address)
 
     # 譲渡可能更新
     share_contract.setTransferable.transact(after_transferable, {'from': attacker})  # エラーになる
@@ -725,7 +716,7 @@ def test_setOfferingStatus_normal_1(users, share_exchange, personal_info):
 
     # トークン新規発行
     share_token, deploy_args = \
-        utils.issue_share_token(issuer, share_exchange.address, personal_info.address)
+        utils.issue_share_token(users, share_exchange.address, personal_info.address)
 
     # 初期状態 == False
     assert share_token.offeringStatus() is False
@@ -743,7 +734,7 @@ def test_setOfferingStatus_normal_2(users, share_exchange, personal_info):
 
     # トークン新規発行
     share_token, deploy_args = \
-        utils.issue_share_token(issuer, share_exchange.address, personal_info.address)
+        utils.issue_share_token(users, share_exchange.address, personal_info.address)
 
     # 新規募集ステータスの更新
     share_token.setOfferingStatus.transact(True, {'from': issuer})
@@ -760,7 +751,7 @@ def test_setOfferingStatus_error_1(users, share_exchange, personal_info):
 
     # トークン新規発行
     share_token, deploy_args = \
-        utils.issue_share_token(issuer, share_exchange.address, personal_info.address)
+        utils.issue_share_token(users, share_exchange.address, personal_info.address)
 
     # 新規募集ステータスの更新（エラー）：文字型
     with pytest.raises(ValueError):
@@ -778,7 +769,7 @@ def test_balanceOf_normal_1(users, share_exchange, personal_info):
 
     # 株式トークン新規発行
     share_token, deploy_args = utils. \
-        issue_share_token(issuer, share_exchange.address, personal_info.address)
+        issue_share_token(users, share_exchange.address, personal_info.address)
 
     balance = share_token.balanceOf(issuer)
     assert balance == 10000
@@ -786,11 +777,9 @@ def test_balanceOf_normal_1(users, share_exchange, personal_info):
 
 # エラー系1: 入力値の型誤り（Owner）
 def test_balanceOf_error_1(users, share_exchange, personal_info):
-    issuer = users['issuer']
-
     # 株式トークン新規発行
     share_token, deploy_args = utils. \
-        issue_share_token(issuer, share_exchange.address, personal_info.address)
+        issue_share_token(users, share_exchange.address, personal_info.address)
 
     account_address = 1234
 
@@ -810,7 +799,7 @@ def test_authorize_normal_1(users, share_exchange, personal_info):
 
     # 株式トークン新規発行
     share_token, deploy_args = utils. \
-        issue_share_token(issuer, share_exchange.address, personal_info.address)
+        issue_share_token(users, share_exchange.address, personal_info.address)
 
     # 認可
     share_token.authorize.transact(trader, True, {'from': issuer})
@@ -833,7 +822,7 @@ def test_authorize_error_1(users, share_exchange, personal_info):
 
     # 株式トークン新規発行
     share_token, deploy_args = utils. \
-        issue_share_token(issuer, share_exchange.address, personal_info.address)
+        issue_share_token(users, share_exchange.address, personal_info.address)
 
     # アドレス指定誤り
     with pytest.raises(ValueError):
@@ -859,7 +848,7 @@ def test_lock_normal_1(users, share_exchange, personal_info):
 
     # 株式トークン新規発行
     share_token, deploy_args = utils. \
-        issue_share_token(issuer, share_exchange.address, personal_info.address)
+        issue_share_token(users, share_exchange.address, personal_info.address)
 
     # 投資家に移管
     share_token.transferFrom.transact(issuer, trader, transfer_amount, {'from': issuer})
@@ -887,7 +876,7 @@ def test_lock_normal_2(users, share_exchange, personal_info):
 
     # 株式トークン新規発行
     share_token, deploy_args = utils. \
-        issue_share_token(issuer, share_exchange.address, personal_info.address)
+        issue_share_token(users, share_exchange.address, personal_info.address)
 
     # 投資家に移管
     share_token.transferFrom.transact(issuer, trader, transfer_amount, {'from': issuer})
@@ -912,7 +901,7 @@ def test_lock_error_1(users, share_exchange, personal_info):
 
     # 株式トークン新規発行
     share_token, deploy_args = utils. \
-        issue_share_token(issuer, share_exchange.address, personal_info.address)
+        issue_share_token(users, share_exchange.address, personal_info.address)
 
     # 投資家に移管
     share_token.transferFrom.transact(issuer, trader, transfer_amount, {'from': issuer})
@@ -942,7 +931,7 @@ def test_lock_error_2(users, share_exchange, personal_info):
 
     # 株式トークン新規発行
     share_token, deploy_args = utils. \
-        issue_share_token(issuer, share_exchange.address, personal_info.address)
+        issue_share_token(users, share_exchange.address, personal_info.address)
 
     # 投資家に移管
     share_token.transferFrom.transact(issuer, trader, transfer_amount, {'from': issuer})
@@ -966,7 +955,7 @@ def test_lock_error_3(users, share_exchange, personal_info):
 
     # 株式トークン新規発行
     share_token, deploy_args = utils. \
-        issue_share_token(issuer, share_exchange.address, personal_info.address)
+        issue_share_token(users, share_exchange.address, personal_info.address)
 
     # 投資家に移管
     share_token.transferFrom.transact(issuer, trader, transfer_amount, {'from': issuer})
@@ -994,7 +983,7 @@ def test_lock_error_4(users, share_exchange, personal_info):
 
     # 株式トークン新規発行
     share_token, deploy_args = utils. \
-        issue_share_token(issuer, share_exchange.address, personal_info.address)
+        issue_share_token(users, share_exchange.address, personal_info.address)
 
     # 投資家に移管
     share_token.transferFrom.transact(issuer, trader, transfer_amount, {'from': issuer})
@@ -1023,7 +1012,7 @@ def test_lockedOf_error_1(users, share_exchange, personal_info):
 
     # 株式トークン新規発行
     share_token, deploy_args = utils. \
-        issue_share_token(issuer, share_exchange.address, personal_info.address)
+        issue_share_token(users, share_exchange.address, personal_info.address)
 
     # 投資家に移管
     share_token.transferFrom.transact(issuer, trader, transfer_amount, {'from': issuer})
@@ -1056,7 +1045,7 @@ def test_unlock_normal_1(users, share_exchange, personal_info):
 
     # 株式トークン新規発行
     share_token, deploy_args = utils. \
-        issue_share_token(issuer, share_exchange.address, personal_info.address)
+        issue_share_token(users, share_exchange.address, personal_info.address)
 
     # 投資家に移管
     share_token.transferFrom.transact(issuer, trader, transfer_amount, {'from': issuer})
@@ -1093,7 +1082,7 @@ def test_unlock_normal_2(users, share_exchange, personal_info):
 
     # 株式トークン新規発行
     share_token, deploy_args = utils. \
-        issue_share_token(issuer, share_exchange.address, personal_info.address)
+        issue_share_token(users, share_exchange.address, personal_info.address)
 
     # 投資家に移管
     share_token.transferFrom.transact(issuer, trader, transfer_amount, {'from': issuer})
@@ -1127,7 +1116,7 @@ def test_unlock_error_1(users, share_exchange, personal_info):
 
     # 株式トークン新規発行
     share_token, deploy_args = utils. \
-        issue_share_token(issuer, share_exchange.address, personal_info.address)
+        issue_share_token(users, share_exchange.address, personal_info.address)
 
     # 投資家に移管
     share_token.transferFrom.transact(issuer, trader, transfer_amount, {'from': issuer})
@@ -1165,7 +1154,7 @@ def test_unlock_error_2(users, share_exchange, personal_info):
 
     # 株式トークン新規発行
     share_token, deploy_args = utils. \
-        issue_share_token(issuer, share_exchange.address, personal_info.address)
+        issue_share_token(users, share_exchange.address, personal_info.address)
 
     # 投資家に移管
     share_token.transferFrom.transact(issuer, trader, transfer_amount, {'from': issuer})
@@ -1195,7 +1184,7 @@ def test_unlock_error_3(users, share_exchange, personal_info):
 
     # 株式トークン新規発行
     share_token, deploy_args = utils. \
-        issue_share_token(issuer, share_exchange.address, personal_info.address)
+        issue_share_token(users, share_exchange.address, personal_info.address)
 
     # 投資家に移管
     share_token.transferFrom.transact(issuer, trader, transfer_amount, {'from': issuer})
@@ -1228,7 +1217,7 @@ def test_unlock_error_4(users, share_exchange, personal_info):
 
     # 株式トークン新規発行
     share_token, deploy_args = utils. \
-        issue_share_token(issuer, share_exchange.address, personal_info.address)
+        issue_share_token(users, share_exchange.address, personal_info.address)
 
     # 投資家に移管
     share_token.transferFrom.transact(issuer, trader, transfer_amount, {'from': issuer})
@@ -1329,7 +1318,7 @@ def test_transfer_error_3(users, share_exchange, personal_info):
 
     # 株式トークン新規発行
     share_contract, deploy_args = utils. \
-        issue_share_token(issuer, share_exchange.address, personal_info.address)
+        issue_share_token(users, share_exchange.address, personal_info.address)
 
     # 個人情報登録
     utils.register_personal_info(from_address, personal_info, from_address)
@@ -1353,7 +1342,7 @@ def test_transfer_error_4(users, share_exchange, personal_info):
 
     # 株式トークン新規発行
     share_contract, deploy_args = utils. \
-        issue_share_token(issuer, share_exchange.address, personal_info.address)
+        issue_share_token(users, share_exchange.address, personal_info.address)
 
     with pytest.raises(AttributeError):
         share_contract.isContract(to_address)
@@ -1392,6 +1381,7 @@ def test_transfer_error_5(users, share_exchange, personal_info,
     assert from_balance == deploy_args[5]
     assert to_balance == 0
 
+
 # エラー系6: 譲渡不可トークンの振替
 def test_transfer_error_6(users, share_exchange, personal_info):
     issuer = users['issuer']
@@ -1400,7 +1390,7 @@ def test_transfer_error_6(users, share_exchange, personal_info):
 
     # 株式トークン新規発行
     share_contract, deploy_args = \
-        utils.issue_share_token(issuer, share_exchange.address, personal_info.address)
+        utils.issue_share_token(users, share_exchange.address, personal_info.address)
 
     # 個人情報登録
     utils.register_personal_info(to_address, personal_info, issuer)
@@ -1426,7 +1416,7 @@ def test_transfer_error_7(users, share_exchange, personal_info):
 
     # 株式トークン新規発行
     share_contract, deploy_args = \
-        utils.issue_share_token(issuer, share_exchange.address, personal_info.address)
+        utils.issue_share_token(users, share_exchange.address, personal_info.address)
 
     # NOTE:個人情報未登録（to_address）
 
@@ -1600,12 +1590,11 @@ TEST_募集申込（applyForOffering）
 # 正常系1
 #   発行：発行体 -> （申込なし）初期データ参照
 def test_applyForOffering_normal_1(users):
-    issuer = users['issuer']
     trader = users['trader']
 
     # トークン新規発行
     share_token, deploy_args = \
-        utils.issue_share_token(issuer, zero_address, zero_address)
+        utils.issue_share_token(users, zero_address, zero_address)
 
     application = share_token.applications(trader)
     assert application[0] == 0
@@ -1621,7 +1610,7 @@ def test_applyForOffering_normal_2(users, personal_info):
 
     # トークン新規発行
     share_token, deploy_args = \
-        utils.issue_share_token(issuer, zero_address, personal_info.address)
+        utils.issue_share_token(users, zero_address, personal_info.address)
 
     # 新規募集ステータスの更新
     share_token.setOfferingStatus.transact(True, {'from': issuer})
@@ -1646,7 +1635,7 @@ def test_applyForOffering_normal_3(users, personal_info):
 
     # トークン新規発行
     share_token, deploy_args = \
-        utils.issue_share_token(issuer, zero_address, personal_info.address)
+        utils.issue_share_token(users, zero_address, personal_info.address)
 
     # 新規募集ステータスの更新
     share_token.setOfferingStatus.transact(True, {'from': issuer})
@@ -1669,12 +1658,11 @@ def test_applyForOffering_normal_3(users, personal_info):
 # エラー系1:
 #   発行：発行体 -> 投資家：募集申込（入力値の型誤り）
 def test_applyForOffering_error_1(users):
-    issuer = users['issuer']
     trader = users['trader']
 
     # トークン新規発行
     share_token, deploy_args = \
-        utils.issue_share_token(issuer, zero_address, zero_address)
+        utils.issue_share_token(users, zero_address, zero_address)
 
     # 募集申込（エラー）：amount 文字型
     with pytest.raises(TypeError):
@@ -1692,12 +1680,11 @@ def test_applyForOffering_error_1(users):
 # エラー系2:
 #   発行：発行体 -> 投資家：募集申込（申込ステータスが停止中）
 def test_applyForOffering_error_2(users):
-    issuer = users['issuer']
     trader = users['trader']
 
     # トークン新規発行
     share_token, deploy_args = \
-        utils.issue_share_token(issuer, zero_address, zero_address)
+        utils.issue_share_token(users, zero_address, zero_address)
 
     # 募集申込（エラー）：募集申込ステータスFalse状態での申込
     share_token.applyForOffering.transact(10, 'abcdefgh', {'from': trader})
@@ -1707,6 +1694,7 @@ def test_applyForOffering_error_2(users):
     assert application[1] == 0
     assert application[2] == ''
 
+
 # エラー系3
 #   発行：発行体 -> 投資家：募集申込（個人情報未登録）
 def test_applyForOffering_error_3(users, personal_info):
@@ -1715,7 +1703,7 @@ def test_applyForOffering_error_3(users, personal_info):
 
     # トークン新規発行
     share_token, deploy_args = \
-        utils.issue_share_token(issuer, zero_address, personal_info.address)
+        utils.issue_share_token(users, zero_address, personal_info.address)
 
     # 新規募集ステータスの更新
     share_token.setOfferingStatus.transact(True, {'from': issuer})
@@ -1743,7 +1731,7 @@ def test_allot_normal_1(users, personal_info):
     trader = users['trader']
 
     # トークン新規発行
-    share_token, deploy_args = utils.issue_share_token(issuer, zero_address, personal_info.address)
+    share_token, deploy_args = utils.issue_share_token(users, zero_address, personal_info.address)
 
     # 新規募集ステータスの更新
     share_token.setOfferingStatus.transact(True, {'from': issuer})
@@ -1770,7 +1758,7 @@ def test_allot_error_1(users):
     trader = users['trader']
 
     # トークン新規発行
-    share_token, deploy_args = utils.issue_share_token(issuer, zero_address, zero_address)
+    share_token, deploy_args = utils.issue_share_token(users, zero_address, zero_address)
 
     # 新規募集ステータスの更新
     share_token.setOfferingStatus.transact(True, {'from': issuer})
@@ -1791,7 +1779,7 @@ def test_allot_error_2(users):
     trader = users['trader']
 
     # トークン新規発行
-    share_token, deploy_args = utils.issue_share_token(issuer, zero_address, zero_address)
+    share_token, deploy_args = utils.issue_share_token(users, zero_address, zero_address)
 
     # 新規募集ステータスの更新
     share_token.setOfferingStatus.transact(True, {'from': issuer})
@@ -1816,7 +1804,7 @@ def test_issueFrom_normal_1(users):
     value = 10
 
     # トークン新規発行
-    share_token, deploy_args = utils.issue_share_token(issuer, zero_address, zero_address)
+    share_token, deploy_args = utils.issue_share_token(users, zero_address, zero_address)
 
     # 増資
     share_token.issueFrom.transact(issuer, zero_address, value, {'from': issuer})
@@ -1835,7 +1823,7 @@ def test_issueFrom_normal_2(users):
     value = 10
 
     # トークン新規発行
-    share_token, deploy_args = utils.issue_share_token(issuer, zero_address, zero_address)
+    share_token, deploy_args = utils.issue_share_token(users, zero_address, zero_address)
 
     # 増資
     share_token.issueFrom.transact(trader, zero_address, value, {'from': issuer})
@@ -1861,7 +1849,7 @@ def test_issueFrom_normal_3(users, share_exchange):
 
     # 株式トークン新規発行
     share_token, deploy_args = utils. \
-        issue_share_token(issuer, share_exchange.address, zero_address)
+        issue_share_token(users, share_exchange.address, zero_address)
 
     # 投資家に移管
     share_token.transferFrom.transact(issuer, trader, transfer_amount, {'from': issuer})
@@ -1884,7 +1872,7 @@ def test_issueFrom_error_1(users):
     issuer = users['issuer']
 
     # トークン新規発行
-    share_token, deploy_args = utils.issue_share_token(issuer, zero_address, zero_address)
+    share_token, deploy_args = utils.issue_share_token(users, zero_address, zero_address)
 
     # String
     with pytest.raises(TypeError):
@@ -1904,7 +1892,7 @@ def test_issueFrom_error_2(users):
     issuer = users['issuer']
 
     # トークン新規発行
-    share_token, deploy_args = utils.issue_share_token(issuer, zero_address, zero_address)
+    share_token, deploy_args = utils.issue_share_token(users, zero_address, zero_address)
 
     # 上限値超
     with pytest.raises(OverflowError):
@@ -1921,7 +1909,7 @@ def test_issueFrom_error_3(users):
     trader = users['trader']
 
     # トークン新規発行
-    share_token, deploy_args = utils.issue_share_token(issuer, zero_address, zero_address)
+    share_token, deploy_args = utils.issue_share_token(users, zero_address, zero_address)
 
     # 上限値超
     with pytest.raises(OverflowError):
@@ -1938,7 +1926,7 @@ def test_issueFrom_error_4(users):
     trader = users['trader']
 
     # トークン新規発行
-    share_token, deploy_args = utils.issue_share_token(issuer, zero_address, zero_address)
+    share_token, deploy_args = utils.issue_share_token(users, zero_address, zero_address)
 
     issue_amount = 2 ** 256 - deploy_args[5]
 
@@ -1960,7 +1948,7 @@ def test_issueFrom_error_5(users):
     attacker = users['trader']
 
     # トークン新規発行
-    share_token, deploy_args = utils.issue_share_token(issuer, zero_address, zero_address)
+    share_token, deploy_args = utils.issue_share_token(users, zero_address, zero_address)
 
     # 増資：権限エラー
     share_token.issueFrom.transact(attacker, zero_address, 1, {'from': attacker})  # エラーになる
@@ -1983,7 +1971,7 @@ def test_redeemFrom_normal_1(users):
     value = 10
 
     # トークン新規発行
-    share_token, deploy_args = utils.issue_share_token(issuer, zero_address, zero_address)
+    share_token, deploy_args = utils.issue_share_token(users, zero_address, zero_address)
 
     # 減資
     share_token.redeemFrom.transact(issuer, zero_address, value, {'from': issuer})
@@ -2003,7 +1991,7 @@ def test_redeemFrom_normal_2(users):
     value = 10
 
     # トークン新規発行
-    share_token, deploy_args = utils.issue_share_token(issuer, zero_address, zero_address)
+    share_token, deploy_args = utils.issue_share_token(users, zero_address, zero_address)
 
     # traderとexchangeに譲渡
     share_token.transferFrom.transact(issuer, trader, transfer_amount, {'from': issuer})
@@ -2029,7 +2017,7 @@ def test_redeemFrom_normal_3(users):
     value = 5
 
     # トークン新規発行
-    share_token, deploy_args = utils.issue_share_token(issuer, zero_address, zero_address)
+    share_token, deploy_args = utils.issue_share_token(users, zero_address, zero_address)
 
     # traderに譲渡
     share_token.transferFrom.transact(issuer, trader, transfer_amount, {'from': issuer})
@@ -2056,7 +2044,7 @@ def test_redeemFrom_error_1(users):
     issuer = users['issuer']
 
     # トークン新規発行
-    share_token, deploy_args = utils.issue_share_token(issuer, zero_address, zero_address)
+    share_token, deploy_args = utils.issue_share_token(users, zero_address, zero_address)
 
     # String
     with pytest.raises(TypeError):
@@ -2076,7 +2064,7 @@ def test_redeemFrom_error_2(users):
     issuer = users['issuer']
 
     # トークン新規発行
-    share_token, deploy_args = utils.issue_share_token(issuer, zero_address, zero_address)
+    share_token, deploy_args = utils.issue_share_token(users, zero_address, zero_address)
 
     # 下限値超
     with pytest.raises(OverflowError):
@@ -2088,7 +2076,7 @@ def test_redeemFrom_error_3(users):
     issuer = users['issuer']
 
     # トークン新規発行
-    share_token, deploy_args = utils.issue_share_token(issuer, zero_address, zero_address)
+    share_token, deploy_args = utils.issue_share_token(users, zero_address, zero_address)
 
     redeem_amount = deploy_args[5] + 1
 
@@ -2101,6 +2089,7 @@ def test_redeemFrom_error_3(users):
     assert total_supply == deploy_args[5]
     assert balance == deploy_args[5]
 
+
 # エラー系4: 発行→ロック→減資→ロック数量より下限を超過
 def test_redeemFrom_error_4(users):
     issuer = users['issuer']
@@ -2110,7 +2099,7 @@ def test_redeemFrom_error_4(users):
     redeem_amount = lock_amount + 1
 
     # トークン新規発行
-    share_token, deploy_args = utils.issue_share_token(issuer, zero_address, zero_address)
+    share_token, deploy_args = utils.issue_share_token(users, zero_address, zero_address)
 
     # traderに譲渡
     share_token.transferFrom.transact(issuer, trader, transfer_amount, {'from': issuer})
@@ -2138,7 +2127,7 @@ def test_redeemFrom_error_5(users):
     attacker = users['trader']
 
     # トークン新規発行
-    share_token, deploy_args = utils.issue_share_token(issuer, zero_address, zero_address)
+    share_token, deploy_args = utils.issue_share_token(users, zero_address, zero_address)
 
     # 減資：権限エラー
     share_token.redeemFrom.transact(attacker, zero_address, 1, {'from': attacker})  # エラーになる
