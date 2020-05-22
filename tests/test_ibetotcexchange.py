@@ -1,5 +1,6 @@
 import pytest
 from eth_utils import to_checksum_address
+
 import utils
 
 '''
@@ -716,7 +717,6 @@ def test_executeOrder_error_2(users, otc_exchange, personal_info):
 
     # Take注文
     order_id = latest_order_id_error
-    _amount = 123
     otc_exchange.executeOrder.transact(order_id, {'from': _trader})  # エラーになる
 
     orderbook = otc_exchange.getOrder(latest_order_id)

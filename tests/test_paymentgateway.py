@@ -603,4 +603,3 @@ def test_removeAgent_error_2(PaymentGateway, users):
 
     agent_available = pg_contract.getAgent(agent)
     assert agent_available == True
-

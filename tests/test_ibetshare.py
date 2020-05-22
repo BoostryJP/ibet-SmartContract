@@ -202,7 +202,7 @@ def test_setTradableExchange_normal_1(users, share_exchange, personal_info,
 
     # その他Exchange
     other_exchange = users['admin'].deploy(
-        IbetCouponExchange,
+        IbetCouponExchange,  # IbetShareExchange以外を読み込む必要がある
         payment_gateway.address,
         coupon_exchange_storage.address
     )
@@ -238,7 +238,7 @@ def test_setTradableExchange_error_2(users, share_exchange, personal_info,
 
     # その他Exchange
     other_exchange = users['admin'].deploy(
-        IbetCouponExchange,
+        IbetCouponExchange,  # IbetShareExchange以外を読み込む必要がある
         payment_gateway.address,
         coupon_exchange_storage.address
     )
@@ -1248,7 +1248,7 @@ def test_transfer_normal_1(users, share_exchange, personal_info):
 
     # 株式トークン新規発行
     share_contract, deploy_args = utils. \
-        issue_share_token(from_address, share_exchange.address, personal_info.address)
+        issue_share_token(users, share_exchange.address, personal_info.address)
 
     # 振替先の個人情報登録
     utils.register_personal_info(to_address, personal_info, from_address)
@@ -1270,7 +1270,7 @@ def test_transfer_normal_2(users, share_exchange, personal_info):
 
     # 株式トークン新規発行
     share_contract, deploy_args = utils. \
-        issue_share_token(from_address, share_exchange.address, personal_info.address)
+        issue_share_token(users, share_exchange.address, personal_info.address)
 
     to_address = share_exchange.address
     share_contract.transfer.transact(to_address, transfer_amount, {'from': from_address})
@@ -1290,7 +1290,7 @@ def test_transfer_error_1(users, share_exchange, personal_info):
 
     # 株式トークン新規発行
     share_contract, deploy_args = utils. \
-        issue_share_token(from_address, share_exchange.address, personal_info.address)
+        issue_share_token(users, share_exchange.address, personal_info.address)
 
     with pytest.raises(ValueError):
         share_contract.transfer.transact(to_address, transfer_amount, {'from': from_address})
@@ -1304,7 +1304,7 @@ def test_transfer_error_2(users, share_exchange, personal_info):
 
     # 株式トークン新規発行
     share_contract, deploy_args = utils. \
-        issue_share_token(from_address, share_exchange.address, personal_info.address)
+        issue_share_token(users, share_exchange.address, personal_info.address)
 
     with pytest.raises(TypeError):
         share_contract.transfer.transact(to_address, transfer_amount, {'from': from_address})
@@ -1363,11 +1363,11 @@ def test_transfer_error_5(users, share_exchange, personal_info,
 
     # 株式トークン新規発行
     share_contract, deploy_args = utils. \
-        issue_share_token(from_address, share_exchange.address, personal_info.address)
+        issue_share_token(users, share_exchange.address, personal_info.address)
 
     # 取引不可Exchange
     dummy_exchange = users['admin'].deploy(
-        IbetCouponExchange,
+        IbetCouponExchange,  # IbetShareExchange以外を読み込む必要がある
         payment_gateway.address,
         coupon_exchange_storage.address
     )
@@ -1444,7 +1444,7 @@ def test_transferFrom_normal_1(users, share_exchange, personal_info):
 
     # 株式トークン新規発行
     share_contract, deploy_args = utils. \
-        issue_share_token(_issuer, share_exchange.address, personal_info.address)
+        issue_share_token(users, share_exchange.address, personal_info.address)
 
     # 振替先の個人情報登録（_from）
     utils.register_personal_info(_from, personal_info, _issuer)
@@ -1472,7 +1472,7 @@ def test_transferFrom_error_1(users, share_exchange, personal_info):
 
     # 株式トークン新規発行
     share_contract, deploy_args = utils. \
-        issue_share_token(_issuer, share_exchange.address, personal_info.address)
+        issue_share_token(users, share_exchange.address, personal_info.address)
 
     # 移転（_from -> _to）
 
@@ -1491,7 +1491,7 @@ def test_transferFrom_error_2(users, share_exchange, personal_info):
 
     # 株式トークン新規発行
     share_contract, deploy_args = utils. \
-        issue_share_token(_issuer, share_exchange.address, personal_info.address)
+        issue_share_token(users, share_exchange.address, personal_info.address)
 
     # 移転（_from -> _to）
 
@@ -1510,7 +1510,7 @@ def test_transferFrom_error_3(users, share_exchange, personal_info):
 
     # 株式トークン新規発行
     share_contract, deploy_args = utils. \
-        issue_share_token(_issuer, share_exchange.address, personal_info.address)
+        issue_share_token(users, share_exchange.address, personal_info.address)
 
     # 移転（_from -> _to）
 
@@ -1533,7 +1533,7 @@ def test_transferFrom_error_4(users, share_exchange, personal_info):
 
     # 株式トークン新規発行
     share_contract, deploy_args = utils. \
-        issue_share_token(_issuer, share_exchange.address, personal_info.address)
+        issue_share_token(users, share_exchange.address, personal_info.address)
 
     # 振替先の個人情報登録（_from）
     utils.register_personal_info(_from, personal_info, _issuer)
@@ -1562,7 +1562,7 @@ def test_transferFrom_error_5(users, share_exchange, personal_info):
 
     # 株式トークン新規発行
     share_contract, deploy_args = utils. \
-        issue_share_token(_issuer, share_exchange.address, personal_info.address)
+        issue_share_token(users, share_exchange.address, personal_info.address)
 
     # 振替先の個人情報登録（_from）
     utils.register_personal_info(_from, personal_info, _issuer)

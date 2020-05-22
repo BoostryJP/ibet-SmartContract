@@ -282,7 +282,7 @@ def test_transfer_error_5(IbetCoupon, users, coupon_exchange, coupon_exchange_st
 
     # 取引不可Exchange
     dummy_exchange = users['admin'].deploy(
-        IbetMembershipExchange,
+        IbetMembershipExchange,  # IbetCouponExchange以外を読み込む必要がある
         payment_gateway.address,
         coupon_exchange_storage.address)
 
@@ -348,8 +348,6 @@ def test_consume_normal_2(IbetCoupon, users, coupon_exchange):
 # エラー系1: 入力値の型誤り（Value）
 def test_consume_error_1(IbetCoupon, users, coupon_exchange):
     _issuer = users['issuer']
-    _consumer = users['trader']
-    _value = 'One'
 
     # 新規発行
     deploy_args = init_args(coupon_exchange.address)
@@ -874,7 +872,7 @@ def test_setTradableExchange_normal_1(IbetCoupon, users, coupon_exchange,
 
     # Exchange（新）
     other_exchange = users['admin'].deploy(
-        IbetMembershipExchange,
+        IbetMembershipExchange,  # IbetCouponExchange以外を読み込む必要がある
         payment_gateway.address,
         coupon_exchange_storage.address)
 
@@ -908,7 +906,7 @@ def test_setTradableExchange_error_2(IbetCoupon, users, coupon_exchange, IbetCou
 
     # その他Exchange
     other_exchange = users['admin'].deploy(
-        IbetCouponExchange,
+        IbetCouponExchange,  # IbetCouponExchange以外を読み込む必要がある
         '0x0000000000000000000000000000000000000000',
         '0x0000000000000000000000000000000000000000'
     )

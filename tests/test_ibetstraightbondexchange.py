@@ -3146,7 +3146,6 @@ def test_withdrawAll_normal_2(users, bond_exchange, personal_info):
 def test_withdrawAll_normal_3(users,
                               bond_exchange, personal_info, payment_gateway):
     _issuer = users['issuer']
-    _trader = users['trader']
     _agent = users['agent']
 
     personalinfo_register(personal_info, _issuer, _issuer)
