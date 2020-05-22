@@ -56,16 +56,16 @@ $ brownie test
 
 
 ## 5. Ganache接続設定
-* 開発環境のGanacheに接続するために、以下のコマンドを実行して接続先を登録する。
+* ローカル環境のGanacheに接続するために、以下のコマンドを実行して接続先を登録する。
 
 ```bash
-$ brownie networks import data/test_networks.yml
+$ brownie networks import data/networks.yml
 ```
 
-*  `brownie` コマンドに `--network ganache` オプションを付けると開発環境のGanacheに対して処理が行われる。
+*  `brownie` コマンドに `--network local_network` オプションを付けるとローカル環境のGanacheに対して処理が行われる。
 
 ```bash
 # 例: ローカル環境下のGanacheに接続してコンソールを開く
-brownie console --network ganache
+brownie console --network local_network
 ```
 
