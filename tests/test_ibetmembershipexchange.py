@@ -3247,7 +3247,7 @@ def test_updateExchange_normal_1(users, membership_exchange,
         payment_gateway.address,
         membership_exchange_storage.address)
     membership_exchange_storage. \
-        upgradeVersion.transact(membership_exchange_new.address)
+        upgradeVersion.transact(membership_exchange_new.address, {'from': admin})
 
     # Exchange（新）からの情報参照
     order_id = membership_exchange_new.latestOrderId()
