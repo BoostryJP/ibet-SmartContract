@@ -12,15 +12,9 @@
 </p>
 
 
-## Compile
-Install packages
+## Install
 ```bash
 $ pip install -r requirements.txt
-```
-
-Compile
-```bash
-$ populus compile
 ```
 
 ## Deploy
@@ -32,5 +26,5 @@ $ ./scripts/deploy.sh
 
 You can run the tests with:
 ```bash
-$ pytest tests/
+$ brownie test
 ```

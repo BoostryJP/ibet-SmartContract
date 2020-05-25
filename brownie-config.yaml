@@ -1,0 +1,9 @@
+networks:
+    default: development
+    development:
+        gas_price: 0
+        cmd_settings:
+            port: 18545
+            evm_version: petersburg
+
+

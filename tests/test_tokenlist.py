@@ -10,210 +10,182 @@ TEST_トークン情報を登録（register）
 
 
 # 正常系1: 新規登録(普通社債Token)
-def test_register_normal_1(web3, chain, users, bond_exchange, personal_info):
+def test_register_normal_1(TokenList, users, otc_exchange, personal_info):
     admin = users['admin']
     issuer = users['issuer']
 
     # TokenListコントラクト作成
-    web3.eth.defaultAccount = admin
-    tokenlist_contract, _ = chain.provider.get_or_deploy_contract('TokenList')
+    tokenlist_contract = admin.deploy(TokenList)
 
     # Token新規発行
-    web3.eth.defaultAccount = issuer
-    bond_token, deploy_args = \
-        utils.issue_bond_token(web3, chain, users, bond_exchange.address, personal_info.address)
-    token_address = bond_token.address
+    share_token, deploy_args = \
+        utils.issue_share_token(users, otc_exchange.address, personal_info.address)
+    token_address = share_token.address
 
     # TokenListに追加
-    txn_hash = tokenlist_contract.transact().register(token_address, token_template)
-    chain.wait.for_receipt(txn_hash)
+    tokenlist_contract.register.transact(token_address, token_template, {'from': issuer})
 
     # Owner Address が正しいことを確認
-    owner_address = tokenlist_contract.call().getOwnerAddress(token_address)
+    owner_address = tokenlist_contract.getOwnerAddress(token_address)
     assert owner_address == issuer
 
     # 登録後のリストの長さが正しいことを確認
-    list_length = tokenlist_contract.call().getListLength()
+    list_length = tokenlist_contract.getListLength()
     assert list_length == 1
 
     # 登録情報の内容が正しいことを確認（アドレス検索）
-    token_by_address = tokenlist_contract.call().getTokenByAddress(token_address)
+    token_by_address = tokenlist_contract.getTokenByAddress(token_address)
     assert token_by_address[0] == to_checksum_address(token_address)
     assert token_by_address[1] == token_template
-    assert token_by_address[2] == to_checksum_address(issuer)
+    assert token_by_address[2] == to_checksum_address(issuer.address)
 
     # 登録情報の内容が正しいことを確認（リスト番号指定）
-    token_by_num = tokenlist_contract.call().getTokenByNum(0)
+    token_by_num = tokenlist_contract.getTokenByNum(0)
     assert token_by_num[0] == to_checksum_address(token_address)
     assert token_by_num[1] == token_template
-    assert token_by_num[2] == to_checksum_address(issuer)
+    assert token_by_num[2] == to_checksum_address(issuer.address)
 
 
 # 正常系2: 新規登録（クーポンToken）
-def test_register_normal_2(web3, chain, users, coupon_exchange):
+def test_register_normal_2(TokenList, users, coupon_exchange):
     admin = users['admin']
     issuer = users['issuer']
 
     # TokenListコントラクト作成
-    web3.eth.defaultAccount = admin
-    tokenlist_contract, _ = chain.provider.get_or_deploy_contract('TokenList')
+    tokenlist_contract = admin.deploy(TokenList)
 
     # Token新規発行
-    web3.eth.defaultAccount = issuer
     token, deploy_args = \
-        utils.issue_transferable_coupon(web3, chain, coupon_exchange.address)
+        utils.issue_transferable_coupon(issuer, coupon_exchange.address)
     token_address = token.address
 
     # TokenListに追加
-    txn_hash = tokenlist_contract.transact().register(token_address, token_template)
-    chain.wait.for_receipt(txn_hash)
+    tokenlist_contract.register.transact(token_address, token_template, {'from': issuer})
 
     # Owner Address が正しいことを確認
-    owner_address = tokenlist_contract.call().getOwnerAddress(token_address)
+    owner_address = tokenlist_contract.getOwnerAddress(token_address)
     assert owner_address == issuer
 
     # 登録後のリストの長さが正しいことを確認
-    list_length = tokenlist_contract.call().getListLength()
+    list_length = tokenlist_contract.getListLength()
     assert list_length == 1
 
     # 登録情報の内容が正しいことを確認（アドレス検索）
-    token_by_address = tokenlist_contract.call().getTokenByAddress(token_address)
+    token_by_address = tokenlist_contract.getTokenByAddress(token_address)
     assert token_by_address[0] == to_checksum_address(token_address)
     assert token_by_address[1] == token_template
-    assert token_by_address[2] == to_checksum_address(issuer)
+    assert token_by_address[2] == to_checksum_address(issuer.address)
 
     # 登録情報の内容が正しいことを確認（リスト番号指定）
-    token_by_num = tokenlist_contract.call().getTokenByNum(0)
+    token_by_num = tokenlist_contract.getTokenByNum(0)
     assert token_by_num[0] == to_checksum_address(token_address)
     assert token_by_num[1] == token_template
-    assert token_by_num[2] == to_checksum_address(issuer)
+    assert token_by_num[2] == to_checksum_address(issuer.address)
 
 
 # エラー系1: トークンアドレスの型（address）が正しくない場合
-def test_register_error_1(web3, chain, users):
+def test_register_error_1(TokenList, users):
     admin = users['admin']
     issuer = users['issuer']
 
     # TokenListコントラクト作成
-    web3.eth.defaultAccount = admin
-    tokenlist_contract, _ = chain.provider.get_or_deploy_contract('TokenList')
+    tokenlist_contract = admin.deploy(TokenList)
 
     # 新規登録 -> Failure
-    web3.eth.defaultAccount = issuer
     token_address = 'some_token_address'
-    with pytest.raises(TypeError):
-        tokenlist_contract.transact().register(token_address, token_template)
+    with pytest.raises(ValueError):
+        tokenlist_contract.register.transact(token_address, token_template, {'from': issuer})
 
 
 # エラー系2: トークンテンプレートの型（string）が正しくない場合
-def test_register_error_2(web3, chain, users, bond_exchange, personal_info):
+def test_register_error_2(TokenList, users, share_exchange, personal_info):
     admin = users['admin']
     issuer = users['issuer']
 
     # TokenListコントラクト作成
-    web3.eth.defaultAccount = admin
-    tokenlist_contract, _ = chain.provider.get_or_deploy_contract('TokenList')
+    tokenlist_contract = admin.deploy(TokenList)
 
     # Token新規発行
-    web3.eth.defaultAccount = issuer
-    bond_token, deploy_args = \
-        utils.issue_bond_token(web3, chain, users, bond_exchange.address, personal_info.address)
-    token_address = bond_token.address
+    share_token, deploy_args = \
+        utils.issue_share_token(users, share_exchange.address, personal_info.address)
+    token_address = share_token.address
 
     # 新規登録 -> Failure
-    web3.eth.defaultAccount = issuer
-    with pytest.raises(TypeError):
-        tokenlist_contract.transact().register(token_address, 1234)
+    with pytest.raises(ValueError):
+        tokenlist_contract.register. \
+            transact(token_address, '0xb6286fAFd0451320ad6A8143089b216C2152c025', {'from': issuer})
 
 
 # エラー系3: 同一トークンを複数回登録
-def test_register_error_3(web3, chain, users, bond_exchange, personal_info):
+def test_register_error_3(TokenList, users, share_exchange, personal_info):
     admin = users['admin']
     issuer = users['issuer']
 
     # TokenListコントラクト作成
-    web3.eth.defaultAccount = admin
-    tokenlist_contract, _ = chain.provider.get_or_deploy_contract('TokenList')
+    tokenlist_contract = admin.deploy(TokenList)
 
     # Token新規発行
-    web3.eth.defaultAccount = issuer
-    bond_token, deploy_args = \
-        utils.issue_bond_token(web3, chain, users, bond_exchange.address, personal_info.address)
-    token_address = bond_token.address
+    share_token, deploy_args = \
+        utils.issue_share_token(users, share_exchange.address, personal_info.address)
+    token_address = share_token.address
 
     # 新規登録（1回目） -> Success
-    web3.eth.defaultAccount = issuer
-    txn_hash = tokenlist_contract.transact().register(token_address, token_template)
-    chain.wait.for_receipt(txn_hash)
+    tokenlist_contract.register.transact(token_address, token_template, {'from': issuer})
 
     # 新規登録（2回目） -> Failure
-    web3.eth.defaultAccount = issuer
-    try:
-        txn_hash = tokenlist_contract.transact().register(token_address, token_template)
-        chain.wait.for_receipt(txn_hash)
-    except ValueError:
-        pass
+    tokenlist_contract.register.transact(token_address, token_template, {'from': issuer})
 
     # 登録後のリストの長さが正しいことを確認
-    list_length = tokenlist_contract.call().getListLength()
+    list_length = tokenlist_contract.getListLength()
     assert list_length == 1
 
     # 登録情報の内容が正しいことを確認（アドレス検索）
-    token_by_address = tokenlist_contract.call().getTokenByAddress(token_address)
+    token_by_address = tokenlist_contract.getTokenByAddress(token_address)
     assert token_by_address[0] == to_checksum_address(token_address)
     assert token_by_address[1] == token_template
-    assert token_by_address[2] == to_checksum_address(issuer)
+    assert token_by_address[2] == to_checksum_address(issuer.address)
 
     # 登録情報の内容が正しいことを確認（リスト番号指定）
-    token_by_num = tokenlist_contract.call().getTokenByNum(0)
+    token_by_num = tokenlist_contract.getTokenByNum(0)
     assert token_by_num[0] == to_checksum_address(token_address)
     assert token_by_num[1] == token_template
-    assert token_by_num[2] == to_checksum_address(issuer)
+    assert token_by_num[2] == to_checksum_address(issuer.address)
 
 
 # エラー系4: 異なるアドレスから同一トークンを登録
-def test_register_error_4(web3, chain, users, bond_exchange, personal_info):
+def test_register_error_4(TokenList, users, share_exchange, personal_info):
     admin = users['admin']
     issuer = users['issuer']
 
     # TokenListコントラクト作成
-    web3.eth.defaultAccount = admin
-    tokenlist_contract, _ = chain.provider.get_or_deploy_contract('TokenList')
+    tokenlist_contract = admin.deploy(TokenList)
 
     # Token新規発行
-    web3.eth.defaultAccount = issuer
-    bond_token, deploy_args = \
-        utils.issue_bond_token(web3, chain, users, bond_exchange.address, personal_info.address)
-    token_address = bond_token.address
+    share_token, deploy_args = \
+        utils.issue_share_token(users, share_exchange.address, personal_info.address)
+    token_address = share_token.address
 
     # 新規登録（account_1） -> Success
-    web3.eth.defaultAccount = issuer
-    txn_hash = tokenlist_contract.transact().register(token_address, token_template)
-    chain.wait.for_receipt(txn_hash)
+    tokenlist_contract.register.transact(token_address, token_template, {'from': issuer})
 
     # 新規登録（account_2） -> Failure
-    web3.eth.defaultAccount = admin
-    try:
-        txn_hash = tokenlist_contract.transact().register(token_address, token_template)
-        chain.wait.for_receipt(txn_hash)
-    except ValueError:
-        pass
+    tokenlist_contract.register.transact(token_address, token_template, {'from': admin})
 
     # 登録後のリストの長さが正しいことを確認
-    list_length = tokenlist_contract.call().getListLength()
+    list_length = tokenlist_contract.getListLength()
     assert list_length == 1
 
     # 登録情報の内容が正しいことを確認（アドレス検索）
-    token_by_address = tokenlist_contract.call().getTokenByAddress(token_address)
+    token_by_address = tokenlist_contract.getTokenByAddress(token_address)
     assert token_by_address[0] == to_checksum_address(token_address)
     assert token_by_address[1] == token_template
-    assert token_by_address[2] == to_checksum_address(issuer)
+    assert token_by_address[2] == to_checksum_address(issuer.address)
 
     # 登録情報の内容が正しいことを確認（リスト番号指定）
-    token_by_num = tokenlist_contract.call().getTokenByNum(0)
+    token_by_num = tokenlist_contract.getTokenByNum(0)
     assert token_by_num[0] == to_checksum_address(token_address)
     assert token_by_num[1] == token_template
-    assert token_by_num[2] == to_checksum_address(issuer)
+    assert token_by_num[2] == to_checksum_address(issuer.address)
 
 
 '''
@@ -222,146 +194,121 @@ TEST_オーナーを変更（changeOwner）
 
 
 # 正常系1: オーナー変更
-def test_changeOwner_normal_1(web3, chain, users, bond_exchange, personal_info):
+def test_changeOwner_normal_1(TokenList, users, share_exchange, personal_info):
     admin = users['admin']
     issuer = users['issuer']
-    new_owner_address = admin
+    new_owner_address = admin.address
 
     # TokenListコントラクト作成
-    web3.eth.defaultAccount = admin
-    tokenlist_contract, _ = chain.provider.get_or_deploy_contract('TokenList')
+    tokenlist_contract = admin.deploy(TokenList)
 
     # Token新規発行
-    web3.eth.defaultAccount = issuer
-    bond_token, deploy_args = \
-        utils.issue_bond_token(web3, chain, users, bond_exchange.address, personal_info.address)
-    token_address = bond_token.address
+    share_token, deploy_args = \
+        utils.issue_share_token(users, share_exchange.address, personal_info.address)
+    token_address = share_token.address
 
     # 新規登録 -> Success
-    web3.eth.defaultAccount = issuer
-    txn_hash_1 = tokenlist_contract.transact().register(token_address, token_template)
-    chain.wait.for_receipt(txn_hash_1)
+    tokenlist_contract.register.transact(token_address, token_template, {'from': issuer})
 
     # オーナー変更 -> Success
-    web3.eth.defaultAccount = issuer
-    txn_hash_2 = tokenlist_contract.transact().changeOwner(token_address, new_owner_address)
-    chain.wait.for_receipt(txn_hash_2)
+    tokenlist_contract.changeOwner.transact(token_address, new_owner_address, {'from': issuer})
 
     # Owner Address が正しいことを確認
-    owner_address = tokenlist_contract.call().getOwnerAddress(token_address)
+    owner_address = tokenlist_contract.getOwnerAddress(token_address)
     assert owner_address == new_owner_address
 
     # 登録後のリストの長さが正しいことを確認
-    list_length = tokenlist_contract.call().getListLength()
+    list_length = tokenlist_contract.getListLength()
     assert list_length == 1
 
     # 登録情報の内容が正しいことを確認（アドレス検索）
-    token_by_address = tokenlist_contract.call().getTokenByAddress(token_address)
+    token_by_address = tokenlist_contract.getTokenByAddress(token_address)
     assert token_by_address[0] == to_checksum_address(token_address)
     assert token_by_address[1] == token_template
     assert token_by_address[2] == to_checksum_address(new_owner_address)
 
     # 登録情報の内容が正しいことを確認（リスト番号指定）
-    token_by_num = tokenlist_contract.call().getTokenByNum(0)
+    token_by_num = tokenlist_contract.getTokenByNum(0)
     assert token_by_num[0] == to_checksum_address(token_address)
     assert token_by_num[1] == token_template
     assert token_by_num[2] == to_checksum_address(new_owner_address)
 
 
 # エラー系1: トークンアドレスの型（address）が正しくない場合
-def test_changeOwner_error_1(web3, chain, users):
+def test_changeOwner_error_1(TokenList, users):
     admin = users['admin']
     new_owner_address = admin
 
     # TokenListコントラクト作成
-    web3.eth.defaultAccount = admin
-    tokenlist_contract, _ = chain.provider.get_or_deploy_contract('TokenList')
+    tokenlist_contract = admin.deploy(TokenList)
 
     token_address = 'some_token_address'
 
     # 新規登録 -> Failure
-    with pytest.raises(TypeError):
-        tokenlist_contract.transact().changeOwner(token_address, new_owner_address)
+    with pytest.raises(ValueError):
+        tokenlist_contract.changeOwner.transact(token_address, new_owner_address, {'from': admin})
 
 
 # エラー系2: オーナーアドレスの型（address）が正しくない場合
-def test_changeOwner_error_2(web3, chain, users, bond_exchange, personal_info):
+def test_changeOwner_error_2(TokenList, users, share_exchange, personal_info):
     admin = users['admin']
     issuer = users['issuer']
 
     # TokenListコントラクト作成
-    web3.eth.defaultAccount = admin
-    tokenlist_contract, _ = chain.provider.get_or_deploy_contract('TokenList')
+    tokenlist_contract = admin.deploy(TokenList)
 
     # Token新規発行
-    web3.eth.defaultAccount = issuer
-    bond_token, deploy_args = \
-        utils.issue_bond_token(web3, chain, users, bond_exchange.address, personal_info.address)
-    token_address = bond_token.address
+    share_token, deploy_args = \
+        utils.issue_share_token(users, share_exchange.address, personal_info.address)
+    token_address = share_token.address
 
     new_owner_address = 'some_address'
 
     # 新規登録 -> Failure
-    with pytest.raises(TypeError):
-        tokenlist_contract.transact().changeOwner(token_address, new_owner_address)
+    with pytest.raises(ValueError):
+        tokenlist_contract.changeOwner.transact(token_address, new_owner_address, {'from': issuer})
 
 
 # エラー系3: 登録なし -> オーナー変更
-def test_changeOwner_error_3(web3, chain, users, bond_exchange, personal_info):
+def test_changeOwner_error_3(TokenList, users, share_exchange, personal_info):
     admin = users['admin']
     issuer = users['issuer']
     new_owner_address = users['issuer']
 
     # TokenListコントラクト作成
-    web3.eth.defaultAccount = admin
-    tokenlist_contract, _ = chain.provider.get_or_deploy_contract('TokenList')
+    tokenlist_contract = admin.deploy(TokenList)
 
     # Token新規発行
-    web3.eth.defaultAccount = issuer
-    bond_token, deploy_args = \
-        utils.issue_bond_token(web3, chain, users, bond_exchange.address, personal_info.address)
-    token_address = bond_token.address
+    share_token, deploy_args = \
+        utils.issue_share_token(users, share_exchange.address, personal_info.address)
+    token_address = share_token.address
 
     # オーナー変更 -> Failure
-    web3.eth.defaultAccount = issuer
-    try:
-        txn_hash = tokenlist_contract.transact().changeOwner(token_address, new_owner_address)
-        chain.wait.for_receipt(txn_hash)
-    except ValueError:
-        pass
+    tokenlist_contract.changeOwner.transact(token_address, new_owner_address, {'from': issuer})
 
-    owner_address = tokenlist_contract.call().getOwnerAddress(token_address)
+    owner_address = tokenlist_contract.getOwnerAddress(token_address)
     assert owner_address == '0x0000000000000000000000000000000000000000'
 
 
 # エラー系4: オーナー権限のないアドレスでオーナー変更を実施した場合
-def test_changeOwner_error_4(web3, chain, users, bond_exchange, personal_info):
+def test_changeOwner_error_4(TokenList, users, share_exchange, personal_info):
     admin = users['admin']
     issuer = users['issuer']
     new_owner_address = users['issuer']
 
     # TokenListコントラクト作成
-    web3.eth.defaultAccount = admin
-    tokenlist_contract, _ = chain.provider.get_or_deploy_contract('TokenList')
+    tokenlist_contract = admin.deploy(TokenList)
 
     # Token新規発行
-    web3.eth.defaultAccount = issuer
-    bond_token, deploy_args = \
-        utils.issue_bond_token(web3, chain, users, bond_exchange.address, personal_info.address)
-    token_address = bond_token.address
+    share_token, deploy_args = \
+        utils.issue_share_token(users, share_exchange.address, personal_info.address)
+    token_address = share_token.address
 
     # 新規登録 -> Success
-    web3.eth.defaultAccount = issuer
-    txn_hash_1 = tokenlist_contract.transact().register(token_address, token_template)
-    chain.wait.for_receipt(txn_hash_1)
+    tokenlist_contract.register.transact(token_address, token_template, {'from': issuer})
 
     # オーナー変更 -> Failure
-    web3.eth.defaultAccount = admin
-    try:
-        txn_hash = tokenlist_contract.transact().changeOwner(token_address, new_owner_address)
-        chain.wait.for_receipt(txn_hash)
-    except ValueError:
-        pass
+    tokenlist_contract.changeOwner.transact(token_address, new_owner_address, {'from': admin})
 
-    owner_address = tokenlist_contract.call().getOwnerAddress(token_address)
-    assert owner_address == to_checksum_address(issuer)
+    owner_address = tokenlist_contract.getOwnerAddress(token_address)
+    assert owner_address == to_checksum_address(issuer.address)

@@ -2,8 +2,8 @@ pragma solidity ^0.4.24;
 pragma experimental ABIEncoderV2;
 
 import "./SafeMath.sol";
-import "./Ownable.sol";
-import "./IbetStandardTokenInterface.sol";
+import "../interfaces/Ownable.sol";
+import "../interfaces/IbetStandardTokenInterface.sol";
 import "./ExchangeStorageModel.sol";
 import "./OTCExchangeStorage.sol";
 import "./PaymentGateway.sol";

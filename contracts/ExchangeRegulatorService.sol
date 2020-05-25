@@ -1,6 +1,6 @@
 pragma solidity ^0.4.24;
 
-import "./Ownable.sol";
+import "../interfaces/Ownable.sol";
 import "./RegulatorService.sol";
 
 contract ExchangeRegulatorService is RegulatorService, Ownable {
