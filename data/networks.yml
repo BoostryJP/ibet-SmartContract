@@ -1,0 +1,12 @@
+live:
+- name: ibet
+  networks:
+  - chainid: 2017
+    host: http://localhost:8545
+    id: local_network
+    name: local_network
+  - chainid: 2017
+    host: http://quorum:8545
+    id: dev_network
+    name: dev_network
+

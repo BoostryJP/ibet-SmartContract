@@ -1,6 +1,6 @@
 pragma solidity ^0.4.24;
 
-import "./Ownable.sol";
+import "../interfaces/Ownable.sol";
 
 /// @notice RegulatorServiceの標準インターフェース
 contract RegulatorService {

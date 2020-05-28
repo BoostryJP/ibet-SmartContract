@@ -1,7 +1,7 @@
 pragma solidity ^0.4.24;
 
-import "./IbetStandardTokenInterface.sol";
-import "./Ownable.sol";
+import "../interfaces/IbetStandardTokenInterface.sol";
+import "../interfaces/Ownable.sol";
 
 contract TokenList is Ownable {
 
