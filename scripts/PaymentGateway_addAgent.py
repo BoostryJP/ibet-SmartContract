@@ -15,7 +15,7 @@ agent_address : str
 import os
 
 import sys
-from brownie import accounts, project, network
+from brownie import accounts, project, network, web3
 
 # brownieプロジェクトを読み込む
 p = project.load('.', name="ibet_smart_contract")
@@ -35,8 +35,13 @@ agent_address = sys.argv[2]
 
 def main():
     deployer = accounts[0]
+    web3.geth.personal.unlock_account(
+        deployer.address,
+        os.environ.get('ETH_ACCOUNT_PASSWORD'),
+        1000
+    )
 
-    payment_gateway = PaymentGateway(contract_address)
+    payment_gateway = PaymentGateway.at(contract_address)
 
     payment_gateway.addAgent.transact(agent_address, {'from': deployer})
 

@@ -1,7 +1,7 @@
 # -*- coding:utf-8 -*-
 import os
 
-from brownie import accounts, project, network
+from brownie import accounts, project, network, web3
 
 p = project.load('.', name="ibet_smart_contract")
 p.load_config()
@@ -10,6 +10,7 @@ from brownie.project.ibet_smart_contract import TokenList, PersonalInfo, Payment
     IbetStraightBondExchange
 
 APP_ENV = os.environ.get('APP_ENV') or 'local'
+ETH_ACCOUNT_PASSWORD = os.environ.get('ETH_ACCOUNT_PASSWORD') or 'password'
 if APP_ENV == 'local':
     network_id = 'local_network'
 else:
@@ -19,6 +20,11 @@ network.connect(network_id)
 
 def main():
     deployer = accounts[0]
+    web3.geth.personal.unlock_account(
+        deployer.address,
+        ETH_ACCOUNT_PASSWORD,
+        1000
+    )
 
     # TokenList
     token_list = deployer.deploy(TokenList)
