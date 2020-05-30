@@ -567,9 +567,10 @@ def test_transferFrom_normal_3_2(users, IbetMembership, membership_exchange):
 
 # 正常系3-3: 限界値：上限値
 #  コントラクトアドレスへの移転
-def test_transferFrom_normal_3_3(users, IbetMembership, membership_exchange, IbetMembershipExchange, ExchangeStorage):
+def test_transferFrom_normal_3_3(users, IbetMembership, membership_exchange):
     issuer = users['issuer']
     from_address = users['admin']
+    to_address = membership_exchange.address
     max_value = 2 ** 256 - 1
 
     # 発行
@@ -577,40 +578,15 @@ def test_transferFrom_normal_3_3(users, IbetMembership, membership_exchange, Ibe
     deploy_args[2] = max_value
     membership_contract = issuer.deploy(IbetMembership, *deploy_args)
 
-    # Exchangeコントラクトのデプロイ
-    membership_exchange_storage = issuer.deploy(ExchangeStorage)
-    exchange_contract = issuer.deploy(
-        IbetMembershipExchange,
-        '0x0000000000000000000000000000000000000000',
-        membership_exchange_storage.address,
-        gas_limit=6000000
-    )
-    to_address = exchange_contract.address
-
-    issuer_balance = membership_contract.balanceOf(issuer)
-    from_balance = membership_contract.balanceOf(from_address)
-    to_balance = membership_contract.balanceOf(to_address)
-    print(issuer_balance, from_balance, to_balance)
-
     # 譲渡（issuer -> from_address）
-    membership_contract. \
-        transfer.transact(from_address, max_value, {'from': issuer})
-
-    issuer_balance = membership_contract.balanceOf(issuer)
-    from_balance = membership_contract.balanceOf(from_address)
-    to_balance = membership_contract.balanceOf(to_address)
-    print(issuer_balance, from_balance, to_balance)
+    membership_contract.transfer.transact(from_address, max_value, {'from': issuer})
 
     # 移転（from -> to）
-    x = membership_contract. \
-        transferFrom.transact(from_address, to_address, max_value, {'from': issuer})
+    membership_contract.transferFrom.transact(from_address, to_address, max_value, {'from': issuer})
 
     issuer_balance = membership_contract.balanceOf(issuer)
     from_balance = membership_contract.balanceOf(from_address)
     to_balance = membership_contract.balanceOf(to_address)
-    print(issuer_balance, from_balance, to_balance)
-    print(x)
-
     assert issuer_balance == 0
     assert from_balance == 0
     assert to_balance == max_value
@@ -618,9 +594,10 @@ def test_transferFrom_normal_3_3(users, IbetMembership, membership_exchange, Ibe
 
 # 正常系3-4: 限界値：下限値
 #  コントラクトアドレスへの移転
-def test_transferFrom_normal_3_4(users, IbetMembership, membership_exchange, IbetMembershipExchange, ExchangeStorage):
+def test_transferFrom_normal_3_4(users, IbetMembership, membership_exchange):
     issuer = users['issuer']
     from_address = users['admin']
+    to_address = membership_exchange.address
     min_value = 0
 
     # 発行
@@ -628,28 +605,15 @@ def test_transferFrom_normal_3_4(users, IbetMembership, membership_exchange, Ibe
     deploy_args[2] = min_value
     membership_contract = issuer.deploy(IbetMembership, *deploy_args)
 
-    # Exchangeコントラクトのデプロイ
-    membership_exchange_storage = issuer.deploy(ExchangeStorage)
-    exchange_contract = issuer.deploy(
-        IbetMembershipExchange,
-        '0x0000000000000000000000000000000000000000',
-        membership_exchange_storage.address,
-        gas_limit=6000000
-    )
-    to_address = exchange_contract.address
-
     # 譲渡（issuer -> from_address）
-    membership_contract. \
-        transfer.transact(from_address, min_value, {'from': issuer})
+    membership_contract.transfer.transact(from_address, min_value, {'from': issuer})
 
     # 移転（from -> to）
-    membership_contract. \
-        transferFrom.transact(from_address, to_address, min_value, {'from': issuer})
+    membership_contract.transferFrom.transact(from_address, to_address, min_value, {'from': issuer})
 
     issuer_balance = membership_contract.balanceOf(issuer)
     from_balance = membership_contract.balanceOf(from_address)
     to_balance = membership_contract.balanceOf(to_address)
-
     assert issuer_balance == 0
     assert from_balance == 0
     assert to_balance == 0
