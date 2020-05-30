@@ -1,7 +1,7 @@
 pragma solidity ^0.4.24;
 
 import "./SafeMath.sol";
-import "../interfaces/Ownable.sol";
+import "./Ownable.sol";
 import "./IbetCoupon.sol";
 import "./ExchangeStorage.sol";
 import "./PaymentGateway.sol";
