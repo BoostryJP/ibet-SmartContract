@@ -2,7 +2,7 @@ pragma solidity ^0.4.24;
 pragma experimental ABIEncoderV2;
 
 import "../interfaces/Ownable.sol";
-import "./ExchangeStorageModel.sol";
+import "./OTCExchangeStorageModel.sol";
 
 
 // =========================================================================
@@ -10,7 +10,7 @@ import "./ExchangeStorageModel.sol";
 //   Exchange コントラクトの取引情報を管理するための Eternal Storage
 //   Storageのアクセスは認可したExchangeコントラクト限定
 // =========================================================================
-contract OTCExchangeStorage is Ownable, ExchangeStorageModel {
+contract OTCExchangeStorage is Ownable, OTCExchangeStorageModel {
     constructor() public {}
 
     // -------------------------------------------------------------------
@@ -92,11 +92,11 @@ contract OTCExchangeStorage is Ownable, ExchangeStorageModel {
     // 注文情報
     // orderId => order
     // +++++++++++++++++++
-    mapping(uint256 => ExchangeStorageModel.OTCOrder) private orderBook;
+    mapping(uint256 => OTCExchangeStorageModel.OTCOrder) private orderBook;
 
     function setOrder(
         uint256 _orderId,
-        ExchangeStorageModel.OTCOrder _order
+        OTCExchangeStorageModel.OTCOrder _order
     ) public onlyLatestVersion() {
         orderBook[_orderId] = _order;
     }
@@ -118,7 +118,7 @@ contract OTCExchangeStorage is Ownable, ExchangeStorageModel {
     function getOrder(uint256 _orderId)
         public
         view
-        returns (ExchangeStorageModel.OTCOrder)
+        returns (OTCExchangeStorageModel.OTCOrder)
     {
         return orderBook[_orderId];
     }
@@ -147,12 +147,12 @@ contract OTCExchangeStorage is Ownable, ExchangeStorageModel {
     // 約定情報
     // orderId => agreementId => Agreement
     // +++++++++++++++++++
-    mapping(uint256 => mapping(uint256 => ExchangeStorageModel.OTCAgreement)) public agreements;
+    mapping(uint256 => mapping(uint256 => OTCExchangeStorageModel.OTCAgreement)) public agreements;
 
     function setAgreement(
         uint256 _orderId,
         uint256 _agreementId,
-        ExchangeStorageModel.OTCAgreement _agreement
+        OTCExchangeStorageModel.OTCAgreement _agreement
     ) public onlyLatestVersion() {
         agreements[_orderId][_agreementId] = _agreement;
     }
@@ -176,7 +176,7 @@ contract OTCExchangeStorage is Ownable, ExchangeStorageModel {
     function getAgreement(uint256 _orderId, uint256 _agreementId)
         public
         view
-        returns (ExchangeStorageModel.OTCAgreement)
+        returns (OTCExchangeStorageModel.OTCAgreement)
     {
         return agreements[_orderId][_agreementId];
     }
