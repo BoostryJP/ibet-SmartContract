@@ -1,10 +1,10 @@
 pragma solidity ^0.4.24;
 
 import "./SafeMath.sol";
-import "../interfaces/Ownable.sol";
+import "./Ownable.sol";
+import "./PersonalInfo.sol";
 import "../interfaces/ContractReceiver.sol";
 import "../interfaces/IbetStandardTokenInterface.sol";
-import "./PersonalInfo.sol";
 
 // @title ibet Share Token Contract
 contract IbetShare is Ownable, IbetStandardTokenInterface {

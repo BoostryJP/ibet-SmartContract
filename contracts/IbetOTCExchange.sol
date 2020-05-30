@@ -2,7 +2,7 @@ pragma solidity ^0.4.24;
 pragma experimental ABIEncoderV2;
 
 import "./SafeMath.sol";
-import "../interfaces/Ownable.sol";
+import "./Ownable.sol";
 import "../interfaces/IbetStandardTokenInterface.sol";
 import "./OTCExchangeStorageModel.sol";
 import "./OTCExchangeStorage.sol";

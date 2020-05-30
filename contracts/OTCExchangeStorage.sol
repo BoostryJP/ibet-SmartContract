@@ -1,7 +1,7 @@
 pragma solidity ^0.4.24;
 pragma experimental ABIEncoderV2;
 
-import "../interfaces/Ownable.sol";
+import "./Ownable.sol";
 import "./OTCExchangeStorageModel.sol";
 
 

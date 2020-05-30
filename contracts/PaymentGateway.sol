@@ -1,6 +1,6 @@
 pragma solidity ^0.4.24;
 
-import "../interfaces/Ownable.sol";
+import "./Ownable.sol";
 
 contract PaymentGateway is Ownable {
 
