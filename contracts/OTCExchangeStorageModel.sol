@@ -1,12 +1,9 @@
 pragma solidity ^0.4.24;
 
-/**
- * @title OTCExchangeStorageModel
- * @dev OTCExchangeStorageのModel
- */
+/// @title OTCExchangeStorageのModel
 contract OTCExchangeStorageModel {
 
-    // OTC取引情報
+    /// OTC取引情報
     struct OTCOrder {
         address owner; // 取引実行者（売り手）EOAアドレス
         address counterpart; // 買い手EOAアドレス
@@ -17,7 +14,7 @@ contract OTCExchangeStorageModel {
         bool canceled; // キャンセル状態
     }
 
-    // OTC取引合意情報
+    /// OTC取引合意情報
     struct OTCAgreement {
         address counterpart; // 売り手EOAアドレス
         uint256 amount; // 約定数量
@@ -27,15 +24,15 @@ contract OTCExchangeStorageModel {
         uint256 expiry; // 有効期限（約定から１４日）
     }
 
-    // @dev OTC取引情報のMapper
-    // @param _owner 取引実行者（売り手）EOAアドレス
-    // @param _counterpart 買い手EOAアドレス
-    // @param _token トークンアドレス
-    // @param _amount 売却数量
-    // @param _price 売却単価
-    // @param _agent 決済業者のEOAアドレス
-    // @param _canceled キャンセル状態
-    // @return OTCOrder 取引情報
+    /// @dev OTC取引情報のMapper
+    /// @param _owner 取引実行者（売り手）EOAアドレス
+    /// @param _counterpart 買い手EOAアドレス
+    /// @param _token トークンアドレス
+    /// @param _amount 売却数量
+    /// @param _price 売却単価
+    /// @param _agent 決済業者のEOAアドレス
+    /// @param _canceled キャンセル状態
+    /// @return OTCOrder 取引情報
     function mappingOTCOrder(
         address _owner,
         address _counterpart,
@@ -52,14 +49,14 @@ contract OTCExchangeStorageModel {
         return _order;
     }
 
-    // @dev OTC取引合意情報のMapper
-    // @param _counterpart 売り手EOAアドレス
-    // @param _amount 売却数量
-    // @param _price 売却単価
-    // @param _canceled キャンセル状態
-    // @param _paid 支払い状態
-    // @param _expiry 有効期限
-    // @return OTCAgreement 取引合意情報
+    /// @dev OTC取引合意情報のMapper
+    /// @param _counterpart 売り手EOAアドレス
+    /// @param _amount 売却数量
+    /// @param _price 売却単価
+    /// @param _canceled キャンセル状態
+    /// @param _paid 支払い状態
+    /// @param _expiry 有効期限
+    /// @return OTCAgreement 取引合意情報
     function mappingOTCAgreement(
         address _counterpart,
         uint256 _amount,
