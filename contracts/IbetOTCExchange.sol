@@ -2,16 +2,16 @@ pragma solidity ^0.4.24;
 pragma experimental ABIEncoderV2;
 
 import "./SafeMath.sol";
-import "../interfaces/Ownable.sol";
+import "./Ownable.sol";
 import "../interfaces/IbetStandardTokenInterface.sol";
-import "./ExchangeStorageModel.sol";
+import "./OTCExchangeStorageModel.sol";
 import "./OTCExchangeStorage.sol";
 import "./PaymentGateway.sol";
 import "./PersonalInfo.sol";
 import "./RegulatorService.sol";
 
 
-contract IbetOTCExchange is Ownable, ExchangeStorageModel {
+contract IbetOTCExchange is Ownable, OTCExchangeStorageModel {
     using SafeMath for uint256;
 
     // 約定明細の有効期限
@@ -125,7 +125,7 @@ contract IbetOTCExchange is Ownable, ExchangeStorageModel {
         bool _canceled
         )
     {
-        ExchangeStorageModel.OTCOrder memory _order = OTCExchangeStorage(storageAddress).getOrder(_orderId);
+        OTCExchangeStorageModel.OTCOrder memory _order = OTCExchangeStorage(storageAddress).getOrder(_orderId);
 
         return (
            _order.owner,
@@ -148,7 +148,7 @@ contract IbetOTCExchange is Ownable, ExchangeStorageModel {
         address _agent,
         bool _canceled
     ) private returns (bool) {
-        ExchangeStorageModel.OTCOrder memory _order = ExchangeStorageModel.mappingOTCOrder(
+        OTCExchangeStorageModel.OTCOrder memory _order = OTCExchangeStorageModel.mappingOTCOrder(
             _owner,
             _counterpart,
             _token,
@@ -176,7 +176,7 @@ contract IbetOTCExchange is Ownable, ExchangeStorageModel {
             uint256 _expiry
         )
     {
-        ExchangeStorageModel.OTCAgreement memory _agreement = OTCExchangeStorage(storageAddress).getAgreement(_orderId, _agreementId);
+        OTCExchangeStorageModel.OTCAgreement memory _agreement = OTCExchangeStorage(storageAddress).getAgreement(_orderId, _agreementId);
         return (
            _agreement.counterpart,
            _agreement.amount,
@@ -198,7 +198,7 @@ contract IbetOTCExchange is Ownable, ExchangeStorageModel {
         uint256 _expiry
     ) private returns (bool) {
 
-     ExchangeStorageModel.OTCAgreement memory _agreement = ExchangeStorageModel.mappingOTCAgreement(
+     OTCExchangeStorageModel.OTCAgreement memory _agreement = OTCExchangeStorageModel.mappingOTCAgreement(
         _counterpart,
         _amount,
         _price,
@@ -371,7 +371,7 @@ contract IbetOTCExchange is Ownable, ExchangeStorageModel {
         //   -> REVERT
         require(_orderId <= latestOrderId());
 
-        ExchangeStorageModel.OTCOrder memory order = OTCExchangeStorage(storageAddress).getOrder(_orderId);
+        OTCExchangeStorageModel.OTCOrder memory order = OTCExchangeStorage(storageAddress).getOrder(_orderId);
 
         // <CHK>
         //  1) 元注文の残注文数量が0の場合
@@ -426,7 +426,7 @@ contract IbetOTCExchange is Ownable, ExchangeStorageModel {
         //  指定した注文IDが直近の注文IDを超えている場合
         require(_orderId <= latestOrderId());
 
-        ExchangeStorageModel.OTCOrder memory order = OTCExchangeStorage(storageAddress).getOrder(_orderId);
+        OTCExchangeStorageModel.OTCOrder memory order = OTCExchangeStorage(storageAddress).getOrder(_orderId);
 
         // <CHK>
         //  取引参加者チェック
@@ -503,9 +503,9 @@ contract IbetOTCExchange is Ownable, ExchangeStorageModel {
         require(_orderId <= latestOrderId());
         require(_agreementId <= latestAgreementId(_orderId));
 
-        ExchangeStorageModel.OTCOrder memory order = OTCExchangeStorage(storageAddress).getOrder(_orderId);
+        OTCExchangeStorageModel.OTCOrder memory order = OTCExchangeStorage(storageAddress).getOrder(_orderId);
 
-        ExchangeStorageModel.OTCAgreement memory agreement = OTCExchangeStorage(storageAddress).getAgreement(_orderId, _agreementId);
+        OTCExchangeStorageModel.OTCAgreement memory agreement = OTCExchangeStorage(storageAddress).getAgreement(_orderId, _agreementId);
 
         // <CHK>
         //  1) すでに決済承認済み（支払い済み）の場合
@@ -562,9 +562,9 @@ contract IbetOTCExchange is Ownable, ExchangeStorageModel {
         require(_orderId <= latestOrderId());
         require(_agreementId <= latestAgreementId(_orderId));
 
-        ExchangeStorageModel.OTCOrder memory order = OTCExchangeStorage(storageAddress).getOrder(_orderId);
+        OTCExchangeStorageModel.OTCOrder memory order = OTCExchangeStorage(storageAddress).getOrder(_orderId);
 
-        ExchangeStorageModel.OTCAgreement memory agreement = OTCExchangeStorage(storageAddress).getAgreement(_orderId, _agreementId);
+        OTCExchangeStorageModel.OTCAgreement memory agreement = OTCExchangeStorage(storageAddress).getAgreement(_orderId, _agreementId);
 
         if (agreement.expiry <= now) {
             // 約定明細の有効期限を超過している場合

@@ -1,10 +1,11 @@
 pragma solidity ^0.4.24;
 
-import "../interfaces/Ownable.sol";
+import "./Ownable.sol";
 
+/// @title DvP Agent Contract
 contract PaymentGateway is Ownable {
 
-    // 振込用銀行口座
+    /// 支払用口座情報
     struct PaymentAccount {
         address account_address; // アカウントアドレス
         address agent_address; // 収納代行業者（Agent）のアドレス
@@ -12,40 +13,41 @@ contract PaymentGateway is Ownable {
         uint8 approval_status; // 認可状況（NONE(0)/NG(1)/OK(2)/WARN(3)/BAN(4)）
     }
 
-    // 収納代行業者（Agent）
-    // agent_address => 登録状況
+    /// 収納代行業者（Agent）
+    /// agent_address => 登録状況
     mapping(address => bool) public agents;
 
-    // 振込用銀行口座情報
-    // account_address => agent_address => PaymentAccount
+    ///支払用口座情報
+    /// account_address => agent_address => PaymentAccount
     mapping(address => mapping(address => PaymentAccount)) public payment_accounts;
 
-    // イベント：収納代行業者追加
+    /// イベント：収納代行業者追加
     event AddAgent(address indexed agent_address);
 
-    // イベント：収納代行業者削除
+    /// イベント：収納代行業者削除
     event RemoveAgent(address indexed agent_address);
 
-    // イベント：登録
+    /// イベント：登録
     event Register(address indexed account_address, address indexed agent_address);
 
-    // イベント：承認
+    /// イベント：承認
     event Approve(address indexed account_address, address indexed agent_address);
 
-    // イベント：警告
+    /// イベント：警告
     event Warn(address indexed account_address, address indexed agent_address);
 
-    // イベント：非承認
+    /// イベント：非承認
     event Unapprove(address indexed account_address, address indexed agent_address);
 
-    // イベント：アカウント停止（BAN）
+    /// イベント：アカウント停止（BAN）
     event Ban(address indexed account_address, address indexed agent_address);
 
-    // コンストラクタ
-    constructor() public {
-    }
+    /// [CONSTRUCTOR]
+    constructor() public {}
 
-    // ファンクション：（管理者）収納代行業者の追加
+    /// @notice 収納代行業者の追加
+    /// @dev オーナーのみ実行可能
+    /// @param _agent_address 収納代行業者のアドレス
     function addAgent(address _agent_address)
         public
         onlyOwner()
@@ -54,7 +56,9 @@ contract PaymentGateway is Ownable {
         emit AddAgent(_agent_address);
     }
 
-    // ファンクション：（管理者）収納代行業者の削除
+    /// @notice 収納代行業者の削除
+    /// @dev オーナーのみ実行可能
+    /// @param _agent_address 収納代行業者のアドレス
     function removeAgent(address _agent_address)
         public
         onlyOwner()
@@ -63,12 +67,22 @@ contract PaymentGateway is Ownable {
         emit RemoveAgent(_agent_address);
     }
 
-    function getAgent(address _agent_address) public view returns (bool) {
+    /// @notice 収納代行業者の登録状態
+    /// @param _agent_address 収納代行業者のアドレス
+    /// @return 登録状態
+    function getAgent(address _agent_address)
+        public
+        view
+        returns (bool)
+    {
         return agents[_agent_address];
     }
 
-    // ファンクション：支払情報を登録する
-    //  ２回目以降は上書き登録を行う
+    /// @notice 支払用口座情報の登録
+    /// @dev ２回目以降は上書き登録を行う
+    /// @param _agent_address 収納代行業者のアドレス
+    /// @param _encrypted_info 銀行口座情報（暗号化済）
+    /// @return 処理結果
     function register(address _agent_address, string memory _encrypted_info)
         public
         returns (bool)
@@ -86,7 +100,9 @@ contract PaymentGateway is Ownable {
         return true;
     }
 
-    // ファンクション：（収納代行業者）口座情報を承認する
+    /// @notice 支払用口座情報の承認
+    /// @param _account_address アカウントアドレス
+    /// @return 処理結果
     function approve(address _account_address)
         public
         returns (bool)
@@ -100,7 +116,9 @@ contract PaymentGateway is Ownable {
         return true;
     }
 
-    // ファンクション：（収納代行業者）口座情報を警告状態にする
+    /// @notice 支払用口座情報を警告状態にする
+    /// @param _account_address アカウントアドレス
+    /// @return 処理結果
     function warn(address _account_address)
         public
         returns (bool)
@@ -114,7 +132,9 @@ contract PaymentGateway is Ownable {
         return true;
     }
 
-    // ファンクション：（収納代行業者）口座情報を非承認にする
+    /// @notice 支払用口座情報を非承認状態にする
+    /// @param _account_address アカウントアドレス
+    /// @return 処理結果
     function unapprove(address _account_address)
         public
         returns (bool)
@@ -128,7 +148,9 @@ contract PaymentGateway is Ownable {
         return true;
     }
 
-    // ファンクション：（収納代行業者）口座情報をアカウント停止（BAN）する。
+    /// @notice 支払用口座情報を停止状態にする
+    /// @param _account_address アカウントアドレス
+    /// @return 処理結果
     function ban(address _account_address)
         public
         returns (bool)
@@ -142,7 +164,10 @@ contract PaymentGateway is Ownable {
         return true;
     }
 
-    // ファンクション：アカウントの承認状況を返却する
+    /// @notice アカウントの承認状態を返却する
+    /// @param _account_address アカウントアドレス
+    /// @param _agent_address 収納代行業者のアドレス
+    /// @return 承認状態
     function accountApproved(address _account_address, address _agent_address)
         public
         view
