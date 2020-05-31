@@ -3,21 +3,36 @@ pragma solidity ^0.4.24;
 import "../interfaces/IbetStandardTokenInterface.sol";
 import "./Ownable.sol";
 
+/// @title Token Registry
 contract TokenList is Ownable {
 
+    /// トークン情報
     struct Token {
-        address token_address;
-        string token_template;
-        address owner_address;
+        address token_address; // トークンアドレス
+        string token_template; // トークン仕様
+        address owner_address; // トークンのオーナー
     }
 
+    /// トークン情報
+    /// token address => Token
     mapping(address => Token) tokens;
+
+    /// トークンリスト
     Token[] token_list;
 
-    event Register(address indexed token_address, string token_template,
-        address owner_address);
+    /// イベント：登録
+    event Register(
+        address indexed token_address,
+        string token_template,
+        address owner_address
+    );
 
-    function register(address _token_address, string memory _token_template) public {
+    /// @notice トークン登録
+    /// @param _token_address トークンアドレス
+    /// @param _token_template トークン仕様
+    function register(address _token_address, string memory _token_template)
+        public
+    {
         require(tokens[_token_address].token_address == 0x0000000000000000000000000000000000000000);
         require(IbetStandardTokenInterface(_token_address).owner() == msg.sender);
         tokens[_token_address].token_address = _token_address;
@@ -31,7 +46,12 @@ contract TokenList is Ownable {
         emit Register(_token_address, _token_template, msg.sender);
     }
 
-    function changeOwner(address _token_address, address _new_owner_address) public {
+    /// @notice オーナー変更登録
+    /// @param _token_address トークンアドレス
+    /// @param _new_owner_address 新しいオーナーアドレス
+    function changeOwner(address _token_address, address _new_owner_address)
+        public
+    {
         require(tokens[_token_address].token_address != 0x0000000000000000000000000000000000000000);
         require(tokens[_token_address].owner_address == msg.sender);
         tokens[_token_address].owner_address = _new_owner_address;
@@ -42,32 +62,61 @@ contract TokenList is Ownable {
         }
     }
 
-    function getOwnerAddress(address _token_address) public view
+    /// @notice オーナーアドレスの参照
+    /// @param _token_address トークンアドレス
+    /// @return issuer_address オーナーアドレス
+    function getOwnerAddress(address _token_address)
+        public
+        view
         returns (address issuer_address)
-        {
-            issuer_address = tokens[_token_address].owner_address;
-        }
+    {
+        issuer_address = tokens[_token_address].owner_address;
+    }
 
-    function getListLength() public view
+    /// @notice トークンリストのリスト長取得
+    /// @return length リスト長
+    function getListLength()
+        public
+        view
         returns (uint length)
-        {
-            length = token_list.length;
-        }
+    {
+        length = token_list.length;
+    }
 
-    function getTokenByNum(uint _num) public view
-        returns (address token_address, string memory token_template, address owner_address)
-        {
-            token_address = token_list[_num].token_address;
-            token_template = token_list[_num].token_template;
-            owner_address = token_list[_num].owner_address;
-        }
+    /// @notice リスト番号を指定してトークン情報を取得
+    /// @return token_address トークンアドレス
+    /// @return token_template トークン仕様
+    /// @return owner_address オーナーアドレス
+    function getTokenByNum(uint _num)
+        public
+        view
+        returns (
+            address token_address,
+            string memory token_template,
+            address owner_address
+        )
+    {
+        token_address = token_list[_num].token_address;
+        token_template = token_list[_num].token_template;
+        owner_address = token_list[_num].owner_address;
+    }
 
-    function getTokenByAddress(address _token_address) public view
-        returns (address token_address, string memory token_template, address owner_address)
-        {
-            token_address = tokens[_token_address].token_address;
-            token_template = tokens[_token_address].token_template;
-            owner_address = tokens[_token_address].owner_address;
-        }
+    /// @notice トークンアドレスを指定してトークン情報を取得
+    /// @return token_address トークンアドレス
+    /// @return token_template トークン仕様
+    /// @return owner_address オーナーアドレス
+    function getTokenByAddress(address _token_address)
+        public
+        view
+        returns (
+            address token_address,
+            string memory token_template,
+            address owner_address
+        )
+    {
+        token_address = tokens[_token_address].token_address;
+        token_template = tokens[_token_address].token_template;
+        owner_address = tokens[_token_address].owner_address;
+    }
 
 }
