@@ -1,6 +1,9 @@
 .pytest_cache/
-tests/__pycache__/
+__pycache__
+.history
+.hypothesis
 build/
+reports/
 .vscode/
 .idea/
 

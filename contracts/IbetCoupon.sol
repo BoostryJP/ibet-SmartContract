@@ -2,55 +2,76 @@ pragma solidity ^0.4.24;
 
 import "./SafeMath.sol";
 import "./Ownable.sol";
-import "./ContractReceiver.sol";
-import "./IbetStandardTokenInterface.sol";
+import "../interfaces/ContractReceiver.sol";
+import "../interfaces/IbetStandardTokenInterface.sol";
 
+
+/// @title ibet Coupon Token
 contract IbetCoupon is Ownable, IbetStandardTokenInterface {
     using SafeMath for uint;
 
-    // 属性情報
-    string public details; // クーポン詳細
-    string public returnDetails; // リターン詳細
+    /// 属性情報
+    string public details; // 詳細
+    string public returnDetails; // 特典詳細
     string public expirationDate; // 有効期限
-    string public memo; // メモ欄
-    bool public transferable; // 譲渡可能
+    string public memo; // 補足情報
+    bool public transferable; // 譲渡可否
     bool public status; // 取扱ステータス(True：有効、False：無効)
     bool public initialOfferingStatus; // 新規募集ステータス（True：募集中、False：停止中）
 
-    // 残高数量
-    // account_address => balance
-    mapping (address => uint256) public balances;
+    /// 残高数量
+    /// account_address => balance
+    mapping(address => uint256) public balances;
 
-    // 使用済数量
-    // account_address => used quantity
-    mapping (address => uint) public useds;
+    /// 使用済数量
+    /// account_address => used quantity
+    mapping(address => uint) public useds;
 
-    // クーポン画像
-    // image class => url
-    mapping (uint8 => string) public image_urls;
+    /// クーポン画像
+    /// image class => url
+    mapping(uint8 => string) public image_urls;
 
-    // 募集申込
-    // account_address => data
-    mapping (address => string) public applications;
+    /// 募集申込
+    /// account_address => data
+    mapping(address => string) public applications;
 
-    // イベント：振替
+    /// イベント：移転
     event Transfer(address indexed from, address indexed to, uint value);
 
-    // イベント：ステータス変更
+    /// イベント：ステータス変更
     event ChangeStatus(bool indexed status);
 
-    // イベント:消費
+    /// イベント:消費
     event Consume(address indexed consumer, uint balance, uint used, uint value);
 
-    // イベント：募集申込
+    /// イベント：募集申込
     event ApplyFor(address indexed accountAddress);
 
-    // コンストラクタ
-    constructor(string memory _name, string memory _symbol,
-        uint256 _totalSupply, address _tradableExchange,
-        string memory _details, string memory _returnDetails,
-        string memory _memo, string memory _expirationDate,
-        bool _transferable, string _contactInformation, string _privacyPolicy)
+    /// [CONSTRUCTOR]
+    /// @param _name 名称
+    /// @param _symbol 略称
+    /// @param _totalSupply 総発行数量
+    /// @param _tradableExchange 取引コントラクト
+    /// @param _details 詳細
+    /// @param _returnDetails 特典詳細
+    /// @param _memo 補足情報
+    /// @param _expirationDate 有効期限
+    /// @param _transferable 譲渡可否
+    /// @param _contactInformation 問い合わせ先
+    /// @param _privacyPolicy プライバシーポリシー
+    constructor(
+        string memory _name,
+        string memory _symbol,
+        uint256 _totalSupply,
+        address _tradableExchange,
+        string memory _details,
+        string memory _returnDetails,
+        string memory _memo,
+        string memory _expirationDate,
+        bool _transferable,
+        string _contactInformation,
+        string _privacyPolicy
+    )
         public
     {
         owner = msg.sender;
@@ -69,25 +90,44 @@ contract IbetCoupon is Ownable, IbetStandardTokenInterface {
         privacyPolicy = _privacyPolicy;
     }
 
-    // ファンクション：アドレスフォーマットがコントラクトアドレスかを判断する
-    function isContract(address _addr) private view returns (bool is_contract) {
+    /// @notice アドレスがコントラクトアドレスであるかを判定
+    /// @param _addr アドレス
+    /// @return is_contract 判定結果
+    function isContract(address _addr)
+        private
+        view
+        returns (bool is_contract)
+    {
         uint length;
         assembly {
             length := extcodesize(_addr)
         }
-        return (length>0);
+        return (length > 0);
     }
 
-    // ファンクション：アカウントアドレスへの振替
-    function transferToAddress(address _to, uint _value, bytes memory /*_data*/) private returns (bool success) {
+    /// @notice EOAへの移転
+    /// @param _to 宛先アドレス
+    /// @param _value 移転数量
+    /// @return success 処理結果
+    function transferToAddress(address _to, uint _value, bytes memory /*_data*/)
+        private
+        returns (bool success)
+    {
         balances[msg.sender] = balanceOf(msg.sender).sub(_value);
         balances[_to] = balanceOf(_to).add(_value);
         emit Transfer(msg.sender, _to, _value);
         return true;
     }
 
-    // ファンクション：コントラクトアドレスへの振替
-    function transferToContract(address _to, uint _value, bytes memory _data) private returns (bool success) {
+    /// @notice コントラクトアドレスへの移転
+    /// @param _to 宛先アドレス
+    /// @param _value 移転数量
+    /// @param _data 任意のデータ
+    /// @return success 処理結果
+    function transferToContract(address _to, uint _value, bytes memory _data)
+        private
+        returns (bool success)
+    {
         require(_to == tradableExchange);
         balances[msg.sender] = balanceOf(msg.sender).sub(_value);
         balances[_to] = balanceOf(_to).add(_value);
@@ -97,16 +137,22 @@ contract IbetCoupon is Ownable, IbetStandardTokenInterface {
         return true;
     }
 
-    // ファンクション：クーポンを譲渡する
-    function transfer(address _to, uint _value) public returns (bool success) {
+    /// @notice トークンの移転
+    /// @param _to 宛先アドレス
+    /// @param _value 移転数量
+    /// @return success 処理結果
+    function transfer(address _to, uint _value)
+        public
+        returns (bool success)
+    {
         // 譲渡しようとしている数量が残高を超えている場合、エラーを返す
         if (balanceOf(msg.sender) < _value) revert();
         if (msg.sender != tradableExchange) {
-          // 譲渡可能なクーポンではない場合、エラーを返す
-          require(transferable == true);
+            // 譲渡可能なクーポンではない場合、エラーを返す
+            require(transferable == true);
         }
         bytes memory empty;
-        if(isContract(_to)) {
+        if (isContract(_to)) {
             return transferToContract(_to, _value, empty);
         }
         else {
@@ -114,35 +160,42 @@ contract IbetCoupon is Ownable, IbetStandardTokenInterface {
         }
     }
 
-    // ファンクション：トークンの移転
-    // オーナーのみ実行可能
+    /// @notice 強制移転
+    /// @dev オーナーのみ実行可能
+    /// @param _from 移転元アドレス
+    /// @param _to 移転先アドレス
+    /// @param _value 移転数量
+    /// @return 処理結果
     function transferFrom(address _from, address _to, uint _value)
-      public
-      onlyOwner()
-      returns (bool)
+        public
+        onlyOwner()
+        returns (bool)
     {
-      //  数量が送信元アドレス（from）の残高を超えている場合、エラーを返す
-      if (balanceOf(_from) < _value) revert();
+        //  数量が送信元アドレス（from）の残高を超えている場合、エラーを返す
+        if (balanceOf(_from) < _value) revert();
 
-      bytes memory empty;
-      if(isContract(_to)) { // 送信先アドレスがコントラクトアドレスの場合
-        balances[_from] = balanceOf(_from).sub(_value);
-        balances[_to] = balanceOf(_to).add(_value);
-        ContractReceiver receiver = ContractReceiver(_to);
-        receiver.tokenFallback(msg.sender, _value, empty);
-      } else { // 送信先アドレスがアカウントアドレスの場合
-        balances[_from] = balanceOf(_from).sub(_value);
-        balances[_to] = balanceOf(_to).add(_value);
-      }
+        bytes memory empty;
+        if (isContract(_to)) {// 送信先アドレスがコントラクトアドレスの場合
+            balances[_from] = balanceOf(_from).sub(_value);
+            balances[_to] = balanceOf(_to).add(_value);
+            ContractReceiver receiver = ContractReceiver(_to);
+            receiver.tokenFallback(msg.sender, _value, empty);
+        } else {// 送信先アドレスがアカウントアドレスの場合
+            balances[_from] = balanceOf(_from).sub(_value);
+            balances[_to] = balanceOf(_to).add(_value);
+        }
 
-      // イベント登録
-      emit Transfer(_from, _to, _value);
+        // イベント登録
+        emit Transfer(_from, _to, _value);
 
-      return true;
+        return true;
     }
 
-    // ファンクション：クーポンの消費
-    function consume(uint _value) public {
+    /// @notice クーポンの消費
+    /// @param _value 消費数量
+    function consume(uint _value)
+        public
+    {
         // 消費しようとしている数量が残高を超えている場合、エラーを返す
         if (balanceOf(msg.sender) < _value) revert();
         // 無効化されている場合、エラーを返す
@@ -156,32 +209,52 @@ contract IbetCoupon is Ownable, IbetStandardTokenInterface {
         emit Consume(msg.sender, balances[msg.sender], useds[msg.sender], _value);
     }
 
-    // ファンクション：追加発行
-    // オーナーのみ実行可能
-    function issue(uint _value) public onlyOwner() {
+    /// @notice 追加発行
+    /// @dev オーナーのみ実行可能
+    /// @param _value 追加発行数量
+    function issue(uint _value)
+        public
+        onlyOwner()
+    {
         totalSupply = totalSupply.add(_value);
         balances[owner] = balanceOf(owner).add(_value);
     }
 
-    // ファンクション：残高確認
-    function balanceOf(address _owner) public view returns (uint256) {
+    /// @notice 残高の参照
+    /// @param _owner 保有者のアドレス
+    /// @return 残高数量
+    function balanceOf(address _owner)
+        public
+        view
+        returns (uint256)
+    {
         return balances[_owner];
     }
 
-    // ファンクション：使用済数量確認
-    function usedOf(address _owner) public view returns (uint) {
+    /// @notice 消費済数量の参照
+    /// @param _owner 保有者のアドレス
+    /// @return 消費済数量
+    function usedOf(address _owner)
+        public
+        view
+        returns (uint)
+    {
         return useds[_owner];
     }
 
-    // ファンクション：取引可能Exchangeの更新
+    /// @notice 取引コントラクトの更新
+    /// @dev オーナーのみ実行可能
+    /// @param _exchange 更新後取引コントラクト
     function setTradableExchange(address _exchange)
-      public
-      onlyOwner()
+        public
+        onlyOwner()
     {
-      tradableExchange = _exchange;
+        tradableExchange = _exchange;
     }
 
-    // ファンクション：問い合わせ先情報更新
+    /// @notice 問い合わせ先情報の更新
+    /// @dev オーナーのみ実行可能
+    /// @param _contactInformation 問い合わせ先情報
     function setContactInformation(string _contactInformation)
         public
         onlyOwner()
@@ -189,7 +262,9 @@ contract IbetCoupon is Ownable, IbetStandardTokenInterface {
         contactInformation = _contactInformation;
     }
 
-    // ファンクション：プライバシーポリシー更新
+    /// @notice プライバシーポリシーの更新
+    /// @dev オーナーのみ実行可能
+    /// @param _privacyPolicy プライバシーポリシー
     function setPrivacyPolicy(string _privacyPolicy)
         public
         onlyOwner()
@@ -197,14 +272,19 @@ contract IbetCoupon is Ownable, IbetStandardTokenInterface {
         privacyPolicy = _privacyPolicy;
     }
 
-    // ファンクション：クーポン詳細を更新する
-    // オーナーのみ実行可能
-    function setDetails(string memory _details) public onlyOwner() {
+    /// @notice 詳細の更新
+    /// @dev オーナーのみ実行可能
+    /// @param _details クーポン詳細情報
+    function setDetails(string memory _details)
+        public
+        onlyOwner()
+    {
         details = _details;
     }
 
-    // ファンクション：リターン詳細更新
-    // オーナーのみ実行可能
+    /// @notice 特典詳細の更新
+    /// @dev オーナーのみ実行可能
+    /// @param _returnDetails 特典詳細
     function setReturnDetails(string memory _returnDetails)
         public
         onlyOwner()
@@ -212,65 +292,88 @@ contract IbetCoupon is Ownable, IbetStandardTokenInterface {
         returnDetails = _returnDetails;
     }
 
-    // ファンクション：メモ欄を更新する
-    // オーナーのみ実行可能
-    function setMemo(string memory _memo) public onlyOwner() {
+    /// @notice 補足情報の更新
+    /// @dev オーナーのみ実行可能
+    /// @param _memo 補足情報
+    function setMemo(string memory _memo)
+        public
+        onlyOwner()
+    {
         memo = _memo;
     }
 
-    // ファンクション：有効期限更新
-    // オーナーのみ実行可能
+    /// @notice 有効期限の更新
+    /// @dev オーナーのみ実行可能
+    /// @param _expirationDate 有効期限
     function setExpirationDate(string memory _expirationDate)
-      public
-      onlyOwner()
+        public
+        onlyOwner()
     {
-      expirationDate = _expirationDate;
+        expirationDate = _expirationDate;
     }
 
-    // ファンクション：クーポンの有効・無効を更新する
-    // オーナーのみ実行可能
-    function setStatus(bool _status) public onlyOwner() {
+    /// @notice 取扱ステータスの更新
+    /// @dev オーナーのみ実行可能
+    /// @param _status 更新後の取扱ステータス
+    function setStatus(bool _status)
+        public
+        onlyOwner()
+    {
         status = _status;
         emit ChangeStatus(status);
     }
 
-    // ファンクション：譲渡可能更新
-    // オーナーのみ実行可能
+    /// @notice 譲渡可否の更新
+    /// @dev オーナーのみ実行可能
+    /// @param _transferable 譲渡可否
     function setTransferable(bool _transferable)
-      public
-      onlyOwner()
+        public
+        onlyOwner()
     {
-      transferable = _transferable;
+        transferable = _transferable;
     }
 
-    // ファンクション：商品の画像を設定する
-    // オーナーのみ実行可能
-    function setImageURL(uint8 _class, string memory _image_url) public onlyOwner() {
+    /// @notice 商品画像の更新
+    /// @dev オーナーのみ実行可能
+    /// @param _class 画像番号
+    /// @param _image_url 画像URL
+    function setImageURL(uint8 _class, string memory _image_url)
+        public
+        onlyOwner()
+    {
         image_urls[_class] = _image_url;
     }
 
-    // ファンクション：商品の画像を取得する
-    function getImageURL(uint8 _class) public view returns (string memory) {
+    /// @notice 商品画像の参照
+    /// @param _class 画像番号
+    /// @return 画像URL
+    function getImageURL(uint8 _class)
+        public
+        view
+        returns (string memory)
+    {
         return image_urls[_class];
     }
 
-    // ファンクション：新規募集ステータス更新
-    // オーナーのみ実行可能
+    /// @notice 新規募集ステータスの更新
+    /// @dev オーナーのみ実行可能
+    /// @param _status 募集ステータス
     function setInitialOfferingStatus(bool _status)
-      public
-      onlyOwner()
+        public
+        onlyOwner()
     {
-      initialOfferingStatus = _status;
+        initialOfferingStatus = _status;
     }
 
-    // ファンクション：募集申込
+    /// @notice 募集申込
+    /// @param _data 申込付与情報
     function applyForOffering(string memory _data)
-      public
+        public
     {
-      // 申込ステータスが停止中の場合、エラーを返す
-      require(initialOfferingStatus == true);
-      applications[msg.sender] = _data;
-      emit ApplyFor(msg.sender);
+        // 申込ステータスが停止中の場合、エラーを返す
+        require(initialOfferingStatus == true);
+        applications[msg.sender] = _data;
+        emit ApplyFor(msg.sender);
     }
 
 }

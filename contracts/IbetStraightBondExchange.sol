@@ -8,48 +8,82 @@ import "./PaymentGateway.sol";
 import "./PersonalInfo.sol";
 import "./RegulatorService.sol";
 
+
+/// @title ibet Straight Bond DEX
 contract IbetStraightBondExchange is Ownable {
     using SafeMath for uint256;
 
-    // 約定明細の有効期限
-    //  Note:
-    //   現在の設定値は14日で設定している（長期の連休を考慮）。
+    /// 約定明細の有効期限
+    /// 現在の設定値は14日で設定している（長期の連休を考慮）
     uint256 lockingPeriod = 1209600;
 
-    // ---------------------------------------------------------------
-    // Event
-    // ---------------------------------------------------------------
+    /// ---------------------------------------------------------------
+    /// Event
+    /// ---------------------------------------------------------------
 
-    // Event：注文
-    event NewOrder(address indexed tokenAddress, uint256 orderId,
-        address indexed accountAddress, bool indexed isBuy, uint256 price,
-        uint256 amount, address agentAddress);
+    /// Event：注文
+    event NewOrder(
+        address indexed tokenAddress,
+        uint256 orderId,
+        address indexed accountAddress,
+        bool indexed isBuy,
+        uint256 price,
+        uint256 amount,
+        address agentAddress
+    );
 
-    // Event：注文取消
-    event CancelOrder(address indexed tokenAddress, uint256 orderId,
-        address indexed accountAddress, bool indexed isBuy, uint256 price,
-        uint256 amount, address agentAddress);
+    /// Event：注文取消
+    event CancelOrder(
+        address indexed tokenAddress,
+        uint256 orderId,
+        address indexed accountAddress,
+        bool indexed isBuy,
+        uint256 price,
+        uint256 amount,
+        address agentAddress
+    );
 
-    // Event：約定
-    event Agree(address indexed tokenAddress, uint256 orderId,
-        uint256 agreementId, address indexed buyAddress,
-        address indexed sellAddress, uint256 price, uint256 amount,
-        address agentAddress);
+    /// Event：約定
+    event Agree(
+        address indexed tokenAddress,
+        uint256 orderId,
+        uint256 agreementId,
+        address indexed buyAddress,
+        address indexed sellAddress,
+        uint256 price,
+        uint256 amount,
+        address agentAddress
+    );
 
-    // Event：決済OK
-    event SettlementOK(address indexed tokenAddress, uint256 orderId,
-        uint256 agreementId, address indexed buyAddress,
-        address indexed sellAddress, uint256 price, uint256 amount,
-        address agentAddress);
+    /// Event：決済承認
+    event SettlementOK(
+        address indexed tokenAddress,
+        uint256 orderId,
+        uint256 agreementId,
+        address indexed buyAddress,
+        address indexed sellAddress,
+        uint256 price,
+        uint256 amount,
+        address agentAddress
+    );
 
-    // Event：決済NG
-    event SettlementNG(address indexed tokenAddress, uint256 orderId,
-        uint256 agreementId, address indexed buyAddress,
-        address indexed sellAddress, uint256 price,
-        uint256 amount, address agentAddress);
+    /// Event：決済非承認
+    event SettlementNG(
+        address indexed tokenAddress,
+        uint256 orderId,
+        uint256 agreementId,
+        address indexed buyAddress,
+        address indexed sellAddress,
+        uint256 price,
+        uint256 amount,
+        address agentAddress
+    );
 
-    // Event：全引き出し
-    event Withdrawal(address indexed tokenAddress, address indexed accountAddress);
+    /// Event：全引き出し
+    event Withdrawal(
+        address indexed tokenAddress,
+        address indexed accountAddress
+    );
 
     // ---------------------------------------------------------------
     // Constructor
@@ -59,8 +93,17 @@ contract IbetStraightBondExchange is Ownable {
     address public storageAddress;
     address public regulatorServiceAddress;
 
-    constructor(address _paymentGatewayAddress, address _personalInfoAddress,
-        address _storageAddress, address _regulatorServiceAddress)
+    /// [CONSTRUCTOR]
+    /// @param _paymentGatewayAddress PaymentGatewayコントラクトアドレス
+    /// @param _personalInfoAddress PersonalInfoコントラクトアドレス
+    /// @param _storageAddress ExchangeStorageコントラクトアドレス
+    /// @param _regulatorServiceAddress RegulatorServiceコントラクトアドレス
+    constructor(
+        address _paymentGatewayAddress,
+        address _personalInfoAddress,
+        address _storageAddress,
+        address _regulatorServiceAddress
+    )
         public
     {
         paymentGatewayAddress = _paymentGatewayAddress;
@@ -69,9 +112,11 @@ contract IbetStraightBondExchange is Ownable {
         regulatorServiceAddress = _regulatorServiceAddress;
     }
 
-    // ---------------------------------------------------------------
-    // Function: Storage
-    // ---------------------------------------------------------------
+    /// ---------------------------------------------------------------
+    /// Function: Storage
+    /// ---------------------------------------------------------------
+
+    /// 注文情報
     struct Order {
         address owner;
         address token;
@@ -82,6 +127,7 @@ contract IbetStraightBondExchange is Ownable {
         bool canceled; // キャンセル済みフラグ
     }
 
+    /// 約定情報
     struct Agreement {
         address counterpart; // 約定相手
         uint256 amount; // 約定数量
@@ -91,50 +137,129 @@ contract IbetStraightBondExchange is Ownable {
         uint256 expiry; // 有効期限（約定から１４日）
     }
 
-    // Order
+    /// @notice 注文情報取得
+    /// @param _orderId 注文ID
+    /// @return owner 注文実行者
+    /// @return token トークンアドレス
+    /// @return amount 注文数量
+    /// @return price 注文単価
+    /// @return isBuy 売買区分
+    /// @return agent 決済業者のアドレス
+    /// @return canceled キャンセル済み状態
     function getOrder(uint256 _orderId)
         public
         view
-        returns (address owner, address token, uint256 amount, uint256 price,
-        bool isBuy, address agent, bool canceled)
+        returns (
+            address owner,
+            address token,
+            uint256 amount,
+            uint256 price,
+            bool isBuy,
+            address agent,
+            bool canceled
+        )
     {
         return ExchangeStorage(storageAddress).getOrder(_orderId);
     }
 
+    /// @notice 注文情報更新
+    /// @param _orderId 注文ID
+    /// @param _owner 注文実行者
+    /// @param _token トークンアドレス
+    /// @param _amount 注文数量
+    /// @param _price 注文単価
+    /// @param _isBuy 売買区分
+    /// @param _agent 決済業者のアドレス
+    /// @param _canceled キャンセル済み状態
+    /// @return 処理結果
     function setOrder(
-        uint256 _orderId, address _owner, address _token,
-        uint256 _amount, uint256 _price, bool _isBuy,
-        address _agent, bool _canceled)
+        uint256 _orderId,
+        address _owner,
+        address _token,
+        uint256 _amount,
+        uint256 _price,
+        bool _isBuy,
+        address _agent,
+        bool _canceled
+    )
         private
         returns (bool)
     {
         ExchangeStorage(storageAddress).setOrder(
-            _orderId, _owner, _token, _amount, _price, _isBuy, _agent, _canceled);
+            _orderId,
+            _owner,
+            _token,
+            _amount,
+            _price,
+            _isBuy,
+            _agent,
+            _canceled
+        );
         return true;
     }
 
-    // Agreement
+    /// @notice 約定情報取得
+    /// @param _orderId 注文ID
+    /// @param _agreementId 約定ID
+    /// @return _counterpart 約定相手
+    /// @return _amount 約定数量
+    /// @return _price 約定単価
+    /// @return _canceled キャンセル済み状態
+    /// @return _paid 支払済状態
+    /// @return _expiry 有効期限
     function getAgreement(uint256 _orderId, uint256 _agreementId)
         public
         view
-        returns (address _counterpart, uint256 _amount, uint256 _price,
-        bool _canceled, bool _paid, uint256 _expiry)
+        returns (
+            address _counterpart,
+            uint256 _amount,
+            uint256 _price,
+            bool _canceled,
+            bool _paid,
+            uint256 _expiry
+        )
     {
         return ExchangeStorage(storageAddress).getAgreement(_orderId, _agreementId);
     }
 
-    function setAgreement(uint256 _orderId, uint256 _agreementId,
-        address _counterpart, uint256 _amount, uint256 _price,
-        bool _canceled, bool _paid, uint256 _expiry)
+    /// @notice 約定情報更新
+    /// @param _orderId 注文ID
+    /// @param _agreementId 約定ID
+    /// @param _counterpart 約定相手
+    /// @param _amount 約定数量
+    /// @param _price 約定単価
+    /// @param _canceled キャンセル済み状態
+    /// @param _paid 支払済状態
+    /// @param _expiry 有効期限
+    /// @return 処理結果
+    function setAgreement(
+        uint256 _orderId,
+        uint256 _agreementId,
+        address _counterpart,
+        uint256 _amount,
+        uint256 _price,
+        bool _canceled,
+        bool _paid,
+        uint256 _expiry
+    )
         private
         returns (bool)
     {
         ExchangeStorage(storageAddress).setAgreement(
-            _orderId, _agreementId, _counterpart, _amount, _price, _canceled, _paid, _expiry);
+            _orderId,
+            _agreementId,
+            _counterpart,
+            _amount,
+            _price,
+            _canceled,
+            _paid,
+            _expiry
+        );
         return true;
     }
 
-    // Latest Order ID
+    /// @notice 直近注文ID取得
+    /// @return 直近注文ID
     function latestOrderId()
         public
         view
@@ -143,6 +268,9 @@ contract IbetStraightBondExchange is Ownable {
         return ExchangeStorage(storageAddress).getLatestOrderId();
     }
 
+    /// @notice 直近注文ID更新
+    /// @param _value 更新後の直近注文ID
+    /// @return 処理結果
     function setLatestOrderId(uint256 _value)
         private
         returns (bool)
@@ -151,7 +279,9 @@ contract IbetStraightBondExchange is Ownable {
         return true;
     }
 
-    // Latest Agreement ID
+    /// @notice 直近約定ID取得
+    /// @param _orderId 注文ID
+    /// @return 直近約定ID
     function latestAgreementId(uint256 _orderId)
         public
         view
@@ -160,6 +290,10 @@ contract IbetStraightBondExchange is Ownable {
         return ExchangeStorage(storageAddress).getLatestAgreementId(_orderId);
     }
 
+    /// @notice 直近約定ID更新
+    /// @param _orderId 注文ID
+    /// @param _value 更新後の直近約定ID
+    /// @return 処理結果
     function setLatestAgreementId(uint256 _orderId, uint256 _value)
         private
         returns (bool)
@@ -168,40 +302,72 @@ contract IbetStraightBondExchange is Ownable {
         return true;
     }
 
-    // Balance
+    /// @notice 残高参照
+    /// @param _account アカウントアドレス
+    /// @param _token トークンアドレス
+    /// @return 残高数量
     function balanceOf(address _account, address _token)
         public
         view
         returns (uint256)
     {
-        return ExchangeStorage(storageAddress).getBalance(_account, _token);
+        return ExchangeStorage(storageAddress).getBalance(
+            _account,
+            _token
+        );
     }
 
+    /// @notice 残高数量更新
+    /// @param _account アカウントアドレス
+    /// @param _token トークンアドレス
+    /// @param _value 更新後の残高数量
+    /// @return 処理結果
     function setBalance(address _account, address _token, uint256 _value)
         private
         returns (bool)
     {
-        return ExchangeStorage(storageAddress).setBalance(_account, _token, _value);
+        return ExchangeStorage(storageAddress).setBalance(
+            _account,
+            _token,
+            _value
+        );
     }
 
-    // Commitment
+    /// @notice 拘束数量参照
+    /// @param _account アカウントアドレス
+    /// @param _token トークンアドレス
+    /// @return 拘束数量
     function commitmentOf(address _account, address _token)
         public
         view
         returns (uint256)
     {
-        return ExchangeStorage(storageAddress).getCommitment(_account, _token);
+        return ExchangeStorage(storageAddress).getCommitment(
+            _account,
+            _token
+        );
     }
 
+    /// @notice 拘束数量更新
+    /// @param _account アカウントアドレス
+    /// @param _token トークンアドレス
+    /// @param _value 更新後の拘束数量
+    /// @return 処理結果
     function setCommitment(address _account, address _token, uint256 _value)
         private
         returns (bool)
     {
-        ExchangeStorage(storageAddress).setCommitment(_account, _token, _value);
+        ExchangeStorage(storageAddress).setCommitment(
+            _account,
+            _token,
+            _value
+        );
         return true;
     }
 
-    // LastPrice
+    /// @notice 現在値参照
+    /// @param _token トークンアドレス
+    /// @return 現在値
     function lastPrice(address _token)
         public
         view
@@ -210,6 +376,10 @@ contract IbetStraightBondExchange is Ownable {
         return ExchangeStorage(storageAddress).getLastPrice(_token);
     }
 
+    /// @notice 現在値更新
+    /// @param _token トークンアドレス
+    /// @param _value 更新後の現在値
+    /// @return 処理結果
     function setLastPrice(address _token, uint256 _value)
         private
         returns (bool)
@@ -218,13 +388,24 @@ contract IbetStraightBondExchange is Ownable {
         return true;
     }
 
-    // ---------------------------------------------------------------
-    // Function: Logic
-    // ---------------------------------------------------------------
+    /// ---------------------------------------------------------------
+    /// Function: Logic
+    /// ---------------------------------------------------------------
 
-    // Function：（投資家）新規注文を作成する　Make注文
-    function createOrder(address _token, uint256 _amount, uint256 _price,
-        bool _isBuy, address _agent)
+    /// @notice Make注文
+    /// @param _token トークンアドレス
+    /// @param _amount 注文数量
+    /// @param _price 注文単価
+    /// @param _isBuy 売買区分
+    /// @param _agent 収納代行業者のアドレス
+    /// @return 処理結果
+    function createOrder(
+        address _token,
+        uint256 _amount,
+        uint256 _price,
+        bool _isBuy,
+        address _agent
+    )
         public
         returns (bool)
     {
@@ -297,7 +478,9 @@ contract IbetStraightBondExchange is Ownable {
         return true;
     }
 
-    // Function：（投資家）注文をキャンセルする
+    /// @notice 注文キャンセル
+    /// @param _orderId 注文ID
+    /// @return 処理結果
     function cancelOrder(uint256 _orderId)
         public
         returns (bool)
@@ -338,7 +521,11 @@ contract IbetStraightBondExchange is Ownable {
         return true;
     }
 
-    // Function：（投資家）注文に応じる　Take注文 -> 約定
+    /// @notice Take注文
+    /// @param _orderId 注文ID
+    /// @param _amount 注文数量
+    /// @param _isBuy 売買区分
+    /// @return 処理結果
     function executeOrder(uint256 _orderId, uint256 _amount, bool _isBuy)
         public
         returns (bool)
@@ -443,7 +630,11 @@ contract IbetStraightBondExchange is Ownable {
         return true;
     }
 
-    // Function：（決済業者）決済処理 -> 預かりの移動 -> 預かりの引き出し
+    /// @notice 決済承認
+    /// @dev 注文時に指定された決済業者のみ実行が可能
+    /// @param _orderId 注文ID
+    /// @param _agreementId 約定ID
+    /// @return 処理結果
     function confirmAgreement(uint256 _orderId, uint256 _agreementId)
         public
         returns (bool)
@@ -508,7 +699,11 @@ contract IbetStraightBondExchange is Ownable {
         return true;
     }
 
-    // Function：（決済業者）約定キャンセル
+    /// @notice 決済非承認
+    /// @dev 注文時に指定された決済業者から実行が可能、有効期限後はMake注文者も実行が可能
+    /// @param _orderId 注文ID
+    /// @param _agreementId 約定ID
+    /// @return 処理結果
     function cancelAgreement(uint256 _orderId, uint256 _agreementId)
         public
         returns (bool)
@@ -591,10 +786,10 @@ contract IbetStraightBondExchange is Ownable {
         return true;
     }
 
-    // Function：（投資家）全ての預かりを引き出しする
-    //  Note:
-    //   未売却の預かり（balances）に対してのみ引き出しをおこなう。
-    //   約定済、注文中の預かり（commitments）の引き出しはおこなわない。
+    /// @notice 全ての残高を引き出しする
+    /// @dev 未売却の預かりに対してのみ引き出しをおこなう。約定済、注文中の預かり（commitments）の引き出しはおこなわない。
+    /// @param _token トークンアドレス
+    /// @return 処理結果
     function withdrawAll(address _token)
         public
         returns (bool)
@@ -615,14 +810,22 @@ contract IbetStraightBondExchange is Ownable {
         return true;
     }
 
-    // Function： Deposit Handler
+    /// @notice Deposit Handler：デポジット処理
+    /// @param _from アカウントアドレス：残高を保有するアドレス
+    /// @param _value デポジット数量
     function tokenFallback(address _from, uint _value, bytes memory /*_data*/)
         public
     {
-        setBalance(_from, msg.sender, balanceOf(_from, msg.sender).add(_value));
+        setBalance(
+            _from,
+            msg.sender,
+            balanceOf(_from, msg.sender).add(_value)
+        );
     }
 
-    // ファンクション：アドレスフォーマットがコントラクトのものかを判断する
+    /// @notice アドレスがコントラクトアドレスであるかを判定
+    /// @param _addr アドレス
+    /// @return is_contract 判定結果
     function isContract(address _addr)
         private
         view
@@ -635,7 +838,9 @@ contract IbetStraightBondExchange is Ownable {
       return (length>0);
     }
 
-    // ファンクション：新規注文時に指定したagentアドレスが有効なアドレスであることをチェックする
+    /// @notice Agentアドレスが有効なものであることをチェックする
+    /// @param _addr アドレス
+    /// @return 有効状態
     function validateAgent(address _addr)
         private
         view

@@ -5,22 +5,16 @@
 # ibet Smart Contract
 
 <p>
-  <img alt="Version" src="https://img.shields.io/badge/version-0.10-blue.svg?cacheSeconds=2592000" />
+  <img alt="Version" src="https://img.shields.io/badge/version-0.11-blue.svg?cacheSeconds=2592000" />
   <a href="#" target="_blank">
     <img alt="License: Apache--2.0" src="https://img.shields.io/badge/License-Apache--2.0-yellow.svg" />
   </a>
 </p>
 
 
-## Compile
-Install packages
+## Install
 ```bash
 $ pip install -r requirements.txt
-```
-
-Compile
-```bash
-$ populus compile
 ```
 
 ## Deploy
@@ -32,5 +26,5 @@ $ ./scripts/deploy.sh
 
 You can run the tests with:
 ```bash
-$ pytest tests/
+$ brownie test
 ```

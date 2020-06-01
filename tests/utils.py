@@ -1,5 +1,10 @@
+from brownie import IbetShare, IbetStraightBond, IbetMembership, IbetCoupon
+
+import brownie_utils
+
+
 # 普通社債新規発行
-def issue_bond_token(web3, chain, users, exchange_address, personal_info_address):
+def issue_bond_token(users, exchange_address, personal_info_address):
     name = 'test_bond'
     symbol = 'BND'
     total_supply = 10000
@@ -24,15 +29,12 @@ def issue_bond_token(web3, chain, users, exchange_address, personal_info_address
         personal_info_address
     ]
 
-    web3.eth.defaultAccount = users['issuer']
-    bond_token, _ = chain.provider.get_or_deploy_contract(
-        'IbetStraightBond',
-        deploy_args=deploy_args
-    )
+    bond_token = brownie_utils.force_deploy(users['issuer'], IbetStraightBond, *deploy_args)
     return bond_token, deploy_args
 
+
 # 株式新規発行
-def issue_share_token(web3, chain, users, exchange_address, personal_info_address):
+def issue_share_token(users, exchange_address, personal_info_address):
     name = 'test_share'
     symbol = 'IBS'
     issue_price = 10000
@@ -52,15 +54,12 @@ def issue_share_token(web3, chain, users, exchange_address, personal_info_addres
         contact_information, privacy_policy, memo, transferable
     ]
 
-    web3.eth.defaultAccount = users['issuer']
-    share_token, _ = chain.provider.get_or_deploy_contract(
-        'IbetShare',
-        deploy_args=deploy_args
-    )
+    share_token = users['issuer'].deploy(IbetShare, *deploy_args)
     return share_token, deploy_args
 
+
 # 会員権（譲渡可能）新規発行
-def issue_transferable_membership(web3,chain,exchange_address):
+def issue_transferable_membership(issuer, exchange_address):
     name = 'test_membership'
     symbol = 'MEM'
     initial_supply = 10000
@@ -80,15 +79,12 @@ def issue_transferable_membership(web3,chain,exchange_address):
         contact_information, privacy_policy
     ]
 
-    membership, _ = chain.provider.get_or_deploy_contract(
-        'IbetMembership',
-        deploy_args=deploy_args
-    )
+    membership = issuer.deploy(IbetMembership, *deploy_args)
     return membership, deploy_args
 
 
 # 会員権（譲渡不可）新規発行
-def issue_non_transferable_membership(web3,chain,exchange_address):
+def issue_non_transferable_membership(issuer, exchange_address):
     name = 'test_membership'
     symbol = 'MEM'
     initial_supply = 10000
@@ -108,15 +104,12 @@ def issue_non_transferable_membership(web3,chain,exchange_address):
         contact_information, privacy_policy
     ]
 
-    membership, _ = chain.provider.get_or_deploy_contract(
-        'IbetMembership',
-        deploy_args=deploy_args
-    )
+    membership = issuer.deploy(IbetMembership, *deploy_args)
     return membership, deploy_args
 
 
 # クーポン（譲渡可能）新規発行
-def issue_transferable_coupon(web3,chain,exchange_address):
+def issue_transferable_coupon(issuer, exchange_address):
     name = 'test_coupon'
     symbol = 'CPN'
     total_supply = 1000000
@@ -136,15 +129,12 @@ def issue_transferable_coupon(web3,chain,exchange_address):
         contact_information, privacy_policy
     ]
 
-    coupon, _ = chain.provider.get_or_deploy_contract(
-        'IbetCoupon',
-        deploy_args=deploy_args
-    )
+    coupon = issuer.deploy(IbetCoupon, *deploy_args)
     return coupon, deploy_args
 
 
 # クーポン（譲渡不可）新規発行
-def issue_non_transferable_coupon(web3,chain,exchange_address):
+def issue_non_transferable_coupon(issuer, exchange_address):
     name = 'test_coupon'
     symbol = 'CPN'
     total_supply = 1000000
@@ -164,14 +154,10 @@ def issue_non_transferable_coupon(web3,chain,exchange_address):
         contact_information, privacy_policy
     ]
 
-    coupon, _ = chain.provider.get_or_deploy_contract(
-        'IbetCoupon',
-        deploy_args=deploy_args
-    )
+    coupon = issuer.deploy(IbetCoupon, *deploy_args)
     return coupon, deploy_args
 
 
 # 個人情報登録
-def register_personal_info(chain, personal_info, link_address):
-    txn_hash = personal_info.transact().register(link_address, "encrypted_message")
-    chain.wait.for_receipt(txn_hash)
+def register_personal_info(from_account, personal_info, link_address):
+    personal_info.register.transact(link_address, "encrypted_message", {'from': from_account})
