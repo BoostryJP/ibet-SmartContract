@@ -52,24 +52,6 @@ RUN wget -q https://github.com/ethereum/solidity/releases/download/v0.4.25/solid
     chmod 755 /usr/bin/solc && \
     rm solc lllc
 
-# GO
-ENV GOREL go1.7.3.linux-amd64.tar.gz
-ENV PATH $PATH:/usr/local/go/bin
-RUN wget -q https://storage.googleapis.com/golang/$GOREL && \
-    tar xfz $GOREL && \
-    mv go /usr/local/go && \
-    rm -f $GOREL
-
-# Quorum
-RUN git clone https://github.com/jpmorganchase/quorum.git && \
-    cd quorum && \
-    git checkout fd0e3b9d13f9b9563e7d5b3b1aba51f035f9cf0d && \
-    make all && \
-    cp build/bin/geth /usr/local/bin && \
-    cp build/bin/bootnode /usr/local/bin && \
-    cd .. && \
-    rm -rf quorum
-
 # pyenv
 RUN git clone https://github.com/pyenv/pyenv.git
 RUN mkdir -p /home/apl \
