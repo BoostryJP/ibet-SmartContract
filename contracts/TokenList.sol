@@ -3,6 +3,7 @@ pragma solidity ^0.4.24;
 import "../interfaces/IbetStandardTokenInterface.sol";
 import "./Ownable.sol";
 
+
 /// @title Token Registry
 contract TokenList is Ownable {
 

@@ -1,5 +1,6 @@
 pragma solidity ^0.4.24;
 
+
 /// @title Personal Information Registry
 contract PersonalInfo {
 

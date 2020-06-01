@@ -4,6 +4,7 @@ pragma experimental ABIEncoderV2;
 import "./Ownable.sol";
 import "./OTCExchangeStorageModel.sol";
 
+
 /// @title Exchangeコントラクトの取引情報を永続化するためのEternalStorage
 /// @dev Storageのアクセスは認可したExchangeコントラクト限定
 contract OTCExchangeStorage is Ownable, OTCExchangeStorageModel {
