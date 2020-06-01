@@ -6,6 +6,7 @@ import "./PersonalInfo.sol";
 import "../interfaces/ContractReceiver.sol";
 import "../interfaces/IbetStandardTokenInterface.sol";
 
+
 /// @title ibet Straight Bond Token
 contract IbetStraightBond is Ownable, IbetStandardTokenInterface {
     using SafeMath for uint256;

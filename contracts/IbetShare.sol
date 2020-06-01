@@ -6,6 +6,7 @@ import "./PersonalInfo.sol";
 import "../interfaces/ContractReceiver.sol";
 import "../interfaces/IbetStandardTokenInterface.sol";
 
+
 // @title ibet Share Token
 contract IbetShare is Ownable, IbetStandardTokenInterface {
     using SafeMath for uint256;

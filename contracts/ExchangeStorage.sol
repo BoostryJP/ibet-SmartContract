@@ -2,6 +2,7 @@ pragma solidity ^0.4.24;
 
 import "./Ownable.sol";
 
+
 /// @title Exchangeコントラクトの取引情報を永続化するためのEternalStorage
 /// @dev Storageのアクセスは認可したExchangeコントラクト限定
 contract ExchangeStorage is Ownable {

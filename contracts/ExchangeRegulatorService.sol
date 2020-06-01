@@ -3,6 +3,7 @@ pragma solidity ^0.4.24;
 import "./Ownable.sol";
 import "./RegulatorService.sol";
 
+
 /// @title Exchangeの取引参加者制限サービス
 /// @dev Exchangeの取引参加者制限
 contract ExchangeRegulatorService is RegulatorService, Ownable {
