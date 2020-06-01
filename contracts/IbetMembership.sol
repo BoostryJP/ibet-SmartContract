@@ -5,6 +5,7 @@ import "./Ownable.sol";
 import "../interfaces/ContractReceiver.sol";
 import "../interfaces/IbetStandardTokenInterface.sol";
 
+
 /// @title ibet Membership Token
 contract IbetMembership is Ownable, IbetStandardTokenInterface {
     using SafeMath for uint256;
