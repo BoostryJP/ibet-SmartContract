@@ -43,6 +43,9 @@ contract PaymentGateway is Ownable {
     /// イベント：アカウント停止（BAN）
     event Ban(address indexed account_address, address indexed agent_address);
 
+    /// イベント：修正
+    event Modify(address indexed account_address, address indexed agent_address);
+
     /// [CONSTRUCTOR]
     constructor() public {}
 
@@ -185,4 +188,24 @@ contract PaymentGateway is Ownable {
         }
     }
 
+    /// @notice 支払用口座情報の修正
+    /// @dev 収納代行業者による修正。口座登録アカウントによる修正はregister()を使う。
+    /// この関数では認可状況の更新は行わない。
+    /// @param _account_address 銀行口座情報登録アカウントアドレス
+    /// @param _encrypted_info 銀行口座情報（暗号化済）
+    /// @return 処理結果
+    function modify(address _account_address, string memory _encrypted_info)
+        public
+        returns (bool)
+    {
+        PaymentAccount storage payment_account = payment_accounts[_account_address][msg.sender];
+
+        // 登録済みか確認
+        require(payment_account.account_address != address(0));
+
+        payment_account.encrypted_info = _encrypted_info;
+
+        emit Modify(_account_address, msg.sender);
+        return true;
+    }
 }
