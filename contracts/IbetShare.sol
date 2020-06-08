@@ -79,7 +79,7 @@ contract IbetShare is Ownable, IbetStandardTokenInterface {
     event ApplyFor(address indexed accountAddress, uint256 amount);
 
     /// イベント：割当
-    event Allot(address indexed accountAddress, uint256 amuont);
+    event Allot(address indexed accountAddress, uint256 amount);
 
     /// イベント：増資
     event Issue(address indexed from, address indexed target_address, address indexed locked_address, uint256 amount);

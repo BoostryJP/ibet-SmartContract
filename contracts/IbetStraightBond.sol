@@ -78,7 +78,7 @@ contract IbetStraightBond is Ownable, IbetStandardTokenInterface {
     event ApplyFor(address indexed accountAddress, uint256 amount);
 
     /// イベント：割当
-    event Allot(address indexed accountAddress, uint256 amuont);
+    event Allot(address indexed accountAddress, uint256 amount);
 
     /// [CONSTRUCTOR]
     /// @param _name 名称
