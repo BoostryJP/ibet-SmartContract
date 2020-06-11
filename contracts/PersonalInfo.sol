@@ -18,6 +18,9 @@ contract PersonalInfo {
     /// イベント：登録
     event Register(address indexed account_address, address indexed link_address);
 
+    /// イベント：修正
+    event Modify(address indexed account_address, address indexed link_address);
+
     /// [CONSTRUCTOR]
     constructor() public {}
 
@@ -56,4 +59,24 @@ contract PersonalInfo {
         }
     }
 
+    /// @notice 個人情報を修正する。
+    /// @dev 個人情報通知先アカウントによる修正。通知元アカウントによる修正はregister()を使う。
+    /// @param _account_address 個人情報通知元アカウントアドレス
+    /// @param _encrypted_info 暗号化済個人情報
+    /// @return 処理結果
+    function modify(address _account_address, string memory _encrypted_info)
+        public
+        returns (bool)
+    {
+        Info storage info = personal_info[_account_address][msg.sender];
+
+        // 登録済みか確認
+        require(info.account_address == _account_address);
+        require(info.link_address == msg.sender);
+
+        info.encrypted_info = _encrypted_info;
+
+        emit Modify(_account_address, msg.sender);
+        return true;
+    }
 }
