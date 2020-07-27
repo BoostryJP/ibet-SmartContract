@@ -11,6 +11,13 @@ import "../interfaces/IbetStandardTokenInterface.sol";
 contract IbetStraightBond is Ownable, IbetStandardTokenInterface {
     using SafeMath for uint256;
 
+    /// 募集申込情報
+    struct Application {
+        uint256 requestedAmount; // 申込数量
+        uint256 allottedAmount; // 割当数量
+        string data; // その他データ
+    }
+
     /// 属性情報
     uint256 public faceValue; // 額面
     uint256 public interestRate; // 年利
@@ -21,24 +28,10 @@ contract IbetStraightBond is Ownable, IbetStandardTokenInterface {
     string public returnAmount; // 特典内容
     string public purpose; // 発行目的
     string public memo; // 補足情報
-    bool public status; // 取扱ステータス(True：有効、False：無効)
     bool public initialOfferingStatus; // 新規募集ステータス（True：募集中、False：停止中）
-
-    /// 募集申込情報
-    struct Application {
-        uint256 requestedAmount; // 申込数量
-        uint256 allottedAmount; // 割当数量
-        string data; // その他データ
-    }
-
-    /// 償還状況
-    bool public isRedeemed;
-
-    /// 譲渡可否
-    bool public transferable;
-
-    /// 個人情報記帳コントラクト
-    address public personalInfoAddress;
+    bool public isRedeemed; // 償還状況
+    bool public transferable; // 譲渡可否
+    address public personalInfoAddress; // 個人情報記帳コントラクト
 
     /// 残高数量
     /// account_address => balance
@@ -55,6 +48,13 @@ contract IbetStraightBond is Ownable, IbetStandardTokenInterface {
     /// 募集申込
     /// account_address => data
     mapping(address => Application) public applications;
+
+    /// 資産ロック認可済アドレス
+    mapping(address => bool) public authorizedAddress;
+
+    /// ロックされた数量
+    /// address => account_address => balance
+    mapping(address => mapping(address => uint256)) public locked;
 
     /// イベント：移転
     event Transfer(address indexed from, address indexed to, uint256 value);
@@ -80,40 +80,38 @@ contract IbetStraightBond is Ownable, IbetStandardTokenInterface {
     /// イベント：割当
     event Allot(address indexed accountAddress, uint256 amount);
 
+    /// イベント：認可
+    event Authorize(address indexed to, bool auth);
+
+    /// イベント：資産ロック
+    event Lock(address indexed _target_address, uint256 value);
+
+    /// イベント：資産アンロック
+    event Unlock(address indexed from, address indexed to, uint256 value);
+
+    /// イベント：追加発行
+    event Issue(address indexed from, address indexed target_address, address indexed locked_address, uint256 amount);
+
     /// [CONSTRUCTOR]
     /// @param _name 名称
     /// @param _symbol 略称
     /// @param _totalSupply 総発行数量
-    /// @param _tradableExchange 取引コントラクト
     /// @param _faceValue 額面
-    /// @param _interestRate 年利
-    /// @param _interestPaymentDate 利払日
     /// @param _redemptionDate 償還日
     /// @param _redemptionValue 償還金額
     /// @param _returnDate 特典付与日
     /// @param _returnAmount 特典内容
     /// @param _purpose 発行目的
-    /// @param _memo 補足情報
-    /// @param _contactInformation 問い合わせ先情報
-    /// @param _privacyPolicy プライバシーポリシー
-    /// @param _personalInfoAddress 個人情報コントラクトアドレス
     constructor(
         string memory _name,
         string memory _symbol,
         uint256 _totalSupply,
-        address _tradableExchange,
         uint256 _faceValue,
-        uint256 _interestRate,
-        string memory _interestPaymentDate,
         string memory _redemptionDate,
         uint256 _redemptionValue,
         string memory _returnDate,
         string memory _returnAmount,
-        string memory _purpose,
-        string memory _memo,
-        string _contactInformation,
-        string _privacyPolicy,
-        address _personalInfoAddress
+        string memory _purpose
     )
         public
     {
@@ -121,34 +119,16 @@ contract IbetStraightBond is Ownable, IbetStandardTokenInterface {
         name = _name;
         symbol = _symbol;
         totalSupply = _totalSupply;
-        tradableExchange = _tradableExchange;
         faceValue = _faceValue;
-        interestRate = _interestRate;
-        interestPaymentDate = _interestPaymentDate;
         redemptionDate = _redemptionDate;
         redemptionValue = _redemptionValue;
         returnDate = _returnDate;
         returnAmount = _returnAmount;
         purpose = _purpose;
-        memo = _memo;
         transferable = true;
         balances[owner] = totalSupply;
         isRedeemed = false;
         status = true;
-        contactInformation = _contactInformation;
-        privacyPolicy = _privacyPolicy;
-        personalInfoAddress = _personalInfoAddress;
-    }
-
-    /// @notice 追加発行
-    /// @dev オーナーのみ実行可能
-    /// @param _value 追加発行数量
-    function issue(uint _value)
-        public
-        onlyOwner()
-    {
-        totalSupply = totalSupply.add(_value);
-        balances[owner] = balanceOf(owner).add(_value);
     }
 
     /// @notice アドレスがコントラクトアドレスであるかを判定
@@ -286,6 +266,16 @@ contract IbetStraightBond is Ownable, IbetStandardTokenInterface {
         tradableExchange = _exchange;
     }
 
+    /// @notice 個人情報記帳コントラクトの更新
+    /// @dev オーナーのみ実行可能
+    /// @param _address 個人情報記帳コントラクトのアドレス
+    function setPersonalInfoAddress(address _address)
+        public
+        onlyOwner()
+    {
+        personalInfoAddress = _address;
+    }
+
     /// @notice 問い合わせ先情報の更新
     /// @dev オーナーのみ実行可能
     /// @param _contactInformation 問い合わせ先情報
@@ -304,6 +294,79 @@ contract IbetStraightBond is Ownable, IbetStandardTokenInterface {
         onlyOwner()
     {
         privacyPolicy = _privacyPolicy;
+    }
+
+    /// @notice 商品画像の更新
+    /// @dev オーナーのみ実行可能
+    /// @param _class 画像番号
+    /// @param _image_url 画像URL
+    function setImageURL(uint8 _class, string memory _image_url)
+        public
+        onlyOwner()
+    {
+        image_urls[_class] = _image_url;
+    }
+
+    /// @notice 商品画像の参照
+    /// @param _class 画像番号
+    /// @return 画像URL
+    function getImageURL(uint8 _class)
+        public
+        view
+        returns (string memory)
+    {
+        return image_urls[_class];
+    }
+
+    /// @notice 補足情報の更新
+    /// @dev オーナーのみ実行可能
+    /// @param _memo 補足情報
+    function setMemo(string memory _memo)
+        public
+        onlyOwner()
+    {
+        memo = _memo;
+    }
+
+    /// @notice 年利情報の更新
+    /// @dev オーナーのみ実行可能
+    /// @param _interestRate 年利
+    function setInterestRate(uint _interestRate)
+        public
+        onlyOwner()
+    {
+        interestRate = _interestRate;
+    }
+
+    /// @notice 利払日情報の更新
+    /// @dev オーナーのみ実行可能
+    /// @param _interestPaymentDate 利払日（JSON）
+    function setInterestPaymentDate(string memory _interestPaymentDate)
+        public
+        onlyOwner()
+    {
+        interestPaymentDate = _interestPaymentDate;
+    }
+
+    /// @notice 譲渡可否の更新
+    /// @dev オーナーのみ実行可能
+    /// @param _transferable 譲渡可否
+    function setTransferable(bool _transferable)
+        public
+        onlyOwner()
+    {
+        transferable = _transferable;
+    }
+
+    /// @notice 取扱ステータスの更新
+    /// @dev オーナーのみ実行可能
+    /// @param _status 更新後の取扱ステータス
+    function setStatus(bool _status)
+        public
+        onlyOwner()
+    {
+        status = _status;
+        emit ChangeStatus(status);
     }
 
     /// @notice 商品の認定をリクエストする
@@ -339,79 +402,6 @@ contract IbetStraightBond is Ownable, IbetStandardTokenInterface {
         signatures[msg.sender] = 0;
         emit Unsign(msg.sender);
         return true;
-    }
-
-    /// @notice 償還する
-    /// @dev オーナーのみ実行可能
-    function redeem()
-        public
-        onlyOwner()
-    {
-        isRedeemed = true;
-        emit Redeem();
-    }
-
-    /// @notice 商品画像の更新
-    /// @dev オーナーのみ実行可能
-    /// @param _class 画像番号
-    /// @param _image_url 画像URL
-    function setImageURL(uint8 _class, string memory _image_url)
-        public
-        onlyOwner()
-    {
-        image_urls[_class] = _image_url;
-    }
-
-    /// @notice 商品画像の参照
-    /// @param _class 画像番号
-    /// @return 画像URL
-    function getImageURL(uint8 _class)
-        public
-        view
-        returns (string memory)
-    {
-        return image_urls[_class];
-    }
-
-    /// @notice 補足情報の更新
-    /// @dev オーナーのみ実行可能
-    /// @param _memo 補足情報
-    function updateMemo(string memory _memo)
-        public
-        onlyOwner()
-    {
-        memo = _memo;
-    }
-
-    /// @notice 譲渡可否の更新
-    /// @dev オーナーのみ実行可能
-    /// @param _transferable 譲渡可否
-    function setTransferable(bool _transferable)
-        public
-        onlyOwner()
-    {
-        transferable = _transferable;
-    }
-
-    /// @notice 取扱ステータスの更新
-    /// @dev オーナーのみ実行可能
-    /// @param _status 更新後の取扱ステータス
-    function setStatus(bool _status)
-        public
-        onlyOwner()
-    {
-        status = _status;
-        emit ChangeStatus(status);
-    }
-
-    /// @notice 個人情報記帳コントラクトの更新
-    /// @dev オーナーのみ実行可能
-    /// @param _address 個人情報記帳コントラクトのアドレス
-    function setPersonalInfoAddress(address _address)
-        public
-        onlyOwner()
-    {
-        personalInfoAddress = _address;
     }
 
     /// @notice 新規募集ステータスの更新
@@ -453,4 +443,107 @@ contract IbetStraightBond is Ownable, IbetStandardTokenInterface {
         emit Allot(_address, _amount);
     }
 
+    /// @notice 償還する
+    /// @dev オーナーのみ実行可能
+    function redeem()
+        public
+        onlyOwner()
+    {
+        isRedeemed = true;
+        emit Redeem();
+    }
+
+    /// @notice 資産ロック先アドレスの認可
+    /// @dev オーナーのみ実行可能
+    /// @param _address 認可対象のアドレス
+    /// @param _auth 認可状態（true:認可、false:未認可）
+    function authorize(address _address, bool _auth)
+        public
+        onlyOwner()
+    {
+        authorizedAddress[_address] = _auth;
+        emit Authorize(_address, _auth);
+    }
+
+    /// @notice ロック済み資産の参照
+    /// @param _authorized_address 資産ロック先アドレス（認可済）
+    /// @param _account_address 資産ロック対象アカウント
+    /// @return ロック済み数量
+    function lockedOf(address _authorized_address, address _account_address)
+        public
+        view
+        returns (uint256)
+    {
+        return locked[_authorized_address][_account_address];
+    }
+
+    /// @notice 資産をロックする
+    /// @param _target_address 資産をロックする先のアドレス
+    /// @param _value ロックする数量
+    function lock(address _target_address, uint256 _value)
+        public
+    {
+        // ロック対象が認可済みアドレス、まはは発行者アドレスであることをチェック
+        require(
+            authorizedAddress[_target_address] == true ||
+            _target_address == owner
+        );
+
+        // ロック数量が保有数量を上回っている場合、エラーを返す
+        if (balanceOf(msg.sender) < _value) revert();
+
+        // データ更新
+        balances[msg.sender] = balanceOf(msg.sender).sub(_value);
+        locked[_target_address][msg.sender] = lockedOf(_target_address, msg.sender).add(_value);
+
+        emit Lock(_target_address, _value);
+    }
+
+    /// @notice 資産をアンロックする
+    /// @dev 認可済みアドレスあるいは発行体のみ実行可能
+    /// @param _account_address アンロック対象のアドレス
+    /// @param _receive_address 受取アドレス
+    function unlock(address _account_address, address _receive_address, uint256 _value)
+        public
+    {
+        // msg.senderが認可済みアドレス、または発行者アドレスであることをチェック
+        require(
+            authorizedAddress[msg.sender] == true ||
+            msg.sender == owner
+        );
+
+        // アンロック数量がロック数量を上回ってる場合、エラーを返す
+        if (lockedOf(msg.sender, _account_address) < _value) revert();
+
+        // データ更新
+        locked[msg.sender][_account_address] = lockedOf(msg.sender, _account_address).sub(_value);
+        balances[_receive_address] = balanceOf(_receive_address).add(_value);
+        emit Unlock(_account_address, _receive_address, _value);
+    }
+
+    /// @notice 追加発行
+    /// @dev 特定のアドレスの残高に対して、追加発行を行う
+    /// @dev オーナーのみ実行可能
+    /// @param _target_address 追加発行対象の残高を保有するアドレス
+    /// @param _locked_address （任意）資産ロックアドレス
+    /// @param _amount 追加発行数量
+    function issueFrom(address _target_address, address _locked_address, uint256 _amount)
+        public
+        onlyOwner()
+    {
+        // locked_addressを指定した場合：ロック資産に対して追加発行を行う
+        // locked_addressを指定しない場合：アカウントアドレスの残高に対して追加発行を行う
+        if (_locked_address != address(0)) {
+            // ロック資産の更新
+            locked[_target_address][_locked_address] = lockedOf(_target_address, _locked_address).add(_amount);
+            // 総発行数量の更新
+            totalSupply = totalSupply.add(_amount);
+        } else {
+            // アカウント残高の更新
+            balances[_target_address] = balanceOf(_target_address).add(_amount);
+            // 総発行数量の更新
+            totalSupply = totalSupply.add(_amount);
+        }
+        emit Issue(msg.sender, _target_address, _locked_address, _amount);
+    }
 }

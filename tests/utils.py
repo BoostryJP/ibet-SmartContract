@@ -9,27 +9,28 @@ def issue_bond_token(users, exchange_address, personal_info_address):
     symbol = 'BND'
     total_supply = 10000
     face_value = 10000
-    interest_rate = 1000
-    interest_payment_date = '{"interestPaymentDate1":"0331","interestPaymentDate2":"0930"}'
     redemption_date = '20191231'
     redemption_value = 100
     return_date = '20191231'
     return_amount = 'some_return'
     purpose = 'some_purpose'
-    memo = 'some_memo'
-    contact_information = 'some_contact_information'
-    privacy_policy = 'some_privacy_policy'
 
     deploy_args = [
-        name, symbol, total_supply, exchange_address, face_value,
-        interest_rate, interest_payment_date, redemption_date,
-        redemption_value, return_date, return_amount,
-        purpose, memo,
-        contact_information, privacy_policy,
-        personal_info_address
+        name, symbol, total_supply, face_value,
+        redemption_date, redemption_value,
+        return_date, return_amount,
+        purpose
     ]
 
+    # デプロイ
     bond_token = brownie_utils.force_deploy(users['issuer'], IbetStraightBond, *deploy_args)
+
+    # 取引可能DEXの更新
+    bond_token.setTradableExchange.transact(exchange_address, {'from': users["issuer"]})
+
+    # 個人情報コントラクトの更新
+    bond_token.setPersonalInfoAddress.transact(personal_info_address, {'from': users["issuer"]})
+
     return bond_token, deploy_args
 
 
