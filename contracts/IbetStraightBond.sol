@@ -28,7 +28,6 @@ contract IbetStraightBond is Ownable, IbetStandardTokenInterface {
     string public returnAmount; // 特典内容
     string public purpose; // 発行目的
     string public memo; // 補足情報
-    bool public status; // 取扱ステータス(True：有効、False：無効)
     bool public initialOfferingStatus; // 新規募集ステータス（True：募集中、False：停止中）
     bool public isRedeemed; // 償還状況
     bool public transferable; // 譲渡可否
@@ -322,7 +321,7 @@ contract IbetStraightBond is Ownable, IbetStandardTokenInterface {
     /// @notice 補足情報の更新
     /// @dev オーナーのみ実行可能
     /// @param _memo 補足情報
-    function updateMemo(string memory _memo)
+    function setMemo(string memory _memo)
         public
         onlyOwner()
     {
