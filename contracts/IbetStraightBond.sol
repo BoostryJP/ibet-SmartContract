@@ -296,7 +296,7 @@ contract IbetStraightBond is Ownable, IbetStandardTokenInterface {
         privacyPolicy = _privacyPolicy;
     }
 
-        /// @notice 商品画像の更新
+    /// @notice 商品画像の更新
     /// @dev オーナーのみ実行可能
     /// @param _class 画像番号
     /// @param _image_url 画像URL
@@ -489,7 +489,7 @@ contract IbetStraightBond is Ownable, IbetStandardTokenInterface {
             _target_address == owner
         );
 
-        // ロック数量が保有数量を上回っている場合、エラーを変えす
+        // ロック数量が保有数量を上回っている場合、エラーを返す
         if (balanceOf(msg.sender) < _value) revert();
 
         // データ更新

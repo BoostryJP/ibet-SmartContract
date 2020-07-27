@@ -312,7 +312,7 @@ contract IbetShare is Ownable, IbetStandardTokenInterface {
             _target_address == owner
         );
 
-        // ロック数量が保有数量を上回っている場合、エラーを変えす
+        // ロック数量が保有数量を上回っている場合、エラーを返す
         if (balanceOf(msg.sender) < _value) revert();
 
         // データ更新
