@@ -6,1559 +6,1952 @@ import brownie_utils
 zero_address = '0x0000000000000000000000000000000000000000'
 
 
-def init_args(exchange_address, personal_info_address):
+def init_args():
     name = 'test_bond'
     symbol = 'BND'
     total_supply = 10000
     face_value = 10000
-    interest_rate = 1000
-    interest_payment_date = '{"interestPaymentDate1":"0331","interestPaymentDate2":"0930"}'
     redemption_date = '20191231'
     redemption_value = 100
     return_date = '20191231'
     return_amount = 'some_return'
     purpose = 'some_purpose'
-    memo = 'some_memo'
-    contact_information = 'some_contact_information'
-    privacy_policy = 'some_privacy_policy'
 
     deploy_args = [
-        name, symbol, total_supply, exchange_address, face_value,
-        interest_rate, interest_payment_date, redemption_date,
-        redemption_value, return_date, return_amount,
-        purpose, memo,
-        contact_information, privacy_policy,
-        personal_info_address
+        name, symbol, total_supply, face_value,
+        redemption_date, redemption_value,
+        return_date, return_amount,
+        purpose
     ]
     return deploy_args
 
 
-'''
-TEST_デプロイ
-'''
-
-
-# 正常系1: deploy
-def test_deploy_normal_1(users, IbetStraightBond, bond_exchange, personal_info):
-    account_address = users['issuer']
-    deploy_args = init_args(bond_exchange.address, personal_info.address)
-
-    bond_contract = brownie_utils.force_deploy(
-        account_address,
-        IbetStraightBond,
-        *deploy_args
-    )
-
-    owner_address = bond_contract.owner()
-    name = bond_contract.name()
-    symbol = bond_contract.symbol()
-    total_supply = bond_contract.totalSupply()
-    tradable_exchange = bond_contract.tradableExchange()
-    face_value = bond_contract.faceValue()
-    interest_rate = bond_contract.interestRate()
-    interest_payment_date = bond_contract.interestPaymentDate()
-    redemption_date = bond_contract.redemptionDate()
-    redemption_value = bond_contract.redemptionValue()
-    return_date = bond_contract.returnDate()
-    return_amount = bond_contract.returnAmount()
-    purpose = bond_contract.purpose()
-    memo = bond_contract.memo()
-    transferable = bond_contract.transferable()
-    contact_information = bond_contract.contactInformation()
-    privacy_policy = bond_contract.privacyPolicy()
-    personal_info_address = bond_contract.personalInfoAddress()
-
-    assert owner_address == account_address
-    assert name == deploy_args[0]
-    assert symbol == deploy_args[1]
-    assert total_supply == deploy_args[2]
-    assert tradable_exchange == to_checksum_address(deploy_args[3])
-    assert face_value == deploy_args[4]
-    assert interest_rate == deploy_args[5]
-    assert interest_payment_date == deploy_args[6]
-    assert redemption_date == deploy_args[7]
-    assert redemption_value == deploy_args[8]
-    assert return_date == deploy_args[9]
-    assert return_amount == deploy_args[10]
-    assert purpose == deploy_args[11]
-    assert memo == deploy_args[12]
-    assert contact_information == deploy_args[13]
-    assert privacy_policy == deploy_args[14]
-    assert transferable == True
-    assert personal_info_address == to_checksum_address(deploy_args[15])
-
-
-# エラー系1: 入力値の型誤り（name）
-def test_deploy_error_1(users, bond_exchange, IbetStraightBond, personal_info):
-    deploy_args = init_args(bond_exchange.address, personal_info.address)
-    deploy_args[0] = '0x66aB6D9362d4F35596279692F0251Db635165871'
-    with pytest.raises(ValueError):
-        brownie_utils.force_deploy(users['issuer'], IbetStraightBond, *deploy_args)
-
-
-# エラー系2: 入力値の型誤り（symbol）
-def test_deploy_error_2(users, bond_exchange, IbetStraightBond, personal_info):
-    deploy_args = init_args(bond_exchange.address, personal_info.address)
-    deploy_args[1] = '0x66aB6D9362d4F35596279692F0251Db635165871'
-    with pytest.raises(ValueError):
-        brownie_utils.force_deploy(users['issuer'], IbetStraightBond, *deploy_args)
-
-
-# エラー系3: 入力値の型誤り（totalSupply）
-def test_deploy_error_3(users, bond_exchange, IbetStraightBond, personal_info):
-    deploy_args = init_args(bond_exchange.address, personal_info.address)
-    deploy_args[2] = "abc"
-    with pytest.raises(TypeError):
-        brownie_utils.force_deploy(users['issuer'], IbetStraightBond, *deploy_args)
-
-
-# エラー系4: 入力値の型誤り（faceValue）
-def test_deploy_error_4(users, bond_exchange, IbetStraightBond, personal_info):
-    deploy_args = init_args(bond_exchange.address, personal_info.address)
-    deploy_args[4] = "abc"
-    with pytest.raises(TypeError):
-        brownie_utils.force_deploy(users['issuer'], IbetStraightBond, *deploy_args)
-
-
-# エラー系5: 入力値の型誤り（interestRate）
-def test_deploy_error_5(users, bond_exchange, IbetStraightBond, personal_info):
-    deploy_args = init_args(bond_exchange.address, personal_info.address)
-    deploy_args[5] = "abc"
-    with pytest.raises(TypeError):
-        brownie_utils.force_deploy(users['issuer'], IbetStraightBond, *deploy_args)
-
-
-# エラー系6: 入力値の型誤り（interestPaymentDate）
-def test_deploy_error_6(users, bond_exchange, IbetStraightBond, personal_info):
-    deploy_args = init_args(bond_exchange.address, personal_info.address)
-    deploy_args[6] = '0x66aB6D9362d4F35596279692F0251Db635165871'
-    with pytest.raises(ValueError):
-        brownie_utils.force_deploy(users['issuer'], IbetStraightBond, *deploy_args)
+# TEST_デプロイ
+class TestDeploy:
+
+    # 正常系1: deploy
+    def test_deploy_normal_1(self, users, IbetStraightBond):
+        account_address = users['issuer']
+        deploy_args = init_args()
+
+        bond_contract = brownie_utils.force_deploy(
+            account_address,
+            IbetStraightBond,
+            *deploy_args
+        )
+
+        owner_address = bond_contract.owner()
+        name = bond_contract.name()
+        symbol = bond_contract.symbol()
+        total_supply = bond_contract.totalSupply()
+        face_value = bond_contract.faceValue()
+        redemption_date = bond_contract.redemptionDate()
+        redemption_value = bond_contract.redemptionValue()
+        return_date = bond_contract.returnDate()
+        return_amount = bond_contract.returnAmount()
+        purpose = bond_contract.purpose()
+        transferable = bond_contract.transferable()
+        balance = bond_contract.balanceOf(account_address)
+        is_redeemed = bond_contract.isRedeemed()
+        status = bond_contract.status()
+
+        assert owner_address == account_address
+        assert name == deploy_args[0]
+        assert symbol == deploy_args[1]
+        assert total_supply == deploy_args[2]
+        assert face_value == deploy_args[3]
+        assert redemption_date == deploy_args[4]
+        assert redemption_value == deploy_args[5]
+        assert return_date == deploy_args[6]
+        assert return_amount == deploy_args[7]
+        assert purpose == deploy_args[8]
+
+        assert transferable == True
+        assert balance == total_supply
+        assert is_redeemed == False
+        assert status == True
+
+    # エラー系1: 入力値の型誤り（name）
+    def test_deploy_error_1(self, users, IbetStraightBond):
+        deploy_args = init_args()
+        deploy_args[0] = '0x66aB6D9362d4F35596279692F0251Db635165871'
+        with pytest.raises(ValueError):
+            brownie_utils.force_deploy(users['issuer'], IbetStraightBond, *deploy_args)
+
+    # エラー系2: 入力値の型誤り（symbol）
+    def test_deploy_error_2(self, users, IbetStraightBond):
+        deploy_args = init_args()
+        deploy_args[1] = '0x66aB6D9362d4F35596279692F0251Db635165871'
+        with pytest.raises(ValueError):
+            brownie_utils.force_deploy(users['issuer'], IbetStraightBond, *deploy_args)
+
+    # エラー系3: 入力値の型誤り（totalSupply）
+    def test_deploy_error_3(self, users, IbetStraightBond):
+        deploy_args = init_args()
+        deploy_args[2] = "abc"
+        with pytest.raises(TypeError):
+            brownie_utils.force_deploy(users['issuer'], IbetStraightBond, *deploy_args)
+
+    # エラー系4: 入力値の型誤り（faceValue）
+    def test_deploy_error_4(self, users, IbetStraightBond):
+        deploy_args = init_args()
+        deploy_args[3] = "abc"
+        with pytest.raises(TypeError):
+            brownie_utils.force_deploy(users['issuer'], IbetStraightBond, *deploy_args)
+
+    # エラー系7: 入力値の型誤り（redemptionDate）
+    def test_deploy_error_5(self, users, IbetStraightBond):
+        deploy_args = init_args()
+        deploy_args[4] = '0x66aB6D9362d4F35596279692F0251Db635165871'
+        with pytest.raises(ValueError):
+            brownie_utils.force_deploy(users['issuer'], IbetStraightBond, *deploy_args)
+
+    # エラー系8: 入力値の型誤り（redemptionValue）
+    def test_deploy_error_6(self, users, IbetStraightBond):
+        deploy_args = init_args()
+        deploy_args[5] = "abc"
+        with pytest.raises(TypeError):
+            brownie_utils.force_deploy(users['issuer'], IbetStraightBond, *deploy_args)
+
+    # エラー系9: 入力値の型誤り（returnDate）
+    def test_deploy_error_7(self, users, IbetStraightBond):
+        deploy_args = init_args()
+        deploy_args[6] = '0x66aB6D9362d4F35596279692F0251Db635165871'
+        with pytest.raises(ValueError):
+            brownie_utils.force_deploy(users['issuer'], IbetStraightBond, *deploy_args)
+
+    # エラー系10: 入力値の型誤り（returnAmount）
+    def test_deploy_error_8(self, users, IbetStraightBond):
+        deploy_args = init_args()
+        deploy_args[7] = '0x66aB6D9362d4F35596279692F0251Db635165871'
+        with pytest.raises(ValueError):
+            brownie_utils.force_deploy(users['issuer'], IbetStraightBond, *deploy_args)
+
+    # エラー系11: 入力値の型誤り（purpose）
+    def test_deploy_error_9(self, users, IbetStraightBond):
+        deploy_args = init_args()
+        deploy_args[8] = '0x66aB6D9362d4F35596279692F0251Db635165871'
+        with pytest.raises(ValueError):
+            brownie_utils.force_deploy(users['issuer'], IbetStraightBond, *deploy_args)
 
 
-# エラー系7: 入力値の型誤り（redemptionDate）
-def test_deploy_error_7(users, bond_exchange, IbetStraightBond, personal_info):
-    deploy_args = init_args(bond_exchange.address, personal_info.address)
-    deploy_args[7] = '0x66aB6D9362d4F35596279692F0251Db635165871'
-    with pytest.raises(ValueError):
-        brownie_utils.force_deploy(users['issuer'], IbetStraightBond, *deploy_args)
+# TEST_トークンの振替（transfer）
+class TestTransfer:
 
+    # 正常系1: アカウントアドレスへの振替
+    def test_transfer_normal_1(self, users, bond_exchange, personal_info):
+        from_address = users['issuer']
+        to_address = users['trader']
+        transfer_amount = 100
 
-# エラー系8: 入力値の型誤り（redemptionValue）
-def test_deploy_error_8(users, bond_exchange, IbetStraightBond, personal_info):
-    deploy_args = init_args(bond_exchange.address, personal_info.address)
-    deploy_args[8] = "abc"
-    with pytest.raises(TypeError):
-        brownie_utils.force_deploy(users['issuer'], IbetStraightBond, *deploy_args)
+        # 債券トークン新規発行
+        bond_contract, deploy_args = utils. \
+            issue_bond_token(users, bond_exchange.address, personal_info.address)
 
+        # 振替先の個人情報登録
+        utils.register_personal_info(to_address, personal_info, from_address)
 
-# エラー系9: 入力値の型誤り（returnDate）
-def test_deploy_error_9(users, bond_exchange, IbetStraightBond, personal_info):
-    deploy_args = init_args(bond_exchange.address, personal_info.address)
-    deploy_args[9] = '0x66aB6D9362d4F35596279692F0251Db635165871'
-    with pytest.raises(ValueError):
-        brownie_utils.force_deploy(users['issuer'], IbetStraightBond, *deploy_args)
-
-
-# エラー系10: 入力値の型誤り（returnAmount）
-def test_deploy_error_10(users, bond_exchange, IbetStraightBond, personal_info):
-    deploy_args = init_args(bond_exchange.address, personal_info.address)
-    deploy_args[10] = '0x66aB6D9362d4F35596279692F0251Db635165871'
-    with pytest.raises(ValueError):
-        brownie_utils.force_deploy(users['issuer'], IbetStraightBond, *deploy_args)
-
-
-# エラー系11: 入力値の型誤り（purpose）
-def test_deploy_error_11(users, bond_exchange, IbetStraightBond, personal_info):
-    deploy_args = init_args(bond_exchange.address, personal_info.address)
-    deploy_args[11] = '0x66aB6D9362d4F35596279692F0251Db635165871'
-    with pytest.raises(ValueError):
-        brownie_utils.force_deploy(users['issuer'], IbetStraightBond, *deploy_args)
-
-
-# エラー系12: 入力値の型誤り（memo）
-def test_deploy_error_12(users, bond_exchange, IbetStraightBond, personal_info):
-    deploy_args = init_args(bond_exchange.address, personal_info.address)
-    deploy_args[12] = '0x66aB6D9362d4F35596279692F0251Db635165871'
-    with pytest.raises(ValueError):
-        brownie_utils.force_deploy(users['issuer'], IbetStraightBond, *deploy_args)
-
-
-# エラー系13: 入力値の型誤り（tradableExchange）
-def test_deploy_error_13(users, bond_exchange, IbetStraightBond, personal_info):
-    deploy_args = init_args(bond_exchange.address, personal_info.address)
-    deploy_args[3] = '0xaaaa'
-    with pytest.raises(ValueError):
-        brownie_utils.force_deploy(users['issuer'], IbetStraightBond, *deploy_args)
-
-
-# エラー系14: 入力値の型誤り（contactInformation）
-def test_deploy_error_14(users, bond_exchange, IbetStraightBond, personal_info):
-    deploy_args = init_args(bond_exchange.address, personal_info.address)
-    deploy_args[13] = '0x66aB6D9362d4F35596279692F0251Db635165871'
-    with pytest.raises(ValueError):
-        brownie_utils.force_deploy(users['issuer'], IbetStraightBond, *deploy_args)
-
-
-# エラー系15: 入力値の型誤り（privacyPolicy）
-def test_deploy_error_15(users, bond_exchange, IbetStraightBond, personal_info):
-    deploy_args = init_args(bond_exchange.address, personal_info.address)
-    deploy_args[14] = '0x66aB6D9362d4F35596279692F0251Db635165871'
-    with pytest.raises(ValueError):
-        brownie_utils.force_deploy(users['issuer'], IbetStraightBond, *deploy_args)
-
-
-# エラー系16: 入力値の型誤り（personalInfoAddress）
-def test_deploy_error_16(users, bond_exchange, IbetStraightBond, personal_info):
-    deploy_args = init_args(bond_exchange.address, personal_info.address)
-    deploy_args[15] = '0xaaaa'
-    with pytest.raises(ValueError):
-        brownie_utils.force_deploy(users['issuer'], IbetStraightBond, *deploy_args)
-
-
-'''
-TEST_譲渡可能更新（setTransferable）
-'''
-
-
-# 正常系1: 発行 -> 譲渡可能更新
-def test_setTransferable_normal_1(users, bond_exchange, personal_info):
-    issuer = users['issuer']
-    after_transferable = False
-
-    # 新規発行
-    bond_contract, deploy_args = \
-        utils.issue_bond_token(users, bond_exchange.address, personal_info.address)
-
-    # 譲渡可能更新
-    bond_contract.setTransferable.transact(after_transferable, {'from': issuer})
-
-    transferable = bond_contract.transferable()
-    assert after_transferable == transferable
-
-
-# エラー系1: 入力値の型誤り
-def test_setTransferable_error_1(users, bond_exchange, personal_info):
-    issuer = users['issuer']
-
-    # 新規発行
-    bond_contract, deploy_args = \
-        utils.issue_bond_token(users, bond_exchange.address, personal_info.address)
-
-    # 型誤り
-    with pytest.raises(ValueError):
-        bond_contract.setTransferable.transact('False', {'from': issuer})
-
-
-# エラー系2: 権限エラー
-def test_setTransferable_error_2(users, bond_exchange, personal_info):
-    attacker = users['trader']
-    after_transferable = False
-
-    # 新規発行
-    bond_contract, deploy_args = \
-        utils.issue_bond_token(users, bond_exchange.address, personal_info.address)
-
-    # 譲渡可能更新
-    bond_contract.setTransferable.transact(after_transferable, {'from': attacker})  # エラーになる
-
-    transferable = bond_contract.transferable()
-    assert transferable == True
-
-
-'''
-TEST_トークンの振替（transfer）
-'''
-
-
-# 正常系1: アカウントアドレスへの振替
-def test_transfer_normal_1(users, bond_exchange, personal_info):
-    from_address = users['issuer']
-    to_address = users['trader']
-    transfer_amount = 100
-
-    # 債券トークン新規発行
-    bond_contract, deploy_args = utils. \
-        issue_bond_token(users, bond_exchange.address, personal_info.address)
-
-    # 振替先の個人情報登録
-    utils.register_personal_info(to_address, personal_info, from_address)
-
-    # 振替
-    bond_contract.transfer.transact(to_address, transfer_amount, {'from': from_address})
-
-    from_balance = bond_contract.balanceOf(from_address)
-    to_balance = bond_contract.balanceOf(to_address)
-
-    assert from_balance == deploy_args[2] - transfer_amount
-    assert to_balance == transfer_amount
-
-
-# 正常系2: 債券取引コントラクトへの振替
-def test_transfer_normal_2(users, bond_exchange, personal_info):
-    from_address = users['issuer']
-    transfer_amount = 100
-
-    # 債券トークン新規発行
-    bond_contract, deploy_args = utils. \
-        issue_bond_token(users, bond_exchange.address, personal_info.address)
-
-    to_address = bond_exchange.address
-    bond_contract.transfer.transact(to_address, transfer_amount, {'from': from_address})
-
-    from_balance = bond_contract.balanceOf(from_address)
-    to_balance = bond_contract.balanceOf(to_address)
-
-    assert from_balance == deploy_args[2] - transfer_amount
-    assert to_balance == transfer_amount
-
-
-# エラー系1: 入力値の型誤り（To）
-def test_transfer_error_1(users, bond_exchange, personal_info):
-    from_address = users['issuer']
-    to_address = 1234
-    transfer_amount = 100
-
-    # 債券トークン新規発行
-    bond_contract, deploy_args = utils. \
-        issue_bond_token(users, bond_exchange.address, personal_info.address)
-
-    with pytest.raises(ValueError):
+        # 振替
         bond_contract.transfer.transact(to_address, transfer_amount, {'from': from_address})
 
+        from_balance = bond_contract.balanceOf(from_address)
+        to_balance = bond_contract.balanceOf(to_address)
 
-# エラー系2: 入力値の型誤り（Value）
-def test_transfer_error_2(users, bond_exchange, personal_info):
-    from_address = users['issuer']
-    to_address = users['trader']
-    transfer_amount = 'abc'
+        assert from_balance == deploy_args[2] - transfer_amount
+        assert to_balance == transfer_amount
 
-    # 債券トークン新規発行
-    bond_contract, deploy_args = utils. \
-        issue_bond_token(users, bond_exchange.address, personal_info.address)
+    # 正常系2: 債券取引コントラクトへの振替
+    def test_transfer_normal_2(self, users, bond_exchange, personal_info):
+        from_address = users['issuer']
+        transfer_amount = 100
 
-    with pytest.raises(TypeError):
+        # 債券トークン新規発行
+        bond_contract, deploy_args = utils. \
+            issue_bond_token(users, bond_exchange.address, personal_info.address)
+
+        to_address = bond_exchange.address
         bond_contract.transfer.transact(to_address, transfer_amount, {'from': from_address})
 
+        from_balance = bond_contract.balanceOf(from_address)
+        to_balance = bond_contract.balanceOf(to_address)
+
+        assert from_balance == deploy_args[2] - transfer_amount
+        assert to_balance == transfer_amount
+
+    # エラー系1: 入力値の型誤り（To）
+    def test_transfer_error_1(self, users, bond_exchange, personal_info):
+        from_address = users['issuer']
+        to_address = 1234
+        transfer_amount = 100
+
+        # 債券トークン新規発行
+        bond_contract, deploy_args = utils. \
+            issue_bond_token(users, bond_exchange.address, personal_info.address)
+
+        with pytest.raises(ValueError):
+            bond_contract.transfer.transact(to_address, transfer_amount, {'from': from_address})
+
+    # エラー系2: 入力値の型誤り（Value）
+    def test_transfer_error_2(self, users, bond_exchange, personal_info):
+        from_address = users['issuer']
+        to_address = users['trader']
+        transfer_amount = 'abc'
 
-# エラー系3: 残高不足
-def test_transfer_error_3(users, bond_exchange, personal_info):
-    issuer = users['issuer']
-    from_address = issuer
-    to_address = users['trader']
+        # 債券トークン新規発行
+        bond_contract, deploy_args = utils. \
+            issue_bond_token(users, bond_exchange.address, personal_info.address)
 
-    # 債券トークン新規発行
-    bond_contract, deploy_args = utils. \
-        issue_bond_token(users, bond_exchange.address, personal_info.address)
+        with pytest.raises(TypeError):
+            bond_contract.transfer.transact(to_address, transfer_amount, {'from': from_address})
+
+    # エラー系3: 残高不足
+    def test_transfer_error_3(self, users, bond_exchange, personal_info):
+        issuer = users['issuer']
+        from_address = issuer
+        to_address = users['trader']
+
+        # 債券トークン新規発行
+        bond_contract, deploy_args = utils. \
+            issue_bond_token(users, bond_exchange.address, personal_info.address)
 
-    # 個人情報登録
-    utils.register_personal_info(to_address, personal_info, from_address)
+        # 個人情報登録
+        utils.register_personal_info(to_address, personal_info, from_address)
 
-    # 債券トークン振替（残高超）
-    transfer_amount = 10000000000
-    bond_contract.transfer.transact(to_address, transfer_amount, {'from': issuer})  # エラーになる
+        # 債券トークン振替（残高超）
+        transfer_amount = 10000000000
+        bond_contract.transfer.transact(to_address, transfer_amount, {'from': issuer})  # エラーになる
 
-    assert bond_contract.balanceOf(issuer) == 10000
-    assert bond_contract.balanceOf(to_address) == 0
+        assert bond_contract.balanceOf(issuer) == 10000
+        assert bond_contract.balanceOf(to_address) == 0
 
+    # エラー系4: private functionにアクセスできない
+    def test_transfer_error_4(self, users, bond_exchange, personal_info):
+        issuer = users['issuer']
+        from_address = issuer
+        to_address = users['trader']
 
-# エラー系4: private functionにアクセスできない
-def test_transfer_error_4(users, bond_exchange, personal_info):
-    issuer = users['issuer']
-    from_address = issuer
-    to_address = users['trader']
+        transfer_amount = 100
+        data = 0
 
-    transfer_amount = 100
-    data = 0
+        # 債券トークン新規発行
+        bond_contract, deploy_args = utils. \
+            issue_bond_token(users, bond_exchange.address, personal_info.address)
 
-    # 債券トークン新規発行
-    bond_contract, deploy_args = utils. \
-        issue_bond_token(users, bond_exchange.address, personal_info.address)
+        with pytest.raises(AttributeError):
+            bond_contract.isContract(to_address)
 
-    with pytest.raises(AttributeError):
-        bond_contract.isContract(to_address)
+        with pytest.raises(AttributeError):
+            bond_contract.transferToAddress.transact(to_address, transfer_amount, data, {'from': from_address})
 
-    with pytest.raises(AttributeError):
-        bond_contract.transferToAddress.transact(to_address, transfer_amount, data, {'from': from_address})
+        with pytest.raises(AttributeError):
+            bond_contract.transferToContract.transact(to_address, transfer_amount, data, {'from': from_address})
 
-    with pytest.raises(AttributeError):
-        bond_contract.transferToContract.transact(to_address, transfer_amount, data, {'from': from_address})
+    # エラー系5: 取引不可Exchangeへの振替
+    def test_transfer_error_5(self, users, bond_exchange, personal_info,
+                              coupon_exchange_storage, payment_gateway,
+                              IbetCouponExchange):
+        from_address = users['issuer']
+        transfer_amount = 100
 
+        # 債券トークン新規発行
+        bond_contract, deploy_args = utils. \
+            issue_bond_token(users, bond_exchange.address, personal_info.address)
 
-# エラー系5: 取引不可Exchangeへの振替
-def test_transfer_error_5(users, bond_exchange, personal_info,
-                          coupon_exchange_storage, payment_gateway,
-                          IbetCouponExchange):
-    from_address = users['issuer']
-    transfer_amount = 100
+        # 取引不可Exchange
+        dummy_exchange = users['admin'].deploy(
+            IbetCouponExchange,  # IbetStraightBondExchange以外を読み込む必要がある
+            payment_gateway.address,
+            coupon_exchange_storage.address
+        )
 
-    # 債券トークン新規発行
-    bond_contract, deploy_args = utils. \
-        issue_bond_token(users, bond_exchange.address, personal_info.address)
+        to_address = dummy_exchange.address
+        bond_contract.transfer.transact(to_address, transfer_amount, {'from': users['admin']})  # エラーになる
 
-    # 取引不可Exchange
-    dummy_exchange = users['admin'].deploy(
-        IbetCouponExchange,  # IbetStraightBondExchange以外を読み込む必要がある
-        payment_gateway.address,
-        coupon_exchange_storage.address
-    )
+        from_balance = bond_contract.balanceOf(from_address)
+        to_balance = bond_contract.balanceOf(to_address)
 
-    to_address = dummy_exchange.address
-    bond_contract.transfer.transact(to_address, transfer_amount, {'from': users['admin']})  # エラーになる
+        assert from_balance == deploy_args[2]
+        assert to_balance == 0
 
-    from_balance = bond_contract.balanceOf(from_address)
-    to_balance = bond_contract.balanceOf(to_address)
+    # エラー系6: 譲渡不可トークンの振替
+    def test_transfer_error_6(self, users, bond_exchange, personal_info):
+        issuer = users['issuer']
+        to_address = users['trader']
+        transfer_amount = 100
 
-    assert from_balance == deploy_args[2]
-    assert to_balance == 0
+        # 債券トークン新規発行
+        bond_contract, deploy_args = \
+            utils.issue_bond_token(users, bond_exchange.address, personal_info.address)
 
+        # 個人情報登録
+        utils.register_personal_info(to_address, personal_info, issuer)
 
-# エラー系6: 譲渡不可トークンの振替
-def test_transfer_error_6(users, bond_exchange, personal_info):
-    issuer = users['issuer']
-    to_address = users['trader']
-    transfer_amount = 100
+        # 譲渡不可設定
+        bond_contract.setTransferable.transact(False, {'from': issuer})
 
-    # 債券トークン新規発行
-    bond_contract, deploy_args = \
-        utils.issue_bond_token(users, bond_exchange.address, personal_info.address)
+        # 譲渡実行
+        bond_contract.transfer.transact(to_address, transfer_amount, {'from': issuer})  # エラーになる
 
-    # 個人情報登録
-    utils.register_personal_info(to_address, personal_info, issuer)
+        from_balance = bond_contract.balanceOf(issuer)
+        to_balance = bond_contract.balanceOf(to_address)
 
-    # 譲渡不可設定
-    bond_contract.setTransferable.transact(False, {'from': issuer})
+        assert from_balance == deploy_args[2]
+        assert to_balance == 0
 
-    # 譲渡実行
-    bond_contract.transfer.transact(to_address, transfer_amount, {'from': issuer})  # エラーになる
+    # エラー系7: 個人情報未登録アドレスへの振替
+    def test_transfer_error_7(self, users, bond_exchange, personal_info):
+        issuer = users['issuer']
+        to_address = users['trader']
+        transfer_amount = 100
 
-    from_balance = bond_contract.balanceOf(issuer)
-    to_balance = bond_contract.balanceOf(to_address)
+        # 債券トークン新規発行
+        bond_contract, deploy_args = \
+            utils.issue_bond_token(users, bond_exchange.address, personal_info.address)
 
-    assert from_balance == deploy_args[2]
-    assert to_balance == 0
+        # NOTE:個人情報未登録（to_address）
 
+        # 譲渡実行
+        bond_contract.transfer.transact(to_address, transfer_amount, {'from': issuer})  # エラーになる
 
-# エラー系7: 個人情報未登録アドレスへの振替
-def test_transfer_error_7(users, bond_exchange, personal_info):
-    issuer = users['issuer']
-    to_address = users['trader']
-    transfer_amount = 100
+        from_balance = bond_contract.balanceOf(issuer)
+        to_balance = bond_contract.balanceOf(to_address)
 
-    # 債券トークン新規発行
-    bond_contract, deploy_args = \
-        utils.issue_bond_token(users, bond_exchange.address, personal_info.address)
+        assert from_balance == deploy_args[2]
+        assert to_balance == 0
 
-    # NOTE:個人情報未登録（to_address）
 
-    # 譲渡実行
-    bond_contract.transfer.transact(to_address, transfer_amount, {'from': issuer})  # エラーになる
+# TEST_トークンの移転（transferFrom）
+class TestTransferFrom:
 
-    from_balance = bond_contract.balanceOf(issuer)
-    to_balance = bond_contract.balanceOf(to_address)
+    # 正常系1: アカウントアドレスへの移転
+    def test_transferFrom_normal_1(self, users, bond_exchange, personal_info):
+        _issuer = users['issuer']
+        _from = users['admin']
+        _to = users['trader']
+        _value = 100
 
-    assert from_balance == deploy_args[2]
-    assert to_balance == 0
+        # 債券トークン新規発行
+        bond_contract, deploy_args = utils. \
+            issue_bond_token(users, bond_exchange.address, personal_info.address)
 
+        # 振替先の個人情報登録（_from）
+        utils.register_personal_info(_from, personal_info, _issuer)
 
-'''
-TEST_残高確認（balanceOf）
-'''
+        # 譲渡（issuer -> _from）
+        bond_contract.transfer.transact(_from, _value, {'from': _issuer})
 
+        # 移転（_from -> _to）
+        bond_contract.transferFrom.transact(_from, _to, _value, {'from': _issuer})
 
-# 正常系1: 商品コントラクト作成 -> 残高確認
-def test_balanceOf_normal_1(users, bond_exchange, personal_info):
-    issuer = users['issuer']
+        issuer_balance = bond_contract.balanceOf(_issuer)
+        from_balance = bond_contract.balanceOf(_from)
+        to_balance = bond_contract.balanceOf(_to)
 
-    # 債券トークン新規発行
-    bond_token, deploy_args = utils. \
-        issue_bond_token(users, bond_exchange.address, personal_info.address)
+        assert issuer_balance == deploy_args[2] - _value
+        assert from_balance == 0
+        assert to_balance == _value
 
-    balance = bond_token.balanceOf(issuer)
-    assert balance == 10000
+    # エラー系1: 入力値の型誤り（From）
+    def test_transferFrom_error_1(self, users, bond_exchange, personal_info):
+        _issuer = users['issuer']
+        _to = users['trader']
+        _value = 100
 
+        # 債券トークン新規発行
+        bond_contract, deploy_args = utils. \
+            issue_bond_token(users, bond_exchange.address, personal_info.address)
 
-# エラー系1: 入力値の型誤り（Owner）
-def test_balanceOf_error_1(users, bond_exchange, personal_info):
-    # 債券トークン新規発行
-    bond_token, deploy_args = utils. \
-        issue_bond_token(users, bond_exchange.address, personal_info.address)
+        # 移転（_from -> _to）
 
-    account_address = 1234
+        with pytest.raises(ValueError):
+            bond_contract.transferFrom.transact('1234', _to, _value, {'from': _issuer})
 
-    with pytest.raises(ValueError):
-        bond_token.balanceOf(account_address)
+        with pytest.raises(ValueError):
+            bond_contract.transferFrom.transact(1234, _to, _value, {'from': _issuer})
 
+    # エラー系2: 入力値の型誤り（To）
+    def test_transferFrom_error_2(self, users, bond_exchange, personal_info):
+        _issuer = users['issuer']
+        _from = users['admin']
+        _value = 100
 
-'''
-TEST_認定リクエスト（requestSignature）
-'''
+        # 債券トークン新規発行
+        bond_contract, deploy_args = utils. \
+            issue_bond_token(users, bond_exchange.address, personal_info.address)
 
+        # 移転（_from -> _to）
 
-# 正常系1: 初期値が0
-def test_requestSignature_normal_1(users, bond_exchange, personal_info):
-    signer = users['admin']
+        with pytest.raises(ValueError):
+            bond_contract.transferFrom.transact(_from, '1234', _value, {'from': _issuer})
 
-    # 債券トークン新規発行
-    bond_token, deploy_args = utils. \
-        issue_bond_token(users, bond_exchange.address, personal_info.address)
+        with pytest.raises(ValueError):
+            bond_contract.transferFrom.transact(_from, 1234, _value, {'from': _issuer})
 
-    signature = bond_token.functions.signatures(signer)
-    assert signature == 0
+    # エラー系3: 入力値の型誤り（Value）
+    def test_transferFrom_error_3(self, users, bond_exchange, personal_info):
+        _issuer = users['issuer']
+        _from = users['admin']
+        _to = users['trader']
 
+        # 債券トークン新規発行
+        bond_contract, deploy_args = utils. \
+            issue_bond_token(users, bond_exchange.address, personal_info.address)
 
-# 正常系2: 認定リクエスト
-def test_requestSignature_normal_2(users, bond_exchange, personal_info):
-    issuer = users['issuer']
-    signer = users['admin']
+        # 移転（_from -> _to）
 
-    # 債券トークン新規発行
-    bond_token, deploy_args = utils. \
-        issue_bond_token(users, bond_exchange.address, personal_info.address)
+        with pytest.raises(OverflowError):
+            bond_contract.transferFrom.transact(_from, _to, -1, {'from': _issuer})
 
-    bond_token.requestSignature.transact(signer, {'from': issuer})
+        with pytest.raises(OverflowError):
+            bond_contract.transferFrom.transact(_from, _to, 2 ** 256, {'from': _issuer})
 
-    signature = bond_token.functions.signatures(signer)
-    assert signature == 1
+        with pytest.raises(TypeError):
+            bond_contract.transferFrom.transact(_from, _to, 'abc', {'from': _issuer})
 
+    # エラー系4: 残高不足
+    def test_transferFrom_error_4(self, users, bond_exchange, personal_info):
+        _issuer = users['issuer']
+        _from = users['admin']
+        _to = users['trader']
+        _value = 100
 
-# エラー系1: 入力値の型誤り（Signer）
-def test_requestSignature_error_1(users, bond_exchange, personal_info):
-    issuer = users['issuer']
-    signer = 1234
+        # 債券トークン新規発行
+        bond_contract, deploy_args = utils. \
+            issue_bond_token(users, bond_exchange.address, personal_info.address)
 
-    # 債券トークン新規発行
-    bond_token, deploy_args = utils. \
-        issue_bond_token(users, bond_exchange.address, personal_info.address)
+        # 振替先の個人情報登録（_from）
+        utils.register_personal_info(_from, personal_info, _issuer)
 
-    with pytest.raises(ValueError):
-        bond_token.requestSignature.transact(signer, {'from': issuer})
+        # 譲渡（issuer -> _from）
+        bond_contract.transfer.transact(_from, _value, {'from': _issuer})
 
+        # 移転（_from -> _to）
+        bond_contract.transferFrom.transact(_from, _to, 101, {'from': _issuer})  # エラーになる
 
-'''
-TEST_認定（sign）
-'''
+        issuer_balance = bond_contract.balanceOf(_issuer)
+        from_balance = bond_contract.balanceOf(_from)
+        to_balance = bond_contract.balanceOf(_to)
 
+        assert issuer_balance == deploy_args[2] - _value
+        assert from_balance == _value
+        assert to_balance == 0
 
-# 正常系1: 認定リクエスト -> 認定
-def test_sign_normal_1(users, bond_exchange, personal_info):
-    issuer = users['issuer']
-    signer = users['admin']
+    # エラー系5: 権限エラー
+    def test_transferFrom_error_5(self, users, bond_exchange, personal_info):
+        _issuer = users['issuer']
+        _from = users['admin']
+        _to = users['trader']
+        _value = 100
 
-    # 債券トークン新規発行
-    bond_token, deploy_args = utils. \
-        issue_bond_token(users, bond_exchange.address, personal_info.address)
+        # 債券トークン新規発行
+        bond_contract, deploy_args = utils. \
+            issue_bond_token(users, bond_exchange.address, personal_info.address)
 
-    # 認定リクエスト -> Success
-    bond_token.requestSignature.transact(signer, {'from': issuer})
+        # 振替先の個人情報登録（_from）
+        utils.register_personal_info(_from, personal_info, _issuer)
 
-    # 認定 -> Success
-    bond_token.sign.transact({'from': signer})
+        # 譲渡（issuer -> _from）
+        bond_contract.transfer.transact(_from, _value, {'from': _issuer})
 
-    signature = bond_token.functions.signatures(signer)
-    assert signature == 2
+        # 移転（_from -> _to）
+        bond_contract.transferFrom.transact(_from, _to, _value, {'from': _from})  # エラーになる
 
+        issuer_balance = bond_contract.balanceOf(_issuer)
+        from_balance = bond_contract.balanceOf(_from)
+        to_balance = bond_contract.balanceOf(_to)
 
-# エラー系1: 認定リクエスト未実施 -> 認定
-def test_sign_error_1(users, bond_exchange, personal_info):
-    signer = users['admin']
+        assert issuer_balance == deploy_args[2] - _value
+        assert from_balance == _value
+        assert to_balance == 0
 
-    # 債券トークン新規発行
-    bond_token, deploy_args = utils. \
-        issue_bond_token(users, bond_exchange.address, personal_info.address)
 
-    # 認定 -> Failure
-    bond_token.sign.transact({'from': signer})
-    signature = bond_token.functions.signatures(signer)
-    assert signature == 0
+# TEST_残高確認（balanceOf）
+class TestBalanceOf:
 
+    # 正常系1: 商品コントラクト作成 -> 残高確認
+    def test_balanceOf_normal_1(self, users, bond_exchange, personal_info):
+        issuer = users['issuer']
 
-# エラー系2: 認定リクエスト-> 異なるSinerから認定をした場合
-def test_sign_error_2(users, bond_exchange, personal_info):
-    issuer = users['issuer']
-    signer = users['admin']
-    signer_other = users['trader']
+        # 債券トークン新規発行
+        bond_token, deploy_args = utils. \
+            issue_bond_token(users, bond_exchange.address, personal_info.address)
 
-    # 債券トークン新規発行
-    bond_token, deploy_args = utils. \
-        issue_bond_token(users, bond_exchange.address, personal_info.address)
+        balance = bond_token.balanceOf(issuer)
+        assert balance == 10000
 
-    # 認定リクエスト -> Success
-    bond_token.requestSignature.transact(signer, {'from': issuer})
+    # エラー系1: 入力値の型誤り（Owner）
+    def test_balanceOf_error_1(self, users, bond_exchange, personal_info):
+        # 債券トークン新規発行
+        bond_token, deploy_args = utils. \
+            issue_bond_token(users, bond_exchange.address, personal_info.address)
 
-    # 異なるSignerが認定 -> Failure
-    bond_token.sign.transact({'from': signer_other})
-    signature = bond_token.functions.signatures(signer)
-    assert signature == 1
+        account_address = 1234
 
+        with pytest.raises(ValueError):
+            bond_token.balanceOf(account_address)
 
-'''
-TEST_認定取消（unsign）
-'''
 
+# TEST_取引可能Exchangeの更新（setTradableExchange）
+class TestSetTradableExchange:
 
-# 正常系1: 認定リクエスト -> 認定 -> 認定取消
-def test_unsign_normal_1(users, bond_exchange, personal_info):
-    issuer = users['issuer']
-    signer = users['admin']
+    # 正常系1: 発行 -> Exchangeの更新
+    def test_setTradableExchange_normal_1(self, users, bond_exchange, personal_info):
+        # 債券トークン新規発行
+        bond_token, deploy_args = utils. \
+            issue_bond_token(users, bond_exchange.address, personal_info.address)
+        assert bond_token.tradableExchange() == to_checksum_address(bond_exchange.address)
 
-    # 債券トークン新規発行
-    bond_token, deploy_args = utils. \
-        issue_bond_token(users, bond_exchange.address, personal_info.address)
+    # エラー系1: 発行 -> Exchangeの更新（入力値の型誤り）
+    def test_setTradableExchange_error_1(self, users, bond_exchange, personal_info):
+        issuer = users['issuer']
 
-    # 認定リクエスト -> Success
-    bond_token.requestSignature.transact(signer, {'from': issuer})
+        # 債券トークン新規発行
+        bond_token, deploy_args = utils. \
+            issue_bond_token(users, bond_exchange.address, personal_info.address)
 
-    # 認定 -> Success
-    bond_token.sign.transact({'from': signer})
+        # Exchangeの更新
+        with pytest.raises(ValueError):
+            bond_token.setTradableExchange.transact('0xaaaa', {'from': issuer})
 
-    # 認定取消 -> Success
-    bond_token.unsign.transact({'from': signer})
+    # エラー系2: 発行 -> Exchangeの更新（権限エラー）
+    def test_setTradableExchange_error_2(self, users, bond_exchange, personal_info):
+        attacker = users['trader']
 
-    signature = bond_token.functions.signatures(signer)
-    assert signature == 0
+        # 債券トークン新規発行
+        bond_token, deploy_args = utils. \
+            issue_bond_token(users, bond_exchange.address, personal_info.address)
 
+        # Exchangeの更新
+        bond_token.setTradableExchange.transact(zero_address, {'from': attacker})  # エラーになる
 
-# エラー系1: 認定リクエスト未実施 -> 認定取消
-def test_unsign_error_1(users, bond_exchange, personal_info):
-    signer = users['admin']
+        assert bond_token.tradableExchange() == to_checksum_address(bond_exchange.address)
 
-    # 債券トークン新規発行
-    bond_token, deploy_args = utils. \
-        issue_bond_token(users, bond_exchange.address, personal_info.address)
 
-    # 認定取消 -> Failure
-    bond_token.unsign.transact({'from': signer})
-    signature = bond_token.functions.signatures(signer)
-    assert signature == 0
+# TEST_個人情報記帳コントラクトの更新（setPersonalInfoAddress）
+class TestSetPersonalInfoAddress:
 
+    # 正常系1: トークン発行 -> 更新
+    def test_setPersonalInfoAddress_normal_1(self, users, bond_exchange, personal_info):
+        # 債券トークン新規発行
+        bond_token, deploy_args = utils. \
+            issue_bond_token(users, bond_exchange.address, personal_info.address)
 
-# エラー系2: 認定リクエスト -> （認定未実施） -> 認定取消
-def test_unsign_error_2(users, bond_exchange, personal_info):
-    issuer = users['issuer']
-    signer = users['admin']
+        assert bond_token.personalInfoAddress() == to_checksum_address(personal_info.address)
 
-    # 債券トークン新規発行
-    bond_token, deploy_args = utils. \
-        issue_bond_token(users, bond_exchange.address, personal_info.address)
+    # エラー系1: トークン発行 -> 更新（入力値の型誤り）
+    def test_setPersonalInfoAddress_error_1(self, users, bond_exchange, personal_info):
+        issuer = users['issuer']
 
-    # 認定リクエスト -> Success
-    bond_token.requestSignature.transact(signer, {'from': issuer})
+        # 債券トークン新規発行
+        bond_token, deploy_args = utils. \
+            issue_bond_token(users, bond_exchange.address, personal_info.address)
 
-    # 認定取消 -> Failure
-    bond_token.unsign.transact({'from': signer})
-    signature = bond_token.functions.signatures(signer)
-    assert signature == 1
+        # 更新
+        with pytest.raises(ValueError):
+            bond_token.setPersonalInfoAddress.transact('0xaaaa', {'from': issuer})
 
+    # エラー系2: トークン発行 -> 更新（権限エラー）
+    def test_setPersonalInfoAddress_error_2(self, users, bond_exchange, personal_info):
+        attacker = users['trader']
 
-# エラー系3: 認定リクエスト-> 認定 -> 異なるSinerから認定取消を実施した場合
-def test_unsign_error_3(users, bond_exchange, personal_info):
-    issuer = users['issuer']
-    signer = users['admin']
-    signer_other = users['trader']
+        # 債券トークン新規発行
+        bond_token, deploy_args = utils. \
+            issue_bond_token(users, bond_exchange.address, personal_info.address)
 
-    # 債券トークン新規発行
-    bond_token, deploy_args = utils. \
-        issue_bond_token(users, bond_exchange.address, personal_info.address)
+        # 更新
+        bond_token.setPersonalInfoAddress.transact('0x0000000000000000000000000000000000000000', {'from': attacker})
+        assert bond_token.personalInfoAddress() == to_checksum_address(personal_info.address)
 
-    # 認定リクエスト -> Success
-    bond_token.requestSignature.transact(signer, {'from': issuer})
 
-    # 認定 -> Success
-    bond_token.sign.transact({'from': signer})
+# TEST_問い合わせ先情報の更新（setContactInformation）
+class TestSetContactInformation:
 
-    # 異なるSignerが認定取消を実施 -> Failure
-    bond_token.unsign.transact({'from': signer_other})
-    signature = bond_token.functions.signatures(signer)
-    assert signature == 2
+    # 正常系1: 発行（デプロイ） -> 修正
+    def test_setContactInformation_normal_1(self, users, bond_exchange, personal_info):
+        issuer = users['issuer']
 
+        # 債券トークン新規発行
+        bond_token, deploy_args = utils. \
+            issue_bond_token(users, bond_exchange.address, personal_info.address)
 
-'''
-TEST_償還（redeem）
-'''
+        # 修正 -> Success
+        bond_token.setContactInformation.transact('updated contact information', {'from': issuer})
 
+        contact_information = bond_token.contactInformation()
+        assert contact_information == 'updated contact information'
 
-# 正常系1: 発行（デプロイ） -> 償還
-def test_redeem_normal_1(users, bond_exchange, personal_info):
-    issuer = users['issuer']
+    # エラー系1: 入力値の型誤り
+    def test_setContactInformation_error_1(self, users, bond_exchange, personal_info):
+        issuer = users['issuer']
 
-    # 債券トークン新規発行
-    bond_token, deploy_args = utils.issue_bond_token(users, bond_exchange.address, personal_info.address)
+        # 債券トークン新規発行
+        bond_token, deploy_args = utils. \
+            issue_bond_token(users, bond_exchange.address, personal_info.address)
 
-    # 償還 -> Success
-    bond_token.redeem.transact({'from': issuer})
+        with pytest.raises(ValueError):
+            bond_token.setContactInformation.transact('0x66aB6D9362d4F35596279692F0251Db635165871', {'from': issuer})
 
-    is_redeemed = bond_token.isRedeemed()
-    assert is_redeemed is True
+    # エラー系2: 権限エラー
+    def test_setContactInformation_error_2(self, users, bond_exchange, personal_info):
+        other = users['admin']
 
+        # 債券トークン新規発行
+        bond_token, deploy_args = utils. \
+            issue_bond_token(users, bond_exchange.address, personal_info.address)
 
-# エラー系1: issuer以外のアドレスから償還を実施した場合
-def test_redeem_error_1(users, bond_exchange, personal_info):
-    other = users['admin']
+        # Owner以外のアドレスから更新 -> Failure
+        bond_token.setContactInformation.transact('updated contact information', {'from': other})
+        contact_information = bond_token.contactInformation()
+        assert contact_information == ''
 
-    # 債券トークン新規発行
-    bond_token, deploy_args = utils.issue_bond_token(users, bond_exchange.address, personal_info.address)
 
-    # Owner以外のアドレスから償還を実施 -> Failure
-    bond_token.redeem.transact({'from': other})
-    is_redeemed = bond_token.isRedeemed()
-    assert is_redeemed is False
+# TEST_プライバシーポリシーの更新（setPrivacyPolicy）
+class TestSetPrivacyPolicy:
 
+    # 正常系1: 発行（デプロイ） -> 修正
+    def test_setPrivacyPolicy_normal_1(self, users, bond_exchange, personal_info):
+        issuer = users['issuer']
 
-'''
-TEST_商品画像の設定（setImageURL, getImageURL）
-'''
+        # 債券トークン新規発行
+        bond_token, deploy_args = utils. \
+            issue_bond_token(users, bond_exchange.address, personal_info.address)
 
+        # 修正 -> Success
+        bond_token.setPrivacyPolicy.transact('updated privacy policy', {'from': issuer})
 
-# 正常系1: 発行（デプロイ） -> 商品画像の設定
-def test_setImageURL_normal_1(users, bond_exchange, personal_info):
-    issuer = users['issuer']
+        privacy_policy = bond_token.privacyPolicy()
+        assert privacy_policy == 'updated privacy policy'
 
-    # 債券トークン新規発行
-    bond_token, deploy_args = utils. \
-        issue_bond_token(users, bond_exchange.address, personal_info.address)
+    # エラー系1: 入力値の型誤り
+    def test_setPrivacyPolicy_error_1(self, users, bond_exchange, personal_info):
+        issuer = users['issuer']
 
-    image_url = 'https://some_image_url.com/image.png'
+        # 債券トークン新規発行
+        bond_token, deploy_args = utils. \
+            issue_bond_token(users, bond_exchange.address, personal_info.address)
 
-    # 商品画像の設定 -> Success
-    bond_token.setImageURL.transact(0, image_url, {'from': issuer})
+        with pytest.raises(ValueError):
+            bond_token.setPrivacyPolicy.transact('0x66aB6D9362d4F35596279692F0251Db635165871', {'from': issuer})
 
-    image_url_0 = bond_token.getImageURL(0)
-    assert image_url_0 == image_url
+    # エラー系2: 権限エラー
+    def test_setPrivacyPolicy_error_2(self, users, bond_exchange, personal_info):
+        other = users['admin']
 
+        # 債券トークン新規発行
+        bond_token, deploy_args = utils. \
+            issue_bond_token(users, bond_exchange.address, personal_info.address)
 
-# 正常系2: 発行（デプロイ） -> 商品画像の設定（複数設定）
-def test_setImageURL_normal_2(users, bond_exchange, personal_info):
-    issuer = users['issuer']
+        # Owner以外のアドレスから更新 -> Failure
+        bond_token.setPrivacyPolicy.transact('updated privacy policy', {'from': other})
+        privacy_policy = bond_token.privacyPolicy()
+        assert privacy_policy == ''
 
-    # 債券トークン新規発行
-    bond_token, deploy_args = utils. \
-        issue_bond_token(users, bond_exchange.address, personal_info.address)
 
-    image_url = 'https://some_image_url.com/image.png'
+# TEST_商品画像の設定（setImageURL, getImageURL）
+class TestImageURL:
 
-    # 商品画像の設定（1つ目） -> Success
-    bond_token.setImageURL.transact(0, image_url, {'from': issuer})
+    # 正常系1: 発行（デプロイ） -> 商品画像の設定
+    def test_setImageURL_normal_1(self, users, bond_exchange, personal_info):
+        issuer = users['issuer']
 
-    # 商品画像の設定（2つ目） -> Success
-    bond_token.setImageURL.transact(1, image_url, {'from': issuer})
+        # 債券トークン新規発行
+        bond_token, deploy_args = utils. \
+            issue_bond_token(users, bond_exchange.address, personal_info.address)
 
-    image_url_0 = bond_token.getImageURL(0)
-    image_url_1 = bond_token.getImageURL(1)
-    assert image_url_0 == image_url
-    assert image_url_1 == image_url
+        image_url = 'https://some_image_url.com/image.png'
 
-
-# 正常系3: 発行（デプロイ） -> 商品画像の設定（上書き登録）
-def test_setImageURL_normal_3(users, bond_exchange, personal_info):
-    issuer = users['issuer']
-
-    # 債券トークン新規発行
-    bond_token, deploy_args = utils. \
-        issue_bond_token(users, bond_exchange.address, personal_info.address)
-
-    image_url = 'https://some_image_url.com/image.png'
-    image_url_after = 'https://some_image_url.com/image_after.png'
-
-    # 商品画像の設定（1回目） -> Success
-    bond_token.setImageURL.transact(0, image_url, {'from': issuer})
-
-    # 商品画像の設定（2回目：上書き） -> Success
-    bond_token.setImageURL.transact(0, image_url_after, {'from': issuer})
-
-    image_url_0 = bond_token.getImageURL(0)
-    assert image_url_0 == image_url_after
-
-
-# エラー系1: 入力値の型誤り（Class）
-def test_setImageURL_error_1(users, bond_exchange, personal_info):
-    issuer = users['issuer']
-
-    # 債券トークン新規発行
-    bond_token, deploy_args = utils. \
-        issue_bond_token(users, bond_exchange.address, personal_info.address)
-
-    image_url = 'https://some_image_url.com/image.png'
-
-    with pytest.raises(OverflowError):
-        bond_token.setImageURL.transact(-1, image_url, {'from': issuer})
-
-    with pytest.raises(OverflowError):
-        bond_token.setImageURL.transact(256, image_url, {'from': issuer})
-
-    with pytest.raises(TypeError):
-        bond_token.setImageURL.transact('a', image_url, {'from': issuer})
-
-
-# エラー系2: 入力値の型誤り（ImageURL）
-def test_setImageURL_error_2(users, bond_exchange, personal_info):
-    issuer = users['issuer']
-
-    # 債券トークン新規発行
-    bond_token, deploy_args = utils. \
-        issue_bond_token(users, bond_exchange.address, personal_info.address)
-
-    image_url = '0x66aB6D9362d4F35596279692F0251Db635165871'
-
-    with pytest.raises(ValueError):
+        # 商品画像の設定 -> Success
         bond_token.setImageURL.transact(0, image_url, {'from': issuer})
 
+        image_url_0 = bond_token.getImageURL(0)
+        assert image_url_0 == image_url
 
-# エラー系3: Issuer以外のアドレスから画像設定を実施した場合
-def test_setImageURL_error_3(users, bond_exchange, personal_info):
-    other = users['admin']
+    # 正常系2: 発行（デプロイ） -> 商品画像の設定（複数設定）
+    def test_setImageURL_normal_2(self, users, bond_exchange, personal_info):
+        issuer = users['issuer']
 
-    # 債券トークン新規発行
-    bond_token, deploy_args = utils. \
-        issue_bond_token(users, bond_exchange.address, personal_info.address)
+        # 債券トークン新規発行
+        bond_token, deploy_args = utils. \
+            issue_bond_token(users, bond_exchange.address, personal_info.address)
 
-    image_url = 'https://some_image_url.com/image.png'
+        image_url = 'https://some_image_url.com/image.png'
 
-    # Owner以外のアドレスから画像設定を実施 -> Failure
-    bond_token.setImageURL.transact(0, image_url, {'from': other})
-    image_url_0 = bond_token.getImageURL(0)
-    assert image_url_0 == ''
+        # 商品画像の設定（1つ目） -> Success
+        bond_token.setImageURL.transact(0, image_url, {'from': issuer})
 
+        # 商品画像の設定（2つ目） -> Success
+        bond_token.setImageURL.transact(1, image_url, {'from': issuer})
 
-'''
-TEST_メモの更新（updateMemo）
-'''
+        image_url_0 = bond_token.getImageURL(0)
+        image_url_1 = bond_token.getImageURL(1)
+        assert image_url_0 == image_url
+        assert image_url_1 == image_url
 
+    # 正常系3: 発行（デプロイ） -> 商品画像の設定（上書き登録）
+    def test_setImageURL_normal_3(self, users, bond_exchange, personal_info):
+        issuer = users['issuer']
 
-# 正常系1: 発行（デプロイ） -> メモ欄の修正
-def test_updateMemo_normal_1(users, bond_exchange, personal_info):
-    issuer = users['issuer']
+        # 債券トークン新規発行
+        bond_token, deploy_args = utils. \
+            issue_bond_token(users, bond_exchange.address, personal_info.address)
 
-    # 債券トークン新規発行
-    bond_token, deploy_args = utils. \
-        issue_bond_token(users, bond_exchange.address, personal_info.address)
+        image_url = 'https://some_image_url.com/image.png'
+        image_url_after = 'https://some_image_url.com/image_after.png'
 
-    # メモ欄の修正 -> Success
-    bond_token.updateMemo.transact('updated memo', {'from': issuer})
+        # 商品画像の設定（1回目） -> Success
+        bond_token.setImageURL.transact(0, image_url, {'from': issuer})
 
-    memo = bond_token.memo()
-    assert memo == 'updated memo'
+        # 商品画像の設定（2回目：上書き） -> Success
+        bond_token.setImageURL.transact(0, image_url_after, {'from': issuer})
 
+        image_url_0 = bond_token.getImageURL(0)
+        assert image_url_0 == image_url_after
 
-# エラー系1: 入力値の型誤り
-def test_updateMemo_error_1(users, bond_exchange, personal_info):
-    issuer = users['issuer']
+    # エラー系1: 入力値の型誤り（Class）
+    def test_setImageURL_error_1(self, users, bond_exchange, personal_info):
+        issuer = users['issuer']
 
-    # 債券トークン新規発行
-    bond_token, deploy_args = utils. \
-        issue_bond_token(users, bond_exchange.address, personal_info.address)
+        # 債券トークン新規発行
+        bond_token, deploy_args = utils. \
+            issue_bond_token(users, bond_exchange.address, personal_info.address)
 
-    with pytest.raises(ValueError):
-        bond_token.updateMemo.transact('0x66aB6D9362d4F35596279692F0251Db635165871', {'from': issuer})
+        image_url = 'https://some_image_url.com/image.png'
 
+        with pytest.raises(OverflowError):
+            bond_token.setImageURL.transact(-1, image_url, {'from': issuer})
 
-# エラー系2: Owner以外のアドレスからメモ欄の修正を実施した場合
-def test_updateMemo_error_2(users, bond_exchange, personal_info):
-    other = users['admin']
+        with pytest.raises(OverflowError):
+            bond_token.setImageURL.transact(256, image_url, {'from': issuer})
 
-    # 債券トークン新規発行
-    bond_token, deploy_args = utils. \
-        issue_bond_token(users, bond_exchange.address, personal_info.address)
+        with pytest.raises(TypeError):
+            bond_token.setImageURL.transact('a', image_url, {'from': issuer})
 
-    # Owner以外のアドレスからメモ欄の修正を実施 -> Failure
-    bond_token.updateMemo.transact('updated memo', {'from': other})
-    memo = bond_token.memo()
-    assert memo == 'some_memo'
+    # エラー系2: 入力値の型誤り（ImageURL）
+    def test_setImageURL_error_2(self, users, bond_exchange, personal_info):
+        issuer = users['issuer']
 
+        # 債券トークン新規発行
+        bond_token, deploy_args = utils. \
+            issue_bond_token(users, bond_exchange.address, personal_info.address)
 
-'''
-TEST_トークンの移転（transferFrom）
-'''
+        image_url = '0x66aB6D9362d4F35596279692F0251Db635165871'
 
+        with pytest.raises(ValueError):
+            bond_token.setImageURL.transact(0, image_url, {'from': issuer})
 
-# 正常系1: アカウントアドレスへの移転
-def test_transferFrom_normal_1(users, bond_exchange, personal_info):
-    _issuer = users['issuer']
-    _from = users['admin']
-    _to = users['trader']
-    _value = 100
+    # エラー系3: Issuer以外のアドレスから画像設定を実施した場合
+    def test_setImageURL_error_3(self, users, bond_exchange, personal_info):
+        other = users['admin']
 
-    # 債券トークン新規発行
-    bond_contract, deploy_args = utils. \
-        issue_bond_token(users, bond_exchange.address, personal_info.address)
+        # 債券トークン新規発行
+        bond_token, deploy_args = utils. \
+            issue_bond_token(users, bond_exchange.address, personal_info.address)
 
-    # 振替先の個人情報登録（_from）
-    utils.register_personal_info(_from, personal_info, _issuer)
+        image_url = 'https://some_image_url.com/image.png'
 
-    # 譲渡（issuer -> _from）
-    bond_contract.transfer.transact(_from, _value, {'from': _issuer})
+        # Owner以外のアドレスから画像設定を実施 -> Failure
+        bond_token.setImageURL.transact(0, image_url, {'from': other})
+        image_url_0 = bond_token.getImageURL(0)
+        assert image_url_0 == ''
 
-    # 移転（_from -> _to）
-    bond_contract.transferFrom.transact(_from, _to, _value, {'from': _issuer})
 
-    issuer_balance = bond_contract.balanceOf(_issuer)
-    from_balance = bond_contract.balanceOf(_from)
-    to_balance = bond_contract.balanceOf(_to)
+# TEST_メモの更新（setMemo）
+class TestSetMemo:
 
-    assert issuer_balance == deploy_args[2] - _value
-    assert from_balance == 0
-    assert to_balance == _value
+    # 正常系1: 発行（デプロイ） -> メモ欄の修正
+    def test_setMemo_normal_1(self, users, bond_exchange, personal_info):
+        issuer = users['issuer']
 
+        # 債券トークン新規発行
+        bond_token, deploy_args = utils. \
+            issue_bond_token(users, bond_exchange.address, personal_info.address)
 
-# エラー系1: 入力値の型誤り（From）
-def test_transferFrom_error_1(users, bond_exchange, personal_info):
-    _issuer = users['issuer']
-    _to = users['trader']
-    _value = 100
+        # メモ欄の修正 -> Success
+        bond_token.setMemo.transact('updated memo', {'from': issuer})
 
-    # 債券トークン新規発行
-    bond_contract, deploy_args = utils. \
-        issue_bond_token(users, bond_exchange.address, personal_info.address)
+        memo = bond_token.memo()
+        assert memo == 'updated memo'
 
-    # 移転（_from -> _to）
+    # エラー系1: 入力値の型誤り
+    def test_setMemo_error_1(self, users, bond_exchange, personal_info):
+        issuer = users['issuer']
 
-    with pytest.raises(ValueError):
-        bond_contract.transferFrom.transact('1234', _to, _value, {'from': _issuer})
+        # 債券トークン新規発行
+        bond_token, deploy_args = utils. \
+            issue_bond_token(users, bond_exchange.address, personal_info.address)
 
-    with pytest.raises(ValueError):
-        bond_contract.transferFrom.transact(1234, _to, _value, {'from': _issuer})
+        with pytest.raises(ValueError):
+            bond_token.setMemo.transact('0x66aB6D9362d4F35596279692F0251Db635165871', {'from': issuer})
 
+    # エラー系2: Owner以外のアドレスからメモ欄の修正を実施した場合
+    def test_setMemo_error_2(self, users, bond_exchange, personal_info):
+        other = users['admin']
 
-# エラー系2: 入力値の型誤り（To）
-def test_transferFrom_error_2(users, bond_exchange, personal_info):
-    _issuer = users['issuer']
-    _from = users['admin']
-    _value = 100
+        # 債券トークン新規発行
+        bond_token, deploy_args = utils. \
+            issue_bond_token(users, bond_exchange.address, personal_info.address)
 
-    # 債券トークン新規発行
-    bond_contract, deploy_args = utils. \
-        issue_bond_token(users, bond_exchange.address, personal_info.address)
+        # Owner以外のアドレスからメモ欄の修正を実施 -> Failure
+        bond_token.setMemo.transact('updated memo', {'from': other})
+        memo = bond_token.memo()
+        assert memo == ''
 
-    # 移転（_from -> _to）
 
-    with pytest.raises(ValueError):
-        bond_contract.transferFrom.transact(_from, '1234', _value, {'from': _issuer})
+# TEST_年利情報の更新（setInterestRate）
+class TestSetInterestRate:
 
-    with pytest.raises(ValueError):
-        bond_contract.transferFrom.transact(_from, 1234, _value, {'from': _issuer})
+    # 正常系1
+    def test_setInterestRate_normal_1(self, users, bond_exchange, personal_info):
+        issuer = users['issuer']
 
+        # 債券トークン新規発行
+        bond_token, deploy_args = utils. \
+            issue_bond_token(users, bond_exchange.address, personal_info.address)
 
-# エラー系3: 入力値の型誤り（Value）
-def test_transferFrom_error_3(users, bond_exchange, personal_info):
-    _issuer = users['issuer']
-    _from = users['admin']
-    _to = users['trader']
+        # 年利情報の更新 -> Success
+        bond_token.setInterestRate.transact(123, {'from': issuer})
 
-    # 債券トークン新規発行
-    bond_contract, deploy_args = utils. \
-        issue_bond_token(users, bond_exchange.address, personal_info.address)
+        interest_rate = bond_token.interestRate()
+        assert interest_rate == 123
 
-    # 移転（_from -> _to）
+    # エラー系1: 入力値の型誤り
+    def test_setInterestRate_error_1(self, users, bond_exchange, personal_info):
+        issuer = users['issuer']
 
-    with pytest.raises(OverflowError):
-        bond_contract.transferFrom.transact(_from, _to, -1, {'from': _issuer})
+        # 債券トークン新規発行
+        bond_token, deploy_args = utils. \
+            issue_bond_token(users, bond_exchange.address, personal_info.address)
 
-    with pytest.raises(OverflowError):
-        bond_contract.transferFrom.transact(_from, _to, 2 ** 256, {'from': _issuer})
+        with pytest.raises(TypeError):
+            bond_token.setInterestRate.transact("abc", {'from': issuer})
 
-    with pytest.raises(TypeError):
-        bond_contract.transferFrom.transact(_from, _to, 'abc', {'from': _issuer})
+    # エラー系2: 権限エラー
+    def test_setInterestRate_error_2(self, users, bond_exchange, personal_info):
+        other = users['admin']
 
+        # 債券トークン新規発行
+        bond_token, deploy_args = utils. \
+            issue_bond_token(users, bond_exchange.address, personal_info.address)
 
-# エラー系4: 残高不足
-def test_transferFrom_error_4(users, bond_exchange, personal_info):
-    _issuer = users['issuer']
-    _from = users['admin']
-    _to = users['trader']
-    _value = 100
+        # Owner以外のアドレスから更新 -> Failure
+        bond_token.setInterestRate.transact(123, {'from': other})
 
-    # 債券トークン新規発行
-    bond_contract, deploy_args = utils. \
-        issue_bond_token(users, bond_exchange.address, personal_info.address)
+        interest_rate = bond_token.interestRate()
+        assert interest_rate == 0
 
-    # 振替先の個人情報登録（_from）
-    utils.register_personal_info(_from, personal_info, _issuer)
 
-    # 譲渡（issuer -> _from）
-    bond_contract.transfer.transact(_from, _value, {'from': _issuer})
+# TEST_利払日情報の更新（setInterestPaymentDate）
+class TestSetInterestPaymentDate:
 
-    # 移転（_from -> _to）
-    bond_contract.transferFrom.transact(_from, _to, 101, {'from': _issuer})  # エラーになる
+    # 正常系1
+    def test_setInterestPaymentDate_normal_1(self, users, bond_exchange, personal_info):
+        issuer = users['issuer']
 
-    issuer_balance = bond_contract.balanceOf(_issuer)
-    from_balance = bond_contract.balanceOf(_from)
-    to_balance = bond_contract.balanceOf(_to)
+        # 債券トークン新規発行
+        bond_token, deploy_args = utils. \
+            issue_bond_token(users, bond_exchange.address, personal_info.address)
 
-    assert issuer_balance == deploy_args[2] - _value
-    assert from_balance == _value
-    assert to_balance == 0
+        # 利払日情報の更新 -> Success
+        bond_token.setInterestPaymentDate.transact(
+            '{"interestPaymentDate1":"0331","interestPaymentDate2":"0930"}',
+            {'from': issuer}
+        )
 
+        interest_payment_date = bond_token.interestPaymentDate()
+        assert interest_payment_date == '{"interestPaymentDate1":"0331","interestPaymentDate2":"0930"}'
 
-# エラー系5: 権限エラー
-def test_transferFrom_error_5(users, bond_exchange, personal_info):
-    _issuer = users['issuer']
-    _from = users['admin']
-    _to = users['trader']
-    _value = 100
+    # エラー系1: 入力値の型誤り
+    def test_setInterestPaymentDate_error_1(self, users, bond_exchange, personal_info):
+        issuer = users['issuer']
 
-    # 債券トークン新規発行
-    bond_contract, deploy_args = utils. \
-        issue_bond_token(users, bond_exchange.address, personal_info.address)
+        # 債券トークン新規発行
+        bond_token, deploy_args = utils. \
+            issue_bond_token(users, bond_exchange.address, personal_info.address)
 
-    # 振替先の個人情報登録（_from）
-    utils.register_personal_info(_from, personal_info, _issuer)
+        with pytest.raises(ValueError):
+            bond_token.setInterestPaymentDate.transact(
+                '0x66aB6D9362d4F35596279692F0251Db635165871',
+                {'from': issuer}
+            )
 
-    # 譲渡（issuer -> _from）
-    bond_contract.transfer.transact(_from, _value, {'from': _issuer})
+    # エラー系2: 権限エラー
+    def test_setInterestPaymentDate_error_2(self, users, bond_exchange, personal_info):
+        other = users['admin']
 
-    # 移転（_from -> _to）
-    bond_contract.transferFrom.transact(_from, _to, _value, {'from': _from})  # エラーになる
+        # 債券トークン新規発行
+        bond_token, deploy_args = utils. \
+            issue_bond_token(users, bond_exchange.address, personal_info.address)
 
-    issuer_balance = bond_contract.balanceOf(_issuer)
-    from_balance = bond_contract.balanceOf(_from)
-    to_balance = bond_contract.balanceOf(_to)
+        # Owner以外のアドレスから更新 -> Failure
+        bond_token.setInterestPaymentDate.transact(
+            '{"interestPaymentDate1":"0331","interestPaymentDate2":"0930"}',
+            {'from': other}
+        )
 
-    assert issuer_balance == deploy_args[2] - _value
-    assert from_balance == _value
-    assert to_balance == 0
+        interest_payment_date = bond_token.interestPaymentDate()
+        assert interest_payment_date == ''
 
 
-'''
-TEST_取引可能Exchangeの更新（setTradableExchange）
-'''
+# TEST_譲渡可能更新（setTransferable）
+class TestSetTransferable:
 
+    # 正常系1: 発行 -> 譲渡可能更新
+    def test_setTransferable_normal_1(self, users, bond_exchange, personal_info):
+        issuer = users['issuer']
+        after_transferable = False
 
-# 正常系1: 発行 -> Exchangeの更新
-def test_setTradableExchange_normal_1(users, bond_exchange, personal_info,
-                                      coupon_exchange_storage, payment_gateway,
-                                      IbetCouponExchange):
-    issuer = users['issuer']
+        # 新規発行
+        bond_contract, deploy_args = \
+            utils.issue_bond_token(users, bond_exchange.address, personal_info.address)
 
-    # 債券トークン新規発行
-    bond_token, deploy_args = utils. \
-        issue_bond_token(users, bond_exchange.address, personal_info.address)
+        # 譲渡可能更新
+        bond_contract.setTransferable.transact(after_transferable, {'from': issuer})
 
-    # その他Exchange
-    other_exchange = users['admin'].deploy(
-        IbetCouponExchange,  # IbetStraightBondExchange以外を読み込む必要がある
-        payment_gateway.address,
-        coupon_exchange_storage.address
-    )
+        transferable = bond_contract.transferable()
+        assert after_transferable == transferable
 
-    # Exchangeの更新
-    bond_token.setTradableExchange.transact(other_exchange.address, {'from': issuer})
+    # エラー系1: 入力値の型誤り
+    def test_setTransferable_error_1(self, users, bond_exchange, personal_info):
+        issuer = users['issuer']
 
-    assert bond_token.tradableExchange() == to_checksum_address(other_exchange.address)
+        # 新規発行
+        bond_contract, deploy_args = \
+            utils.issue_bond_token(users, bond_exchange.address, personal_info.address)
 
+        # 型誤り
+        with pytest.raises(ValueError):
+            bond_contract.setTransferable.transact('False', {'from': issuer})
 
-# エラー系1: 発行 -> Exchangeの更新（入力値の型誤り）
-def test_setTradableExchange_error_1(users, bond_exchange, personal_info):
-    issuer = users['issuer']
+    # エラー系2: 権限エラー
+    def test_setTransferable_error_2(self, users, bond_exchange, personal_info):
+        attacker = users['trader']
+        after_transferable = False
 
-    # 債券トークン新規発行
-    bond_token, deploy_args = utils. \
-        issue_bond_token(users, bond_exchange.address, personal_info.address)
+        # 新規発行
+        bond_contract, deploy_args = \
+            utils.issue_bond_token(users, bond_exchange.address, personal_info.address)
 
-    # Exchangeの更新
-    with pytest.raises(ValueError):
-        bond_token.setTradableExchange.transact('0xaaaa', {'from': issuer})
+        # 譲渡可能更新
+        bond_contract.setTransferable.transact(after_transferable, {'from': attacker})  # エラーになる
 
+        transferable = bond_contract.transferable()
+        assert transferable == True
 
-# エラー系2: 発行 -> Exchangeの更新（権限エラー）
-def test_setTradableExchange_error_2(users, bond_exchange, personal_info,
-                                     coupon_exchange_storage, payment_gateway,
-                                     IbetCouponExchange):
-    trader = users['trader']
 
-    # 債券トークン新規発行
-    bond_token, deploy_args = utils. \
-        issue_bond_token(users, bond_exchange.address, personal_info.address)
+# TEST_取扱ステータス更新（setStatus）
+class TestSetStatus:
 
-    # その他Exchange
-    other_exchange = users['admin'].deploy(
-        IbetCouponExchange,  # IbetStraightBondExchange以外を読み込む必要がある
-        payment_gateway.address,
-        coupon_exchange_storage.address
-    )
+    # 正常系1
+    def test_setStatus_normal_1(self, users, bond_exchange, personal_info):
+        issuer = users['issuer']
 
-    # Exchangeの更新
-    bond_token.setTradableExchange.transact(other_exchange.address, {'from': trader})  # エラーになる
+        # 新規発行
+        bond_contract, deploy_args = \
+            utils.issue_bond_token(users, bond_exchange.address, personal_info.address)
 
-    assert bond_token.tradableExchange() == to_checksum_address(bond_exchange.address)
+        # 更新
+        bond_contract.setStatus.transact(False, {'from': issuer})
 
+        status = bond_contract.status()
+        assert status == False
 
-'''
-TEST_問い合わせ先情報の更新（setContactInformation）
-'''
+    # エラー系1: 入力値の型誤り
+    def test_setStatus_error_1(self, users, bond_exchange, personal_info):
+        issuer = users['issuer']
 
+        # 新規発行
+        bond_contract, deploy_args = \
+            utils.issue_bond_token(users, bond_exchange.address, personal_info.address)
 
-# 正常系1: 発行（デプロイ） -> 修正
-def test_setContactInformation_normal_1(users, bond_exchange, personal_info):
-    issuer = users['issuer']
+        # 型誤り
+        with pytest.raises(ValueError):
+            bond_contract.setStatus.transact('False', {'from': issuer})
 
-    # 債券トークン新規発行
-    bond_token, deploy_args = utils. \
-        issue_bond_token(users, bond_exchange.address, personal_info.address)
+    # エラー系2: 権限エラー
+    def test_setStatus_error_2(self, users, bond_exchange, personal_info):
+        attacker = users['trader']
 
-    # 修正 -> Success
-    bond_token.setContactInformation.transact('updated contact information', {'from': issuer})
+        # 新規発行
+        bond_contract, deploy_args = \
+            utils.issue_bond_token(users, bond_exchange.address, personal_info.address)
 
-    contact_information = bond_token.contactInformation()
-    assert contact_information == 'updated contact information'
+        # 更新
+        bond_contract.setStatus.transact(False, {'from': attacker})  # エラーになる
 
+        status = bond_contract.status()
+        assert status == True
 
-# エラー系1: 入力値の型誤り
-def test_setContactInformation_error_1(users, bond_exchange, personal_info):
-    issuer = users['issuer']
 
-    # 債券トークン新規発行
-    bond_token, deploy_args = utils. \
-        issue_bond_token(users, bond_exchange.address, personal_info.address)
+# TEST_認定リクエスト（requestSignature）
+class TestRequestSignature:
 
-    with pytest.raises(ValueError):
-        bond_token.setContactInformation.transact('0x66aB6D9362d4F35596279692F0251Db635165871', {'from': issuer})
+    # 正常系1: 初期値が0
+    def test_requestSignature_normal_1(self, users, bond_exchange, personal_info):
+        signer = users['admin']
 
+        # 債券トークン新規発行
+        bond_token, deploy_args = utils. \
+            issue_bond_token(users, bond_exchange.address, personal_info.address)
 
-# エラー系2: 権限エラー
-def test_setContactInformation_error_2(users, bond_exchange, personal_info):
-    other = users['admin']
+        signature = bond_token.functions.signatures(signer)
+        assert signature == 0
 
-    # 債券トークン新規発行
-    bond_token, deploy_args = utils. \
-        issue_bond_token(users, bond_exchange.address, personal_info.address)
+    # 正常系2: 認定リクエスト
+    def test_requestSignature_normal_2(self, users, bond_exchange, personal_info):
+        issuer = users['issuer']
+        signer = users['admin']
 
-    # Owner以外のアドレスから更新 -> Failure
-    bond_token.setContactInformation.transact('updated contact information', {'from': other})
-    contact_information = bond_token.contactInformation()
-    assert contact_information == 'some_contact_information'
+        # 債券トークン新規発行
+        bond_token, deploy_args = utils. \
+            issue_bond_token(users, bond_exchange.address, personal_info.address)
 
+        bond_token.requestSignature.transact(signer, {'from': issuer})
 
-'''
-TEST_プライバシーポリシーの更新（setPrivacyPolicy）
-'''
+        signature = bond_token.functions.signatures(signer)
+        assert signature == 1
 
+    # エラー系1: 入力値の型誤り（Signer）
+    def test_requestSignature_error_1(self, users, bond_exchange, personal_info):
+        issuer = users['issuer']
+        signer = 1234
 
-# 正常系1: 発行（デプロイ） -> 修正
-def test_setPrivacyPolicy_normal_1(users, bond_exchange, personal_info):
-    issuer = users['issuer']
+        # 債券トークン新規発行
+        bond_token, deploy_args = utils. \
+            issue_bond_token(users, bond_exchange.address, personal_info.address)
 
-    # 債券トークン新規発行
-    bond_token, deploy_args = utils. \
-        issue_bond_token(users, bond_exchange.address, personal_info.address)
+        with pytest.raises(ValueError):
+            bond_token.requestSignature.transact(signer, {'from': issuer})
 
-    # 修正 -> Success
-    bond_token.setPrivacyPolicy.transact('updated privacy policy', {'from': issuer})
 
-    privacy_policy = bond_token.privacyPolicy()
-    assert privacy_policy == 'updated privacy policy'
+# TEST_認定（sign）
+class TestSign:
 
+    # 正常系1: 認定リクエスト -> 認定
+    def test_sign_normal_1(self, users, bond_exchange, personal_info):
+        issuer = users['issuer']
+        signer = users['admin']
 
-# エラー系1: 入力値の型誤り
-def test_setPrivacyPolicy_error_1(users, bond_exchange, personal_info):
-    issuer = users['issuer']
+        # 債券トークン新規発行
+        bond_token, deploy_args = utils. \
+            issue_bond_token(users, bond_exchange.address, personal_info.address)
 
-    # 債券トークン新規発行
-    bond_token, deploy_args = utils. \
-        issue_bond_token(users, bond_exchange.address, personal_info.address)
+        # 認定リクエスト -> Success
+        bond_token.requestSignature.transact(signer, {'from': issuer})
 
-    with pytest.raises(ValueError):
-        bond_token.setPrivacyPolicy.transact('0x66aB6D9362d4F35596279692F0251Db635165871', {'from': issuer})
+        # 認定 -> Success
+        bond_token.sign.transact({'from': signer})
 
+        signature = bond_token.functions.signatures(signer)
+        assert signature == 2
 
-# エラー系2: 権限エラー
-def test_setPrivacyPolicy_error_2(users, bond_exchange, personal_info):
-    other = users['admin']
+    # エラー系1: 認定リクエスト未実施 -> 認定
+    def test_sign_error_1(self, users, bond_exchange, personal_info):
+        signer = users['admin']
 
-    # 債券トークン新規発行
-    bond_token, deploy_args = utils. \
-        issue_bond_token(users, bond_exchange.address, personal_info.address)
+        # 債券トークン新規発行
+        bond_token, deploy_args = utils. \
+            issue_bond_token(users, bond_exchange.address, personal_info.address)
 
-    # Owner以外のアドレスから更新 -> Failure
-    bond_token.setPrivacyPolicy.transact('updated privacy policy', {'from': other})
-    privacy_policy = bond_token.privacyPolicy()
-    assert privacy_policy == 'some_privacy_policy'
+        # 認定 -> Failure
+        bond_token.sign.transact({'from': signer})
+        signature = bond_token.functions.signatures(signer)
+        assert signature == 0
 
+    # エラー系2: 認定リクエスト-> 異なるSinerから認定をした場合
+    def test_sign_error_2(self, users, bond_exchange, personal_info):
+        issuer = users['issuer']
+        signer = users['admin']
+        signer_other = users['trader']
 
-'''
-TEST_個人情報記帳コントラクトの更新（setPersonalInfoAddress）
-'''
+        # 債券トークン新規発行
+        bond_token, deploy_args = utils. \
+            issue_bond_token(users, bond_exchange.address, personal_info.address)
 
+        # 認定リクエスト -> Success
+        bond_token.requestSignature.transact(signer, {'from': issuer})
 
-# 正常系1: トークン発行 -> 更新
-def test_setPersonalInfoAddress_normal_1(users, bond_exchange, personal_info):
-    issuer = users['issuer']
+        # 異なるSignerが認定 -> Failure
+        bond_token.sign.transact({'from': signer_other})
+        signature = bond_token.functions.signatures(signer)
+        assert signature == 1
 
-    # 債券トークン新規発行
-    bond_token, deploy_args = utils. \
-        issue_bond_token(users, bond_exchange.address, personal_info.address)
 
-    # 更新
-    bond_token.setPersonalInfoAddress.transact('0x0000000000000000000000000000000000000000', {'from': issuer})
+# TEST_認定取消（unsign）
+class TestUnsign:
 
-    assert bond_token.personalInfoAddress() == '0x0000000000000000000000000000000000000000'
+    # 正常系1: 認定リクエスト -> 認定 -> 認定取消
+    def test_unsign_normal_1(self, users, bond_exchange, personal_info):
+        issuer = users['issuer']
+        signer = users['admin']
 
+        # 債券トークン新規発行
+        bond_token, deploy_args = utils. \
+            issue_bond_token(users, bond_exchange.address, personal_info.address)
 
-# エラー系1: トークン発行 -> 更新（入力値の型誤り）
-def test_setPersonalInfoAddress_error_1(users, bond_exchange, personal_info):
-    issuer = users['issuer']
+        # 認定リクエスト -> Success
+        bond_token.requestSignature.transact(signer, {'from': issuer})
 
-    # 債券トークン新規発行
-    bond_token, deploy_args = utils. \
-        issue_bond_token(users, bond_exchange.address, personal_info.address)
+        # 認定 -> Success
+        bond_token.sign.transact({'from': signer})
 
-    # 更新
-    with pytest.raises(ValueError):
-        bond_token.setPersonalInfoAddress.transact('0xaaaa', {'from': issuer})
+        # 認定取消 -> Success
+        bond_token.unsign.transact({'from': signer})
 
+        signature = bond_token.functions.signatures(signer)
+        assert signature == 0
 
-# エラー系2: トークン発行 -> 更新（権限エラー）
-def test_setPersonalInfoAddress_error_2(users, bond_exchange, personal_info):
-    attacker = users['trader']
+    # エラー系1: 認定リクエスト未実施 -> 認定取消
+    def test_unsign_error_1(self, users, bond_exchange, personal_info):
+        signer = users['admin']
 
-    # 債券トークン新規発行
-    bond_token, deploy_args = utils. \
-        issue_bond_token(users, bond_exchange.address, personal_info.address)
+        # 債券トークン新規発行
+        bond_token, deploy_args = utils. \
+            issue_bond_token(users, bond_exchange.address, personal_info.address)
 
-    # 更新
-    bond_token.setPersonalInfoAddress.transact('0x0000000000000000000000000000000000000000', {'from': attacker})
-    assert bond_token.personalInfoAddress() == to_checksum_address(personal_info.address)
+        # 認定取消 -> Failure
+        bond_token.unsign.transact({'from': signer})
+        signature = bond_token.functions.signatures(signer)
+        assert signature == 0
 
+    # エラー系2: 認定リクエスト -> （認定未実施） -> 認定取消
+    def test_unsign_error_2(self, users, bond_exchange, personal_info):
+        issuer = users['issuer']
+        signer = users['admin']
 
-'''
-TEST_新規募集ステータス更新（setInitialOfferingStatus）
-'''
+        # 債券トークン新規発行
+        bond_token, deploy_args = utils. \
+            issue_bond_token(users, bond_exchange.address, personal_info.address)
 
+        # 認定リクエスト -> Success
+        bond_token.requestSignature.transact(signer, {'from': issuer})
 
-# 正常系1: 発行 -> 新規募集ステータス更新（False→True）
-def test_setInitialOfferingStatus_normal_1(users, bond_exchange, personal_info):
-    issuer = users['issuer']
+        # 認定取消 -> Failure
+        bond_token.unsign.transact({'from': signer})
+        signature = bond_token.functions.signatures(signer)
+        assert signature == 1
 
-    # トークン新規発行
-    bond_token, deploy_args = \
-        utils.issue_bond_token(users, bond_exchange.address, personal_info.address)
+    # エラー系3: 認定リクエスト-> 認定 -> 異なるSinerから認定取消を実施した場合
+    def test_unsign_error_3(self, users, bond_exchange, personal_info):
+        issuer = users['issuer']
+        signer = users['admin']
+        signer_other = users['trader']
 
-    # 初期状態 == False
-    assert bond_token.initialOfferingStatus() is False
+        # 債券トークン新規発行
+        bond_token, deploy_args = utils. \
+            issue_bond_token(users, bond_exchange.address, personal_info.address)
 
-    # 新規募集ステータスの更新
-    bond_token.setInitialOfferingStatus.transact(True, {'from': issuer})
+        # 認定リクエスト -> Success
+        bond_token.requestSignature.transact(signer, {'from': issuer})
 
-    assert bond_token.initialOfferingStatus() is True
+        # 認定 -> Success
+        bond_token.sign.transact({'from': signer})
 
+        # 異なるSignerが認定取消を実施 -> Failure
+        bond_token.unsign.transact({'from': signer_other})
+        signature = bond_token.functions.signatures(signer)
+        assert signature == 2
 
-# 正常系2:
-#   発行 -> 新規募集ステータス更新（False→True） -> 2回目更新（True→False）
-def test_setInitialOfferingStatus_normal_2(users, bond_exchange, personal_info):
-    issuer = users['issuer']
 
-    # トークン新規発行
-    bond_token, deploy_args = \
-        utils.issue_bond_token(users, bond_exchange.address, personal_info.address)
+# TEST_新規募集ステータス更新（setInitialOfferingStatus）
+class TestSetInitialOfferingStatus:
 
-    # 新規募集ステータスの更新
-    bond_token.setInitialOfferingStatus.transact(True, {'from': issuer})
+    # 正常系1: 発行 -> 新規募集ステータス更新（False→True）
+    def test_setInitialOfferingStatus_normal_1(self, users, bond_exchange, personal_info):
+        issuer = users['issuer']
 
-    # 新規募集ステータスの更新（2回目）
-    bond_token.setInitialOfferingStatus.transact(False, {'from': issuer})
+        # トークン新規発行
+        bond_token, deploy_args = \
+            utils.issue_bond_token(users, bond_exchange.address, personal_info.address)
 
-    assert bond_token.initialOfferingStatus() is False
+        # 初期状態 == False
+        assert bond_token.initialOfferingStatus() is False
 
+        # 新規募集ステータスの更新
+        bond_token.setInitialOfferingStatus.transact(True, {'from': issuer})
 
-# エラー系1: 発行 -> 新規募集ステータス更新（入力値の型誤り）
-def test_setInitialOfferingStatus_error_1(users, bond_exchange, personal_info):
-    issuer = users['issuer']
+        assert bond_token.initialOfferingStatus() is True
 
-    # トークン新規発行
-    bond_token, deploy_args = \
-        utils.issue_bond_token(users, bond_exchange.address, personal_info.address)
+    # 正常系2:
+    #   発行 -> 新規募集ステータス更新（False→True） -> 2回目更新（True→False）
+    def test_setInitialOfferingStatus_normal_2(self, users, bond_exchange, personal_info):
+        issuer = users['issuer']
 
-    # 新規募集ステータスの更新（エラー）：文字型
-    with pytest.raises(ValueError):
-        bond_token.setInitialOfferingStatus.transact('True', {'from': issuer})
+        # トークン新規発行
+        bond_token, deploy_args = \
+            utils.issue_bond_token(users, bond_exchange.address, personal_info.address)
 
+        # 新規募集ステータスの更新
+        bond_token.setInitialOfferingStatus.transact(True, {'from': issuer})
 
-'''
-TEST_募集申込（applyForOffering）
-'''
+        # 新規募集ステータスの更新（2回目）
+        bond_token.setInitialOfferingStatus.transact(False, {'from': issuer})
 
+        assert bond_token.initialOfferingStatus() is False
 
-# 正常系1
-#   発行：発行体 -> （申込なし）初期データ参照
-def test_applyForOffering_normal_1(users):
-    trader = users['trader']
+    # エラー系1: 発行 -> 新規募集ステータス更新（入力値の型誤り）
+    def test_setInitialOfferingStatus_error_1(self, users, bond_exchange, personal_info):
+        issuer = users['issuer']
 
-    # トークン新規発行
-    bond_token, deploy_args = \
-        utils.issue_bond_token(users, zero_address, zero_address)
+        # トークン新規発行
+        bond_token, deploy_args = \
+            utils.issue_bond_token(users, bond_exchange.address, personal_info.address)
 
-    application = bond_token.applications(trader)
-    assert application[0] == 0
-    assert application[1] == 0
-    assert application[2] == ''
+        # 新規募集ステータスの更新（エラー）：文字型
+        with pytest.raises(ValueError):
+            bond_token.setInitialOfferingStatus.transact('True', {'from': issuer})
 
 
-# 正常系2
-#   発行：発行体 -> 投資家：募集申込
-def test_applyForOffering_normal_2(users, personal_info):
-    issuer = users['issuer']
-    trader = users['trader']
+# TEST_募集申込（applyForOffering）
+class TestApplyForOffering:
 
-    # トークン新規発行
-    bond_token, deploy_args = \
-        utils.issue_bond_token(users, zero_address, personal_info.address)
+    # 正常系1
+    #   発行：発行体 -> （申込なし）初期データ参照
+    def test_applyForOffering_normal_1(self, users):
+        trader = users['trader']
 
-    # 新規募集ステータスの更新
-    bond_token.setInitialOfferingStatus.transact(True, {'from': issuer})
+        # トークン新規発行
+        bond_token, deploy_args = \
+            utils.issue_bond_token(users, zero_address, zero_address)
 
-    # 個人情報登録
-    utils.register_personal_info(trader, personal_info, issuer)
+        application = bond_token.applications(trader)
+        assert application[0] == 0
+        assert application[1] == 0
+        assert application[2] == ''
 
-    # 募集申込
-    bond_token.applyForOffering.transact(10, 'abcdefgh', {'from': trader})
+    # 正常系2
+    #   発行：発行体 -> 投資家：募集申込
+    def test_applyForOffering_normal_2(self, users, personal_info):
+        issuer = users['issuer']
+        trader = users['trader']
 
-    application = bond_token.applications(trader)
-    assert application[0] == 10
-    assert application[1] == 0
-    assert application[2] == 'abcdefgh'
+        # トークン新規発行
+        bond_token, deploy_args = \
+            utils.issue_bond_token(users, zero_address, personal_info.address)
 
+        # 新規募集ステータスの更新
+        bond_token.setInitialOfferingStatus.transact(True, {'from': issuer})
 
-# 正常系3
-#   発行：発行体 -> 投資家：募集申込（複数回）
-def test_applyForOffering_normal_3(users, personal_info):
-    issuer = users['issuer']
-    trader = users['trader']
+        # 個人情報登録
+        utils.register_personal_info(trader, personal_info, issuer)
 
-    # トークン新規発行
-    bond_token, deploy_args = \
-        utils.issue_bond_token(users, zero_address, personal_info.address)
+        # 募集申込
+        bond_token.applyForOffering.transact(10, 'abcdefgh', {'from': trader})
 
-    # 新規募集ステータスの更新
-    bond_token.setInitialOfferingStatus.transact(True, {'from': issuer})
+        application = bond_token.applications(trader)
+        assert application[0] == 10
+        assert application[1] == 0
+        assert application[2] == 'abcdefgh'
 
-    # 個人情報登録
-    utils.register_personal_info(trader, personal_info, issuer)
+    # 正常系3
+    #   発行：発行体 -> 投資家：募集申込（複数回）
+    def test_applyForOffering_normal_3(self, users, personal_info):
+        issuer = users['issuer']
+        trader = users['trader']
 
-    # 募集申込
-    bond_token.applyForOffering.transact(10, 'abcdefgh', {'from': trader})
+        # トークン新規発行
+        bond_token, deploy_args = \
+            utils.issue_bond_token(users, zero_address, personal_info.address)
 
-    # 募集申込：２回目
-    bond_token.applyForOffering.transact(20, 'vwxyz', {'from': trader})
+        # 新規募集ステータスの更新
+        bond_token.setInitialOfferingStatus.transact(True, {'from': issuer})
 
-    application = bond_token.applications(trader)
-    assert application[0] == 20
-    assert application[1] == 0
-    assert application[2] == 'vwxyz'
+        # 個人情報登録
+        utils.register_personal_info(trader, personal_info, issuer)
 
+        # 募集申込
+        bond_token.applyForOffering.transact(10, 'abcdefgh', {'from': trader})
 
-# エラー系1:
-#   発行：発行体 -> 投資家：募集申込（入力値の型誤り）
-def test_applyForOffering_error_1(users):
-    trader = users['trader']
+        # 募集申込：２回目
+        bond_token.applyForOffering.transact(20, 'vwxyz', {'from': trader})
 
-    # トークン新規発行
-    bond_token, deploy_args = \
-        utils.issue_bond_token(users, zero_address, zero_address)
+        application = bond_token.applications(trader)
+        assert application[0] == 20
+        assert application[1] == 0
+        assert application[2] == 'vwxyz'
 
-    # 募集申込（エラー）：amount 文字型
-    with pytest.raises(TypeError):
-        bond_token.applyForOffering.transact("abc", "1234", {'from': trader})
+    # エラー系1:
+    #   発行：発行体 -> 投資家：募集申込（入力値の型誤り）
+    def test_applyForOffering_error_1(self, users):
+        trader = users['trader']
 
-    # 募集申込（エラー）：data 数値型
-    with pytest.raises(ValueError):
-        bond_token.applyForOffering.transact(10, '0x66aB6D9362d4F35596279692F0251Db635165871', {'from': trader})
+        # トークン新規発行
+        bond_token, deploy_args = \
+            utils.issue_bond_token(users, zero_address, zero_address)
 
+        # 募集申込（エラー）：amount 文字型
+        with pytest.raises(TypeError):
+            bond_token.applyForOffering.transact("abc", "1234", {'from': trader})
 
-# エラー系2:
-#   発行：発行体 -> 投資家：募集申込（申込ステータスが停止中）
-def test_applyForOffering_error_2(users):
-    trader = users['trader']
+        # 募集申込（エラー）：data 数値型
+        with pytest.raises(ValueError):
+            bond_token.applyForOffering.transact(10, '0x66aB6D9362d4F35596279692F0251Db635165871', {'from': trader})
 
-    # トークン新規発行
-    bond_token, deploy_args = \
-        utils.issue_bond_token(users, zero_address, zero_address)
+    # エラー系2:
+    #   発行：発行体 -> 投資家：募集申込（申込ステータスが停止中）
+    def test_applyForOffering_error_2(self, users):
+        trader = users['trader']
 
-    # 募集申込（エラー）：募集申込ステータスFalse状態での申込
-    bond_token.applyForOffering.transact(10, 'abcdefgh', {'from': trader})
-    application = bond_token.applications(trader)
-    assert application[0] == 0
-    assert application[1] == 0
-    assert application[2] == ''
+        # トークン新規発行
+        bond_token, deploy_args = \
+            utils.issue_bond_token(users, zero_address, zero_address)
 
+        # 募集申込（エラー）：募集申込ステータスFalse状態での申込
+        bond_token.applyForOffering.transact(10, 'abcdefgh', {'from': trader})
+        application = bond_token.applications(trader)
+        assert application[0] == 0
+        assert application[1] == 0
+        assert application[2] == ''
 
-# エラー系3
-#   発行：発行体 -> 投資家：募集申込（個人情報未登録）
-def test_applyForOffering_error_3(users, personal_info):
-    issuer = users['issuer']
-    trader = users['trader']
+    # エラー系3
+    #   発行：発行体 -> 投資家：募集申込（個人情報未登録）
+    def test_applyForOffering_error_3(self, users, personal_info):
+        issuer = users['issuer']
+        trader = users['trader']
 
-    # トークン新規発行
-    bond_token, deploy_args = \
-        utils.issue_bond_token(users, zero_address, personal_info.address)
+        # トークン新規発行
+        bond_token, deploy_args = \
+            utils.issue_bond_token(users, zero_address, personal_info.address)
 
-    # 新規募集ステータスの更新
-    bond_token.setInitialOfferingStatus.transact(True, {'from': issuer})
+        # 新規募集ステータスの更新
+        bond_token.setInitialOfferingStatus.transact(True, {'from': issuer})
 
-    # 個人情報未登録
+        # 個人情報未登録
 
-    # 募集申込（エラーになる）
-    bond_token.applyForOffering.transact(10, 'abcdefgh', {'from': trader})
-    application = bond_token.applications(trader)
-    assert application[0] == 0
-    assert application[1] == 0
-    assert application[2] == ''
+        # 募集申込（エラーになる）
+        bond_token.applyForOffering.transact(10, 'abcdefgh', {'from': trader})
+        application = bond_token.applications(trader)
+        assert application[0] == 0
+        assert application[1] == 0
+        assert application[2] == ''
 
 
-'''
-TEST_募集割当（allot）
-'''
+# TEST_募集割当（allot）
+class TestAllot:
 
+    # 正常系1
+    #   発行：発行体 -> 投資家：募集申込 -> 発行体：募集割当
+    def test_allot_normal_1(self, users, personal_info):
+        issuer = users['issuer']
+        trader = users['trader']
 
-# 正常系1
-#   発行：発行体 -> 投資家：募集申込 -> 発行体：募集割当
-def test_allot_normal_1(users, personal_info):
-    issuer = users['issuer']
-    trader = users['trader']
+        # トークン新規発行
+        bond_token, deploy_args = utils.issue_bond_token(users, zero_address, personal_info.address)
 
-    # トークン新規発行
-    bond_token, deploy_args = utils.issue_bond_token(users, zero_address, personal_info.address)
+        # 新規募集ステータスの更新
+        bond_token.setInitialOfferingStatus.transact(True, {'from': issuer})
 
-    # 新規募集ステータスの更新
-    bond_token.setInitialOfferingStatus.transact(True, {'from': issuer})
+        # 個人情報登録
+        utils.register_personal_info(trader, personal_info, issuer)
 
-    # 個人情報登録
-    utils.register_personal_info(trader, personal_info, issuer)
+        # 募集申込
+        bond_token.applyForOffering.transact(10, 'abcdefgh', {'from': trader})
 
-    # 募集申込
-    bond_token.applyForOffering.transact(10, 'abcdefgh', {'from': trader})
+        # 割当
+        bond_token.allot.transact(trader, 5, {'from': issuer})
 
-    # 割当
-    bond_token.allot.transact(trader, 5, {'from': issuer})
+        application = bond_token.applications(trader)
+        assert application[0] == 10
+        assert application[1] == 5
+        assert application[2] == 'abcdefgh'
 
-    application = bond_token.applications(trader)
-    assert application[0] == 10
-    assert application[1] == 5
-    assert application[2] == 'abcdefgh'
+    # エラー系1
+    #   発行：発行体 -> 投資家：募集申込 -> 発行体：募集割当（入力値の型誤り）
+    def test_allot_error_1(self, users):
+        issuer = users['issuer']
+        trader = users['trader']
 
+        # トークン新規発行
+        bond_token, deploy_args = utils.issue_bond_token(users, zero_address, zero_address)
 
-# エラー系1
-#   発行：発行体 -> 投資家：募集申込 -> 発行体：募集割当（入力値の型誤り）
-def test_allot_error_1(users):
-    issuer = users['issuer']
-    trader = users['trader']
+        # 新規募集ステータスの更新
+        bond_token.setInitialOfferingStatus.transact(True, {'from': issuer})
 
-    # トークン新規発行
-    bond_token, deploy_args = utils.issue_bond_token(users, zero_address, zero_address)
+        # 割当（エラー）：address 数値型
+        with pytest.raises(ValueError):
+            bond_token.allot.transact(1234, 5, {'from': issuer})
 
-    # 新規募集ステータスの更新
-    bond_token.setInitialOfferingStatus.transact(True, {'from': issuer})
+        # 割当（エラー）：amount 文字型
+        with pytest.raises(TypeError):
+            bond_token.allot.transact(trader, "abc", {'from': issuer})
 
-    # 割当（エラー）：address 数値型
-    with pytest.raises(ValueError):
-        bond_token.allot.transact(1234, 5, {'from': issuer})
+    # エラー系2
+    #   発行：発行体 -> 投資家：募集申込 -> 発行体：募集割当（権限エラー）
+    def test_allot_error_2(self, users):
+        issuer = users['issuer']
+        trader = users['trader']
 
-    # 割当（エラー）：amount 文字型
-    with pytest.raises(TypeError):
-        bond_token.allot.transact(trader, "abc", {'from': issuer})
+        # トークン新規発行
+        bond_token, deploy_args = utils.issue_bond_token(users, zero_address, zero_address)
 
+        # 新規募集ステータスの更新
+        bond_token.setInitialOfferingStatus.transact(True, {'from': issuer})
 
-# エラー系2
-#   発行：発行体 -> 投資家：募集申込 -> 発行体：募集割当（権限エラー）
-def test_allot_error_2(users):
-    issuer = users['issuer']
-    trader = users['trader']
+        # 割当（エラー）：権限エラー
+        bond_token.allot.transact(trader, 5, {'from': trader})
+        application = bond_token.applications(trader)
+        assert application[0] == 0
+        assert application[1] == 0
+        assert application[2] == ''
 
-    # トークン新規発行
-    bond_token, deploy_args = utils.issue_bond_token(users, zero_address, zero_address)
 
-    # 新規募集ステータスの更新
-    bond_token.setInitialOfferingStatus.transact(True, {'from': issuer})
+# TEST_償還（redeem）
+class TestRedeem:
 
-    # 割当（エラー）：権限エラー
-    bond_token.allot.transact(trader, 5, {'from': trader})
-    application = bond_token.applications(trader)
-    assert application[0] == 0
-    assert application[1] == 0
-    assert application[2] == ''
+    # 正常系1: 発行（デプロイ） -> 償還
+    def test_redeem_normal_1(self, users, bond_exchange, personal_info):
+        issuer = users['issuer']
 
+        # 債券トークン新規発行
+        bond_token, deploy_args = utils.issue_bond_token(users, bond_exchange.address, personal_info.address)
 
-'''
-TEST_追加発行（issue）
-'''
+        # 償還 -> Success
+        bond_token.redeem.transact({'from': issuer})
 
+        is_redeemed = bond_token.isRedeemed()
+        assert is_redeemed is True
 
-# 正常系1: 発行 -> 追加発行
-def test_issue_normal_1(users):
-    issuer = users['issuer']
-    value = 10
+    # エラー系1: issuer以外のアドレスから償還を実施した場合
+    def test_redeem_error_1(self, users, bond_exchange, personal_info):
+        other = users['admin']
 
-    # トークン新規発行
-    bond_token, deploy_args = utils.issue_bond_token(users, zero_address, zero_address)
+        # 債券トークン新規発行
+        bond_token, deploy_args = utils.issue_bond_token(users, bond_exchange.address, personal_info.address)
 
-    # 追加発行
-    bond_token.issue.transact(value, {'from': issuer})
+        # Owner以外のアドレスから償還を実施 -> Failure
+        bond_token.redeem.transact({'from': other})
+        is_redeemed = bond_token.isRedeemed()
+        assert is_redeemed is False
 
-    total_supply = bond_token.totalSupply()
-    balance = bond_token.balanceOf(issuer)
 
-    assert total_supply == deploy_args[2] + value
-    assert balance == deploy_args[2] + value
+# TEST_資産ロック先アドレスの認可（authorize）
+class TestAuthorize:
 
+    # 正常系1: 商品コントラクト作成 -> アドレス認可 -> 認可情報変更
+    def test_authorize_normal_1(self, users, bond_exchange, personal_info):
+        issuer = users['issuer']
+        trader = users['trader']
 
-# エラー系1: 入力値の型誤り
-def test_issue_error_1(users):
-    issuer = users['issuer']
+        # トークン新規発行
+        bond_token, deploy_args = utils. \
+            issue_bond_token(users, bond_exchange.address, personal_info.address)
 
-    # トークン新規発行
-    bond_token, deploy_args = utils.issue_bond_token(users, zero_address, zero_address)
+        # 認可
+        bond_token.authorize.transact(trader, True, {'from': issuer})
 
-    # String
-    with pytest.raises(TypeError):
-        bond_token.issue.transact("abc", {'from': issuer})
+        auth_trader = bond_token.authorizedAddress(trader)
+        auth_issuer = bond_token.authorizedAddress(issuer)
+        assert auth_trader == True
+        assert auth_issuer == False
 
+        # 変更
+        bond_token.authorize.transact(trader, False, {'from': issuer})
 
-# エラー系2: 限界値超
-def test_issue_error_2(users):
-    issuer = users['issuer']
+        auth_trader = bond_token.authorizedAddress(trader)
+        assert auth_trader == False
 
-    # トークン新規発行
-    bond_token, deploy_args = utils.issue_bond_token(users, zero_address, zero_address)
+    # エラー系1: 入力値の型誤り（address, auth）
+    def test_authorize_error_1(self, users, bond_exchange, personal_info):
+        issuer = users['issuer']
 
-    # 上限値超
-    with pytest.raises(OverflowError):
-        bond_token.issue.transact(2 ** 256, {'from': issuer})
+        # トークン新規発行
+        bond_token, deploy_args = utils. \
+            issue_bond_token(users, bond_exchange.address, personal_info.address)
 
-    # 下限値超
-    with pytest.raises(OverflowError):
-        bond_token.issue.transact(-1, {'from': issuer})
+        # アドレス指定誤り
+        with pytest.raises(ValueError):
+            bond_token.authorize.transact('0x1234', True, {'from': issuer})
 
+        # アドレス指定誤り
+        with pytest.raises(ValueError):
+            bond_token.authorize.transact(issuer, 'True', {'from': issuer})
 
-# エラー系3: 発行→追加発行→上限界値超
-def test_issue_error_3(users):
-    issuer = users['issuer']
 
-    # トークン新規発行
-    bond_token, deploy_args = utils.issue_bond_token(users, zero_address, zero_address)
+# TEST_ロック（lock）、ロック数量参照（lockedOf）
+class TestLock:
 
-    issue_amount = 2 ** 256 - deploy_args[2]
+    # 正常系1
+    def test_lock_normal_1(self, users, bond_exchange, personal_info):
+        issuer = users['issuer']
+        trader = users['trader']
+        agent = users['agent']
 
-    # 追加発行（限界値超）
-    bond_token.issue.transact(issue_amount, {'from': issuer})  # エラーになる
+        # トークン新規発行
+        bond_token, deploy_args = utils.issue_bond_token(users, bond_exchange.address, personal_info.address)
 
-    total_supply = bond_token.totalSupply()
-    balance = bond_token.balanceOf(issuer)
+        # traderアドレスに移転（30）
+        bond_token.transferFrom.transact(issuer, trader, 30, {'from': issuer})
 
-    assert total_supply == deploy_args[2]
-    assert balance == deploy_args[2]
+        # agentのアドレスを認可
+        bond_token.authorize.transact(agent, True, {'from': issuer})
 
+        # agentアドレスに対してtraderの保有をロック（10）
+        bond_token.lock.transact(agent, 10, {'from': trader})
 
-# エラー系4: 権限エラー
-def test_issue_error_4(users):
-    issuer = users['issuer']
-    attacker = users['trader']
+        trader_amount = bond_token.balanceOf(trader)
+        trader_locked_amount = bond_token.lockedOf(agent, trader)
 
-    # トークン新規発行
-    bond_token, deploy_args = utils.issue_bond_token(users, zero_address, zero_address)
+        assert trader_amount == 20
+        assert trader_locked_amount == 10
 
-    # 追加発行：権限エラー
-    bond_token.issue.transact(1, {'from': attacker})  # エラーになる
+    # 正常系2: 発行体アドレスに対するロック
+    def test_lock_normal_2(self, users, bond_exchange, personal_info):
+        issuer = users['issuer']
+        trader = users['trader']
 
-    total_supply = bond_token.totalSupply()
-    balance = bond_token.balanceOf(issuer)
+        # トークン新規発行
+        bond_token, deploy_args = utils.issue_bond_token(users, bond_exchange.address, personal_info.address)
 
-    assert total_supply == deploy_args[2]
-    assert balance == deploy_args[2]
+        # traderアドレスに移転（30）
+        bond_token.transferFrom.transact(issuer, trader, 30, {'from': issuer})
+
+        # issuerアドレスに対してtraderの保有をロック（10）
+        bond_token.lock.transact(issuer, 10, {'from': trader})
+
+        trader_amount = bond_token.balanceOf(trader)
+        trader_locked_amount = bond_token.lockedOf(issuer, trader)
+
+        assert trader_amount == 20
+        assert trader_locked_amount == 10
+
+    # エラー系1: 入力値の型誤り
+    def test_lock_error_1(self, users, bond_exchange, personal_info):
+        issuer = users['issuer']
+        trader = users['trader']
+
+        # トークン新規発行
+        bond_token, deploy_args = utils.issue_bond_token(users, bond_exchange.address, personal_info.address)
+
+        # traderアドレスに移転
+        bond_token.transferFrom.transact(issuer, trader, 30, {'from': issuer})
+
+        # 型誤り：ロック先アドレス
+        with pytest.raises(ValueError):
+            bond_token.lock.transact('0x1234', 10, {'from': trader})
+
+        # 型誤り：数量
+        with pytest.raises(TypeError):
+            bond_token.lock.transact(issuer, 'A', {'from': trader})
+
+        trader_amount = bond_token.balanceOf(trader)
+        trader_locked_amount = bond_token.lockedOf(issuer, trader)
+
+        assert trader_amount == 30
+        assert trader_locked_amount == 0
+
+    # エラー系2: 数量超過
+    def test_lock_error_2(self, users, bond_exchange, personal_info):
+        issuer = users['issuer']
+        trader = users['trader']
+
+        # トークン新規発行
+        bond_token, deploy_args = utils.issue_bond_token(users, bond_exchange.address, personal_info.address)
+
+        # traderアドレスに移転
+        bond_token.transferFrom.transact(issuer, trader, 30, {'from': issuer})
+
+        # 残高を超過してロック -> Failure
+        bond_token.lock.transact(issuer, 40, {'from': trader})
+
+        trader_amount = bond_token.balanceOf(trader)
+        trader_locked_amount = bond_token.lockedOf(issuer, trader)
+
+        assert trader_amount == 30
+        assert trader_locked_amount == 0
+
+    # エラー系3: 認可外アドレスに対するlock（レコードはあるがFalse）
+    def test_lock_error_3(self, users, bond_exchange, personal_info):
+        issuer = users['issuer']
+        trader = users['trader']
+        agent = users['agent']
+
+        # トークン新規発行
+        bond_token, deploy_args = utils.issue_bond_token(users, bond_exchange.address, personal_info.address)
+
+        # traderアドレスに移転
+        bond_token.transferFrom.transact(issuer, trader, 30, {'from': issuer})
+
+        # agentアドレスを非認可
+        bond_token.authorize.transact(agent, False, {'from': issuer})
+
+        # agentに対してtraderの資産をロック -> Failure
+        bond_token.lock.transact(agent, 10, {'from': trader})
+
+        trader_amount = bond_token.balanceOf(trader)
+        trader_locked_amount = bond_token.lockedOf(agent, trader)
+
+        assert trader_amount == 30
+        assert trader_locked_amount == 0
+
+    # エラー系4: 認可外アドレスに対するlock（レコードが存在しない）
+    def test_lock_error_4(self, users, bond_exchange, personal_info):
+        issuer = users['issuer']
+        trader = users['trader']
+        agent = users['agent']
+
+        # トークン新規発行
+        bond_token, deploy_args = utils.issue_bond_token(users, bond_exchange.address, personal_info.address)
+
+        # traderアドレスに移転
+        bond_token.transferFrom.transact(issuer, trader, 30, {'from': issuer})
+
+        # agentアドレスに対してtraderの残高をロック -> Failure
+        bond_token.lock.transact(agent, 10, {'from': trader})
+
+        trader_amount = bond_token.balanceOf(trader)
+        trader_locked_amount = bond_token.lockedOf(agent, trader)
+
+        assert trader_amount == 30
+        assert trader_locked_amount == 0
+
+
+# TEST_アンロック（unlock）
+class TestUnlock:
+
+    # 正常系1: 認可済みアドレスによるアンロック
+    def test_unlock_normal_1(self, users, bond_exchange, personal_info):
+        issuer = users['issuer']
+        trader = users['trader']
+        agent = users['agent']
+
+        transfer_amount = 30
+        lock_amount = 10
+        unlock_amount = 3
+
+        # トークン新規発行
+        bond_token, deploy_args = utils.issue_bond_token(users, bond_exchange.address, personal_info.address)
+
+        # 投資家アドレスに移転
+        bond_token.transferFrom.transact(issuer, trader, transfer_amount, {'from': issuer})
+
+        # agentアドレスを認可
+        bond_token.authorize.transact(agent, True, {'from': issuer})
+
+        # agentに対してtraderが自身の保有をロック
+        bond_token.lock.transact(agent, lock_amount, {'from': trader})
+
+        # agentによりtraderの保有をアンロック（agentへ）
+        bond_token.unlock.transact(trader, agent, unlock_amount, {'from': agent})
+
+        # agentによりtraderの保有をアンロック（traderへ）
+        bond_token.unlock.transact(trader, trader, unlock_amount, {'from': agent})
+
+        trader_amount = bond_token.balanceOf(trader)
+        agent_amount = bond_token.balanceOf(agent)
+        trader_locked_amount = bond_token.lockedOf(agent, trader)
+
+        assert trader_amount == transfer_amount - lock_amount + unlock_amount
+        assert agent_amount == unlock_amount
+        assert trader_locked_amount == lock_amount - unlock_amount - unlock_amount
+
+    # 正常系2: 発行体によるアンロック
+    def test_unlock_normal_2(self, users, bond_exchange, personal_info):
+        issuer = users['issuer']
+        trader = users['trader']
+
+        transfer_amount = 30
+        lock_amount = 10
+        unlock_amount = 3
+
+        # トークン新規発行
+        bond_token, deploy_args = utils. \
+            issue_bond_token(users, bond_exchange.address, personal_info.address)
+
+        # 投資家アドレスに移転
+        bond_token.transferFrom.transact(issuer, trader, transfer_amount, {'from': issuer})
+
+        # issuerに対してtraderが自身の保有をロック
+        bond_token.lock.transact(issuer, lock_amount, {'from': trader})
+
+        # issuerによりtraderの保有をアンロック（issuerへ）
+        bond_token.unlock.transact(trader, issuer, unlock_amount, {'from': issuer})
+
+        # issuerによりtraderの保有をアンロック（traderへ）
+        bond_token.unlock.transact(trader, trader, unlock_amount, {'from': issuer})
+
+        trader_amount = bond_token.balanceOf(trader)
+        issuer_amount = bond_token.balanceOf(issuer)
+        trader_locked_amount = bond_token.lockedOf(issuer, trader)
+
+        assert trader_amount == transfer_amount - lock_amount + unlock_amount
+        assert issuer_amount == deploy_args[2] - transfer_amount + unlock_amount
+        assert trader_locked_amount == lock_amount - unlock_amount - unlock_amount
+
+    # エラー系1: 入力値の型誤り
+    def test_unlock_error_1(self, users, bond_exchange, personal_info):
+        issuer = users['issuer']
+        trader = users['trader']
+
+        transfer_amount = 30
+        lock_amount = 10
+        unlock_amount = 3
+
+        # トークン新規発行
+        bond_token, deploy_args = utils. \
+            issue_bond_token(users, bond_exchange.address, personal_info.address)
+
+        # 投資家アドレスに移転
+        bond_token.transferFrom.transact(issuer, trader, transfer_amount, {'from': issuer})
+
+        # issuerに対してtraderが自身の保有をロック
+        bond_token.lock.transact(issuer, lock_amount, {'from': trader})
+
+        # アドレス誤り
+        with pytest.raises(ValueError):
+            bond_token.unlock.transact('0x1111', issuer, unlock_amount, {'from': trader})
+
+        # アドレス誤り
+        with pytest.raises(ValueError):
+            bond_token.unlock.transact(trader, '0x1234', unlock_amount, {'from': trader})
+
+        # 数量指定誤り
+        with pytest.raises(TypeError):
+            bond_token.unlock.transact(trader, issuer, 'three', {'from': trader})
+
+        trader_amount = bond_token.balanceOf(trader)
+        trader_locked_amount = bond_token.lockedOf(issuer, trader)
+
+        assert trader_amount == transfer_amount - lock_amount
+        assert trader_locked_amount == lock_amount
+
+    # エラー系2: 数量超過
+    def test_unlock_error_2(self, users, bond_exchange, personal_info):
+        issuer = users['issuer']
+        trader = users['trader']
+
+        transfer_amount = 30
+        lock_amount = 10
+        unlock_amount = 11
+
+        # トークン新規発行
+        bond_token, deploy_args = utils. \
+            issue_bond_token(users, bond_exchange.address, personal_info.address)
+
+        # 投資家アドレスに移転
+        bond_token.transferFrom.transact(issuer, trader, transfer_amount, {'from': issuer})
+
+        # issuerに対してtraderが自身の保有をロック
+        bond_token.lock.transact(issuer, lock_amount, {'from': trader})
+
+        # lock数量よりも多いunlockをする
+        bond_token.unlock.transact(trader, issuer, unlock_amount, {'from': issuer})
+
+        trader_amount = bond_token.balanceOf(trader)
+        trader_locked_amount = bond_token.lockedOf(issuer, trader)
+
+        assert trader_amount == transfer_amount - lock_amount
+        assert trader_locked_amount == lock_amount
+
+    # エラー系3: 認可外アドレスによるunlock（認可はあるがFalse）
+    def test_unlock_error_3(self, users, bond_exchange, personal_info):
+        issuer = users['issuer']
+        trader = users['trader']
+        agent = users['agent']
+
+        transfer_amount = 30
+        lock_amount = 10
+        unlock_amount = 3
+
+        # トークン新規発行
+        bond_token, deploy_args = utils. \
+            issue_bond_token(users, bond_exchange.address, personal_info.address)
+
+        # 投資家アドレスに移転
+        bond_token.transferFrom.transact(issuer, trader, transfer_amount, {'from': issuer})
+
+        # agentを非認可
+        bond_token.authorize.transact(agent, False, {'from': issuer})
+
+        # issuerに対してtraderが自身の保有をロック
+        bond_token.lock.transact(issuer, lock_amount, {'from': trader})
+
+        # 非認可アドレスからアンロック
+        bond_token.unlock.transact(trader, agent, unlock_amount, {'from': agent})
+
+        trader_amount = bond_token.balanceOf(trader)
+        trader_locked_amount = bond_token.lockedOf(issuer, trader)
+
+        assert trader_amount == transfer_amount - lock_amount
+        assert trader_locked_amount == lock_amount
+
+    # エラー系4: 認可外アドレスによるunlock（認可がない）
+    def test_unlock_error_4(self, users, bond_exchange, personal_info):
+        issuer = users['issuer']
+        trader = users['trader']
+        agent = users['agent']
+
+        transfer_amount = 30
+        lock_amount = 10
+        unlock_amount = 3
+
+        # トークン新規発行
+        bond_token, deploy_args = utils. \
+            issue_bond_token(users, bond_exchange.address, personal_info.address)
+
+        # 投資家アドレスに移転
+        bond_token.transferFrom.transact(issuer, trader, transfer_amount, {'from': issuer})
+
+        # issuerに対してtraderが自身の保有をロック
+        bond_token.lock.transact(issuer, lock_amount, {'from': trader})
+
+        # 認可のないアドレスからアンロック
+        bond_token.unlock.transact(trader, agent, unlock_amount, {'from': agent})
+
+        trader_amount = bond_token.balanceOf(trader)
+        trader_locked_amount = bond_token.lockedOf(issuer, trader)
+
+        assert trader_amount == transfer_amount - lock_amount
+        assert trader_locked_amount == lock_amount
+
+
+# TEST_追加発行（issueFrom）
+class TestIssueFrom:
+
+    # 正常系1
+    def test_issueFrom_normal_1(self, users):
+        issuer = users['issuer']
+        value = 10
+
+        # トークン新規発行
+        bond_token, deploy_args = utils.issue_bond_token(users, zero_address, zero_address)
+
+        # 追加発行
+        bond_token.issueFrom.transact(issuer, zero_address, value, {'from': issuer})
+
+        total_supply = bond_token.totalSupply()
+        balance = bond_token.balanceOf(issuer)
+
+        assert total_supply == deploy_args[2] + value
+        assert balance == deploy_args[2] + value
+
+    # 正常系2: 投資家想定のEOAアドレス分の残高から追加発行
+    def test_issueFrom_normal_2(self, users):
+        issuer = users['issuer']
+        trader = users['trader']
+        value = 10
+
+        # トークン新規発行
+        bond_token, deploy_args = utils.issue_bond_token(users, zero_address, zero_address)
+
+        # 追加発行
+        bond_token.issueFrom.transact(trader, zero_address, value, {'from': issuer})
+
+        total_supply = bond_token.totalSupply()
+        balance_issuer = bond_token.balanceOf(issuer)
+        balance_trader = bond_token.balanceOf(trader)
+
+        assert total_supply == deploy_args[2] + value
+        assert balance_issuer == deploy_args[2]
+        assert balance_trader == value
+
+    # 正常系3: ロック状態から追加発行（from issuer）
+    def test_issueFrom_normal_3(self, users, bond_exchange):
+        issuer = users['issuer']
+        trader = users['trader']
+
+        transfer_amount = 30
+        lock_amount = 10
+
+        value = 5
+
+        # トークン新規発行
+        bond_token, deploy_args = utils.issue_bond_token(users, bond_exchange.address, zero_address)
+
+        # traderアドレスに移管
+        bond_token.transferFrom.transact(issuer, trader, transfer_amount, {'from': issuer})
+
+        # issuerに対してtraderが自身の資産をロック
+        bond_token.lock.transact(issuer, lock_amount, {'from': trader})
+
+        # 追加発行
+        bond_token.issueFrom.transact(issuer, trader, value, {'from': issuer})
+
+        trader_balance = bond_token.balanceOf(trader)
+        trader_locked_amount = bond_token.lockedOf(issuer, trader)
+
+        assert trader_balance == transfer_amount - lock_amount
+        assert trader_locked_amount == lock_amount + value
+
+    # エラー系1: 入力値の型誤り
+    def test_issueFrom_error_1(self, users):
+        issuer = users['issuer']
+
+        # トークン新規発行
+        bond_token, deploy_args = utils.issue_bond_token(users, zero_address, zero_address)
+
+        # String
+        with pytest.raises(TypeError):
+            bond_token.issueFrom.transact(issuer, zero_address, "a", {'from': issuer})
+
+        # アドレス誤り
+        with pytest.raises(ValueError):
+            bond_token.issueFrom.transact("0x00", zero_address, 1, {'from': issuer})
+        with pytest.raises(ValueError):
+            bond_token.issueFrom.transact(issuer, "0x00", 1, {'from': issuer})
+
+    # エラー系2: 限界値超（balance）
+    def test_issueFrom_error_2(self, users):
+        issuer = users['issuer']
+
+        # トークン新規発行
+        bond_token, deploy_args = utils.issue_bond_token(users, zero_address, zero_address)
+
+        # 上限値超
+        with pytest.raises(OverflowError):
+            bond_token.issueFrom.transact(issuer, zero_address, 2 ** 256, {'from': issuer})
+
+        # 下限値超
+        with pytest.raises(OverflowError):
+            bond_token.issueFrom.transact(issuer, zero_address, -1, {'from': issuer})
+
+    # エラー系3 限界値超（locked）
+    def test_issueFrom_error_3(self, users):
+        issuer = users['issuer']
+        trader = users['trader']
+
+        # トークン新規発行
+        bond_token, deploy_args = utils.issue_bond_token(users, zero_address, zero_address)
+
+        # 上限値超
+        with pytest.raises(OverflowError):
+            bond_token.issueFrom.transact(issuer, trader, 2 ** 256, {'from': issuer})
+
+        # 下限値超
+        with pytest.raises(OverflowError):
+            bond_token.issueFrom.transact(issuer, trader, -1, {'from': issuer})
+
+    # エラー系4: 発行 -> 追加発行 -> 上限界値超
+    def test_issueFrom_error_4(self, users):
+        issuer = users['issuer']
+        trader = users['trader']
+
+        # トークン新規発行
+        bond_token, deploy_args = utils.issue_bond_token(users, zero_address, zero_address)
+
+        issue_amount = 2 ** 256 - deploy_args[2]
+
+        # 追加発行（限界値超）
+        bond_token.issueFrom.transact(issuer, zero_address, issue_amount, {'from': issuer})  # エラーになる
+        bond_token.issueFrom.transact(issuer, trader, issue_amount, {'from': issuer})  # エラーになる
+
+        total_supply = bond_token.totalSupply()
+        balance = bond_token.balanceOf(issuer)
+
+        assert total_supply == deploy_args[2]
+        assert balance == deploy_args[2]
+
+    # エラー系5: 権限エラー
+    def test_issueFrom_error_5(self, users):
+        issuer = users['issuer']
+        attacker = users['trader']
+
+        # トークン新規発行
+        bond_token, deploy_args = utils.issue_bond_token(users, zero_address, zero_address)
+
+        # 追加発行：権限エラー
+        bond_token.issueFrom.transact(attacker, zero_address, 1, {'from': attacker})  # エラーになる
+
+        total_supply = bond_token.totalSupply()
+        balance = bond_token.balanceOf(issuer)
+
+        assert total_supply == deploy_args[2]
+        assert balance == deploy_args[2]
