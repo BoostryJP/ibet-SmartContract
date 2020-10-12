@@ -84,7 +84,7 @@ contract IbetStraightBond is Ownable, IbetStandardTokenInterface {
     event Authorize(address indexed to, bool auth);
 
     /// イベント：資産ロック
-    event Lock(address indexed _target_address, uint256 value);
+    event Lock(address indexed from, address indexed target_address, uint256 value);
 
     /// イベント：資産アンロック
     event Unlock(address indexed from, address indexed to, uint256 value);
@@ -496,7 +496,7 @@ contract IbetStraightBond is Ownable, IbetStandardTokenInterface {
         balances[msg.sender] = balanceOf(msg.sender).sub(_value);
         locked[_target_address][msg.sender] = lockedOf(_target_address, msg.sender).add(_value);
 
-        emit Lock(_target_address, _value);
+        emit Lock(msg.sender, _target_address, _value);
     }
 
     /// @notice 資産をアンロックする
