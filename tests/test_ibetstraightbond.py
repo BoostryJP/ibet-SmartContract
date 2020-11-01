@@ -2005,7 +2005,7 @@ class TestSetFaceValue:
         assert bond_token.faceValue() == deploy_args[3]
 
 
-# TEST_額面金額の更新（setRedemptionValue）
+# TEST_償還金額の更新（setRedemptionValue）
 class TestSetRedemptionValue:
 
     # 正常系1: 発行 -> 償還金額の更新
