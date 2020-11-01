@@ -1955,3 +1955,99 @@ class TestIssueFrom:
 
         assert total_supply == deploy_args[2]
         assert balance == deploy_args[2]
+
+
+# TEST_額面金額の更新（setFaceValue）
+class TestSetFaceValue:
+
+    # 正常系1: 発行 -> 額面金額の更新
+    def test_setFaceValue_normal_1(self, users, bond_exchange, personal_info):
+        issuer = users['issuer']
+
+        # トークン新規発行
+        bond_token, deploy_args = \
+            utils.issue_bond_token(users, bond_exchange.address, personal_info.address)
+
+        # 初期状態 == 10000
+        assert bond_token.faceValue() == 10000
+
+        # 額面金額の更新
+        bond_token.setFaceValue.transact(10001, {'from': issuer})
+
+        assert bond_token.faceValue() == 10001
+
+    # エラー系1: オーバーフロー
+    def test_setFaceValue_error_1(self, users, bond_exchange, personal_info):
+        issuer = users['issuer']
+
+        # トークン新規発行
+        bond_token, deploy_args = \
+            utils.issue_bond_token(users, bond_exchange.address, personal_info.address)
+
+        # 額面金額の更新（負値）
+        with pytest.raises(OverflowError):
+            bond_token.setFaceValue.transact(-1, {'from': issuer})
+
+        # 額面金額の更新（最大値超え）
+        with pytest.raises(OverflowError):
+            bond_token.setFaceValue.transact(2**256, {'from': issuer})
+
+    # エラー系2: 権限エラー（発行体以外からの更新）
+    def test_setFaceValue_error_2(self, users):
+        attacker = users['trader']
+
+        # トークン新規発行
+        bond_token, deploy_args = utils.issue_bond_token(users, zero_address, zero_address)
+
+        # 額面金額の更新（権限エラー）
+        bond_token.setFaceValue.transact(10001, {'from': attacker})
+
+        assert bond_token.faceValue() == deploy_args[3]
+
+
+# TEST_額面金額の更新（setRedemptionValue）
+class TestSetRedemptionValue:
+
+    # 正常系1: 発行 -> 償還金額の更新
+    def test_setRedemptionValue_normal_1(self, users, bond_exchange, personal_info):
+        issuer = users['issuer']
+
+        # トークン新規発行
+        bond_token, deploy_args = \
+            utils.issue_bond_token(users, bond_exchange.address, personal_info.address)
+
+        # 初期状態 == 10000
+        assert bond_token.redemptionValue() == 100
+
+        # 償還金額の更新
+        bond_token.setRedemptionValue.transact(99, {'from': issuer})
+
+        assert bond_token.redemptionValue() == 99
+
+    # エラー系1: オーバーフロー
+    def test_setRedemptionValue_error_1(self, users, bond_exchange, personal_info):
+        issuer = users['issuer']
+
+        # トークン新規発行
+        bond_token, deploy_args = \
+            utils.issue_bond_token(users, bond_exchange.address, personal_info.address)
+
+        # 償還金額の更新（負値）
+        with pytest.raises(OverflowError):
+            bond_token.setRedemptionValue.transact(-1, {'from': issuer})
+
+        # 額面金額の更新（最大値超え）
+        with pytest.raises(OverflowError):
+            bond_token.setRedemptionValue.transact(2**256, {'from': issuer})
+
+    # エラー系2: 権限エラー（発行体以外からの更新）
+    def test_setRedemptionValue_error_2(self, users):
+        attacker = users['trader']
+
+        # トークン新規発行
+        bond_token, deploy_args = utils.issue_bond_token(users, zero_address, zero_address)
+
+        # 額面金額の更新（権限エラー）
+        bond_token.setRedemptionValue.transact(10001, {'from': attacker})
+
+        assert bond_token.redemptionValue() == deploy_args[5]
