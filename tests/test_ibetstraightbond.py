@@ -2036,7 +2036,7 @@ class TestSetRedemptionValue:
         with pytest.raises(OverflowError):
             bond_token.setRedemptionValue.transact(-1, {'from': issuer})
 
-        # 額面金額の更新（最大値超え）
+        # 償還金額の更新（最大値超え）
         with pytest.raises(OverflowError):
             bond_token.setRedemptionValue.transact(2**256, {'from': issuer})
 
@@ -2047,7 +2047,7 @@ class TestSetRedemptionValue:
         # トークン新規発行
         bond_token, deploy_args = utils.issue_bond_token(users, zero_address, zero_address)
 
-        # 額面金額の更新（権限エラー）
+        # 償還金額の更新（権限エラー）
         bond_token.setRedemptionValue.transact(10001, {'from': attacker})
 
         assert bond_token.redemptionValue() == deploy_args[5]
