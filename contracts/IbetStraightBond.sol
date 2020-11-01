@@ -19,7 +19,7 @@ contract IbetStraightBond is Ownable, IbetStandardTokenInterface {
     }
 
     /// 属性情報
-    uint256 public faceValue; // 額面
+    uint256 public faceValue; // 額面金額
     uint256 public interestRate; // 年利
     string public interestPaymentDate; // 利払日（JSON）
     string public redemptionDate; // 償還日
@@ -92,11 +92,17 @@ contract IbetStraightBond is Ownable, IbetStandardTokenInterface {
     /// イベント：追加発行
     event Issue(address indexed from, address indexed target_address, address indexed locked_address, uint256 amount);
 
+    /// イベント：額面金額変更
+    event ChangeFaceValue(uint256 faceValue);
+
+    /// イベント：償還金額変更
+    event ChangeRedemptionValue(uint256 redemptionValue);
+
     /// [CONSTRUCTOR]
     /// @param _name 名称
     /// @param _symbol 略称
     /// @param _totalSupply 総発行数量
-    /// @param _faceValue 額面
+    /// @param _faceValue 額面金額
     /// @param _redemptionDate 償還日
     /// @param _redemptionValue 償還金額
     /// @param _returnDate 特典付与日
@@ -546,4 +552,27 @@ contract IbetStraightBond is Ownable, IbetStandardTokenInterface {
         }
         emit Issue(msg.sender, _target_address, _locked_address, _amount);
     }
+
+    /// @notice 額面金額の更新
+    /// @dev オーナーのみ実行可能
+    /// @param _faceValue 更新後の額面金額
+    function setFaceValue(uint256 _faceValue)
+        public
+        onlyOwner()
+    {
+        faceValue = _faceValue;
+        emit ChangeFaceValue(_faceValue);
+    }
+
+    /// @notice 償還金額の更新
+    /// @dev オーナーのみ実行可能
+    /// @param _redemptionValue 更新後の償還金額
+    function setRedemptionValue(uint256 _redemptionValue)
+        public
+        onlyOwner()
+    {
+        redemptionValue = _redemptionValue;
+        emit ChangeRedemptionValue(_redemptionValue);
+    }
+
 }
