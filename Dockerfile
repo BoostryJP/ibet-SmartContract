@@ -42,7 +42,9 @@ RUN apt-get update && \
             libyaml-cpp-dev \
             libgcc1 \
             libstdc++6 \
-            libz3-dev
+            libz3-dev \
+            jq \
+            expect
 
 # Solidity
 USER root
@@ -50,7 +52,13 @@ RUN wget -q https://github.com/ethereum/solidity/releases/download/v0.4.25/solid
     unzip solidity-ubuntu-trusty.zip && \
     cp solc /usr/bin && \
     chmod 755 /usr/bin/solc && \
-    rm solc lllc
+    rm solc lllc solidity-ubuntu-trusty.zip
+
+# AWS CLI
+RUN wget -q https://awscli.amazonaws.com/awscli-exe-linux-$(arch).zip -O awscliv2.zip && \
+    unzip awscliv2.zip && \
+    ./aws/install && \
+    rm -r aws awscliv2.zip
 
 # pyenv
 RUN git clone https://github.com/pyenv/pyenv.git
