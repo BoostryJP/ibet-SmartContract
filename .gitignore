@@ -3,9 +3,12 @@ __pycache__
 .history
 .hypothesis
 build/
+output/
 reports/
 .vscode/
 .idea/
 
 #pyenv
 .python-version
+
+!.gitkeep
