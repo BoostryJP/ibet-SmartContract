@@ -9,3 +9,5 @@ reports/
 
 #pyenv
 .python-version
+
+!.gitkeep
