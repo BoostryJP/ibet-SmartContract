@@ -60,7 +60,6 @@ def deploy(users, deploy_args):
 def deposit(token, exchange, account, amount):
     token.transfer.transact(exchange.address, amount, {'from': account})
 
-
 # make order
 def make_order(token, exchange, account,
                amount, price, isBuy, agent):
@@ -2478,27 +2477,29 @@ def test_confirmAgreement_error_5(users, coupon_exchange):
 def test_confirmAgreement_error_6(users, coupon_exchange):
     issuer = users['issuer']
     trader = users['trader']
+    trader2 = users['trader2']
     agent = users['agent']
 
     # 新規発行
     deploy_args = init_args(coupon_exchange.address)
     coupon_token = deploy(users, deploy_args)
+    coupon_token.transfer.transact(trader, deploy_args[2], {'from': issuer})
 
     # Make注文（売）
     deposit(
         coupon_token, coupon_exchange,
-        issuer, 100
+        trader, 100
     )
     make_order(
         coupon_token, coupon_exchange,
-        issuer, 100, 123, False, agent
+        trader, 100, 123, False, agent
     )
 
     # Take注文（買）
     order_id = coupon_exchange.latestOrderId()
     take_order(
         coupon_token, coupon_exchange,
-        trader, order_id, 30, True
+        trader2, order_id, 30, True
     )
 
     # 決済非承認
@@ -2517,21 +2518,21 @@ def test_confirmAgreement_error_6(users, coupon_exchange):
 
     orderbook = coupon_exchange.getOrder(order_id)
     assert orderbook == [
-        issuer.address, to_checksum_address(coupon_token.address),
+        trader.address, to_checksum_address(coupon_token.address),
         70, 123, False, agent.address, False
     ]
 
     # Assert: balance
-    assert coupon_token.balanceOf(issuer) == deploy_args[2] - 70
-    assert coupon_token.balanceOf(trader) == 0
+    assert coupon_token.balanceOf(trader) == deploy_args[2] - 70
+    assert coupon_token.balanceOf(trader2) == 0
 
     # Assert: commitment
-    assert coupon_exchange.commitmentOf(issuer, coupon_token.address) == 70
+    assert coupon_exchange.commitmentOf(trader, coupon_token.address) == 70
 
     # Assert: agreement
     agreement = coupon_exchange.getAgreement(order_id, agreement_id)
     assert agreement[0:5] == [
-        trader, 30, 123, True, False
+        trader2, 30, 123, True, False
     ]
 
     # Assert: last_price
@@ -2603,32 +2604,34 @@ TEST_決済非承認（cancelAgreement）
 
 # 正常系1
 #   Make売、Take買
-#       ＜発行体＞新規発行 -> ＜発行体＞Make注文（売）
+#       ＜発行体＞新規発行 -> ＜投資家＞Make注文（売）
 #           -> ＜投資家＞Take注文（買） -> ＜決済業者＞決済非承認
 def test_cancelAgreement_normal_1(users, coupon_exchange):
     issuer = users['issuer']
     trader = users['trader']
+    trader2 = users['trader2']
     agent = users['agent']
 
     # 新規発行
     deploy_args = init_args(coupon_exchange.address)
     coupon_token = deploy(users, deploy_args)
+    coupon_token.transfer.transact(trader, deploy_args[2], {'from': issuer})
 
     # Make注文（売）
     deposit(
         coupon_token, coupon_exchange,
-        issuer, 100
+        trader, 100
     )
     make_order(
         coupon_token, coupon_exchange,
-        issuer, 100, 123, False, agent
+        trader, 100, 123, False, agent
     )
 
     # Take注文（買）
     order_id = coupon_exchange.latestOrderId()
     take_order(
         coupon_token, coupon_exchange,
-        trader, order_id, 30, True
+        trader2, order_id, 30, True
     )
 
     # 決済非承認
@@ -2641,21 +2644,21 @@ def test_cancelAgreement_normal_1(users, coupon_exchange):
     # Assert: orderbook
     orderbook = coupon_exchange.getOrder(order_id)
     assert orderbook == [
-        issuer.address, to_checksum_address(coupon_token.address),
+        trader.address, to_checksum_address(coupon_token.address),
         70, 123, False, agent.address, False
     ]
 
     # Assert: balance
-    assert coupon_token.balanceOf(issuer) == deploy_args[2] - 70
-    assert coupon_token.balanceOf(trader) == 0
+    assert coupon_token.balanceOf(trader) == deploy_args[2] - 70
+    assert coupon_token.balanceOf(trader2) == 0
 
     # Assert: commitment
-    assert coupon_exchange.commitmentOf(issuer, coupon_token.address) == 70
+    assert coupon_exchange.commitmentOf(trader, coupon_token.address) == 70
 
     # Assert: agreement
     agreement = coupon_exchange.getAgreement(order_id, agreement_id)
     assert agreement[0:5] == [
-        trader, 30, 123, True, False
+        trader2, 30, 123, True, False
     ]
 
     # Assert: last_price
@@ -2722,35 +2725,36 @@ def test_cancelAgreement_normal_2(users, coupon_exchange):
     # Assert: last_price
     assert coupon_exchange.lastPrice(coupon_token.address) == 0
 
-
 # 正常系3-1
 #   Make売、Take買
 #   限界値
 def test_cancelAgreement_normal_3_1(users, coupon_exchange):
     issuer = users['issuer']
     trader = users['trader']
+    trader2 = users['trader2']
     agent = users['agent']
 
     # 新規発行
     deploy_args = init_args(coupon_exchange.address)
     deploy_args[2] = 2 ** 256 - 1  # 上限値
     coupon_token = deploy(users, deploy_args)
+    coupon_token.transfer.transact(trader, deploy_args[2], {'from': issuer})
 
     # Make注文（売）
     deposit(
         coupon_token, coupon_exchange,
-        issuer, 2 ** 256 - 1
+        trader, 2 ** 256 - 1
     )
     make_order(
         coupon_token, coupon_exchange,
-        issuer, 2 ** 256 - 1, 2 ** 256 - 1, False, agent
+        trader, 2 ** 256 - 1, 2 ** 256 - 1, False, agent
     )
 
     # Take注文（買）
     order_id = coupon_exchange.latestOrderId()
     take_order(
         coupon_token, coupon_exchange,
-        trader, order_id, 2 ** 256 - 1, True
+        trader2, order_id, 2 ** 256 - 1, True
     )
 
     # 決済非承認
@@ -2763,21 +2767,21 @@ def test_cancelAgreement_normal_3_1(users, coupon_exchange):
     # Assert: orderbook
     orderbook = coupon_exchange.getOrder(order_id)
     assert orderbook == [
-        issuer.address, to_checksum_address(coupon_token.address),
+        trader.address, to_checksum_address(coupon_token.address),
         0, 2 ** 256 - 1, False, agent.address, False
     ]
 
     # Assert: balance
-    assert coupon_token.balanceOf(issuer) == deploy_args[2]
-    assert coupon_token.balanceOf(trader) == 0
+    assert coupon_token.balanceOf(trader) == deploy_args[2]
+    assert coupon_token.balanceOf(trader2) == 0
 
     # Assert: commitment
-    assert coupon_exchange.commitmentOf(issuer, coupon_token.address) == 0
+    assert coupon_exchange.commitmentOf(trader, coupon_token.address) == 0
 
     # Assert: agreement
     agreement = coupon_exchange.getAgreement(order_id, agreement_id)
     assert agreement[0:5] == [
-        trader, 2 ** 256 - 1, 2 ** 256 - 1, True, False
+        trader2, 2 ** 256 - 1, 2 ** 256 - 1, True, False
     ]
 
     # Assert: last_price
@@ -2839,6 +2843,67 @@ def test_cancelAgreement_normal_3_2(users, coupon_exchange):
     agreement = coupon_exchange.getAgreement(order_id, agreement_id)
     assert agreement[0:5] == [
         issuer, 2 ** 256 - 1, 2 ** 256 - 1, True, False
+    ]
+
+    # Assert: last_price
+    assert coupon_exchange.lastPrice(coupon_token.address) == 0
+
+
+# 正常系4
+#   Make売、Take買
+#       ＜発行体＞新規発行 -> ＜発行体＞Make注文（売）
+#           -> ＜投資家＞Take注文（買） -> ＜決済業者＞決済非承認
+def test_cancelAgreement_normal_4(users, coupon_exchange):
+    issuer = users['issuer']
+    trader = users['trader']
+    agent = users['agent']
+
+    # 新規発行
+    deploy_args = init_args(coupon_exchange.address)
+    coupon_token = deploy(users, deploy_args)
+
+    # Make注文（売）
+    deposit(
+        coupon_token, coupon_exchange,
+        issuer, 100
+    )
+    make_order(
+        coupon_token, coupon_exchange,
+        issuer, 100, 123, False, agent
+    )
+
+    # Take注文（買）
+    order_id = coupon_exchange.latestOrderId()
+    take_order(
+        coupon_token, coupon_exchange,
+        trader, order_id, 30, True
+    )
+
+    # 決済非承認
+    agreement_id = coupon_exchange.latestAgreementId(order_id)
+    settlement_ng(
+        coupon_token, coupon_exchange,
+        agent, order_id, agreement_id
+    )
+
+    # Assert: orderbook
+    orderbook = coupon_exchange.getOrder(order_id)
+    assert orderbook == [
+        issuer.address, to_checksum_address(coupon_token.address),
+        100, 123, False, agent.address, False
+    ]
+
+    # Assert: balance
+    assert coupon_token.balanceOf(issuer) == deploy_args[2] - 100
+    assert coupon_token.balanceOf(trader) == 0
+
+    # Assert: commitment
+    assert coupon_exchange.commitmentOf(issuer, coupon_token.address) == 100
+
+    # Assert: agreement
+    agreement = coupon_exchange.getAgreement(order_id, agreement_id)
+    assert agreement[0:5] == [
+        trader, 30, 123, True, False
     ]
 
     # Assert: last_price
@@ -3068,27 +3133,29 @@ def test_cancelAgreement_error_5(users, coupon_exchange):
 def test_cancelAgreement_error_6(users, coupon_exchange):
     issuer = users['issuer']
     trader = users['trader']
+    trader2 = users['trader2']
     agent = users['agent']
 
     # 新規発行
     deploy_args = init_args(coupon_exchange.address)
     coupon_token = deploy(users, deploy_args)
+    coupon_token.transfer.transact(trader, deploy_args[2], {'from': issuer})
 
     # Make注文（売）
     deposit(
         coupon_token, coupon_exchange,
-        issuer, 100
+        trader, 100
     )
     make_order(
         coupon_token, coupon_exchange,
-        issuer, 100, 123, False, agent
+        trader, 100, 123, False, agent
     )
 
     # Take注文（買）
     order_id = coupon_exchange.latestOrderId()
     take_order(
         coupon_token, coupon_exchange,
-        trader, order_id, 30, True
+        trader2, order_id, 30, True
     )
 
     # 決済非承認１回目
@@ -3106,21 +3173,21 @@ def test_cancelAgreement_error_6(users, coupon_exchange):
 
     orderbook = coupon_exchange.getOrder(order_id)
     assert orderbook == [
-        issuer.address, to_checksum_address(coupon_token.address),
+        trader.address, to_checksum_address(coupon_token.address),
         70, 123, False, agent.address, False
     ]
 
     # Assert: balance
-    assert coupon_token.balanceOf(issuer) == deploy_args[2] - 70
-    assert coupon_token.balanceOf(trader) == 0
+    assert coupon_token.balanceOf(trader) == deploy_args[2] - 70
+    assert coupon_token.balanceOf(trader2) == 0
 
     # Assert: commitment
-    assert coupon_exchange.commitmentOf(issuer, coupon_token.address) == 70
+    assert coupon_exchange.commitmentOf(trader, coupon_token.address) == 70
 
     # Assert: agreement
     agreement = coupon_exchange.getAgreement(order_id, agreement_id)
     assert agreement[0:5] == [
-        trader, 30, 123, True, False
+        trader2, 30, 123, True, False
     ]
 
     # Assert: last_price
