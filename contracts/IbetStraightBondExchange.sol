@@ -790,18 +790,9 @@ contract IbetStraightBondExchange is Ownable {
                 order.owner, agreement.counterpart, order.price,
                 agreement.amount, order.agent);
         } else {
-            if (order.owner == IbetStraightBond(order.token).owner()) { // 発注者がトークン所有者(発行者)の場合
-                // 更新処理：元注文の数量を戻す
-                setOrder(_orderId, order.owner, order.token, order.amount.add(agreement.amount),
-                    order.price, order.isBuy, order.agent, order.canceled);
-            } else {
-                // 更新処理：売り注文の場合、突合相手（買い手）の注文数量だけ注文者（売り手）の預かりを解放
-                //  -> 預かりの引き出し。
-                // 取り消した注文は無効化する（注文中状態に戻さない）
-                setCommitment(order.owner, order.token,
-                    commitmentOf(order.owner, order.token).sub(agreement.amount));
-                IbetStraightBond(order.token).transfer(order.owner, agreement.amount);
-            }
+            // 更新処理：元注文の数量を戻す
+            setOrder(_orderId, order.owner, order.token, order.amount.add(agreement.amount),
+                order.price, order.isBuy, order.agent, order.canceled);
             // イベント登録：決済NG
             emit SettlementNG(order.token, _orderId, _agreementId,
                 agreement.counterpart, order.owner, order.price,

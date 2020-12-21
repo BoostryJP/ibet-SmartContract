@@ -2592,7 +2592,6 @@ def test_confirmAgreement_error_7(users,
                                   bond_exchange, personal_info, payment_gateway):
     _issuer = users['issuer']
     _trader = users['trader']
-    _trader2 = users['trader2']
     _agent = users['agent']
 
     personalinfo_register(personal_info, _issuer, _issuer)
@@ -2603,29 +2602,24 @@ def test_confirmAgreement_error_7(users,
     payment_gateway_register(payment_gateway, _trader, _agent)
     payment_gateway_approve(payment_gateway, _trader, _agent)
 
-    personalinfo_register(personal_info, _trader2, _issuer)
-    payment_gateway_register(payment_gateway, _trader2, _agent)
-    payment_gateway_approve(payment_gateway, _trader2, _agent)
-
     # 新規発行
     bond_token, deploy_args = utils. \
         issue_bond_token(users, bond_exchange.address, personal_info.address)
-    bond_token.transfer.transact(_trader, deploy_args[2], {'from': _issuer})
 
-    # Exchangeへのデポジット：投資家A
+    # Exchangeへのデポジット：発行体
     _amount_make = 100
-    bond_token.transfer.transact(bond_exchange.address, _amount_make, {'from': _trader})
+    bond_token.transfer.transact(bond_exchange.address, _amount_make, {'from': _issuer})
 
-    # Make注文（売）：投資家A
+    # Make注文（売）：発行体
     _price = 123
     bond_exchange.createOrder.transact(
-        bond_token.address, _amount_make, _price, False, _agent, {'from': _trader})
+        bond_token.address, _amount_make, _price, False, _agent, {'from': _issuer})
 
-    # Take注文（買）：投資家B
+    # Take注文（買）：投資家
     order_id = bond_exchange.latestOrderId()
     _amount_take = 50
     bond_exchange.executeOrder.transact(
-        order_id, _amount_take, True, {'from': _trader2})
+        order_id, _amount_take, True, {'from': _trader})
 
     agreement_id = bond_exchange.latestAgreementId(order_id)
 
@@ -2638,19 +2632,19 @@ def test_confirmAgreement_error_7(users,
 
     orderbook = bond_exchange.getOrder(order_id)
     agreement = bond_exchange.getAgreement(order_id, agreement_id)
-    balance_maker = bond_token.balanceOf(_trader)
-    balance_taker = bond_token.balanceOf(_trader2)
-    commitment = bond_exchange.commitmentOf(_trader, bond_token.address)
+    balance_maker = bond_token.balanceOf(_issuer)
+    balance_taker = bond_token.balanceOf(_trader)
+    commitment = bond_exchange.commitmentOf(_issuer, bond_token.address)
 
     assert orderbook == [
-        _trader, to_checksum_address(bond_token.address),
-        _amount_make - _amount_take,
+        _issuer, to_checksum_address(bond_token.address),
+        _amount_make,
         _price, False, _agent, False
     ]
-    assert agreement[0:5] == [_trader2, _amount_take, _price, True, False]
-    assert balance_maker == deploy_args[2] - _amount_make + _amount_take
+    assert agreement[0:5] == [_trader, _amount_take, _price, True, False]
+    assert balance_maker == deploy_args[2] - _amount_make
     assert balance_taker == 0
-    assert commitment == _amount_make - _amount_take
+    assert commitment == _amount_make
 
     # Assert: last_price
     assert bond_exchange.lastPrice(bond_token.address) == 0
@@ -2663,13 +2657,12 @@ TEST_決済非承認（cancelAgreement）
 
 # 正常系1
 # Make売、Take買
-# ＜発行体＞新規発行 -> ＜投資家＞Make注文（売）
+# ＜発行体＞新規発行 -> ＜発行体＞Make注文（売）
 #  -> ＜投資家＞Take注文（買） -> ＜決済業者＞決済非承認
 def test_cancelAgreement_normal_1(users,
                                   bond_exchange, personal_info, payment_gateway):
     _issuer = users['issuer']
     _trader = users['trader']
-    _trader2 = users['trader2']
     _agent = users['agent']
 
     personalinfo_register(personal_info, _issuer, _issuer)
@@ -2680,29 +2673,24 @@ def test_cancelAgreement_normal_1(users,
     payment_gateway_register(payment_gateway, _trader, _agent)
     payment_gateway_approve(payment_gateway, _trader, _agent)
 
-    personalinfo_register(personal_info, _trader2, _issuer)
-    payment_gateway_register(payment_gateway, _trader2, _agent)
-    payment_gateway_approve(payment_gateway, _trader2, _agent)
-
     # 新規発行
     bond_token, deploy_args = utils. \
         issue_bond_token(users, bond_exchange.address, personal_info.address)
-    bond_token.transfer.transact(_trader, deploy_args[2], {'from': _issuer})
 
-    # Exchangeへのデポジット：投資家A
+    # Exchangeへのデポジット：発行体
     _amount_make = 100
-    bond_token.transfer.transact(bond_exchange.address, _amount_make, {'from': _trader})
+    bond_token.transfer.transact(bond_exchange.address, _amount_make, {'from': _issuer})
 
-    # Make注文（売）：投資家A
+    # Make注文（売）：発行体
     _price = 123
     bond_exchange.createOrder.transact(
-        bond_token.address, _amount_make, _price, False, _agent, {'from': _trader})
+        bond_token.address, _amount_make, _price, False, _agent, {'from': _issuer})
 
-    # Take注文（買）：投資家B
+    # Take注文（買）：投資家
     order_id = bond_exchange.latestOrderId()
     _amount_take = 50
     bond_exchange.executeOrder.transact(
-        order_id, _amount_take, True, {'from': _trader2})
+        order_id, _amount_take, True, {'from': _trader})
 
     agreement_id = bond_exchange.latestAgreementId(order_id)
 
@@ -2712,19 +2700,19 @@ def test_cancelAgreement_normal_1(users,
 
     orderbook = bond_exchange.getOrder(order_id)
     agreement = bond_exchange.getAgreement(order_id, agreement_id)
-    balance_maker = bond_token.balanceOf(_trader)
-    balance_taker = bond_token.balanceOf(_trader2)
-    commitment = bond_exchange.commitmentOf(_trader, bond_token.address)
+    balance_maker = bond_token.balanceOf(_issuer)
+    balance_taker = bond_token.balanceOf(_trader)
+    commitment = bond_exchange.commitmentOf(_issuer, bond_token.address)
 
     assert orderbook == [
-        _trader, to_checksum_address(bond_token.address),
-        _amount_make - _amount_take,
+        _issuer, to_checksum_address(bond_token.address),
+        _amount_make,
         _price, False, _agent, False
     ]
-    assert agreement[0:5] == [_trader2, _amount_take, _price, True, False]
-    assert balance_maker == deploy_args[2] - _amount_make + _amount_take
+    assert agreement[0:5] == [_trader, _amount_take, _price, True, False]
+    assert balance_maker == deploy_args[2] - _amount_make
     assert balance_taker == 0
-    assert commitment == _amount_make - _amount_take
+    assert commitment == _amount_make
 
 
 # 正常系2
@@ -2785,66 +2773,6 @@ def test_cancelAgreement_normal_2(users,
     assert balance_maker == 0
     assert balance_taker == deploy_args[2]
     assert commitment == 0
-
-
-# 正常系3
-# Make売、Take買
-# ＜発行体＞新規発行 -> ＜発行体＞Make注文（売）
-#  -> ＜投資家＞Take注文（買） -> ＜決済業者＞決済非承認
-def test_cancelAgreement_normal_3(users,
-                                  bond_exchange, personal_info, payment_gateway):
-    _issuer = users['issuer']
-    _trader = users['trader']
-    _agent = users['agent']
-
-    personalinfo_register(personal_info, _issuer, _issuer)
-    payment_gateway_register(payment_gateway, _issuer, _agent)
-    payment_gateway_approve(payment_gateway, _issuer, _agent)
-
-    personalinfo_register(personal_info, _trader, _issuer)
-    payment_gateway_register(payment_gateway, _trader, _agent)
-    payment_gateway_approve(payment_gateway, _trader, _agent)
-
-    # 新規発行
-    bond_token, deploy_args = utils. \
-        issue_bond_token(users, bond_exchange.address, personal_info.address)
-
-    # Exchangeへのデポジット：発行体
-    _amount_make = 100
-    bond_token.transfer.transact(bond_exchange.address, _amount_make, {'from': _issuer})
-
-    # Make注文（売）：発行体
-    _price = 123
-    bond_exchange.createOrder.transact(
-        bond_token.address, _amount_make, _price, False, _agent, {'from': _issuer})
-
-    # Take注文（買）：投資家
-    order_id = bond_exchange.latestOrderId()
-    _amount_take = 50
-    bond_exchange.executeOrder.transact(
-        order_id, _amount_take, True, {'from': _trader})
-
-    agreement_id = bond_exchange.latestAgreementId(order_id)
-
-    # 決済非承認：決済業者
-    bond_exchange.cancelAgreement.transact(
-        order_id, agreement_id, {'from': _agent})
-
-    orderbook = bond_exchange.getOrder(order_id)
-    agreement = bond_exchange.getAgreement(order_id, agreement_id)
-    balance_maker = bond_token.balanceOf(_issuer)
-    balance_taker = bond_token.balanceOf(_trader)
-    commitment = bond_exchange.commitmentOf(_issuer, bond_token.address)
-
-    assert orderbook == [
-        _issuer, to_checksum_address(bond_token.address),
-        _amount_make,
-        _price, False, _agent, False
-    ]
-    assert agreement[0:5] == [_trader, _amount_take, _price, True, False]
-    assert balance_maker == deploy_args[2] - _amount_make
-    assert balance_taker == 0
-    assert commitment == _amount_make
 
 
 # エラー系1
@@ -3121,7 +3049,6 @@ def test_cancelAgreement_error_7(users,
                                  bond_exchange, personal_info, payment_gateway):
     _issuer = users['issuer']
     _trader = users['trader']
-    _trader2 = users['trader2']
     _agent = users['agent']
 
     personalinfo_register(personal_info, _issuer, _issuer)
@@ -3132,29 +3059,24 @@ def test_cancelAgreement_error_7(users,
     payment_gateway_register(payment_gateway, _trader, _agent)
     payment_gateway_approve(payment_gateway, _trader, _agent)
 
-    personalinfo_register(personal_info, _trader2, _issuer)
-    payment_gateway_register(payment_gateway, _trader2, _agent)
-    payment_gateway_approve(payment_gateway, _trader2, _agent)
-
     # 新規発行
     bond_token, deploy_args = utils. \
         issue_bond_token(users, bond_exchange.address, personal_info.address)
-    bond_token.transfer.transact(_trader, deploy_args[2], {'from': _issuer})
 
-    # Exchangeへのデポジット：投資家A
+    # Exchangeへのデポジット：発行体
     _amount_make = 100
-    bond_token.transfer.transact(bond_exchange.address, _amount_make, {'from': _trader})
+    bond_token.transfer.transact(bond_exchange.address, _amount_make, {'from': _issuer})
 
-    # Make注文（売）：投資家A
+    # Make注文（売）：発行体
     _price = 123
     bond_exchange.createOrder.transact(
-        bond_token.address, _amount_make, _price, False, _agent, {'from': _trader})
+        bond_token.address, _amount_make, _price, False, _agent, {'from': _issuer})
 
-    # Take注文（買）：投資家B
+    # Take注文（買）：投資家
     order_id = bond_exchange.latestOrderId()
     _amount_take = 50
     bond_exchange.executeOrder.transact(
-        order_id, _amount_take, True, {'from': _trader2})
+        order_id, _amount_take, True, {'from': _trader})
 
     agreement_id = bond_exchange.latestAgreementId(order_id)
 
@@ -3167,19 +3089,19 @@ def test_cancelAgreement_error_7(users,
 
     orderbook = bond_exchange.getOrder(order_id)
     agreement = bond_exchange.getAgreement(order_id, agreement_id)
-    balance_maker = bond_token.balanceOf(_trader)
-    balance_taker = bond_token.balanceOf(_trader2)
-    commitment = bond_exchange.commitmentOf(_trader, bond_token.address)
+    balance_maker = bond_token.balanceOf(_issuer)
+    balance_taker = bond_token.balanceOf(_trader)
+    commitment = bond_exchange.commitmentOf(_issuer, bond_token.address)
 
     assert orderbook == [
-        _trader, to_checksum_address(bond_token.address),
-        _amount_make - _amount_take,
+        _issuer, to_checksum_address(bond_token.address),
+        _amount_make,
         _price, False, _agent, False
     ]
-    assert agreement[0:5] == [_trader2, _amount_take, _price, True, False]
-    assert balance_maker == deploy_args[2] - _amount_make + _amount_take
+    assert agreement[0:5] == [_trader, _amount_take, _price, True, False]
+    assert balance_maker == deploy_args[2] - _amount_make
     assert balance_taker == 0
-    assert commitment == _amount_make - _amount_take
+    assert commitment == _amount_make
 
 
 '''

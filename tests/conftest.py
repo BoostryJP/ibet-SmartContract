@@ -67,18 +67,15 @@ def users(web3, accounts):
     trader = accounts[1]
     issuer = accounts[2]
     agent = accounts[3]
-    trader2 = accounts[4]
     web3.geth.personal.unlock_account(accounts[0].address, "password", 0)
     web3.geth.personal.unlock_account(accounts[1].address, "password", 0)
     web3.geth.personal.unlock_account(accounts[2].address, "password", 0)
     web3.geth.personal.unlock_account(accounts[3].address, "password", 0)
-    web3.geth.personal.unlock_account(accounts[4].address, "password", 0)
     users = {
         'admin': admin,
         'trader': trader,
         'issuer': issuer,
-        'agent': agent,
-        'trader2': trader2
+        'agent': agent
     }
 
     yield users
@@ -103,7 +100,6 @@ def exchange_regulator_service(ExchangeRegulatorService, users):
     exchange_regulator_service = admin.deploy(ExchangeRegulatorService)
     exchange_regulator_service.register.transact(users['issuer'], False, {'from': admin})
     exchange_regulator_service.register.transact(users['trader'], False, {'from': admin})
-    exchange_regulator_service.register.transact(users['trader2'], False, {'from': admin})
     exchange_regulator_service.register.transact(users['admin'], False, {'from': admin})
     return exchange_regulator_service
 

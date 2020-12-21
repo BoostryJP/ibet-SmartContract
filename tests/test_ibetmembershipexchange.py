@@ -2374,29 +2374,27 @@ def test_confirmAgreement_error_5(users, membership_exchange):
 def test_confirmAgreement_error_6(users, membership_exchange):
     issuer = users['issuer']
     trader = users['trader']
-    trader2 = users['trader2']
     agent = users['agent']
 
     # 新規発行
     deploy_args = init_args(membership_exchange.address)
     membership_token = deploy(users, deploy_args)
-    membership_token.transfer.transact(trader, deploy_args[2], {'from': issuer})
 
     # Make注文（売）
     deposit(
         membership_token, membership_exchange,
-        trader, 100
+        issuer, 100
     )
     make_order(
         membership_token, membership_exchange,
-        trader, 100, 123, False, agent
+        issuer, 100, 123, False, agent
     )
 
     # Take注文（買）
     order_id = membership_exchange.latestOrderId()
     take_order(
         membership_token, membership_exchange,
-        trader2, order_id, 30, True
+        trader, order_id, 30, True
     )
 
     # 決済非承認
@@ -2415,21 +2413,21 @@ def test_confirmAgreement_error_6(users, membership_exchange):
 
     orderbook = membership_exchange.getOrder(order_id)
     assert orderbook == [
-        trader.address, to_checksum_address(membership_token.address),
-        70, 123, False, agent.address, False
+        issuer.address, to_checksum_address(membership_token.address),
+        100, 123, False, agent.address, False
     ]
 
     # Assert: balance
-    assert membership_token.balanceOf(trader) == deploy_args[2] - 70
-    assert membership_token.balanceOf(trader2) == 0
+    assert membership_token.balanceOf(issuer) == deploy_args[2] - 100
+    assert membership_token.balanceOf(trader) == 0
 
     # Assert: commitment
-    assert membership_exchange.commitmentOf(trader, membership_token.address) == 70
+    assert membership_exchange.commitmentOf(issuer, membership_token.address) == 100
 
     # Assert: agreement
     agreement = membership_exchange.getAgreement(order_id, agreement_id)
     assert agreement[0:5] == [
-        trader2, 30, 123, True, False
+        trader, 30, 123, True, False
     ]
 
     # Assert: last_price
@@ -2501,34 +2499,32 @@ TEST_決済非承認（cancelAgreement）
 
 # 正常系1
 #   Make売、Take買
-#       ＜発行体＞新規発行 -> ＜投資家＞Make注文（売）
+#       ＜発行体＞新規発行 -> ＜発行体＞Make注文（売）
 #           -> ＜投資家＞Take注文（買） -> ＜決済業者＞決済非承認
 def test_cancelAgreement_normal_1(users, membership_exchange):
     issuer = users['issuer']
     trader = users['trader']
-    trader2 = users['trader2']
     agent = users['agent']
 
     # 新規発行
     deploy_args = init_args(membership_exchange.address)
     membership_token = deploy(users, deploy_args)
-    membership_token.transfer.transact(trader, deploy_args[2], {'from': issuer})
 
     # Make注文（売）
     deposit(
         membership_token, membership_exchange,
-        trader, 100
+        issuer, 100
     )
     make_order(
         membership_token, membership_exchange,
-        trader, 100, 123, False, agent
+        issuer, 100, 123, False, agent
     )
 
     # Take注文（買）
     order_id = membership_exchange.latestOrderId()
     take_order(
         membership_token, membership_exchange,
-        trader2, order_id, 30, True
+        trader, order_id, 30, True
     )
 
     # 決済非承認
@@ -2541,21 +2537,21 @@ def test_cancelAgreement_normal_1(users, membership_exchange):
     # Assert: orderbook
     orderbook = membership_exchange.getOrder(order_id)
     assert orderbook == [
-        trader.address, to_checksum_address(membership_token.address),
-        70, 123, False, agent.address, False
+        issuer.address, to_checksum_address(membership_token.address),
+        100, 123, False, agent.address, False
     ]
 
     # Assert: balance
-    assert membership_token.balanceOf(trader) == deploy_args[2] - 70
-    assert membership_token.balanceOf(trader2) == 0
+    assert membership_token.balanceOf(issuer) == deploy_args[2] - 100
+    assert membership_token.balanceOf(trader) == 0
 
     # Assert: commitment
-    assert membership_exchange.commitmentOf(trader, membership_token.address) == 70
+    assert membership_exchange.commitmentOf(issuer, membership_token.address) == 100
 
     # Assert: agreement
     agreement = membership_exchange.getAgreement(order_id, agreement_id)
     assert agreement[0:5] == [
-        trader2, 30, 123, True, False
+        trader, 30, 123, True, False
     ]
 
     # Assert: last_price
@@ -2629,30 +2625,28 @@ def test_cancelAgreement_normal_2(users, membership_exchange):
 def test_cancelAgreement_normal_3_1(users, membership_exchange):
     issuer = users['issuer']
     trader = users['trader']
-    trader2 = users['trader2']
     agent = users['agent']
 
     # 新規発行
     deploy_args = init_args(membership_exchange.address)
     deploy_args[2] = 2 ** 256 - 1  # 上限値
     membership_token = deploy(users, deploy_args)
-    membership_token.transfer.transact(trader, deploy_args[2], {'from': issuer})
 
     # Make注文（売）
     deposit(
         membership_token, membership_exchange,
-        trader, 2 ** 256 - 1
+        issuer, 2 ** 256 - 1
     )
     make_order(
         membership_token, membership_exchange,
-        trader, 2 ** 256 - 1, 2 ** 256 - 1, False, agent
+        issuer, 2 ** 256 - 1, 2 ** 256 - 1, False, agent
     )
 
     # Take注文（買）
     order_id = membership_exchange.latestOrderId()
     take_order(
         membership_token, membership_exchange,
-        trader2, order_id, 2 ** 256 - 1, True
+        trader, order_id, 2 ** 256 - 1, True
     )
 
     # 決済非承認
@@ -2665,21 +2659,21 @@ def test_cancelAgreement_normal_3_1(users, membership_exchange):
     # Assert: orderbook
     orderbook = membership_exchange.getOrder(order_id)
     assert orderbook == [
-        trader.address, to_checksum_address(membership_token.address),
-        0, 2 ** 256 - 1, False, agent.address, False
+        issuer.address, to_checksum_address(membership_token.address),
+        2 ** 256 - 1, 2 ** 256 - 1, False, agent.address, False
     ]
 
     # Assert: balance
-    assert membership_token.balanceOf(trader) == deploy_args[2]
-    assert membership_token.balanceOf(trader2) == 0
+    assert membership_token.balanceOf(issuer) == deploy_args[2] - (2 ** 256 - 1)
+    assert membership_token.balanceOf(trader) == 0
 
     # Assert: commitment
-    assert membership_exchange.commitmentOf(issuer, membership_token.address) == 0
+    assert membership_exchange.commitmentOf(issuer, membership_token.address) == 2 ** 256 - 1
 
     # Assert: agreement
     agreement = membership_exchange.getAgreement(order_id, agreement_id)
     assert agreement[0:5] == [
-        trader2, 2 ** 256 - 1, 2 ** 256 - 1, True, False
+        trader, 2 ** 256 - 1, 2 ** 256 - 1, True, False
     ]
 
     # Assert: last_price
@@ -2741,67 +2735,6 @@ def test_cancelAgreement_normal_3_2(users, membership_exchange):
     agreement = membership_exchange.getAgreement(order_id, agreement_id)
     assert agreement[0:5] == [
         issuer, 2 ** 256 - 1, 2 ** 256 - 1, True, False
-    ]
-
-    # Assert: last_price
-    assert membership_exchange.lastPrice(membership_token.address) == 0
-
-
-# 正常系4
-#   Make売、Take買
-#       ＜発行体＞新規発行 -> ＜発行体＞Make注文（売）
-#           -> ＜投資家＞Take注文（買） -> ＜決済業者＞決済非承認
-def test_cancelAgreement_normal_4(users, membership_exchange):
-    issuer = users['issuer']
-    trader = users['trader']
-    agent = users['agent']
-
-    # 新規発行
-    deploy_args = init_args(membership_exchange.address)
-    membership_token = deploy(users, deploy_args)
-
-    # Make注文（売）
-    deposit(
-        membership_token, membership_exchange,
-        issuer, 100
-    )
-    make_order(
-        membership_token, membership_exchange,
-        issuer, 100, 123, False, agent
-    )
-
-    # Take注文（買）
-    order_id = membership_exchange.latestOrderId()
-    take_order(
-        membership_token, membership_exchange,
-        trader, order_id, 30, True
-    )
-
-    # 決済非承認
-    agreement_id = membership_exchange.latestAgreementId(order_id)
-    settlement_ng(
-        membership_token, membership_exchange,
-        agent, order_id, agreement_id
-    )
-
-    # Assert: orderbook
-    orderbook = membership_exchange.getOrder(order_id)
-    assert orderbook == [
-        issuer.address, to_checksum_address(membership_token.address),
-        100, 123, False, agent.address, False
-    ]
-
-    # Assert: balance
-    assert membership_token.balanceOf(issuer) == deploy_args[2] - 100
-    assert membership_token.balanceOf(trader) == 0
-
-    # Assert: commitment
-    assert membership_exchange.commitmentOf(issuer, membership_token.address) == 100
-
-    # Assert: agreement
-    agreement = membership_exchange.getAgreement(order_id, agreement_id)
-    assert agreement[0:5] == [
-        trader, 30, 123, True, False
     ]
 
     # Assert: last_price
@@ -3031,29 +2964,27 @@ def test_cancelAgreement_error_5(users, membership_exchange):
 def test_cancelAgreement_error_6(users, membership_exchange):
     issuer = users['issuer']
     trader = users['trader']
-    trader2 = users['trader2']
     agent = users['agent']
 
     # 新規発行
     deploy_args = init_args(membership_exchange.address)
     membership_token = deploy(users, deploy_args)
-    membership_token.transfer.transact(trader, deploy_args[2], {'from': issuer})
 
     # Make注文（売）
     deposit(
         membership_token, membership_exchange,
-        trader, 100
+        issuer, 100
     )
     make_order(
         membership_token, membership_exchange,
-        trader, 100, 123, False, agent
+        issuer, 100, 123, False, agent
     )
 
     # Take注文（買）
     order_id = membership_exchange.latestOrderId()
     take_order(
         membership_token, membership_exchange,
-        trader2, order_id, 30, True
+        trader, order_id, 30, True
     )
 
     # 決済非承認１回目
@@ -3071,21 +3002,21 @@ def test_cancelAgreement_error_6(users, membership_exchange):
 
     orderbook = membership_exchange.getOrder(order_id)
     assert orderbook == [
-        trader.address, to_checksum_address(membership_token.address),
-        70, 123, False, agent.address, False
+        issuer.address, to_checksum_address(membership_token.address),
+        100, 123, False, agent.address, False
     ]
 
     # Assert: balance
-    assert membership_token.balanceOf(trader) == deploy_args[2] - 70
-    assert membership_token.balanceOf(trader2) == 0
+    assert membership_token.balanceOf(issuer) == deploy_args[2] - 100
+    assert membership_token.balanceOf(trader) == 0
 
     # Assert: commitment
-    assert membership_exchange.commitmentOf(trader, membership_token.address) == 70
+    assert membership_exchange.commitmentOf(issuer, membership_token.address) == 100
 
     # Assert: agreement
     agreement = membership_exchange.getAgreement(order_id, agreement_id)
     assert agreement[0:5] == [
-        trader2, 30, 123, True, False
+        trader, 30, 123, True, False
     ]
 
     # Assert: last_price
