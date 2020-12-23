@@ -738,18 +738,9 @@ contract IbetOTCExchange is Ownable, OTCExchangeStorageModel {
         // 更新処理: キャンセル済みフラグをキャンセル（True）に更新する
          OTCExchangeStorage(storageAddress).setAgreementCanceled( _orderId, _agreementId, true);
 
-        // 更新処理: 突合相手（買い手）の注文数量だけ注文者（売り手）の預かりを解放
-        //  -> 預かりの引き出し。
-        // 取り消した注文は無効化する（注文中状態に戻さない）
-        setCommitment(
-            order.owner,
-            order.token,
-            commitmentOf(order.owner, order.token).sub(agreement.amount)
-        );
-        IbetStandardTokenInterface(order.token).transfer(
-            order.owner,
-            agreement.amount
-        );
+        // 更新処理：元注文の数量を戻す
+        OTCExchangeStorage(storageAddress).setOrderAmount(_orderId, order.amount.add(agreement.amount));
+
         // イベント登録: 決済NG
         emit SettlementNG(
             order.token,

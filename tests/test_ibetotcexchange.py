@@ -1366,12 +1366,12 @@ def test_confirmAgreement_error_7(users, otc_exchange, personal_info):
 
     assert orderbook == [
         _issuer, _trader, to_checksum_address(share_token.address),
-        0, _price, _agent, False
+        _amount_make, _price, _agent, False
     ]
     assert agreement[0:5] == [_trader, _amount_make, _price, True, False]
-    assert balance_maker == deploy_args[5]
+    assert balance_maker == deploy_args[5] - _amount_make
     assert balance_taker == 0
-    assert commitment == 0
+    assert commitment == _amount_make
 
 
 # エラー系8
@@ -1497,12 +1497,12 @@ def test_cancelAgreement_normal_1(users, otc_exchange, personal_info):
 
     assert orderbook == [
         _issuer, _trader, to_checksum_address(share_token.address),
-        0, _price, _agent, False
+        _amount_make, _price, _agent, False
     ]
     assert agreement[0:5] == [_trader, _amount_make, _price, True, False]
-    assert balance_maker == deploy_args[5]
+    assert balance_maker == deploy_args[5] - _amount_make
     assert balance_taker == 0
-    assert commitment == 0
+    assert commitment == _amount_make
 
 
 # エラー系1
@@ -1781,12 +1781,12 @@ def test_cancelAgreement_error_7(users, otc_exchange, personal_info):
 
     assert orderbook == [
         _issuer, _trader, to_checksum_address(share_token.address),
-        0, _price, _agent, False
+        _amount_make, _price, _agent, False
     ]
     assert agreement[0:5] == [_trader, _amount_make, _price, True, False]
-    assert balance_maker == deploy_args[5]
+    assert balance_maker == deploy_args[5] - _amount_make
     assert balance_taker == 0
-    assert commitment == 0
+    assert commitment == _amount_make
 
 
 # エラー系8

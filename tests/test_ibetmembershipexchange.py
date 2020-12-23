@@ -2414,15 +2414,15 @@ def test_confirmAgreement_error_6(users, membership_exchange):
     orderbook = membership_exchange.getOrder(order_id)
     assert orderbook == [
         issuer.address, to_checksum_address(membership_token.address),
-        70, 123, False, agent.address, False
+        100, 123, False, agent.address, False
     ]
 
     # Assert: balance
-    assert membership_token.balanceOf(issuer) == deploy_args[2] - 70
+    assert membership_token.balanceOf(issuer) == deploy_args[2] - 100
     assert membership_token.balanceOf(trader) == 0
 
     # Assert: commitment
-    assert membership_exchange.commitmentOf(issuer, membership_token.address) == 70
+    assert membership_exchange.commitmentOf(issuer, membership_token.address) == 100
 
     # Assert: agreement
     agreement = membership_exchange.getAgreement(order_id, agreement_id)
@@ -2538,15 +2538,15 @@ def test_cancelAgreement_normal_1(users, membership_exchange):
     orderbook = membership_exchange.getOrder(order_id)
     assert orderbook == [
         issuer.address, to_checksum_address(membership_token.address),
-        70, 123, False, agent.address, False
+        100, 123, False, agent.address, False
     ]
 
     # Assert: balance
-    assert membership_token.balanceOf(issuer) == deploy_args[2] - 70
+    assert membership_token.balanceOf(issuer) == deploy_args[2] - 100
     assert membership_token.balanceOf(trader) == 0
 
     # Assert: commitment
-    assert membership_exchange.commitmentOf(issuer, membership_token.address) == 70
+    assert membership_exchange.commitmentOf(issuer, membership_token.address) == 100
 
     # Assert: agreement
     agreement = membership_exchange.getAgreement(order_id, agreement_id)
@@ -2660,15 +2660,15 @@ def test_cancelAgreement_normal_3_1(users, membership_exchange):
     orderbook = membership_exchange.getOrder(order_id)
     assert orderbook == [
         issuer.address, to_checksum_address(membership_token.address),
-        0, 2 ** 256 - 1, False, agent.address, False
+        2 ** 256 - 1, 2 ** 256 - 1, False, agent.address, False
     ]
 
     # Assert: balance
-    assert membership_token.balanceOf(issuer) == deploy_args[2]
+    assert membership_token.balanceOf(issuer) == deploy_args[2] - (2 ** 256 - 1)
     assert membership_token.balanceOf(trader) == 0
 
     # Assert: commitment
-    assert membership_exchange.commitmentOf(issuer, membership_token.address) == 0
+    assert membership_exchange.commitmentOf(issuer, membership_token.address) == 2 ** 256 - 1
 
     # Assert: agreement
     agreement = membership_exchange.getAgreement(order_id, agreement_id)
@@ -3003,15 +3003,15 @@ def test_cancelAgreement_error_6(users, membership_exchange):
     orderbook = membership_exchange.getOrder(order_id)
     assert orderbook == [
         issuer.address, to_checksum_address(membership_token.address),
-        70, 123, False, agent.address, False
+        100, 123, False, agent.address, False
     ]
 
     # Assert: balance
-    assert membership_token.balanceOf(issuer) == deploy_args[2] - 70
+    assert membership_token.balanceOf(issuer) == deploy_args[2] - 100
     assert membership_token.balanceOf(trader) == 0
 
     # Assert: commitment
-    assert membership_exchange.commitmentOf(issuer, membership_token.address) == 70
+    assert membership_exchange.commitmentOf(issuer, membership_token.address) == 100
 
     # Assert: agreement
     agreement = membership_exchange.getAgreement(order_id, agreement_id)

@@ -2638,13 +2638,13 @@ def test_confirmAgreement_error_7(users,
 
     assert orderbook == [
         _issuer, to_checksum_address(bond_token.address),
-        _amount_make - _amount_take,
+        _amount_make,
         _price, False, _agent, False
     ]
     assert agreement[0:5] == [_trader, _amount_take, _price, True, False]
-    assert balance_maker == deploy_args[2] - _amount_make + _amount_take
+    assert balance_maker == deploy_args[2] - _amount_make
     assert balance_taker == 0
-    assert commitment == _amount_make - _amount_take
+    assert commitment == _amount_make
 
     # Assert: last_price
     assert bond_exchange.lastPrice(bond_token.address) == 0
@@ -2706,13 +2706,13 @@ def test_cancelAgreement_normal_1(users,
 
     assert orderbook == [
         _issuer, to_checksum_address(bond_token.address),
-        _amount_make - _amount_take,
+        _amount_make,
         _price, False, _agent, False
     ]
     assert agreement[0:5] == [_trader, _amount_take, _price, True, False]
-    assert balance_maker == deploy_args[2] - _amount_make + _amount_take
+    assert balance_maker == deploy_args[2] - _amount_make
     assert balance_taker == 0
-    assert commitment == _amount_make - _amount_take
+    assert commitment == _amount_make
 
 
 # 正常系2
@@ -3095,13 +3095,13 @@ def test_cancelAgreement_error_7(users,
 
     assert orderbook == [
         _issuer, to_checksum_address(bond_token.address),
-        _amount_make - _amount_take,
+        _amount_make,
         _price, False, _agent, False
     ]
     assert agreement[0:5] == [_trader, _amount_take, _price, True, False]
-    assert balance_maker == deploy_args[2] - _amount_make + _amount_take
+    assert balance_maker == deploy_args[2] - _amount_make
     assert balance_taker == 0
-    assert commitment == _amount_make - _amount_take
+    assert commitment == _amount_make
 
 
 '''
