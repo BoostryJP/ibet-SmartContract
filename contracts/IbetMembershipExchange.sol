@@ -8,7 +8,7 @@
 * http://www.apache.org/licenses/LICENSE-2.0
 *
 * Unless required by applicable law or agreed to in writing,
-* software distributed under the License is distributed onan "AS IS" BASIS,
+* software distributed under the License is distributed on an "AS IS" BASIS,
 * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 *
 * See the License for the specific language governing permissions and
@@ -740,12 +740,9 @@ contract IbetMembershipExchange is Ownable {
                 order.owner, agreement.counterpart, order.price,
                 agreement.amount, order.agent);
         } else {
-            // 更新処理：売り注文の場合、突合相手（買い手）の注文数量だけ注文者（売り手）の預かりを解放
-            //  -> 預かりの引き出し。
-            // 取り消した注文は無効化する（注文中状態に戻さない）
-            setCommitment(order.owner, order.token,
-                commitmentOf(order.owner, order.token).sub(agreement.amount));
-            IbetMembership(order.token).transfer(order.owner,agreement.amount);
+            // 更新処理：元注文の数量を戻す
+            setOrder(_orderId, order.owner, order.token, order.amount.add(agreement.amount),
+                order.price, order.isBuy, order.agent, order.canceled);
             // イベント登録：決済NG
             emit SettlementNG(order.token, _orderId, _agreementId,
                 agreement.counterpart, order.owner, order.price,
