@@ -1,28 +1,20 @@
 ---
 name: Feature request
-about: プロダクトの改善提案
+about: Suggest an idea for this project
 title: "[FEATURE]"
 labels: feature
 assignees: YoshihitoAso
 
 ---
 
-## 対象
-:sob: 株式
-:sob: 債券
-:sob: 会員権
-:sob: クーポン
-:sob: その他
+**Is your feature request related to a problem? Please describe.**
+A clear and concise description of what the problem is. Ex. I'm always frustrated when [...]
 
-## 現状の課題
-あなたが感じている現状のプロダクトの課題について、簡潔明瞭に記載してください。
+**Describe the solution you'd like**
+A clear and concise description of what you want to happen.
 
-## ソリューション案
-課題に関するソリューション案を、簡潔明瞭に記載してください。
-細かい実装方針がすでに明確である場合は、実装方針案について記載してください。
+**Describe alternatives you've considered**
+A clear and concise description of any alternative solutions or features you've considered.
 
-## 代替案
-上記の他に代替案がある場合は記載してください。
-
-## その他
-その他の特記事項がある場合は記載してください。
+**Additional context**
+Add any other context or screenshots about the feature request here.
