@@ -17,7 +17,7 @@
 * SPDX-License-Identifier: Apache-2.0
 */
 
-pragma solidity ^0.4.24;
+pragma solidity ^0.8.0;
 
 import "./SafeMath.sol";
 import "./Ownable.sol";
@@ -25,22 +25,23 @@ import "./IbetStraightBond.sol";
 import "./ExchangeStorage.sol";
 import "./PaymentGateway.sol";
 import "./PersonalInfo.sol";
-import "./RegulatorService.sol";
+import "../interfaces/RegulatorService.sol";
+import "../interfaces/ContractReceiver.sol";
 
 
 /// @title ibet Straight Bond DEX
-contract IbetStraightBondExchange is Ownable {
+contract IbetStraightBondExchange is Ownable, ContractReceiver {
     using SafeMath for uint256;
 
-    /// 約定明細の有効期限
-    /// 現在の設定値は14日で設定している（長期の連休を考慮）
+    // 約定明細の有効期限
+    // 現在の設定値は14日で設定している（長期の連休を考慮）
     uint256 lockingPeriod = 1209600;
 
-    /// ---------------------------------------------------------------
-    /// Event
-    /// ---------------------------------------------------------------
+    // ---------------------------------------------------------------
+    // Event
+    // ---------------------------------------------------------------
 
-    /// Event：注文
+    // Event：注文
     event NewOrder(
         address indexed tokenAddress,
         uint256 orderId,
@@ -51,7 +52,7 @@ contract IbetStraightBondExchange is Ownable {
         address agentAddress
     );
 
-    /// Event：注文取消
+    // Event：注文取消
     event CancelOrder(
         address indexed tokenAddress,
         uint256 orderId,
@@ -62,7 +63,7 @@ contract IbetStraightBondExchange is Ownable {
         address agentAddress
     );
 
-    /// Event：約定
+    // Event：約定
     event Agree(
         address indexed tokenAddress,
         uint256 orderId,
@@ -74,7 +75,7 @@ contract IbetStraightBondExchange is Ownable {
         address agentAddress
     );
 
-    /// Event：決済承認
+    // Event：決済承認
     event SettlementOK(
         address indexed tokenAddress,
         uint256 orderId,
@@ -86,7 +87,7 @@ contract IbetStraightBondExchange is Ownable {
         address agentAddress
     );
 
-    /// Event：決済非承認
+    // Event：決済非承認
     event SettlementNG(
         address indexed tokenAddress,
         uint256 orderId,
@@ -98,7 +99,7 @@ contract IbetStraightBondExchange is Ownable {
         address agentAddress
     );
 
-    /// Event：全引き出し
+    // Event：全引き出し
     event Withdrawal(
         address indexed tokenAddress,
         address indexed accountAddress
@@ -112,7 +113,7 @@ contract IbetStraightBondExchange is Ownable {
     address public storageAddress;
     address public regulatorServiceAddress;
 
-    /// [CONSTRUCTOR]
+    // [CONSTRUCTOR]
     /// @param _paymentGatewayAddress PaymentGatewayコントラクトアドレス
     /// @param _personalInfoAddress PersonalInfoコントラクトアドレス
     /// @param _storageAddress ExchangeStorageコントラクトアドレス
@@ -123,7 +124,6 @@ contract IbetStraightBondExchange is Ownable {
         address _storageAddress,
         address _regulatorServiceAddress
     )
-        public
     {
         paymentGatewayAddress = _paymentGatewayAddress;
         personalInfoAddress = _personalInfoAddress;
@@ -131,11 +131,11 @@ contract IbetStraightBondExchange is Ownable {
         regulatorServiceAddress = _regulatorServiceAddress;
     }
 
-    /// ---------------------------------------------------------------
-    /// Function: Storage
-    /// ---------------------------------------------------------------
+    // ---------------------------------------------------------------
+    // Function: Storage
+    // ---------------------------------------------------------------
 
-    /// 注文情報
+    // 注文情報
     struct Order {
         address owner;
         address token;
@@ -146,7 +146,7 @@ contract IbetStraightBondExchange is Ownable {
         bool canceled; // キャンセル済みフラグ
     }
 
-    /// 約定情報
+    // 約定情報
     struct Agreement {
         address counterpart; // 約定相手
         uint256 amount; // 約定数量
@@ -407,9 +407,9 @@ contract IbetStraightBondExchange is Ownable {
         return true;
     }
 
-    /// ---------------------------------------------------------------
-    /// Function: Logic
-    /// ---------------------------------------------------------------
+    // ---------------------------------------------------------------
+    // Function: Logic
+    // ---------------------------------------------------------------
 
     /// @notice Make注文
     /// @param _token トークンアドレス
@@ -626,7 +626,7 @@ contract IbetStraightBondExchange is Ownable {
         // 更新処理：約定IDをカウントアップ => 約定情報を挿入する
         uint256 agreementId = latestAgreementId(_orderId) + 1;
         setLatestAgreementId(_orderId, agreementId);
-        uint256 expiry = now + lockingPeriod;
+        uint256 expiry = block.timestamp + lockingPeriod;
         setAgreement(_orderId, agreementId, msg.sender, _amount, order.price, false, false, expiry);
 
         // 更新処理：元注文の数量を減らす
@@ -745,7 +745,7 @@ contract IbetStraightBondExchange is Ownable {
             agreement.canceled, agreement.paid, agreement.expiry) =
                 getAgreement(_orderId, _agreementId);
 
-        if (agreement.expiry <= now) { // 約定明細の有効期限を超過している場合
+        if (agreement.expiry <= block.timestamp) { // 約定明細の有効期限を超過している場合
           // <CHK>
           //  1) すでに決済承認済み（支払い済み）の場合
           //  2) すでに決済非承認済み（キャンセル済み）の場合
@@ -831,6 +831,7 @@ contract IbetStraightBondExchange is Ownable {
     /// @param _value デポジット数量
     function tokenFallback(address _from, uint _value, bytes memory /*_data*/)
         public
+        override
     {
         setBalance(
             _from,

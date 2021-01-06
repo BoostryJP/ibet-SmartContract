@@ -17,13 +17,12 @@
 * SPDX-License-Identifier: Apache-2.0
 */
 
-pragma solidity ^0.4.24;
+pragma solidity ^0.8.0;
 
 /// @title ibet Standard Token Interface
-contract IbetStandardTokenInterface {
+abstract contract IbetStandardTokenInterface {
 
-    /// 基本属性情報
-    address public owner; // オーナーのアドレス
+    // 基本属性情報
     string public name; // 名称
     string public symbol; //略称
     uint8 public constant decimals = 0;
@@ -36,29 +35,29 @@ contract IbetStandardTokenInterface {
     /// @notice 残高の参照
     /// @param _owner 保有者のアドレス
     /// @return 残高数量
-    function balanceOf(address _owner) public view returns (uint256);
+    function balanceOf(address _owner) public view virtual returns (uint256);
 
     /// @notice 取引コントラクトの更新
     /// @param _exchange 更新後の取引コントラクト
-    function setTradableExchange(address _exchange) public;
+    function setTradableExchange(address _exchange) public virtual;
 
     /// @notice 問い合わせ先情報の更新
     /// @param _contactInformation 更新後の問い合わせ先情報
-    function setContactInformation(string _contactInformation) public;
+    function setContactInformation(string memory _contactInformation) public virtual;
 
     /// @notice プライバシーポリシーの更新
     /// @param _privacyPolicy 更新後のプライバシーポリシー
-    function setPrivacyPolicy(string _privacyPolicy) public;
+    function setPrivacyPolicy(string memory _privacyPolicy) public virtual;
 
     /// @notice トークンの移転
     /// @param _to 宛先アドレス
     /// @param _value 移転数量
     /// @return 処理結果
-    function transfer(address _to, uint _value) public returns (bool);
+    function transfer(address _to, uint _value) public virtual returns (bool);
 
     /// @notice 取扱ステータスの更新
     /// @param _status 更新後の取扱ステータス
-    function setStatus(bool _status) public;
+    function setStatus(bool _status) public virtual;
 
     /// イベント：移転
     event Transfer(address indexed from, address indexed to, uint256 value);

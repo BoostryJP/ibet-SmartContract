@@ -17,13 +17,11 @@
 * SPDX-License-Identifier: Apache-2.0
 */
 
-pragma solidity ^0.4.24;
-
-import "./Ownable.sol";
+pragma solidity ^0.8.0;
 
 
 /// @title RegulatorServiceの標準インターフェース
-contract RegulatorService {
+abstract contract RegulatorService {
 
     /// @notice 取引可否チェック
     /// @param _participant 取引参加者のアドレス（EOA）
@@ -31,6 +29,7 @@ contract RegulatorService {
     function check(address _participant)
         public
         view
+        virtual
         returns (uint8);
 
 }

@@ -24,7 +24,7 @@ from eth_utils import to_checksum_address
 zero_address = '0x0000000000000000000000000000000000000000'
 
 
-def init_args(exchange_address, personal_info_address):
+def init_args():
     name = 'test_share'
     symbol = 'IBS'
     issue_price = 10000
@@ -33,15 +33,10 @@ def init_args(exchange_address, personal_info_address):
     devidend_record_date = '20200829'
     devidend_payment_date = '20200831'
     cancellation_date = '20191231'
-    contact_information = 'some_contact_information'
-    privacy_policy = 'some_privacy_policy'
-    memo = 'some_memo'
-    transferable = True
 
     deploy_args = [
-        name, symbol, exchange_address, personal_info_address, issue_price, total_supply,
-        devidends, devidend_record_date, devidend_payment_date, cancellation_date,
-        contact_information, privacy_policy, memo, transferable
+        name, symbol, issue_price, total_supply,
+        devidends, devidend_record_date, devidend_payment_date, cancellation_date
     ]
     return deploy_args
 
@@ -52,9 +47,9 @@ TEST_デプロイ
 
 
 # 正常系1: deploy
-def test_deploy_normal_1(IbetShare, users, share_exchange, personal_info):
+def test_deploy_normal_1(IbetShare, users):
     account_address = users['issuer']
-    deploy_args = init_args(share_exchange.address, personal_info.address)
+    deploy_args = init_args()
 
     share_contract = account_address.deploy(
         IbetShare,
@@ -64,142 +59,82 @@ def test_deploy_normal_1(IbetShare, users, share_exchange, personal_info):
     owner_address = share_contract.owner()
     name = share_contract.name()
     symbol = share_contract.symbol()
-    tradable_exchange = share_contract.tradableExchange()
-    personal_info_address = share_contract.personalInfoAddress()
     issue_price = share_contract.issuePrice()
     total_supply = share_contract.totalSupply()
     dividend_information = share_contract.dividendInformation()
     cancellation_date = share_contract.cancellationDate()
-    contact_information = share_contract.contactInformation()
-    privacy_policy = share_contract.privacyPolicy()
-    memo = share_contract.memo()
-    transferable = share_contract.transferable()
 
     assert owner_address == account_address
     assert name == deploy_args[0]
     assert symbol == deploy_args[1]
-    assert tradable_exchange == to_checksum_address(deploy_args[2])
-    assert personal_info_address == to_checksum_address(deploy_args[3])
-    assert issue_price == deploy_args[4]
-    assert total_supply == deploy_args[5]
-    assert dividend_information[0] == deploy_args[6]
-    assert dividend_information[1] == deploy_args[7]
-    assert dividend_information[2] == deploy_args[8]
-    assert cancellation_date == deploy_args[9]
-    assert contact_information == deploy_args[10]
-    assert privacy_policy == deploy_args[11]
-    assert memo == deploy_args[12]
-    assert transferable == deploy_args[13]
+    assert issue_price == deploy_args[2]
+    assert total_supply == deploy_args[3]
+    assert dividend_information[0] == deploy_args[4]
+    assert dividend_information[1] == deploy_args[5]
+    assert dividend_information[2] == deploy_args[6]
+    assert cancellation_date == deploy_args[7]
 
 
 # エラー系1: 入力値の型誤り（name）
-def test_deploy_error_1(users, IbetShare, share_exchange, personal_info):
-    deploy_args = init_args(share_exchange.address, personal_info.address)
+def test_deploy_error_1(users, IbetShare):
+    deploy_args = init_args()
     deploy_args[0] = '0x1596Ff8ED308a83897a731F3C1e814B19E11D68c'
     with pytest.raises(ValueError):
         users['admin'].deploy(IbetShare, *deploy_args)
 
 
 # エラー系2: 入力値の型誤り（symbol）
-def test_deploy_error_2(users, IbetShare, share_exchange, personal_info):
-    deploy_args = init_args(share_exchange.address, personal_info.address)
+def test_deploy_error_2(users, IbetShare):
+    deploy_args = init_args()
     deploy_args[1] = '0x1596Ff8ED308a83897a731F3C1e814B19E11D68c'
     with pytest.raises(ValueError):
         users['admin'].deploy(IbetShare, *deploy_args)
 
 
-# エラー系13: 入力値の型誤り（tradableExchange）
-def test_deploy_error_3(users, IbetShare, share_exchange, personal_info):
-    deploy_args = init_args(share_exchange.address, personal_info.address)
-    deploy_args[2] = '0xaaaa'
-    with pytest.raises(ValueError):
-        users['admin'].deploy(IbetShare, *deploy_args)
-
-
-# エラー系16: 入力値の型誤り（personalInfoAddress）
-def test_deploy_error_4(users, IbetShare, share_exchange, personal_info):
-    deploy_args = init_args(share_exchange.address, personal_info.address)
-    deploy_args[3] = '0xaaaa'
-    with pytest.raises(ValueError):
-        users['admin'].deploy(IbetShare, *deploy_args)
-
-
-# エラー系4: 入力値の型誤り（issuePrice）
-def test_deploy_error_5(users, IbetShare, share_exchange, personal_info):
-    deploy_args = init_args(share_exchange.address, personal_info.address)
-    deploy_args[4] = "a10000"
+# エラー系3: 入力値の型誤り（issuePrice）
+def test_deploy_error_3(users, IbetShare):
+    deploy_args = init_args()
+    deploy_args[2] = "a10000"
     with pytest.raises(TypeError):
         users['admin'].deploy(IbetShare, *deploy_args)
 
 
-# エラー系3: 入力値の型誤り（totalSupply）
-def test_deploy_error_6(users, IbetShare, share_exchange, personal_info):
-    deploy_args = init_args(share_exchange.address, personal_info.address)
-    deploy_args[5] = "a10000"
+# エラー系4: 入力値の型誤り（totalSupply）
+def test_deploy_error_6(users, IbetShare):
+    deploy_args = init_args()
+    deploy_args[3] = "a10000"
     with pytest.raises(TypeError):
         users['admin'].deploy(IbetShare, *deploy_args)
 
 
 # エラー系5: 入力値の型誤り（dividends）
-def test_deploy_error_7(users, IbetShare, share_exchange, personal_info):
-    deploy_args = init_args(share_exchange.address, personal_info.address)
-    deploy_args[6] = "a1000"
+def test_deploy_error_5(users, IbetShare):
+    deploy_args = init_args()
+    deploy_args[4] = "a1000"
     with pytest.raises(TypeError):
         users['admin'].deploy(IbetShare, *deploy_args)
 
 
 # エラー系6: 入力値の型誤り（dividendRecordDate）
-def test_deploy_error_8(users, IbetShare, share_exchange, personal_info):
-    deploy_args = init_args(share_exchange.address, personal_info.address)
+def test_deploy_error_6(users, IbetShare):
+    deploy_args = init_args()
+    deploy_args[5] = '0x1596Ff8ED308a83897a731F3C1e814B19E11D68c'
+    with pytest.raises(ValueError):
+        users['admin'].deploy(IbetShare, *deploy_args)
+
+
+# エラー系7: 入力値の型誤り（dividendPaymentDate）
+def test_deploy_error_7(users, IbetShare):
+    deploy_args = init_args()
+    deploy_args[6] = '0x1596Ff8ED308a83897a731F3C1e814B19E11D68c'
+    with pytest.raises(ValueError):
+        users['admin'].deploy(IbetShare, *deploy_args)
+
+
+# エラー系8: 入力値の型誤り（cancellationDate）
+def test_deploy_error_8(users, IbetShare):
+    deploy_args = init_args()
     deploy_args[7] = '0x1596Ff8ED308a83897a731F3C1e814B19E11D68c'
-    with pytest.raises(ValueError):
-        users['admin'].deploy(IbetShare, *deploy_args)
-
-
-# エラー系6: 入力値の型誤り（dividendPaymentDate）
-def test_deploy_error_9(users, IbetShare, share_exchange, personal_info):
-    deploy_args = init_args(share_exchange.address, personal_info.address)
-    deploy_args[8] = '0x1596Ff8ED308a83897a731F3C1e814B19E11D68c'
-    with pytest.raises(ValueError):
-        users['admin'].deploy(IbetShare, *deploy_args)
-
-
-# エラー系7: 入力値の型誤り（cancellationDate）
-def test_deploy_error_10(users, IbetShare, share_exchange, personal_info):
-    deploy_args = init_args(share_exchange.address, personal_info.address)
-    deploy_args[9] = '0x1596Ff8ED308a83897a731F3C1e814B19E11D68c'
-    with pytest.raises(ValueError):
-        users['admin'].deploy(IbetShare, *deploy_args)
-
-
-# エラー系14: 入力値の型誤り（contactInformation）
-def test_deploy_error_11(users, IbetShare, share_exchange, personal_info):
-    deploy_args = init_args(share_exchange.address, personal_info.address)
-    deploy_args[10] = '0x1596Ff8ED308a83897a731F3C1e814B19E11D68c'
-    with pytest.raises(ValueError):
-        users['admin'].deploy(IbetShare, *deploy_args)
-
-
-# エラー系15: 入力値の型誤り（privacyPolicy）
-def test_deploy_error_12(users, IbetShare, share_exchange, personal_info):
-    deploy_args = init_args(share_exchange.address, personal_info.address)
-    deploy_args[11] = '0x1596Ff8ED308a83897a731F3C1e814B19E11D68c'
-    with pytest.raises(ValueError):
-        users['admin'].deploy(IbetShare, *deploy_args)
-
-
-# エラー系12: 入力値の型誤り（memo）
-def test_deploy_error_13(users, IbetShare, share_exchange, personal_info):
-    deploy_args = init_args(share_exchange.address, personal_info.address)
-    deploy_args[12] = '0x1596Ff8ED308a83897a731F3C1e814B19E11D68c'
-    with pytest.raises(ValueError):
-        users['admin'].deploy(IbetShare, *deploy_args)
-
-
-# エラー系12: 入力値の型誤り（transferable）
-def test_deploy_error_14(users, IbetShare, share_exchange, personal_info):
-    deploy_args = init_args(share_exchange.address, personal_info.address)
-    deploy_args[13] = "True"
     with pytest.raises(ValueError):
         users['admin'].deploy(IbetShare, *deploy_args)
 
@@ -1120,7 +1055,7 @@ def test_unlock_normal_2(users, share_exchange, personal_info):
     trader_locked_amount = share_token.lockedOf(issuer, trader)
 
     assert trader_amount == transfer_amount - lock_amount + unlock_amount
-    assert issuer_amount == deploy_args[5] - transfer_amount + unlock_amount
+    assert issuer_amount == deploy_args[3] - transfer_amount + unlock_amount
     assert trader_locked_amount == lock_amount - unlock_amount - unlock_amount
 
 
@@ -1278,7 +1213,7 @@ def test_transfer_normal_1(users, share_exchange, personal_info):
     from_balance = share_contract.balanceOf(from_address)
     to_balance = share_contract.balanceOf(to_address)
 
-    assert from_balance == deploy_args[5] - transfer_amount
+    assert from_balance == deploy_args[3] - transfer_amount
     assert to_balance == transfer_amount
 
 
@@ -1297,7 +1232,7 @@ def test_transfer_normal_2(users, share_exchange, personal_info):
     from_balance = share_contract.balanceOf(from_address)
     to_balance = share_contract.balanceOf(to_address)
 
-    assert from_balance == deploy_args[5] - transfer_amount
+    assert from_balance == deploy_args[3] - transfer_amount
     assert to_balance == transfer_amount
 
 
@@ -1397,7 +1332,7 @@ def test_transfer_error_5(users, share_exchange, personal_info,
     from_balance = share_contract.balanceOf(from_address)
     to_balance = share_contract.balanceOf(to_address)
 
-    assert from_balance == deploy_args[5]
+    assert from_balance == deploy_args[3]
     assert to_balance == 0
 
 
@@ -1423,7 +1358,7 @@ def test_transfer_error_6(users, share_exchange, personal_info):
     from_balance = share_contract.balanceOf(issuer)
     to_balance = share_contract.balanceOf(to_address)
 
-    assert from_balance == deploy_args[5]
+    assert from_balance == deploy_args[3]
     assert to_balance == 0
 
 
@@ -1445,7 +1380,7 @@ def test_transfer_error_7(users, share_exchange, personal_info):
     from_balance = share_contract.balanceOf(issuer)
     to_balance = share_contract.balanceOf(to_address)
 
-    assert from_balance == deploy_args[5]
+    assert from_balance == deploy_args[3]
     assert to_balance == 0
 
 
@@ -1478,7 +1413,7 @@ def test_transferFrom_normal_1(users, share_exchange, personal_info):
     from_balance = share_contract.balanceOf(_from)
     to_balance = share_contract.balanceOf(_to)
 
-    assert issuer_balance == deploy_args[5] - _value
+    assert issuer_balance == deploy_args[3] - _value
     assert from_balance == 0
     assert to_balance == _value
 
@@ -1567,7 +1502,7 @@ def test_transferFrom_error_4(users, share_exchange, personal_info):
     from_balance = share_contract.balanceOf(_from)
     to_balance = share_contract.balanceOf(_to)
 
-    assert issuer_balance == deploy_args[5] - _value
+    assert issuer_balance == deploy_args[3] - _value
     assert from_balance == _value
     assert to_balance == 0
 
@@ -1596,7 +1531,7 @@ def test_transferFrom_error_5(users, share_exchange, personal_info):
     from_balance = share_contract.balanceOf(_from)
     to_balance = share_contract.balanceOf(_to)
 
-    assert issuer_balance == deploy_args[5] - _value
+    assert issuer_balance == deploy_args[3] - _value
     assert from_balance == _value
     assert to_balance == 0
 
@@ -1831,8 +1766,8 @@ def test_issueFrom_normal_1(users):
     total_supply = share_token.totalSupply()
     balance = share_token.balanceOf(issuer)
 
-    assert total_supply == deploy_args[5] + value
-    assert balance == deploy_args[5] + value
+    assert total_supply == deploy_args[3] + value
+    assert balance == deploy_args[3] + value
 
 
 # 正常系2: 発行 -> 増資（投資家想定のEOAアドレスのアドレスを増資）
@@ -1851,8 +1786,8 @@ def test_issueFrom_normal_2(users):
     balance_issuer = share_token.balanceOf(issuer)
     balance_trader = share_token.balanceOf(trader)
 
-    assert total_supply == deploy_args[5] + value
-    assert balance_issuer == deploy_args[5]
+    assert total_supply == deploy_args[3] + value
+    assert balance_issuer == deploy_args[3]
     assert balance_trader == value
 
 
@@ -1947,7 +1882,7 @@ def test_issueFrom_error_4(users):
     # トークン新規発行
     share_token, deploy_args = utils.issue_share_token(users, zero_address, zero_address)
 
-    issue_amount = 2 ** 256 - deploy_args[5]
+    issue_amount = 2 ** 256 - deploy_args[3]
 
     # 増資（限界値超）
     share_token.issueFrom.transact(issuer, zero_address, issue_amount, {'from': issuer})  # エラーになる
@@ -1957,8 +1892,8 @@ def test_issueFrom_error_4(users):
     total_supply = share_token.totalSupply()
     balance = share_token.balanceOf(issuer)
 
-    assert total_supply == deploy_args[5]
-    assert balance == deploy_args[5]
+    assert total_supply == deploy_args[3]
+    assert balance == deploy_args[3]
 
 
 # エラー系5: 権限エラー
@@ -1975,8 +1910,8 @@ def test_issueFrom_error_5(users):
     total_supply = share_token.totalSupply()
     balance = share_token.balanceOf(issuer)
 
-    assert total_supply == deploy_args[5]
-    assert balance == deploy_args[5]
+    assert total_supply == deploy_args[3]
+    assert balance == deploy_args[3]
 
 
 '''
@@ -1998,8 +1933,8 @@ def test_redeemFrom_normal_1(users):
     total_supply = share_token.totalSupply()
     balance = share_token.balanceOf(issuer)
 
-    assert total_supply == deploy_args[5] - value
-    assert balance == deploy_args[5] - value
+    assert total_supply == deploy_args[3] - value
+    assert balance == deploy_args[3] - value
 
 
 # 正常系2: 発行 -> 減資（投資家想定のEOAアドレスの保有を減資）
@@ -2022,8 +1957,8 @@ def test_redeemFrom_normal_2(users):
     balance_issuer = share_token.balanceOf(issuer)
     balance_trader = share_token.balanceOf(trader)
 
-    assert total_supply == deploy_args[5] - value
-    assert balance_issuer == deploy_args[5] - transfer_amount
+    assert total_supply == deploy_args[3] - value
+    assert balance_issuer == deploy_args[3] - transfer_amount
     assert balance_trader == transfer_amount - value
 
 
@@ -2052,8 +1987,8 @@ def test_redeemFrom_normal_3(users):
     balance_trader = share_token.balanceOf(trader)
     balance_trader_lock = share_token.locked(issuer, trader)
 
-    assert total_supply == deploy_args[5] - value
-    assert balance_issuer == deploy_args[5] - transfer_amount
+    assert total_supply == deploy_args[3] - value
+    assert balance_issuer == deploy_args[3] - transfer_amount
     assert balance_trader == transfer_amount - lock_amount
     assert balance_trader_lock == lock_amount - value
 
@@ -2097,7 +2032,7 @@ def test_redeemFrom_error_3(users):
     # トークン新規発行
     share_token, deploy_args = utils.issue_share_token(users, zero_address, zero_address)
 
-    redeem_amount = deploy_args[5] + 1
+    redeem_amount = deploy_args[3] + 1
 
     # 減資（限界値超）
     share_token.redeemFrom.transact(issuer, zero_address, redeem_amount, {'from': issuer})  # エラーになる
@@ -2105,8 +2040,8 @@ def test_redeemFrom_error_3(users):
     total_supply = share_token.totalSupply()
     balance = share_token.balanceOf(issuer)
 
-    assert total_supply == deploy_args[5]
-    assert balance == deploy_args[5]
+    assert total_supply == deploy_args[3]
+    assert balance == deploy_args[3]
 
 
 # エラー系4: 発行→ロック→減資→ロック数量より下限を超過
@@ -2134,8 +2069,8 @@ def test_redeemFrom_error_4(users):
     trader_balance = share_token.balanceOf(trader)
     trader_locked = share_token.locked(issuer, trader)
 
-    assert total_supply == deploy_args[5]
-    assert issuer_balance == deploy_args[5] - transfer_amount
+    assert total_supply == deploy_args[3]
+    assert issuer_balance == deploy_args[3] - transfer_amount
     assert trader_balance == transfer_amount - lock_amount
     assert trader_locked == lock_amount
 
@@ -2154,5 +2089,5 @@ def test_redeemFrom_error_5(users):
     total_supply = share_token.totalSupply()
     balance = share_token.balanceOf(issuer)
 
-    assert total_supply == deploy_args[5]
-    assert balance == deploy_args[5]
+    assert total_supply == deploy_args[3]
+    assert balance == deploy_args[3]

@@ -17,7 +17,7 @@
 * SPDX-License-Identifier: Apache-2.0
 */
 
-pragma solidity ^0.4.24;
+pragma solidity ^0.8.0;
 
 import "./Ownable.sol";
 
@@ -25,7 +25,7 @@ import "./Ownable.sol";
 /// @title DvP Agent Contract
 contract PaymentGateway is Ownable {
 
-    /// 支払用口座情報
+    // 支払用口座情報
     struct PaymentAccount {
         address account_address; // アカウントアドレス
         address agent_address; // 収納代行業者（Agent）のアドレス
@@ -33,40 +33,40 @@ contract PaymentGateway is Ownable {
         uint8 approval_status; // 認可状況（NONE(0)/NG(1)/OK(2)/WARN(3)/BAN(4)）
     }
 
-    /// 収納代行業者（Agent）
-    /// agent_address => 登録状況
+    // 収納代行業者（Agent）
+    // agent_address => 登録状況
     mapping(address => bool) public agents;
 
     ///支払用口座情報
-    /// account_address => agent_address => PaymentAccount
+    // account_address => agent_address => PaymentAccount
     mapping(address => mapping(address => PaymentAccount)) public payment_accounts;
 
-    /// イベント：収納代行業者追加
+    // イベント：収納代行業者追加
     event AddAgent(address indexed agent_address);
 
-    /// イベント：収納代行業者削除
+    // イベント：収納代行業者削除
     event RemoveAgent(address indexed agent_address);
 
-    /// イベント：登録
+    // イベント：登録
     event Register(address indexed account_address, address indexed agent_address);
 
-    /// イベント：承認
+    // イベント：承認
     event Approve(address indexed account_address, address indexed agent_address);
 
-    /// イベント：警告
+    // イベント：警告
     event Warn(address indexed account_address, address indexed agent_address);
 
-    /// イベント：非承認
+    // イベント：非承認
     event Unapprove(address indexed account_address, address indexed agent_address);
 
-    /// イベント：アカウント停止（BAN）
+    // イベント：アカウント停止（BAN）
     event Ban(address indexed account_address, address indexed agent_address);
 
-    /// イベント：修正
+    // イベント：修正
     event Modify(address indexed account_address, address indexed agent_address);
 
-    /// [CONSTRUCTOR]
-    constructor() public {}
+    // [CONSTRUCTOR]
+    constructor() {}
 
     /// @notice 収納代行業者の追加
     /// @dev オーナーのみ実行可能
@@ -209,7 +209,7 @@ contract PaymentGateway is Ownable {
 
     /// @notice 支払用口座情報の修正
     /// @dev 収納代行業者による修正。口座登録アカウントによる修正はregister()を使う。
-    /// この関数では認可状況の更新は行わない。
+    // この関数では認可状況の更新は行わない。
     /// @param _account_address 銀行口座情報登録アカウントアドレス
     /// @param _encrypted_info 銀行口座情報（暗号化済）
     /// @return 処理結果
