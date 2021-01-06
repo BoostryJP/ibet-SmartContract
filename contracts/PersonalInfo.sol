@@ -71,7 +71,7 @@ contract PersonalInfo {
         view returns (bool)
     {
         Info storage info = personal_info[_account_address][_link_address];
-        if (info.account_address == 0x0000000000000000000000000000000000000000) {
+        if (info.account_address == address(0)) {
             return false;
         } else {
             return true;

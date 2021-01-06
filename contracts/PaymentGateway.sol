@@ -37,7 +37,7 @@ contract PaymentGateway is Ownable {
     // agent_address => 登録状況
     mapping(address => bool) public agents;
 
-    ///支払用口座情報
+    // 支払用口座情報
     // account_address => agent_address => PaymentAccount
     mapping(address => mapping(address => PaymentAccount)) public payment_accounts;
 
@@ -208,8 +208,7 @@ contract PaymentGateway is Ownable {
     }
 
     /// @notice 支払用口座情報の修正
-    /// @dev 収納代行業者による修正。口座登録アカウントによる修正はregister()を使う。
-    // この関数では認可状況の更新は行わない。
+    /// @dev 収納代行業者による修正。口座登録アカウントによる修正はregister()を使う。この関数では認可状況の更新は行わない。
     /// @param _account_address 銀行口座情報登録アカウントアドレス
     /// @param _encrypted_info 銀行口座情報（暗号化済）
     /// @return 処理結果

@@ -526,7 +526,7 @@ contract IbetMembershipExchange is Ownable, ContractReceiver {
         (order.owner, order.token, order.amount, order.price, order.isBuy, order.agent, order.canceled) =
             getOrder(_orderId);
 
-        require(order.owner != 0x0000000000000000000000000000000000000000);
+        require(order.owner != address(0));
 
         if (_isBuy == true) { // 買注文の場合
             // <CHK>

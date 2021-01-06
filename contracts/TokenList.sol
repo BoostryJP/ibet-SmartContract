@@ -52,7 +52,7 @@ contract TokenList is Ownable {
     function register(address _token_address, string memory _token_template)
         public
     {
-        require(tokens[_token_address].token_address == 0x0000000000000000000000000000000000000000);
+        require(tokens[_token_address].token_address == address(0));
         require(Ownable(_token_address).owner() == msg.sender);
         tokens[_token_address].token_address = _token_address;
         tokens[_token_address].token_template = _token_template;
@@ -71,7 +71,7 @@ contract TokenList is Ownable {
     function changeOwner(address _token_address, address _new_owner_address)
         public
     {
-        require(tokens[_token_address].token_address != 0x0000000000000000000000000000000000000000);
+        require(tokens[_token_address].token_address != address(0));
         require(tokens[_token_address].owner_address == msg.sender);
         tokens[_token_address].owner_address = _new_owner_address;
         for (uint i = 0; i < token_list.length; i++) {
