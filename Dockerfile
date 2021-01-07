@@ -46,14 +46,6 @@ RUN apt-get update && \
             jq \
             expect
 
-# Solidity
-USER root
-RUN wget -q https://github.com/ethereum/solidity/releases/download/v0.4.25/solidity-ubuntu-trusty.zip && \
-    unzip solidity-ubuntu-trusty.zip && \
-    cp solc /usr/bin && \
-    chmod 755 /usr/bin/solc && \
-    rm solc lllc solidity-ubuntu-trusty.zip
-
 # AWS CLI
 RUN wget -q https://awscli.amazonaws.com/awscli-exe-linux-$(arch).zip -O awscliv2.zip && \
     unzip awscliv2.zip && \

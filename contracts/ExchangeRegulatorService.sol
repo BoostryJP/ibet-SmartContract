@@ -17,36 +17,36 @@
 * SPDX-License-Identifier: Apache-2.0
 */
 
-pragma solidity ^0.4.24;
+pragma solidity ^0.8.0;
 
 import "./Ownable.sol";
-import "./RegulatorService.sol";
+import "../interfaces/RegulatorService.sol";
 
 
 /// @title Exchangeの取引参加者制限サービス
 /// @dev Exchangeの取引参加者制限
 contract ExchangeRegulatorService is RegulatorService, Ownable {
 
-    /// 取引参加者の登録情報
+    // 取引参加者の登録情報
     struct Participant {
         address participant; // 取引参加者EOAアドレス
         bool locked; // ロック状態
     }
 
-    /// Check success code
+    // Check success code
     uint8 constant private CHECK_SUCCESS = 0;
 
-    /// Check error reason : アカウントロック
+    // Check error reason : アカウントロック
     uint8 constant private CHECK_LOCKED = 1;
 
-    /// Check error reason : アカウント未登録
+    // Check error reason : アカウント未登録
     uint8 constant private CHECK_NOT_REGISTERD = 2;
 
-    /// 購入可能者情報
-    /// whitelist[participantAddress]
+    // 購入可能者情報
+    // whitelist[participantAddress]
     mapping(address => Participant) whitelist;
 
-    /// 参加者登録時イベント
+    // 参加者登録時イベント
     event Register(address indexed participant, bool locked);
 
     /// @dev コントラクトアドレス判定
@@ -88,7 +88,7 @@ contract ExchangeRegulatorService is RegulatorService, Ownable {
     /// @notice 取引参加者参照
     /// @param _participant 取引参加者のEOAアドレス
     /// @return participant 取引参加者のEOAアドレス
-    /// @return ロック状態
+    /// @return locked ロック状態
     function getWhitelist(address _participant)
         public
         view
@@ -104,6 +104,7 @@ contract ExchangeRegulatorService is RegulatorService, Ownable {
     function check(address _participant)
         public
         view
+        override
         returns (uint8)
     {
         if (whitelist[_participant].locked) {

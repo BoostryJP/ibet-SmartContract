@@ -17,7 +17,7 @@
 * SPDX-License-Identifier: Apache-2.0
 */
 
-pragma solidity ^0.4.24;
+pragma solidity ^0.8.0;
 
 import "./SafeMath.sol";
 import "./Ownable.sol";
@@ -30,14 +30,14 @@ import "../interfaces/IbetStandardTokenInterface.sol";
 contract IbetStraightBond is Ownable, IbetStandardTokenInterface {
     using SafeMath for uint256;
 
-    /// 募集申込情報
+    // 募集申込情報
     struct Application {
         uint256 requestedAmount; // 申込数量
         uint256 allottedAmount; // 割当数量
         string data; // その他データ
     }
 
-    /// 属性情報
+    // 属性情報
     uint256 public faceValue; // 額面金額
     uint256 public interestRate; // 年利
     string public interestPaymentDate; // 利払日（JSON）
@@ -52,72 +52,66 @@ contract IbetStraightBond is Ownable, IbetStandardTokenInterface {
     bool public transferable; // 譲渡可否
     address public personalInfoAddress; // 個人情報記帳コントラクト
 
-    /// 残高数量
-    /// account_address => balance
+    // 残高数量
+    // account_address => balance
     mapping(address => uint256) public balances;
 
-    /// 第三者認定情報
-    /// signer_address => status
+    // 第三者認定情報
+    // signer_address => status
     mapping(address => uint8) public signatures;
 
-    /// 商品画像
-    /// image class => url
+    // 商品画像
+    // image class => url
     mapping(uint8 => string) public image_urls;
 
-    /// 募集申込
-    /// account_address => data
+    // 募集申込
+    // account_address => data
     mapping(address => Application) public applications;
 
-    /// 資産ロック認可済アドレス
+    // 資産ロック認可済アドレス
     mapping(address => bool) public authorizedAddress;
 
-    /// ロックされた数量
-    /// address => account_address => balance
+    // ロックされた数量
+    // address => account_address => balance
     mapping(address => mapping(address => uint256)) public locked;
 
-    /// イベント：移転
-    event Transfer(address indexed from, address indexed to, uint256 value);
-
-    /// イベント：認定
+    // イベント：認定
     event Sign(address indexed signer);
 
-    /// イベント：認定取消
+    // イベント：認定取消
     event Unsign(address indexed signer);
 
-    /// イベント：償還
+    // イベント：償還
     event Redeem();
 
-    /// イベント：ステータス変更
-    event ChangeStatus(bool indexed status);
-
-    /// イベント：募集ステータス変更
+    // イベント：募集ステータス変更
     event ChangeInitialOfferingStatus(bool indexed status);
 
-    /// イベント：募集申込
+    // イベント：募集申込
     event ApplyFor(address indexed accountAddress, uint256 amount);
 
-    /// イベント：割当
+    // イベント：割当
     event Allot(address indexed accountAddress, uint256 amount);
 
-    /// イベント：認可
+    // イベント：認可
     event Authorize(address indexed to, bool auth);
 
-    /// イベント：資産ロック
+    // イベント：資産ロック
     event Lock(address indexed from, address indexed target_address, uint256 value);
 
-    /// イベント：資産アンロック
+    // イベント：資産アンロック
     event Unlock(address indexed from, address indexed to, uint256 value);
 
-    /// イベント：追加発行
+    // イベント：追加発行
     event Issue(address indexed from, address indexed target_address, address indexed locked_address, uint256 amount);
 
-    /// イベント：額面金額変更
+    // イベント：額面金額変更
     event ChangeFaceValue(uint256 faceValue);
 
-    /// イベント：償還金額変更
+    // イベント：償還金額変更
     event ChangeRedemptionValue(uint256 redemptionValue);
 
-    /// [CONSTRUCTOR]
+    // [CONSTRUCTOR]
     /// @param _name 名称
     /// @param _symbol 略称
     /// @param _totalSupply 総発行数量
@@ -138,7 +132,6 @@ contract IbetStraightBond is Ownable, IbetStandardTokenInterface {
         string memory _returnAmount,
         string memory _purpose
     )
-        public
     {
         owner = msg.sender;
         name = _name;
@@ -219,6 +212,7 @@ contract IbetStraightBond is Ownable, IbetStandardTokenInterface {
     /// @return success 処理結果
     function transfer(address _to, uint _value)
         public
+        override
         returns (bool success)
     {
         // <CHK>
@@ -276,6 +270,7 @@ contract IbetStraightBond is Ownable, IbetStandardTokenInterface {
     function balanceOf(address _owner)
         public
         view
+        override
         returns (uint256)
     {
         return balances[_owner];
@@ -287,6 +282,7 @@ contract IbetStraightBond is Ownable, IbetStandardTokenInterface {
     function setTradableExchange(address _exchange)
         public
         onlyOwner()
+        override
     {
         tradableExchange = _exchange;
     }
@@ -304,9 +300,10 @@ contract IbetStraightBond is Ownable, IbetStandardTokenInterface {
     /// @notice 問い合わせ先情報の更新
     /// @dev オーナーのみ実行可能
     /// @param _contactInformation 問い合わせ先情報
-    function setContactInformation(string _contactInformation)
+    function setContactInformation(string memory _contactInformation)
         public
         onlyOwner()
+        override
     {
         contactInformation = _contactInformation;
     }
@@ -314,9 +311,10 @@ contract IbetStraightBond is Ownable, IbetStandardTokenInterface {
     /// @notice プライバシーポリシーの更新
     /// @dev オーナーのみ実行可能
     /// @param _privacyPolicy プライバシーポリシー
-    function setPrivacyPolicy(string _privacyPolicy)
+    function setPrivacyPolicy(string memory _privacyPolicy)
         public
         onlyOwner()
+        override
     {
         privacyPolicy = _privacyPolicy;
     }
@@ -389,6 +387,7 @@ contract IbetStraightBond is Ownable, IbetStandardTokenInterface {
     function setStatus(bool _status)
         public
         onlyOwner()
+        override
     {
         status = _status;
         emit ChangeStatus(status);

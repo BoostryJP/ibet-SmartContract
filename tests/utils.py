@@ -69,12 +69,22 @@ def issue_share_token(users, exchange_address, personal_info_address):
     transferable = True
 
     deploy_args = [
-        name, symbol, exchange_address, personal_info_address, issue_price, total_supply,
-        dividends, devidend_record_date, devidend_payment_date, cansellation_date,
-        contact_information, privacy_policy, memo, transferable
+        name, symbol, issue_price, total_supply,
+        dividends, devidend_record_date, devidend_payment_date, cansellation_date
     ]
 
-    share_token = users['issuer'].deploy(IbetShare, *deploy_args)
+    issuer = users['issuer']
+
+    # デプロイ
+    share_token = issuer.deploy(IbetShare, *deploy_args)
+
+    # 各種情報の更新
+    share_token.setTradableExchange.transact(exchange_address, {'from': issuer})
+    share_token.setPersonalInfoAddress.transact(personal_info_address, {'from': issuer})
+    share_token.setContactInformation.transact(contact_information, {'from': issuer})
+    share_token.setPrivacyPolicy.transact(privacy_policy, {'from': issuer})
+    share_token.setMemo.transact(memo, {'from': issuer})
+    share_token.setTransferable.transact(transferable, {'from': issuer})
     return share_token, deploy_args
 
 

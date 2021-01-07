@@ -17,7 +17,7 @@
 * SPDX-License-Identifier: Apache-2.0
 */
 
-pragma solidity ^0.4.24;
+pragma solidity ^0.8.0;
 
 import "./SafeMath.sol";
 import "./Ownable.sol";
@@ -29,44 +29,37 @@ import "../interfaces/IbetStandardTokenInterface.sol";
 contract IbetCoupon is Ownable, IbetStandardTokenInterface {
     using SafeMath for uint;
 
-    /// 属性情報
+    // 属性情報
     string public details; // 詳細
     string public returnDetails; // 特典詳細
     string public expirationDate; // 有効期限
     string public memo; // 補足情報
     bool public transferable; // 譲渡可否
-    bool public status; // 取扱ステータス(True：有効、False：無効)
     bool public initialOfferingStatus; // 新規募集ステータス（True：募集中、False：停止中）
 
-    /// 残高数量
-    /// account_address => balance
+    // 残高数量
+    // account_address => balance
     mapping(address => uint256) public balances;
 
-    /// 使用済数量
-    /// account_address => used quantity
+    // 使用済数量
+    // account_address => used quantity
     mapping(address => uint) public useds;
 
-    /// クーポン画像
-    /// image class => url
+    // クーポン画像
+    // image class => url
     mapping(uint8 => string) public image_urls;
 
-    /// 募集申込
-    /// account_address => data
+    // 募集申込
+    // account_address => data
     mapping(address => string) public applications;
 
-    /// イベント：移転
-    event Transfer(address indexed from, address indexed to, uint value);
-
-    /// イベント：ステータス変更
-    event ChangeStatus(bool indexed status);
-
-    /// イベント:消費
+    // イベント:消費
     event Consume(address indexed consumer, uint balance, uint used, uint value);
 
-    /// イベント：募集申込
+    // イベント：募集申込
     event ApplyFor(address indexed accountAddress);
 
-    /// [CONSTRUCTOR]
+    // [CONSTRUCTOR]
     /// @param _name 名称
     /// @param _symbol 略称
     /// @param _totalSupply 総発行数量
@@ -88,10 +81,9 @@ contract IbetCoupon is Ownable, IbetStandardTokenInterface {
         string memory _memo,
         string memory _expirationDate,
         bool _transferable,
-        string _contactInformation,
-        string _privacyPolicy
+        string memory _contactInformation,
+        string memory _privacyPolicy
     )
-        public
     {
         owner = msg.sender;
         name = _name;
@@ -162,6 +154,7 @@ contract IbetCoupon is Ownable, IbetStandardTokenInterface {
     /// @return success 処理結果
     function transfer(address _to, uint _value)
         public
+        override
         returns (bool success)
     {
         // 譲渡しようとしている数量が残高を超えている場合、エラーを返す
@@ -245,6 +238,7 @@ contract IbetCoupon is Ownable, IbetStandardTokenInterface {
     function balanceOf(address _owner)
         public
         view
+        override
         returns (uint256)
     {
         return balances[_owner];
@@ -267,6 +261,7 @@ contract IbetCoupon is Ownable, IbetStandardTokenInterface {
     function setTradableExchange(address _exchange)
         public
         onlyOwner()
+        override
     {
         tradableExchange = _exchange;
     }
@@ -274,9 +269,10 @@ contract IbetCoupon is Ownable, IbetStandardTokenInterface {
     /// @notice 問い合わせ先情報の更新
     /// @dev オーナーのみ実行可能
     /// @param _contactInformation 問い合わせ先情報
-    function setContactInformation(string _contactInformation)
+    function setContactInformation(string memory _contactInformation)
         public
         onlyOwner()
+        override
     {
         contactInformation = _contactInformation;
     }
@@ -284,9 +280,10 @@ contract IbetCoupon is Ownable, IbetStandardTokenInterface {
     /// @notice プライバシーポリシーの更新
     /// @dev オーナーのみ実行可能
     /// @param _privacyPolicy プライバシーポリシー
-    function setPrivacyPolicy(string _privacyPolicy)
+    function setPrivacyPolicy(string memory _privacyPolicy)
         public
         onlyOwner()
+        override
     {
         privacyPolicy = _privacyPolicy;
     }
@@ -337,6 +334,7 @@ contract IbetCoupon is Ownable, IbetStandardTokenInterface {
     function setStatus(bool _status)
         public
         onlyOwner()
+        override
     {
         status = _status;
         emit ChangeStatus(status);

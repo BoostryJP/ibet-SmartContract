@@ -17,7 +17,7 @@
 * SPDX-License-Identifier: Apache-2.0
 */
 
-pragma solidity ^0.4.24;
+pragma solidity ^0.8.0;
 
 import "./SafeMath.sol";
 import "./Ownable.sol";
@@ -39,7 +39,7 @@ contract IbetShare is Ownable, IbetStandardTokenInterface {
     bool public transferable; // 譲渡可否
     bool public offeringStatus; // 募集ステータス（True：募集中、False：停止中）
 
-    /// 配当情報
+    // 配当情報
     struct DividendInformation {
         uint256 dividends; // 1口あたりの配当金/分配金
         string dividendRecordDate; // 権利確定日
@@ -47,114 +47,89 @@ contract IbetShare is Ownable, IbetStandardTokenInterface {
     }
     DividendInformation public dividendInformation;
 
-    /// 関連URL
-    /// class => url
+    // 関連URL
+    // class => url
     mapping(uint8 => string) public referenceUrls;
 
-    /// 残高数量
-    /// account_address => balance
+    // 残高数量
+    // account_address => balance
     mapping(address => uint256) public balances;
 
-    /// ロック資産数量
-    /// address => account_address => balance
+    // ロック資産数量
+    // address => account_address => balance
     mapping(address => mapping(address => uint256)) public locked;
 
-    /// 募集申込情報
+    // 募集申込情報
     struct Application {
         uint256 requestedAmount; // 申込数量
         uint256 allottedAmount; // 割当数量
         string data; // その他データ
     }
-    /// 募集申込
-    /// account_address => data
+    // 募集申込
+    // account_address => data
     mapping(address => Application) public applications;
 
-    /// イベント：認可
+    // イベント：認可
     event Authorize(address indexed to, bool auth);
 
-    /// イベント：資産ロック
+    // イベント：資産ロック
     event Lock(address indexed from, address indexed target_address, uint256 value);
 
-    /// イベント：資産アンロック
+    // イベント：資産アンロック
     event Unlock(address indexed from, address indexed to, uint256 value);
 
-    /// イベント：配当情報の変更
+    // イベント：配当情報の変更
     event ChangeDividendInformation(
         uint256 dividends,
         string dividendRecordDate,
         string dividendPaymentDate
     );
 
-    /// イベント：移転
-    event Transfer(address indexed from, address indexed to, uint256 value);
-
-    /// イベント：ステータス変更
-    event ChangeStatus(bool indexed status);
-
-    /// イベント：募集ステータス変更
+    // イベント：募集ステータス変更
     event ChangeOfferingStatus(bool indexed status);
 
-    /// イベント：募集申込
+    // イベント：募集申込
     event ApplyFor(address indexed accountAddress, uint256 amount);
 
-    /// イベント：割当
+    // イベント：割当
     event Allot(address indexed accountAddress, uint256 amount);
 
-    /// イベント：増資
+    // イベント：増資
     event Issue(address indexed from, address indexed target_address, address indexed locked_address, uint256 amount);
 
-    /// イベント：減資
+    // イベント：減資
     event Redeem(address indexed from, address indexed target_address, address indexed locked_address, uint256 amount);
 
-    /// [CONSTRUCTOR]
+    // [CONSTRUCTOR]
     /// @param _name 名称
     /// @param _symbol 略称
-    /// @param _tradableExchange 取引コントラクト
-    /// @param _personalInfoAddress 個人情報記帳コントラクト
     /// @param _issuePrice 発行価格
     /// @param _totalSupply 総発行数量
     /// @param _dividends 1口あたりの配当金・分配金
     /// @param _dividendRecordDate 権利確定日
     /// @param _dividendPaymentDate 配当支払日
     /// @param _cancellationDate 消却日
-    /// @param _contactInformation 問い合わせ先
-    /// @param _privacyPolicy プライバシーポリシー
-    /// @param _memo 補足情報
-    /// @param _transferable 譲渡可否
     constructor(
         string memory _name,
         string memory _symbol,
-        address _tradableExchange,
-        address _personalInfoAddress,
         uint256 _issuePrice,
         uint256 _totalSupply,
         uint256 _dividends,
         string memory _dividendRecordDate,
         string memory _dividendPaymentDate,
-        string memory _cancellationDate,
-        string _contactInformation,
-        string _privacyPolicy,
-        string memory _memo,
-        bool _transferable
+        string memory _cancellationDate
     )
-        public
     {
         name = _name;
         symbol = _symbol;
         owner = msg.sender;
-        tradableExchange = _tradableExchange;
-        personalInfoAddress = _personalInfoAddress;
         issuePrice = _issuePrice;
         totalSupply = _totalSupply;
         dividendInformation.dividends = _dividends;
         dividendInformation.dividendRecordDate = _dividendRecordDate;
         dividendInformation.dividendPaymentDate = _dividendPaymentDate;
         cancellationDate = _cancellationDate;
-        contactInformation = _contactInformation;
-        privacyPolicy = _privacyPolicy;
-        memo = _memo;
         status = true;
-        transferable = _transferable;
         balances[owner] = totalSupply;
     }
 
@@ -164,6 +139,7 @@ contract IbetShare is Ownable, IbetStandardTokenInterface {
     function setTradableExchange(address _exchange)
         public
         onlyOwner()
+        override
     {
         tradableExchange = _exchange;
     }
@@ -185,8 +161,8 @@ contract IbetShare is Ownable, IbetStandardTokenInterface {
     /// @param _dividendPaymentDate 配当支払日
     function setDividendInformation(
         uint256 _dividends,
-        string _dividendRecordDate,
-        string _dividendPaymentDate
+        string memory _dividendRecordDate,
+        string memory _dividendPaymentDate
     )
         public
         onlyOwner()
@@ -204,7 +180,7 @@ contract IbetShare is Ownable, IbetStandardTokenInterface {
     /// @notice 消却日の更新
     /// @dev オーナーのみ実行可能
     /// @param _cancellationDate 消却日
-    function setCancellationDate(string _cancellationDate)
+    function setCancellationDate(string memory _cancellationDate)
         public
         onlyOwner()
     {
@@ -225,9 +201,10 @@ contract IbetShare is Ownable, IbetStandardTokenInterface {
     /// @notice 問い合わせ先情報更新
     /// @dev オーナーのみ実行可能
     /// @param _contactInformation 問い合わせ先情報
-    function setContactInformation(string _contactInformation)
+    function setContactInformation(string memory _contactInformation)
         public
         onlyOwner()
+        override
     {
         contactInformation = _contactInformation;
     }
@@ -235,9 +212,10 @@ contract IbetShare is Ownable, IbetStandardTokenInterface {
     /// @notice プライバシーポリシー更新
     /// @dev オーナーのみ実行可能
     /// @param _privacyPolicy プライバシーポリシー
-    function setPrivacyPolicy(string _privacyPolicy)
+    function setPrivacyPolicy(string memory _privacyPolicy)
         public
         onlyOwner()
+        override
     {
         privacyPolicy = _privacyPolicy;
     }
@@ -258,6 +236,7 @@ contract IbetShare is Ownable, IbetStandardTokenInterface {
     function setStatus(bool _status)
         public
         onlyOwner()
+        override
     {
         status = _status;
         emit ChangeStatus(status);
@@ -290,6 +269,7 @@ contract IbetShare is Ownable, IbetStandardTokenInterface {
     function balanceOf(address _address)
         public
         view
+        override
         returns (uint256)
     {
         return balances[_address];
@@ -426,6 +406,7 @@ contract IbetShare is Ownable, IbetStandardTokenInterface {
     /// @return success 処理結果
     function transfer(address _to, uint256 _value)
         public
+        override
         returns (bool success)
     {
         //  数量が残高を超えている場合、エラーを返す
@@ -450,7 +431,7 @@ contract IbetShare is Ownable, IbetStandardTokenInterface {
     /// @param _from 移転元アドレス
     /// @param _to 移転先アドレス
     /// @param _value 移転数量
-    /// @return 処理結果
+    /// @return success 処理結果
     function transferFrom(address _from, address _to, uint256 _value)
         public
         onlyOwner()
