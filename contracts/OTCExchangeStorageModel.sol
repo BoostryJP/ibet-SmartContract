@@ -17,13 +17,13 @@
 * SPDX-License-Identifier: Apache-2.0
 */
 
-pragma solidity ^0.4.24;
+pragma solidity ^0.8.0;
 
 
 /// @title OTCExchangeStorageのModel
 contract OTCExchangeStorageModel {
 
-    /// OTC取引情報
+    // OTC取引情報
     struct OTCOrder {
         address owner; // 取引実行者（売り手）EOAアドレス
         address counterpart; // 買い手EOAアドレス
@@ -34,7 +34,7 @@ contract OTCExchangeStorageModel {
         bool canceled; // キャンセル状態
     }
 
-    /// OTC取引合意情報
+    // OTC取引合意情報
     struct OTCAgreement {
         address counterpart; // 売り手EOAアドレス
         uint256 amount; // 約定数量
@@ -63,7 +63,7 @@ contract OTCExchangeStorageModel {
         bool _canceled
     )
         internal
-        returns (OTCOrder)
+        returns (OTCOrder memory)
     {
         OTCOrder memory _order = OTCOrder(_owner, _counterpart, _token, _amount, _price, _agent, _canceled);
         return _order;
@@ -86,7 +86,7 @@ contract OTCExchangeStorageModel {
         uint256 _expiry
     )
         internal
-        returns (OTCAgreement)
+        returns (OTCAgreement memory)
     {
         OTCAgreement memory _agreement = OTCAgreement(_counterpart, _amount, _price, _canceled, _paid, _expiry);
         return _agreement;

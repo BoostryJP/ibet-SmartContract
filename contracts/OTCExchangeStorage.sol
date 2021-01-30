@@ -17,7 +17,7 @@
 * SPDX-License-Identifier: Apache-2.0
 */
 
-pragma solidity ^0.4.24;
+pragma solidity ^0.8.0;
 pragma experimental ABIEncoderV2;
 
 import "./Ownable.sol";
@@ -28,13 +28,13 @@ import "./OTCExchangeStorageModel.sol";
 /// @dev Storageのアクセスは認可したExchangeコントラクト限定
 contract OTCExchangeStorage is Ownable, OTCExchangeStorageModel {
 
-    constructor() public {}
+    constructor() {}
 
-    /// -------------------------------------------------------------------
-    /// 最新バージョンのExchangeコントラクトアドレス
-    /// -------------------------------------------------------------------
+    // -------------------------------------------------------------------
+    // 最新バージョンのExchangeコントラクトアドレス
+    // -------------------------------------------------------------------
 
-    /// 最新バージョンのExchangeコントラクトアドレス
+    // 最新バージョンのExchangeコントラクトアドレス
     address public latestVersion;
 
     /// @notice Exchangeコントラクトのバージョン更新
@@ -53,12 +53,12 @@ contract OTCExchangeStorage is Ownable, OTCExchangeStorageModel {
         _;
     }
 
-    /// -------------------------------------------------------------------
-    /// 残高数量
-    /// -------------------------------------------------------------------
+    // -------------------------------------------------------------------
+    // 残高数量
+    // -------------------------------------------------------------------
 
-    /// 残高情報
-    /// account => token => balance
+    // 残高情報
+    // account => token => balance
     mapping(address => mapping(address => uint256)) private balances;
 
     /// @notice 残高の更新
@@ -88,12 +88,12 @@ contract OTCExchangeStorage is Ownable, OTCExchangeStorageModel {
         return balances[_account][_token];
     }
 
-    /// -------------------------------------------------------------------
-    /// 拘束数量（約定済みの数量）
-    /// -------------------------------------------------------------------
+    // -------------------------------------------------------------------
+    // 拘束数量（約定済みの数量）
+    // -------------------------------------------------------------------
 
-    /// 拘束数量
-    /// account => token => order commitment
+    // 拘束数量
+    // account => token => order commitment
     mapping(address => mapping(address => uint256)) private commitments;
 
     /// @notice 拘束数量の更新
@@ -120,19 +120,19 @@ contract OTCExchangeStorage is Ownable, OTCExchangeStorageModel {
         return commitments[_account][_token];
     }
 
-    /// -------------------------------------------------------------------
-    /// 注文情報
-    /// -------------------------------------------------------------------
+    // -------------------------------------------------------------------
+    // 注文情報
+    // -------------------------------------------------------------------
 
-    /// 注文情報
-    /// orderId => order
+    // 注文情報
+    // orderId => order
     mapping(uint256 => OTCExchangeStorageModel.OTCOrder) private orderBook;
 
     /// @notice 注文情報の更新
     /// @dev 最新バージョンのExchangeコントラクトのみ実行が可能
     /// @param _orderId 注文ID
     /// @param _order 注文情報
-    function setOrder(uint256 _orderId, OTCExchangeStorageModel.OTCOrder _order)
+    function setOrder(uint256 _orderId, OTCExchangeStorageModel.OTCOrder memory _order)
         public
         onlyLatestVersion()
     {
@@ -222,7 +222,7 @@ contract OTCExchangeStorage is Ownable, OTCExchangeStorageModel {
     function getOrder(uint256 _orderId)
         public
         view
-        returns (OTCExchangeStorageModel.OTCOrder)
+        returns (OTCExchangeStorageModel.OTCOrder memory)
     {
         return orderBook[_orderId];
     }
@@ -304,11 +304,11 @@ contract OTCExchangeStorage is Ownable, OTCExchangeStorageModel {
         return orderBook[_orderId].canceled;
     }
 
-    /// -------------------------------------------------------------------
-    /// 直近注文ID
-    /// -------------------------------------------------------------------
+    // -------------------------------------------------------------------
+    // 直近注文ID
+    // -------------------------------------------------------------------
 
-    /// 直近注文ID
+    // 直近注文ID
     uint256 public latestOrderId = 0;
 
     /// @notice 直近注文IDの更新
@@ -331,12 +331,12 @@ contract OTCExchangeStorage is Ownable, OTCExchangeStorageModel {
         return latestOrderId;
     }
 
-    /// -------------------------------------------------------------------
-    /// 約定情報
-    /// -------------------------------------------------------------------
+    // -------------------------------------------------------------------
+    // 約定情報
+    // -------------------------------------------------------------------
 
-    /// 約定情報
-    /// orderId => agreementId => Agreement
+    // 約定情報
+    // orderId => agreementId => Agreement
     mapping(uint256 => mapping(uint256 => OTCExchangeStorageModel.OTCAgreement)) public agreements;
 
     /// @notice 約定情報の更新
@@ -346,7 +346,7 @@ contract OTCExchangeStorage is Ownable, OTCExchangeStorageModel {
     /// @param _agreement 約定情報
     function setAgreement(
         uint256 _orderId, uint256 _agreementId,
-        OTCExchangeStorageModel.OTCAgreement _agreement
+        OTCExchangeStorageModel.OTCAgreement memory _agreement
     )
         public
         onlyLatestVersion()
@@ -457,7 +457,7 @@ contract OTCExchangeStorage is Ownable, OTCExchangeStorageModel {
     function getAgreement(uint256 _orderId, uint256 _agreementId)
         public
         view
-        returns (OTCExchangeStorageModel.OTCAgreement)
+        returns (OTCExchangeStorageModel.OTCAgreement memory)
     {
         return agreements[_orderId][_agreementId];
     }
@@ -534,12 +534,12 @@ contract OTCExchangeStorage is Ownable, OTCExchangeStorageModel {
         return agreements[_orderId][_agreementId].expiry;
     }
 
-    /// -------------------------------------------------------------------
-    /// 直近約定ID
+    // -------------------------------------------------------------------
+    // 直近約定ID
     ///-------------------------------------------------------------------
 
-    /// 直近約定ID
-    /// orderId => latestAgreementId
+    // 直近約定ID
+    // orderId => latestAgreementId
     mapping(uint256 => uint256) public latestAgreementIds;
 
     /// @notice 直近約定IDの更新

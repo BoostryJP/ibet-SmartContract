@@ -145,7 +145,7 @@ def test_createorder_normal_1(users, otc_exchange, personal_info):
         issuer.address, trader.address, to_checksum_address(share_token.address), _amount, _price,
         agent.address, False
     ]
-    assert share_token.balanceOf(issuer) == deploy_args[5] - _amount
+    assert share_token.balanceOf(issuer) == deploy_args[3] - _amount
     assert commitment == _amount
 
 
@@ -291,7 +291,7 @@ def test_createorder_error_6(users, otc_exchange, personal_info):
     commitment = otc_exchange.commitmentOf(issuer, share_token.address)
     balance = share_token.balanceOf(issuer)
 
-    assert balance == deploy_args[5]
+    assert balance == deploy_args[3]
     assert commitment == 0
 
 
@@ -319,7 +319,7 @@ def test_createorder_error_7(users, otc_exchange, personal_info):
     commitment = otc_exchange.commitmentOf(issuer, share_token.address)
     balance = share_token.balanceOf(issuer)
 
-    assert balance == deploy_args[5]
+    assert balance == deploy_args[3]
     assert commitment == 0
 
 
@@ -348,7 +348,7 @@ def test_createorder_error_8(users, otc_exchange, personal_info):
     commitment = otc_exchange.commitmentOf(issuer, share_token.address)
     balance = share_token.balanceOf(issuer)
 
-    assert balance == deploy_args[5]
+    assert balance == deploy_args[3]
     assert commitment == 0
 
 
@@ -376,7 +376,7 @@ def test_createorder_error_9(users, otc_exchange, personal_info):
     commitment = otc_exchange.commitmentOf(issuer, share_token.address)
     balance = share_token.balanceOf(issuer)
 
-    assert balance == deploy_args[5]
+    assert balance == deploy_args[3]
     assert commitment == 0
 
 
@@ -407,7 +407,7 @@ def test_createorder_error_10(users, otc_exchange, personal_info):
 
     commitment = otc_exchange.commitmentOf(issuer, share_token.address)
     balance = share_token.balanceOf(issuer)
-    assert balance == deploy_args[5]
+    assert balance == deploy_args[3]
     assert commitment == 0
 
 
@@ -466,7 +466,7 @@ def test_cancelOrder_normal_1(users, otc_exchange, personal_info):
     assert orderbook == [
         issuer.address, trader.address, to_checksum_address(share_token.address), _amount, _price, agent.address, True
     ]
-    assert share_token.balanceOf(issuer) == deploy_args[5]
+    assert share_token.balanceOf(issuer) == deploy_args[3]
     assert commitment == 0
 
 
@@ -521,7 +521,7 @@ def test_cancelOrder_error_2(users, otc_exchange, personal_info):
     ]
     # キャンセルがエラーとなっているため、注文中の状態
 
-    assert share_token.balanceOf(issuer) == deploy_args[5] - _amount
+    assert share_token.balanceOf(issuer) == deploy_args[3] - _amount
     assert commitment == 100
 
 
@@ -560,7 +560,7 @@ def test_cancelOrder_error_3(users, otc_exchange, personal_info):
     assert orderbook == [
         issuer.address, trader.address, to_checksum_address(share_token.address), _amount, _price, agent.address, True
     ]
-    assert share_token.balanceOf(issuer) == deploy_args[5]
+    assert share_token.balanceOf(issuer) == deploy_args[3]
     assert commitment == 0
 
 
@@ -597,7 +597,7 @@ def test_cancelOrder_error_4(users, otc_exchange, personal_info):
     assert orderbook == [
         issuer.address, trader.address, to_checksum_address(share_token.address), _amount, _price, agent.address, False
     ]
-    assert balance == deploy_args[5] - _amount
+    assert balance == deploy_args[3] - _amount
     assert commitment == _amount
 
 
@@ -637,7 +637,7 @@ def test_cancelOrder_error_5(users, otc_exchange, personal_info):
     assert orderbook == [
         issuer.address, trader.address, to_checksum_address(share_token.address), _amount, _price, agent.address, False
     ]
-    assert balance == deploy_args[5] - _amount
+    assert balance == deploy_args[3] - _amount
     assert commitment == _amount
 
 
@@ -688,7 +688,7 @@ def test_executeOrder_normal_1(users, otc_exchange, personal_info):
     ]
 
     assert agree[0:5] == [_trader, _amount_make, _price, False, False]
-    assert balance_maker == deploy_args[5] - _amount_make
+    assert balance_maker == deploy_args[3] - _amount_make
     assert balance_taker == 0
     assert commitment == _amount_make
 
@@ -749,7 +749,7 @@ def test_executeOrder_error_2(users, otc_exchange, personal_info):
         _price, _agent, False
     ]
 
-    assert balance_maker == deploy_args[5] - _amount_make
+    assert balance_maker == deploy_args[3] - _amount_make
     assert commitment == _amount_make
 
     assert balance_taker == 0
@@ -792,7 +792,7 @@ def test_executeOrder_error_3(users, otc_exchange, personal_info):
         _price, _agent, False
     ]
 
-    assert balance_maker == deploy_args[5] - _amount_make
+    assert balance_maker == deploy_args[3] - _amount_make
     assert commitment == _amount_make
 
 
@@ -838,7 +838,7 @@ def test_executeOrder_error_4(users, otc_exchange, personal_info):
         _amount_make,  # Make注文の件数から減っていない状態
         _price, _agent, True  # 取消済み状態
     ]
-    assert balance_maker == deploy_args[5]
+    assert balance_maker == deploy_args[3]
     assert balance_taker == 0
     assert commitment == 0
 
@@ -881,7 +881,7 @@ def test_executeOrder_error_5(users, otc_exchange, personal_info):
         _amount_make,  # Make注文の件数から減っていない状態
         _price, _agent, False
     ]
-    assert balance_maker == deploy_args[5] - _amount_make
+    assert balance_maker == deploy_args[3] - _amount_make
     assert balance_taker == 0
     assert commitment == _amount_make
 
@@ -926,7 +926,7 @@ def test_executeOrder_error_6(users, otc_exchange, personal_info):
         _amount_make,  # Make注文の件数から減っていない状態
         _price, _agent, False
     ]
-    assert balance_maker == deploy_args[5] - _amount_make
+    assert balance_maker == deploy_args[3] - _amount_make
     assert balance_taker == 0
     assert commitment == _amount_make
 
@@ -973,7 +973,7 @@ def test_executeOrder_error_7(users, otc_exchange, personal_info):
         _amount_make,  # Make注文の件数から減っていない状態
         _price, _agent, False
     ]
-    assert balance_maker == deploy_args[5] - _amount_make
+    assert balance_maker == deploy_args[3] - _amount_make
     assert balance_taker == 0
     assert balance_attacker == 0
     assert commitment == _amount_make
@@ -1027,7 +1027,7 @@ def test_executeOrder_error_8(users, otc_exchange, personal_info):
     ]
 
     assert agree[0:5] == [_trader, _amount_make, _price, False, False]
-    assert balance_maker == deploy_args[5] - _amount_make
+    assert balance_maker == deploy_args[3] - _amount_make
     assert balance_taker == 0
     assert commitment == _amount_make
 
@@ -1082,7 +1082,7 @@ def test_confirmAgreement_normal_1(users, otc_exchange, personal_info):
     ]
 
     assert agreement[0:5] == [_trader, _amount_make, _price, False, True]
-    assert balance_maker == deploy_args[5] - _amount_make
+    assert balance_maker == deploy_args[3] - _amount_make
     assert balance_taker == _amount_make
     assert commitment == 0
 
@@ -1166,7 +1166,7 @@ def test_confirmAgreement_error_3(users, otc_exchange, personal_info):
     ]
 
     assert agreement[0:5] == [_trader, _amount_make, _price, False, False]
-    assert balance_maker == deploy_args[5] - _amount_make
+    assert balance_maker == deploy_args[3] - _amount_make
     assert balance_taker == 0
     assert commitment == _amount_make
 
@@ -1216,7 +1216,7 @@ def test_confirmAgreement_error_4(users, otc_exchange, personal_info):
     ]
 
     assert agreement[0:5] == [_trader, _amount_make, _price, False, False]
-    assert balance_maker == deploy_args[5] - _amount_make
+    assert balance_maker == deploy_args[3] - _amount_make
     assert balance_taker == 0
     assert commitment == _amount_make
 
@@ -1268,7 +1268,7 @@ def test_confirmAgreement_error_5(users, otc_exchange, personal_info):
         0, _price, _agent, False
     ]
     assert agreement[0:5] == [_trader, _amount_make, _price, False, True]
-    assert balance_maker == deploy_args[5] - _amount_make
+    assert balance_maker == deploy_args[3] - _amount_make
     assert balance_taker == _amount_make
     assert commitment == 0
 
@@ -1317,7 +1317,7 @@ def test_confirmAgreement_error_6(users, otc_exchange, personal_info):
     ]
 
     assert agreement[0:5] == [_trader, _amount_make, _price, False, False]
-    assert balance_maker == deploy_args[5] - _amount_make
+    assert balance_maker == deploy_args[3] - _amount_make
     assert balance_taker == 0
     assert commitment == _amount_make
 
@@ -1369,7 +1369,7 @@ def test_confirmAgreement_error_7(users, otc_exchange, personal_info):
         _amount_make, _price, _agent, False
     ]
     assert agreement[0:5] == [_trader, _amount_make, _price, True, False]
-    assert balance_maker == deploy_args[5] - _amount_make
+    assert balance_maker == deploy_args[3] - _amount_make
     assert balance_taker == 0
     assert commitment == _amount_make
 
@@ -1420,7 +1420,7 @@ def test_confirmAgreement_error_8(users, otc_exchange, personal_info):
         0, _price, _agent, False
     ]
     assert agreement[0:5] == [_trader, _amount_make, _price, False, False]
-    assert balance_maker == deploy_args[5] - _amount_make
+    assert balance_maker == deploy_args[3] - _amount_make
     assert balance_taker == 0
     assert commitment == _amount_make
 
@@ -1500,7 +1500,7 @@ def test_cancelAgreement_normal_1(users, otc_exchange, personal_info):
         _amount_make, _price, _agent, False
     ]
     assert agreement[0:5] == [_trader, _amount_make, _price, True, False]
-    assert balance_maker == deploy_args[5] - _amount_make
+    assert balance_maker == deploy_args[3] - _amount_make
     assert balance_taker == 0
     assert commitment == _amount_make
 
@@ -1583,7 +1583,7 @@ def test_cancelAgreement_error_3(users, otc_exchange, personal_info):
         0, _price, _agent, False
     ]
     assert agreement[0:5] == [_trader, _amount_make, _price, False, False]
-    assert balance_maker == deploy_args[5] - _amount_make
+    assert balance_maker == deploy_args[3] - _amount_make
     assert balance_taker == 0
     assert commitment == _amount_make
 
@@ -1632,7 +1632,7 @@ def test_cancelAgreement_error_4(users, otc_exchange, personal_info):
         0, _price, _agent, False
     ]
     assert agreement[0:5] == [_trader, _amount_make, _price, False, False]
-    assert balance_maker == deploy_args[5] - _amount_make
+    assert balance_maker == deploy_args[3] - _amount_make
     assert balance_taker == 0
     assert commitment == _amount_make
 
@@ -1684,7 +1684,7 @@ def test_cancelAgreement_error_5(users, otc_exchange, personal_info):
         0, _price, _agent, False
     ]
     assert agreement[0:5] == [_trader, _amount_make, _price, False, True]
-    assert balance_maker == deploy_args[5] - _amount_make
+    assert balance_maker == deploy_args[3] - _amount_make
     assert balance_taker == _amount_make
     assert commitment == 0
 
@@ -1732,7 +1732,7 @@ def test_cancelAgreement_error_6(users, otc_exchange, personal_info):
         0, _price, _agent, False
     ]
     assert agreement[0:5] == [_trader, _amount_make, _price, False, False]
-    assert balance_maker == deploy_args[5] - _amount_make
+    assert balance_maker == deploy_args[3] - _amount_make
     assert balance_taker == 0
     assert commitment == _amount_make
 
@@ -1784,7 +1784,7 @@ def test_cancelAgreement_error_7(users, otc_exchange, personal_info):
         _amount_make, _price, _agent, False
     ]
     assert agreement[0:5] == [_trader, _amount_make, _price, True, False]
-    assert balance_maker == deploy_args[5] - _amount_make
+    assert balance_maker == deploy_args[3] - _amount_make
     assert balance_taker == 0
     assert commitment == _amount_make
 
@@ -1835,7 +1835,7 @@ def test_cancelAgreement_error_8(users, otc_exchange, personal_info):
         0, _price, _agent, False
     ]
     assert agreement[0:5] == [_trader, _amount_make, _price, False, False]
-    assert balance_maker == deploy_args[5] - _amount_make
+    assert balance_maker == deploy_args[3] - _amount_make
     assert balance_taker == 0
     assert commitment == _amount_make
 
@@ -1865,7 +1865,7 @@ def test_withdrawAll_normal_1(users, otc_exchange, personal_info):
     balance_token = share_token.balanceOf(_issuer)
 
     assert balance_exchange == 0
-    assert balance_token == deploy_args[5]
+    assert balance_token == deploy_args[3]
 
 
 # 正常系2
@@ -1892,7 +1892,7 @@ def test_withdrawAll_normal_2(users, otc_exchange, personal_info):
     balance_token = share_token.balanceOf(_issuer)
 
     assert balance_exchange == 0
-    assert balance_token == deploy_args[5]
+    assert balance_token == deploy_args[3]
 
 
 # 正常系3
@@ -1927,7 +1927,7 @@ def test_withdrawAll_normal_3(users, otc_exchange, personal_info):
     commitment = otc_exchange.commitmentOf(_issuer, share_token.address)
 
     assert balance_exchange == 0
-    assert balance_token == deploy_args[5] - _amount_make
+    assert balance_token == deploy_args[3] - _amount_make
     assert commitment == _amount_make
 
 
@@ -1970,7 +1970,7 @@ def test_withdrawAll_normal_4(users, otc_exchange, personal_info):
 
     # 約定済みのトークンはそのまま。
     assert balance_exchange == 0
-    assert balance_issuer == deploy_args[5] - _amount_make
+    assert balance_issuer == deploy_args[3] - _amount_make
     assert balance_trader == 0
     assert commitment == _amount_make
 
@@ -2020,7 +2020,7 @@ def test_withdrawAll_normal_5(users, otc_exchange, personal_info):
     commitment = otc_exchange.commitmentOf(_issuer, share_token.address)
 
     assert balance_issuer_exchange == 0
-    assert balance_issuer_token == deploy_args[5] - _amount_make
+    assert balance_issuer_token == deploy_args[3] - _amount_make
     assert balance_trader_exchange == 0
     assert balance_trader_token == _amount_make
     assert commitment == 0
@@ -2064,7 +2064,7 @@ def test_withdrawAll_error_2_1(users, otc_exchange, personal_info):
     balance_token = share_token.balanceOf(_issuer)
 
     assert balance_exchange == 0
-    assert balance_token == deploy_args[5]
+    assert balance_token == deploy_args[3]
 
 
 # エラー系2-2
@@ -2090,7 +2090,7 @@ def test_withdrawAll_error_2_2(users, otc_exchange, personal_info):
     balance_token = share_token.balanceOf(_issuer)
 
     assert balance_exchange == _amount_transfer
-    assert balance_token == deploy_args[5] - _amount_transfer
+    assert balance_token == deploy_args[3] - _amount_transfer
 
 
 # エラー系3
@@ -2117,7 +2117,7 @@ def test_withdrawAll_error_3(users, otc_exchange, personal_info):
     balance_token = share_token.balanceOf(_issuer)
 
     assert balance_exchange == _amount_transfer
-    assert balance_token == deploy_args[5] - _amount_transfer
+    assert balance_token == deploy_args[3] - _amount_transfer
 
 
 '''
@@ -2174,6 +2174,6 @@ def test_updateExchange_normal_1(
         issuer.address, trader.address, to_checksum_address(share_token.address),
         amount_make, price, agent.address, False
     ]
-    assert balance_token == deploy_args[5] - deposit_amount
+    assert balance_token == deploy_args[3] - deposit_amount
     assert balance_exchange == deposit_amount - amount_make
     assert commitment == amount_make

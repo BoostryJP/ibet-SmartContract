@@ -17,7 +17,7 @@
 * SPDX-License-Identifier: Apache-2.0
 */
 
-pragma solidity ^0.4.24;
+pragma solidity ^0.8.0;
 
 import "./Ownable.sol";
 
@@ -26,13 +26,13 @@ import "./Ownable.sol";
 /// @dev Storageのアクセスは認可したExchangeコントラクト限定
 contract ExchangeStorage is Ownable {
 
-    constructor() public {}
+    constructor() {}
 
-    /// -------------------------------------------------------------------
-    /// 最新バージョンのExchangeコントラクトアドレス
-    /// -------------------------------------------------------------------
+    // -------------------------------------------------------------------
+    // 最新バージョンのExchangeコントラクトアドレス
+    // -------------------------------------------------------------------
 
-    /// 最新バージョンのExchangeコントラクトアドレス
+    // 最新バージョンのExchangeコントラクトアドレス
     address public latestVersion;
 
     /// @notice Exchangeコントラクトのバージョン更新
@@ -51,12 +51,12 @@ contract ExchangeStorage is Ownable {
         _;
     }
 
-    /// -------------------------------------------------------------------
-    /// 残高数量
-    /// -------------------------------------------------------------------
+    // -------------------------------------------------------------------
+    // 残高数量
+    // -------------------------------------------------------------------
 
-    /// 残高情報
-    /// account => token => balance
+    // 残高情報
+    // account => token => balance
     mapping(address => mapping(address => uint256)) public balances;
 
     /// @notice 残高の更新
@@ -86,12 +86,12 @@ contract ExchangeStorage is Ownable {
         return balances[_account][_token];
     }
 
-    /// -------------------------------------------------------------------
-    /// 拘束数量
-    /// -------------------------------------------------------------------
+    // -------------------------------------------------------------------
+    // 拘束数量
+    // -------------------------------------------------------------------
 
-    /// 拘束数量
-    /// account => token => order commitment
+    // 拘束数量
+    // account => token => order commitment
     mapping(address => mapping(address => uint256)) public commitments;
 
     /// @notice 拘束数量の更新
@@ -118,9 +118,9 @@ contract ExchangeStorage is Ownable {
         return commitments[_account][_token];
     }
 
-    /// -------------------------------------------------------------------
-    /// 注文情報
-    /// -------------------------------------------------------------------
+    // -------------------------------------------------------------------
+    // 注文情報
+    // -------------------------------------------------------------------
     struct Order {
         address owner; // 注文実行者
         address token; // トークンアドレス
@@ -131,8 +131,8 @@ contract ExchangeStorage is Ownable {
         bool canceled; // キャンセル済み状態
     }
 
-    /// 注文情報
-    /// orderId => order
+    // 注文情報
+    // orderId => order
     mapping(uint256 => Order) public orderBook;
 
     /// @notice 注文情報の更新
@@ -344,11 +344,11 @@ contract ExchangeStorage is Ownable {
         return orderBook[_orderId].canceled;
     }
 
-    /// -------------------------------------------------------------------
-    /// 直近注文ID
-    /// -------------------------------------------------------------------
+    // -------------------------------------------------------------------
+    // 直近注文ID
+    // -------------------------------------------------------------------
 
-    /// 直近注文ID
+    // 直近注文ID
     uint256 public latestOrderId = 0;
 
     /// @notice 直近注文IDの更新
@@ -371,9 +371,9 @@ contract ExchangeStorage is Ownable {
         return latestOrderId;
     }
 
-    /// -------------------------------------------------------------------
-    /// 約定情報
-    /// -------------------------------------------------------------------
+    // -------------------------------------------------------------------
+    // 約定情報
+    // -------------------------------------------------------------------
     struct Agreement {
         address counterpart; // 約定相手
         uint256 amount; // 約定数量
@@ -383,8 +383,8 @@ contract ExchangeStorage is Ownable {
         uint256 expiry; // 有効期限（約定から１４日）
     }
 
-    /// 約定情報
-    /// orderId => agreementId => Agreement
+    // 約定情報
+    // orderId => agreementId => Agreement
     mapping(uint256 => mapping(uint256 => Agreement)) public agreements;
 
     /// @notice 約定情報の更新
@@ -488,12 +488,12 @@ contract ExchangeStorage is Ownable {
     /// @notice 約定情報の参照
     /// @param _orderId 注文ID
     /// @param _agreementId 約定ID
-    /// @return counterpart 約定相手
-    /// @return amount 約定数量
-    /// @return price 約定単価
-    /// @return canceled キャンセル済み状態
-    /// @return paid 支払済状態
-    /// @return expiry 有効期限
+    /// @return _counterpart 約定相手
+    /// @return _amount 約定数量
+    /// @return _price 約定単価
+    /// @return _canceled キャンセル済み状態
+    /// @return _paid 支払済状態
+    /// @return _expiry 有効期限
     function getAgreement(uint256 _orderId, uint256 _agreementId)
         public
         view
@@ -537,7 +537,6 @@ contract ExchangeStorage is Ownable {
     /// @notice 約定情報の参照（役従尾単価）
     /// @param _orderId 注文ID
     /// @param _agreementId 約定ID
-    /// @return counterpart 約定相手
     /// @return 約定単価
     function getAgreementPrice(uint256 _orderId, uint256 _agreementId)
         public
@@ -583,12 +582,12 @@ contract ExchangeStorage is Ownable {
         return agreements[_orderId][_agreementId].expiry;
     }
 
-    /// -------------------------------------------------------------------
-    /// 直近約定ID
-    /// -------------------------------------------------------------------
+    // -------------------------------------------------------------------
+    // 直近約定ID
+    // -------------------------------------------------------------------
 
-    /// 直近約定ID
-    /// orderId => latestAgreementId
+    // 直近約定ID
+    // orderId => latestAgreementId
     mapping(uint256 => uint256) public latestAgreementIds;
 
     /// @notice 直近約定IDの更新
@@ -613,12 +612,12 @@ contract ExchangeStorage is Ownable {
         return latestAgreementIds[_orderId];
     }
 
-    /// -------------------------------------------------------------------
-    /// 現在値
-    /// -------------------------------------------------------------------
+    // -------------------------------------------------------------------
+    // 現在値
+    // -------------------------------------------------------------------
 
-    /// 現在値
-    /// token => latest_price
+    // 現在値
+    // token => latest_price
     mapping(address => uint256) public lastPrice;
 
     /// @notice 現在値の更新

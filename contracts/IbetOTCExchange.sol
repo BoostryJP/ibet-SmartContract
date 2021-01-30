@@ -17,7 +17,7 @@
 * SPDX-License-Identifier: Apache-2.0
 */
 
-pragma solidity ^0.4.24;
+pragma solidity ^0.8.0;
 pragma experimental ABIEncoderV2;
 
 import "./SafeMath.sol";
@@ -27,22 +27,23 @@ import "./OTCExchangeStorageModel.sol";
 import "./OTCExchangeStorage.sol";
 import "./PaymentGateway.sol";
 import "./PersonalInfo.sol";
-import "./RegulatorService.sol";
+import "../interfaces/RegulatorService.sol";
+import "../interfaces/ContractReceiver.sol";
 
 
 /// @title ibet OTC DEX
-contract IbetOTCExchange is Ownable, OTCExchangeStorageModel {
+contract IbetOTCExchange is Ownable, ContractReceiver, OTCExchangeStorageModel {
     using SafeMath for uint256;
 
-    /// 約定明細の有効期限
-    /// 現在の設定値は14日で設定している（長期の連休を考慮）
+    // 約定明細の有効期限
+    // 現在の設定値は14日で設定している（長期の連休を考慮）
     uint256 lockingPeriod = 1209600;
 
-    /// ---------------------------------------------------------------
-    /// Event
-    /// ---------------------------------------------------------------
+    // ---------------------------------------------------------------
+    // Event
+    // ---------------------------------------------------------------
 
-    /// Event：注文
+    // Event：注文
     event NewOrder(
         address indexed tokenAddress,
         uint256 orderId,
@@ -53,7 +54,7 @@ contract IbetOTCExchange is Ownable, OTCExchangeStorageModel {
         address agentAddress
     );
 
-    /// Event: 注文取消
+    // Event: 注文取消
     event CancelOrder(
         address indexed tokenAddress,
         uint256 orderId,
@@ -64,7 +65,7 @@ contract IbetOTCExchange is Ownable, OTCExchangeStorageModel {
         address agentAddress
     );
 
-    /// Event: 約定
+    // Event: 約定
     event Agree(
         address indexed tokenAddress,
         uint256 orderId,
@@ -76,7 +77,7 @@ contract IbetOTCExchange is Ownable, OTCExchangeStorageModel {
         address agentAddress
     );
 
-    /// Event: 決済OK
+    // Event: 決済OK
     event SettlementOK(
         address indexed tokenAddress,
         uint256 orderId,
@@ -88,7 +89,7 @@ contract IbetOTCExchange is Ownable, OTCExchangeStorageModel {
         address agentAddress
     );
 
-    /// Event: 決済NG
+    // Event: 決済NG
     event SettlementNG(
         address indexed tokenAddress,
         uint256 orderId,
@@ -100,21 +101,21 @@ contract IbetOTCExchange is Ownable, OTCExchangeStorageModel {
         address agentAddress
     );
 
-    /// Event: 全引き出し
+    // Event: 全引き出し
     event Withdrawal(
         address indexed tokenAddress,
         address indexed accountAddress
     );
 
-    /// ---------------------------------------------------------------
-    /// Constructor
-    /// ---------------------------------------------------------------
+    // ---------------------------------------------------------------
+    // Constructor
+    // ---------------------------------------------------------------
     address public personalInfoAddress;
     address public paymentGatewayAddress;
     address public storageAddress;
     address public regulatorServiceAddress;
 
-    /// [CONSTRUCTOR]
+    // [CONSTRUCTOR]
     /// @param _paymentGatewayAddress PaymentGatewayコントラクトアドレス
     /// @param _personalInfoAddress PersonalInfoコントラクトアドレス
     /// @param _storageAddress OTCExchangeStorageコントラクトアドレス
@@ -125,7 +126,6 @@ contract IbetOTCExchange is Ownable, OTCExchangeStorageModel {
         address _storageAddress,
         address _regulatorServiceAddress
     )
-        public
     {
         paymentGatewayAddress = _paymentGatewayAddress;
         personalInfoAddress = _personalInfoAddress;
@@ -133,9 +133,9 @@ contract IbetOTCExchange is Ownable, OTCExchangeStorageModel {
         regulatorServiceAddress = _regulatorServiceAddress;
     }
 
-    /// -------------------------------------------------------------------
-    /// Function: getter/setter
-    /// -------------------------------------------------------------------
+    // -------------------------------------------------------------------
+    // Function: getter/setter
+    // -------------------------------------------------------------------
 
     /// @notice 注文情報取得
     /// @param _orderId 注文ID
@@ -389,9 +389,9 @@ contract IbetOTCExchange is Ownable, OTCExchangeStorageModel {
         return true;
     }
 
-    /// ---------------------------------------------------------------
-    /// Function: Logic
-    /// ---------------------------------------------------------------
+    // ---------------------------------------------------------------
+    // Function: Logic
+    // ---------------------------------------------------------------
 
     /// @notice Make注文
     /// @param _counterpart 取引相手（買い手）アドレス
@@ -426,7 +426,7 @@ contract IbetOTCExchange is Ownable, OTCExchangeStorageModel {
         if (
             _amount == 0 ||
             balanceOf(msg.sender, _token) < _amount ||
-            PersonalInfo(personalInfoAddress).isRegistered(msg.sender, IbetStandardTokenInterface(_token).owner()) == false ||
+            PersonalInfo(personalInfoAddress).isRegistered(msg.sender, Ownable(_token).owner()) == false ||
             IbetStandardTokenInterface(_token).status() == false ||
             validateAgent(_agent) == false
         ) {
@@ -577,7 +577,7 @@ contract IbetOTCExchange is Ownable, OTCExchangeStorageModel {
         if (
             msg.sender == order.owner ||
             order.canceled == true ||
-            PersonalInfo(personalInfoAddress).isRegistered(msg.sender,IbetStandardTokenInterface(order.token).owner()) == false ||
+            PersonalInfo(personalInfoAddress).isRegistered(msg.sender,Ownable(order.token).owner()) == false ||
             isContract(msg.sender) == true ||
             IbetStandardTokenInterface(order.token).status() == false ||
             order.amount == 0
@@ -588,7 +588,7 @@ contract IbetOTCExchange is Ownable, OTCExchangeStorageModel {
         // 更新処理: 約定IDをカウントアップ => 約定情報を挿入する
         uint256 agreementId = latestAgreementId(_orderId) + 1;
         setLatestAgreementId(_orderId, agreementId);
-        uint256 expiry = now + lockingPeriod;
+        uint256 expiry = block.timestamp + lockingPeriod;
         setAgreement(
             _orderId,
             agreementId,
@@ -700,7 +700,7 @@ contract IbetOTCExchange is Ownable, OTCExchangeStorageModel {
 
         OTCExchangeStorageModel.OTCAgreement memory agreement = OTCExchangeStorage(storageAddress).getAgreement(_orderId, _agreementId);
 
-        if (agreement.expiry <= now) {
+        if (agreement.expiry <= block.timestamp) {
             // 約定明細の有効期限を超過している場合
             // <CHK>
             //  1) すでに決済承認済み（支払い済み）の場合
@@ -788,6 +788,7 @@ contract IbetOTCExchange is Ownable, OTCExchangeStorageModel {
     /// @param _value デポジット数量
     function tokenFallback(address _from, uint256 _value, bytes memory /*_data*/)
         public
+        override
     {
         setBalance(
             _from,

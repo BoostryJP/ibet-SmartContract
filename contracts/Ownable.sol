@@ -17,19 +17,19 @@
 * SPDX-License-Identifier: Apache-2.0
 */
 
-pragma solidity ^0.4.24;
+pragma solidity ^0.8.0;
 
 
 /// @title Ownership Management Contract
 contract Ownable {
-    /// オーナーアドレス
+    // オーナーアドレス
     address public owner;
 
-    /// イベント：オーナー変更
+    // イベント：オーナー変更
     event OwnershipTransferred(address indexed previousOwner, address indexed newOwner);
 
-    /// [CONSTRUCTOR]
-    constructor() public {
+    // [CONSTRUCTOR]
+    constructor() {
         owner = msg.sender;
     }
 
