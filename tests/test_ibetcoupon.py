@@ -220,6 +220,26 @@ def test_transfer_normal_1(IbetCoupon, users, coupon_exchange):
     assert to_balance == _value
 
 
+# 正常系2: クーポン取引コントラクトへの譲渡
+def test_transfer_normal_2(IbetCoupon, users, coupon_exchange):
+    _from = users['issuer']
+    _to = coupon_exchange.address
+    _value = 100
+
+    # 新規発行
+    deploy_args = init_args(coupon_exchange.address)
+    coupon = _from.deploy(IbetCoupon, *deploy_args)
+
+    # 譲渡
+    coupon.transfer.transact(_to, _value, {'from': _from})
+
+    from_balance = coupon.balanceOf(_from)
+    to_balance = coupon.balanceOf(_to)
+
+    assert from_balance == deploy_args[2] - _value
+    assert to_balance == _value
+
+
 # エラー系1: 入力値の型誤り（To）
 def test_transfer_error_1(IbetCoupon, users, coupon_exchange):
     _from = users['issuer']

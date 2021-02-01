@@ -17,8 +17,8 @@
 * SPDX-License-Identifier: Apache-2.0
 */
 
-pragma solidity ^0.4.24;
+pragma solidity ^0.8.0;
 
-contract ContractReceiver {
-  function tokenFallback(address _from, uint _value, bytes memory _data) public;
+interface ContractReceiver {
+  function tokenFallback(address _from, uint _value, bytes memory _data) external;
 }

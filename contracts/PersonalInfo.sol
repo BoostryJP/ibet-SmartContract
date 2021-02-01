@@ -17,31 +17,31 @@
 * SPDX-License-Identifier: Apache-2.0
 */
 
-pragma solidity ^0.4.24;
+pragma solidity ^0.8.0;
 
 
 /// @title Personal Information Registry
 contract PersonalInfo {
 
-    /// 個人情報
+    // 個人情報
     struct Info {
         address account_address; // アカウントアドレス
         address link_address; // 情報を公開する先のアドレス
         string encrypted_info; // 暗号化済個人情報
     }
 
-    /// 個人情報
-    /// account_address => link_address => info
+    // 個人情報
+    // account_address => link_address => info
     mapping(address => mapping(address => Info)) public personal_info;
 
-    /// イベント：登録
+    // イベント：登録
     event Register(address indexed account_address, address indexed link_address);
 
-    /// イベント：修正
+    // イベント：修正
     event Modify(address indexed account_address, address indexed link_address);
 
-    /// [CONSTRUCTOR]
-    constructor() public {}
+    // [CONSTRUCTOR]
+    constructor() {}
 
     /// @notice 個人情報を登録する
     /// @param _link_address 通知先アドレス
@@ -71,7 +71,7 @@ contract PersonalInfo {
         view returns (bool)
     {
         Info storage info = personal_info[_account_address][_link_address];
-        if (info.account_address == 0x0000000000000000000000000000000000000000) {
+        if (info.account_address == address(0)) {
             return false;
         } else {
             return true;

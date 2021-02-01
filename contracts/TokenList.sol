@@ -17,30 +17,29 @@
 * SPDX-License-Identifier: Apache-2.0
 */
 
-pragma solidity ^0.4.24;
+pragma solidity ^0.8.0;
 
-import "../interfaces/IbetStandardTokenInterface.sol";
 import "./Ownable.sol";
 
 
 /// @title Token Registry
 contract TokenList is Ownable {
 
-    /// トークン情報
+    // トークン情報
     struct Token {
         address token_address; // トークンアドレス
         string token_template; // トークン仕様
         address owner_address; // トークンのオーナー
     }
 
-    /// トークン情報
-    /// token address => Token
+    // トークン情報
+    // token address => Token
     mapping(address => Token) tokens;
 
-    /// トークンリスト
+    // トークンリスト
     Token[] token_list;
 
-    /// イベント：登録
+    // イベント：登録
     event Register(
         address indexed token_address,
         string token_template,
@@ -53,8 +52,8 @@ contract TokenList is Ownable {
     function register(address _token_address, string memory _token_template)
         public
     {
-        require(tokens[_token_address].token_address == 0x0000000000000000000000000000000000000000);
-        require(IbetStandardTokenInterface(_token_address).owner() == msg.sender);
+        require(tokens[_token_address].token_address == address(0));
+        require(Ownable(_token_address).owner() == msg.sender);
         tokens[_token_address].token_address = _token_address;
         tokens[_token_address].token_template = _token_template;
         tokens[_token_address].owner_address = msg.sender;
@@ -72,7 +71,7 @@ contract TokenList is Ownable {
     function changeOwner(address _token_address, address _new_owner_address)
         public
     {
-        require(tokens[_token_address].token_address != 0x0000000000000000000000000000000000000000);
+        require(tokens[_token_address].token_address != address(0));
         require(tokens[_token_address].owner_address == msg.sender);
         tokens[_token_address].owner_address = _new_owner_address;
         for (uint i = 0; i < token_list.length; i++) {
