@@ -5,7 +5,7 @@
 # ibet Smart Contract
 
 <p>
-  <img alt="Version" src="https://img.shields.io/badge/version-1.1-blue.svg?cacheSeconds=2592000" />
+  <img alt="Version" src="https://img.shields.io/badge/version-21.3-blue.svg?cacheSeconds=2592000" />
   <a href="#" target="_blank">
     <img alt="License: Apache--2.0" src="https://img.shields.io/badge/License-Apache--2.0-yellow.svg" />
   </a>
@@ -58,3 +58,11 @@ Alternatively, you can use pytest and run it as follows.
 ```bash
 $ pytest tests/
 ```
+
+## License
+
+ibet-SmartContract is licensed under the Apache License, Version 2.0.
+
+## Sponsors
+
+[BOOSTRY Co., Ltd.](https://boostry.co.jp/)
