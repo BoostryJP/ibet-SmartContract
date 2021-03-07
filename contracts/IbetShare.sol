@@ -432,6 +432,7 @@ contract IbetShare is Ownable, IbetStandardTokenInterface {
     /// @return success 処理結果
     function bulkTransfer(address[] memory _toList, uint[] memory _valueList)
         public
+        override
         returns (bool success)
     {
         // <CHK>
