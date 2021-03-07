@@ -172,6 +172,47 @@ contract IbetCoupon is Ownable, IbetStandardTokenInterface {
         }
     }
 
+    /// @notice トークンの一括移転
+    /// @param _toList 宛先アドレスのリスト
+    /// @param _valueList 移転数量のリスト
+    /// @return success 処理結果
+    function bulkTransfer(address[] memory _toList, uint[] memory _valueList)
+        public
+        returns (bool success)
+    {
+        // <CHK>
+        // リスト長が等しくない場合、エラーを返す
+        if (_toList.length != _valueList.length) revert();
+
+        // <CHK>
+        // 数量が残高を超えている場合、エラーを返す
+        uint totalValue;
+        for(uint i = 0; i < _toList.length; i++) {
+             totalValue += _valueList[i];
+        }
+        if (balanceOf(msg.sender) < totalValue) revert();
+
+        // <CHK>
+        // 譲渡可能ではない場合、エラーを返す
+        if (msg.sender != tradableExchange) {
+            require(transferable == true);
+        }
+
+        bytes memory empty;
+        bool result = false;
+        for(uint i = 0; i < _toList.length; i++) {
+            if (isContract(_toList[i])) {
+                result = transferToContract(_toList[i], _valueList[i], empty);
+            } else {
+                result = transferToAddress(_toList[i], _valueList[i], empty);
+            }
+            if (result == false) {
+                success = false;
+            }
+        }
+        return success;
+    }
+
     /// @notice 強制移転
     /// @dev オーナーのみ実行可能
     /// @param _from 移転元アドレス
