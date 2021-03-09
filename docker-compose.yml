@@ -6,7 +6,9 @@ services:
     ports:
       - "8545:8545"
   ibet-smartcontract:
-    build: "."
+    build:
+      context: .
+      dockerfile: ./tests/Dockerfile
     environment:
       APP_ENV: "dev"
     links:
