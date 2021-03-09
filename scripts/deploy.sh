@@ -126,5 +126,3 @@ if [ "${REFER_ACCOUNT}" != "GETH" ]; then
 else
   python scripts/contract_deploy.py
 fi
-
-}
