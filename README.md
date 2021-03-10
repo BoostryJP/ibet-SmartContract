@@ -40,6 +40,7 @@ You can switch the EOA used for deploying the contract by setting an environment
     * `ETH_ACCOUNT_PASSWORD` - Passphrase to set for generated EOA
 
 4. from AWS Secrets Manager
+    * `AWS_REGION_NAME` - SecretsManager's Region (default: ap-northeast-1)
     * `AWS_SECRETS_ID` - Secret's ARN
     * `ETH_ACCOUNT_PASSWORD` - EOA passphrase
 
