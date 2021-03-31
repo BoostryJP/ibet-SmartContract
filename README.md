@@ -28,21 +28,23 @@ $ brownie compile
 
 You can switch the EOA used for deploying the contract by setting an environment variable.
 
-1. from GETH
-    * `ETH_ACCOUNT_PASSWORD` - The first EOA passphrase.
-
-2. from Ethereum Keystore FILE
-    * `ETH_KEYSTORE_PATH` - Path of the directory where the keystore is stored
+1. GETH
     * `ETH_ACCOUNT_PASSWORD` - EOA passphrase
 
-3. from Ethereum Private Key
-    * `ETH_PRIVATE_KEY` - 64 random hex characters
-    * `ETH_ACCOUNT_PASSWORD` - Passphrase to set for generated EOA
+2. Ethereum Keystore FILE
+    * `ETH_KEYSTORE_PATH` - Path of the directory where the keystore is stored.
+    * `ETH_ACCOUNT_PASSWORD` - EOA passphrase
 
-4. from AWS Secrets Manager
-    * `AWS_REGION_NAME` - SecretsManager's Region (default: ap-northeast-1)
+3. Ethereum Raw Private Key
+    * `ETH_PRIVATE_KEY` - 64 random hex characters
+    * `ETH_ACCOUNT_PASSWORD` - Passphrase to be set for the EOA generated from the private key.
+
+4. AWS Secrets Manager
+    * `AWS_REGION_NAME` - AWS Region (default: ap-northeast-1)
     * `AWS_SECRETS_ID` - Secret's ARN
     * `ETH_ACCOUNT_PASSWORD` - EOA passphrase
+
+To deploy, execute the following command.
 
 ```bash
 $ ./scripts/deploy.sh
