@@ -339,6 +339,271 @@ class TestTransfer:
         assert to_balance == 0
 
 
+# TEST_bulkTransfer
+class TestBulkTransfer:
+
+    #######################################
+    # Normal
+    #######################################
+
+    # Normal_1
+    # Bulk transfer to account address (1 data)
+    def test_bulk_transfer_normal_1(self, users, bond_exchange, personal_info):
+        from_address = users["issuer"]
+        to_address = users["trader"]
+
+        # issue bond token
+        bond_contract, deploy_args = utils.issue_bond_token(
+            users=users,
+            exchange_address=bond_exchange.address,
+            personal_info_address=personal_info.address
+        )
+
+        # register personal info (to_address)
+        utils.register_personal_info(to_address, personal_info, from_address)
+
+        # bulk transfer
+        to_address_list = [to_address]
+        amount_list = [1]
+        bond_contract.bulkTransfer.transact(
+            to_address_list,
+            amount_list,
+            {"from": from_address}
+        )
+
+        # assertion
+        from_balance = bond_contract.balanceOf(from_address)
+        to_balance = bond_contract.balanceOf(to_address)
+        assert from_balance == deploy_args[2] - 1
+        assert to_balance == 1
+
+    # Normal_2
+    # Bulk transfer to account address (multiple data)
+    def test_bulk_transfer_normal_2(self, users, bond_exchange, personal_info):
+        from_address = users["issuer"]
+        to_address = users["trader"]
+
+        # issue bond token
+        bond_contract, deploy_args = utils.issue_bond_token(
+            users=users,
+            exchange_address=bond_exchange.address,
+            personal_info_address=personal_info.address
+        )
+
+        # register personal info (to_address)
+        utils.register_personal_info(to_address, personal_info, from_address)
+
+        # bulk transfer
+        to_address_list = []
+        amount_list = []
+        for i in range(100):
+            to_address_list.append(to_address)
+            amount_list.append(1)
+
+        bond_contract.bulkTransfer.transact(
+            to_address_list,
+            amount_list,
+            {"from": from_address}
+        )
+
+        # assertion
+        from_balance = bond_contract.balanceOf(from_address)
+        to_balance = bond_contract.balanceOf(to_address)
+        assert from_balance == deploy_args[2] - 100
+        assert to_balance == 100
+
+    # Normal_3
+    # Bulk transfer to contract address
+    def test_bulk_transfer_normal_3(self, users, bond_exchange, personal_info):
+        from_address = users["issuer"]
+
+        # issue bond token
+        bond_contract, deploy_args = utils.issue_bond_token(
+            users=users,
+            exchange_address=bond_exchange.address,
+            personal_info_address=personal_info.address
+        )
+
+        # bulk transfer
+        to_address_list = [bond_exchange.address]
+        amount_list = [1]
+        bond_contract.bulkTransfer.transact(
+            to_address_list,
+            amount_list,
+            {"from": from_address}
+        )
+
+        # assertion
+        from_balance = bond_contract.balanceOf(from_address)
+        to_balance = bond_contract.balanceOf(bond_exchange.address)
+        assert from_balance == deploy_args[2] - 1
+        assert to_balance == 1
+
+    #######################################
+    # Error
+    #######################################
+
+    # Error_1_1
+    # Input value type error (to_list)
+    def test_bulk_transfer_error_1_1(self, users, bond_exchange, personal_info):
+        from_address = users["issuer"]
+        to_address = 1234
+        transfer_amount = 1
+
+        # issue bond token
+        bond_contract, deploy_args = utils.issue_bond_token(
+            users=users,
+            exchange_address=bond_exchange.address,
+            personal_info_address=personal_info.address
+        )
+
+        # bulk transfer
+        with pytest.raises(ValueError):
+            bond_contract.bulkTransfer.transact(
+                [to_address],
+                [transfer_amount],
+                {"from": from_address}
+            )
+
+    # Error_1_2
+    # Input value type error (value_list)
+    def test_bulk_transfer_error_1_2(self, users, bond_exchange, personal_info):
+        from_address = users["issuer"]
+        to_address = users["trader"]
+        transfer_amount = "abc"
+
+        # issue bond token
+        bond_contract, deploy_args = utils.issue_bond_token(
+            users=users,
+            exchange_address=bond_exchange.address,
+            personal_info_address=personal_info.address
+        )
+
+        # bulk transfer
+        with pytest.raises(TypeError):
+            bond_contract.bulkTransfer.transact(
+                [to_address],
+                [transfer_amount],
+                {"from": from_address}
+            )
+
+    # Error_2
+    # Over/Under the limit
+    def test_bulk_transfer_error_2(self, users, bond_exchange, personal_info):
+        from_address = users['issuer']
+        to_address = users['trader']
+
+        # issue bond token
+        bond_contract, deploy_args = utils.issue_bond_token(
+            users=users,
+            exchange_address=bond_exchange.address,
+            personal_info_address=personal_info.address
+        )
+
+        # over the upper limit
+        bond_contract.bulkTransfer.transact(
+            [to_address, to_address],
+            [2 ** 256 - 1, 1],
+            {'from': from_address}
+        )  # error
+        from_balance = bond_contract.balanceOf(from_address)
+        to_balance = bond_contract.balanceOf(to_address)
+        assert from_balance == deploy_args[2]
+        assert to_balance == 0
+
+        # under the lower limit
+        with pytest.raises(OverflowError):
+            bond_contract.bulkTransfer.transact(
+                [to_address],
+                [-1],
+                {'from': from_address}
+            )
+
+    # Error_3
+    # Insufficient balance
+    def test_bulk_transfer_error_3(self, users, bond_exchange, personal_info):
+        issuer = users['issuer']
+        from_address = issuer
+        to_address = users['trader']
+
+        # issue bond token
+        bond_contract, deploy_args = utils.issue_bond_token(
+            users=users,
+            exchange_address=bond_exchange.address,
+            personal_info_address=personal_info.address
+        )
+
+        # register personal info (to_address)
+        utils.register_personal_info(to_address, personal_info, from_address)
+
+        # bulk transfer
+        bond_contract.bulkTransfer.transact(
+            [to_address, to_address],
+            [10000, 1],
+            {'from': issuer}
+        )  # error
+        assert bond_contract.balanceOf(issuer) == 10000
+        assert bond_contract.balanceOf(to_address) == 0
+
+    # Error_4
+    # Non-transferable token
+    def test_bulk_transfer_error_4(self, users, bond_exchange, personal_info):
+        issuer = users["issuer"]
+        to_address = users["trader"]
+
+        # issue bond token
+        bond_contract, deploy_args = utils.issue_bond_token(
+            users=users,
+            exchange_address=bond_exchange.address,
+            personal_info_address=personal_info.address
+        )
+
+        # register personal info (to_address)
+        utils.register_personal_info(to_address, personal_info, issuer)
+
+        # change to non-transferable
+        bond_contract.setTransferable.transact(False, {"from": issuer})
+
+        # bulk transfer
+        bond_contract.bulkTransfer.transact(
+            [to_address],
+            [1],
+            {"from": issuer}
+        )  # error
+
+        # assertion
+        from_balance = bond_contract.balanceOf(issuer)
+        to_balance = bond_contract.balanceOf(to_address)
+        assert from_balance == deploy_args[2]
+        assert to_balance == 0
+
+    # Error_5
+    # Transfer to an address with no personal information registered
+    def test_bulk_transfer_error_5(self, users, bond_exchange, personal_info):
+        issuer = users["issuer"]
+        to_address = users["trader"]
+
+        # issue bond token
+        bond_contract, deploy_args = utils.issue_bond_token(
+            users=users,
+            exchange_address=bond_exchange.address,
+            personal_info_address=personal_info.address
+        )
+
+        # bulk transfer
+        bond_contract.bulkTransfer.transact(
+            [to_address],
+            [1],
+            {'from': issuer}
+        )  # error
+
+        # assertion
+        from_balance = bond_contract.balanceOf(issuer)
+        to_balance = bond_contract.balanceOf(to_address)
+        assert from_balance == deploy_args[2]
+        assert to_balance == 0
+
+
 # TEST_トークンの移転（transferFrom）
 class TestTransferFrom:
 

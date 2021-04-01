@@ -55,6 +55,12 @@ abstract contract IbetStandardTokenInterface {
     /// @return 処理結果
     function transfer(address _to, uint _value) public virtual returns (bool);
 
+    /// @notice トークンの一括移転
+    /// @param _toList 宛先アドレスのリスト
+    /// @param _valueList 移転数量のリスト
+    /// @return 処理結果
+    function bulkTransfer(address[] memory _toList, uint[] memory _valueList) public virtual returns (bool);
+
     /// @notice 取扱ステータスの更新
     /// @param _status 更新後の取扱ステータス
     function setStatus(bool _status) public virtual;

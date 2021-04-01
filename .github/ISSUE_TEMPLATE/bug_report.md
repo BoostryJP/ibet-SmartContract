@@ -1,30 +1,20 @@
 ---
 name: Bug report
-about: バグに関するレポート
+about: Create a report to help us improve
 title: "[BUG]"
 labels: bug
 assignees: YoshihitoAso
 
 ---
 
-## 対象
-:sob: 株式
-:sob: 債券
-:sob: 会員権
-:sob: クーポン
-:sob: その他
+### 1. Describe the bug
 
-## バグの説明
-バグに関する簡潔で明瞭な説明を記載してください。
+- A clear and concise description of what the bug is.
 
-## 再現方法
-事象を再現する方法を記載してください。
+### 2. Expected behavior
 
-## 正しい挙動（想定）
-あなたが正しい挙動として想定している内容を記載してください。
+- A clear and concise description of what you expected to happen.
 
-## スクリーンショット
-スクリーンショットがあれば添付してください。
+### 3. Additional context
 
-## その他
-その他の特記事項がある場合は記載してください。
+- Add any other context about the problem here.

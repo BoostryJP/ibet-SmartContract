@@ -23,7 +23,7 @@ RUN apk update \
       expect
 
 # use glibc instead of musl-dev
-# NOTE: This is because if it is musl-dev, an dynamic link error will occur in Solidity compiler.
+# NOTE: This is because if it is musl-dev, a DynamicLinkError will occur in Solidity compiler.
 RUN wget -q -O /etc/apk/keys/sgerrand.rsa.pub https://alpine-pkgs.sgerrand.com/sgerrand.rsa.pub \
  && wget https://github.com/sgerrand/alpine-pkg-glibc/releases/download/2.33-r0/glibc-2.33-r0.apk \
  && apk add glibc-2.33-r0.apk \
@@ -71,4 +71,10 @@ COPY --chown=apl:apl contracts/ /app/ibet-SmartContract/contracts/
 RUN find /app/ibet-SmartContract/ -type d -name __pycache__ | xargs rm -fr \
  && chmod -R 755 /app/ibet-SmartContract/
 
-CMD /app/ibet-SmartContract/scripts/deploy.sh
+# tests deploy
+COPY --chown=apl:apl qa.sh /app/ibet-SmartContract/
+RUN mkdir -p /app/ibet-SmartContract/tests/
+COPY --chown=apl:apl tests/ /app/ibet-SmartContract/tests/
+RUN find /app/ibet-SmartContract/ -type d -name __pycache__ | xargs rm -fr
+
+CMD /app/ibet-SmartContract/qa.sh
