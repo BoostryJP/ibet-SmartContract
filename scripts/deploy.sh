@@ -21,22 +21,31 @@ source ~/.bash_profile
 
 cd /app/ibet-SmartContract
 
-# コントラクトコードのコンパイル（キャッシュを使わずフルビルド）
-brownie compile --all
+SECRETS_KEYSTORE_TMP_PATH="./data/secrets_keystore.json"
+function del_tmp_file() {
+  rm -f ${SECRETS_KEYSTORE_TMP_PATH}
+}
 
 # AWS Secrets Manager
+AWS_REGION_NAME=${AWS_REGION_NAME:-ap-northeast-1}
 if [ ! -z "${AWS_SECRETS_ID}" ]; then
-  SECRETS=$(aws secretsmanager get-secret-value --secret-id  "${AWS_SECRETS_ID}" | jq -r '.SecretString')
+  SECRETS=$(aws secretsmanager get-secret-value --region "${AWS_REGION_NAME}" --secret-id "${AWS_SECRETS_ID}")
   if [ $? -ne 0 ]; then
     exit 1
   fi
-  echo "${SECRETS}" | jq '' > /dev/null 2>&1
+  SECRET_STRING=$(echo "${SECRETS}" | jq -r '.SecretString')
+  if [ $? -ne 0 ]; then
+    exit 1
+  fi
+  echo "${SECRET_STRING}" | jq '' > /dev/null 2>&1
   if [ $? -eq 0 ]; then
     # JSON形式であればKeystoreFileとみなしてファイル保存
-    ETH_KEYSTORE_PATH="/tmp/keystore.json"
-    echo "${SECRETS}" > ${ETH_KEYSTORE_PATH}
+    ETH_KEYSTORE_PATH=${SECRETS_KEYSTORE_TMP_PATH}
+    echo "${SECRET_STRING}" > ${ETH_KEYSTORE_PATH}
+    trap del_tmp_file 0 1 2 3 15
   else
-    ETH_PRIVATE_KEY="${SECRETS}"
+    ETH_PRIVATE_KEY="${SECRET_STRING}"
+    ETH_KEYSTORE_PATH=
   fi
 fi
 
@@ -58,6 +67,9 @@ if [ ! -z "${ETH_KEYSTORE_PATH}" ]; then
         exit 1
       }
     }
+    catch wait result
+    set status [ lindex \$result 3 ]
+    exit \$status
   " || exit 1
   REFER_ACCOUNT=KEYSTORE
 elif [ ! -z "${ETH_PRIVATE_KEY}" ]; then
@@ -79,11 +91,17 @@ elif [ ! -z "${ETH_PRIVATE_KEY}" ]; then
         exit 1
       }
     }
+    catch wait result
+    set status [ lindex \$result 3 ]
+    exit \$status
   " || exit 1
   REFER_ACCOUNT=PRIVATEKEY
 else
   REFER_ACCOUNT=GETH
 fi
+
+# コントラクトコードのコンパイル（キャッシュを使わずフルビルド）
+brownie compile --all
 
 # deploy実施
 export REFER_ACCOUNT
@@ -101,7 +119,10 @@ if [ "${REFER_ACCOUNT}" != "GETH" ]; then
         exit 1
       }
     }
-  "
+    catch wait result
+    set status [ lindex \$result 3 ]
+    exit \$status
+  " || exit 1
 else
   python scripts/contract_deploy.py
 fi
