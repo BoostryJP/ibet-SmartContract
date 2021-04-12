@@ -16,6 +16,7 @@ limitations under the License.
 
 SPDX-License-Identifier: Apache-2.0
 """
+from collections import OrderedDict
 
 import pytest
 import utils
@@ -2231,3 +2232,669 @@ class TestRedeemFrom:
 
         assert total_supply == deploy_args[3]
         assert balance == deploy_args[3]
+
+
+# TEST_applyForTransfer
+class TestApplyForTransfer:
+
+    ################################################################
+    # Normal Case
+    ################################################################
+
+    # Normal_1
+    def test_normal_1(self, users, personal_info):
+        issuer = users["issuer"]
+        to_address = users["user1"]
+
+        # prepare data
+        share_token, deploy_args = utils.issue_share_token(
+            users=users,
+            exchange_address=zero_address,
+            personal_info_address=personal_info.address
+        )
+        share_token.setTransferApprovalRequired(
+            True,
+            {"from": issuer}
+        )
+        utils.register_personal_info(
+            from_account=to_address,
+            personal_info=personal_info,
+            link_address=issuer
+        )
+
+        # apply for transfer
+        tx = share_token.applyForTransfer(
+            to_address,
+            100,
+            "test_data",
+            {"from": issuer}
+        )
+
+        # assertion
+        assert share_token.balances(issuer) == deploy_args[3] - 100
+        assert share_token.balances(to_address) == 0
+        assert share_token.pendingTransfer(issuer) == 100
+        assert share_token.applicationsForTransfer(0) == \
+               (issuer, to_address, 100, True)
+        assert tx.events["ApplyForTransfer"] == OrderedDict([
+            ("index", 0),
+            ("from", issuer),
+            ("to", to_address),
+            ("value", 100),
+            ("data", "test_data")
+        ])
+
+    # Normal_2
+    # Multiple execution
+    def test_normal_2(self, users, personal_info):
+        issuer = users["issuer"]
+        to_address = users["user1"]
+
+        # prepare data
+        share_token, deploy_args = utils.issue_share_token(
+            users=users,
+            exchange_address=zero_address,
+            personal_info_address=personal_info.address
+        )
+        share_token.setTransferApprovalRequired(
+            True,
+            {"from": issuer}
+        )
+        utils.register_personal_info(
+            from_account=to_address,
+            personal_info=personal_info,
+            link_address=issuer
+        )
+
+        # apply for transfer
+        for i in range(2):
+            share_token.applyForTransfer(
+                to_address,
+                100,
+                "test_data",
+                {"from": issuer}
+            )
+
+        # assertion
+        assert share_token.balances(issuer) == deploy_args[3] - 200
+        assert share_token.balances(to_address) == 0
+        assert share_token.pendingTransfer(issuer) == 200
+        for i in range(2):
+            assert share_token.applicationsForTransfer(i) == \
+                   (issuer, to_address, 100, True)
+
+    # Normal_3
+    # Transfer to the issuer
+    # No need to register personal information
+    def test_normal_3(self, users, personal_info):
+        issuer = users["issuer"]
+        to_address = users["issuer"]
+
+        # prepare data
+        share_token, deploy_args = utils.issue_share_token(
+            users=users,
+            exchange_address=zero_address,
+            personal_info_address=personal_info.address
+        )
+        share_token.setTransferApprovalRequired(
+            True,
+            {"from": issuer}
+        )
+
+        # apply for transfer
+        share_token.applyForTransfer(
+            to_address,
+            100,
+            "test_data",
+            {"from": issuer}
+        )
+
+        # assertion
+        assert share_token.balances(issuer) == deploy_args[3] - 100
+        assert share_token.pendingTransfer(issuer) == 100
+        assert share_token.applicationsForTransfer(0) == \
+               (issuer, to_address, 100, True)
+
+    ################################################################
+    # Error Case
+    ################################################################
+
+    # Error_1
+    # transferApprovalRequired = false
+    def test_error_1(self, users):
+        issuer = users["issuer"]
+        to_address = users["user1"]
+
+        # prepare data
+        # default value: transferApprovalRequired = false
+        share_token, deploy_args = utils.issue_share_token(
+            users=users,
+            exchange_address=zero_address,
+            personal_info_address=zero_address
+        )
+
+        # apply for transfer
+        share_token.applyForTransfer(
+            to_address,
+            100,
+            "test_data",
+            {"from": issuer}
+        )
+
+        # assertion
+        assert share_token.balances(issuer) == deploy_args[3]
+        assert share_token.balances(to_address) == 0
+        assert share_token.pendingTransfer(issuer) == 0
+
+    # Error_2
+    # Insufficient balance
+    def test_error_2(self, users):
+        issuer = users["issuer"]
+        to_address = users["user1"]
+
+        # prepare data
+        # default value: transferApprovalRequired = false
+        share_token, deploy_args = utils.issue_share_token(
+            users=users,
+            exchange_address=zero_address,
+            personal_info_address=zero_address
+        )
+        share_token.setTransferApprovalRequired(
+            True,
+            {"from": issuer}
+        )
+
+        # apply for transfer
+        share_token.applyForTransfer(
+            to_address,
+            deploy_args[3] + 1,
+            "test_data",
+            {"from": issuer}
+        )
+
+        # assertion
+        assert share_token.balances(issuer) == deploy_args[3]
+        assert share_token.balances(to_address) == 0
+        assert share_token.pendingTransfer(issuer) == 0
+
+    # Error_3
+    # Personal information is not registered
+    def test_error_3(self, users):
+        issuer = users["issuer"]
+        to_address = users["user1"]
+
+        # prepare data
+        # default value: transferApprovalRequired = false
+        share_token, deploy_args = utils.issue_share_token(
+            users=users,
+            exchange_address=zero_address,
+            personal_info_address=zero_address
+        )
+        share_token.setTransferApprovalRequired(
+            True,
+            {"from": issuer}
+        )
+
+        # apply for transfer
+        share_token.applyForTransfer(
+            to_address,
+            100,
+            "test_data",
+            {"from": issuer}
+        )
+
+        # assertion
+        assert share_token.balances(issuer) == deploy_args[3]
+        assert share_token.balances(to_address) == 0
+        assert share_token.pendingTransfer(issuer) == 0
+
+
+# TEST_cancelTransfer
+class TestCancelTransfer:
+
+    ################################################################
+    # Normal Case
+    ################################################################
+
+    # Normal_1
+    # Applicant
+    def test_normal_1(self, users, personal_info):
+        issuer = users["issuer"]
+        user1 = users["user1"]
+        user2 = users["user2"]
+
+        # prepare data
+        share_token, deploy_args = utils.issue_share_token(
+            users=users,
+            exchange_address=zero_address,
+            personal_info_address=personal_info.address
+        )
+        share_token.transferFrom(
+            issuer,
+            user1,
+            100,
+            {"from": issuer}
+        )
+        share_token.setTransferApprovalRequired(
+            True,
+            {"from": issuer}
+        )
+        utils.register_personal_info(
+            from_account=user2,
+            personal_info=personal_info,
+            link_address=issuer
+        )
+        share_token.applyForTransfer(
+            user2,
+            100,
+            "test_data",
+            {"from": user1}  # from user1 to user2
+        )
+
+        # cancel transfer (from applicant)
+        tx = share_token.cancelTransfer(
+            0,
+            {"from": user1}
+        )
+
+        # assertion
+        assert share_token.balances(issuer) == deploy_args[3] - 100
+        assert share_token.balances(user1) == 100
+        assert share_token.pendingTransfer(user1) == 0
+        assert share_token.applicationsForTransfer(0) == \
+               (user1, user2, 100, False)
+        assert tx.events["CancelTransfer"] == OrderedDict([
+            ("index", 0),
+            ("from", user1),
+            ("to", user2)
+        ])
+
+    # Normal_2
+    # Issuer
+    def test_normal_2(self, users, personal_info):
+        issuer = users["issuer"]
+        user1 = users["user1"]
+        user2 = users["user2"]
+
+        # prepare data
+        share_token, deploy_args = utils.issue_share_token(
+            users=users,
+            exchange_address=zero_address,
+            personal_info_address=personal_info.address
+        )
+        share_token.transferFrom(
+            issuer,
+            user1,
+            100,
+            {"from": issuer}
+        )
+        share_token.setTransferApprovalRequired(
+            True,
+            {"from": issuer}
+        )
+        utils.register_personal_info(
+            from_account=user2,
+            personal_info=personal_info,
+            link_address=issuer
+        )
+        share_token.applyForTransfer(
+            user2,
+            100,
+            "test_data",
+            {"from": user1}  # from user1 to user2
+        )
+
+        # cancel transfer (from issuer)
+        tx = share_token.cancelTransfer(
+            0,
+            {"from": issuer}
+        )
+
+        # assertion
+        assert share_token.balances(issuer) == deploy_args[3] - 100
+        assert share_token.balances(user1) == 100
+        assert share_token.pendingTransfer(user1) == 0
+        assert share_token.applicationsForTransfer(0) == \
+               (user1, user2, 100, False)
+        assert tx.events["CancelTransfer"] == OrderedDict([
+            ("index", 0),
+            ("from", user1),
+            ("to", user2)
+        ])
+
+    ################################################################
+    # Error Case
+    ################################################################
+
+    # Error_1
+    # No execute permission
+    def test_error_1(self, users, personal_info):
+        issuer = users["issuer"]
+        user1 = users["user1"]
+        user2 = users["user2"]
+
+        # prepare data
+        share_token, deploy_args = utils.issue_share_token(
+            users=users,
+            exchange_address=zero_address,
+            personal_info_address=personal_info.address
+        )
+        share_token.transferFrom(
+            issuer,
+            user1,
+            100,
+            {"from": issuer}
+        )
+        share_token.setTransferApprovalRequired(
+            True,
+            {"from": issuer}
+        )
+        utils.register_personal_info(
+            from_account=user2,
+            personal_info=personal_info,
+            link_address=issuer
+        )
+        share_token.applyForTransfer(
+            user2,
+            100,
+            "test_data",
+            {"from": user1}  # from user1 to user2
+        )
+
+        # cancel transfer
+        share_token.cancelTransfer(
+            0,
+            {"from": user2}
+        )
+
+        # assertion
+        assert share_token.balances(issuer) == deploy_args[3] - 100
+        assert share_token.balances(user1) == 0
+        assert share_token.pendingTransfer(user1) == 100
+        assert share_token.applicationsForTransfer(0) == \
+               (user1, user2, 100, True)
+
+    # Error_2
+    # Invalid application
+    def test_error_2(self, users, personal_info):
+        issuer = users["issuer"]
+        user1 = users["user1"]
+        user2 = users["user2"]
+
+        # prepare data
+        share_token, deploy_args = utils.issue_share_token(
+            users=users,
+            exchange_address=zero_address,
+            personal_info_address=personal_info.address
+        )
+        share_token.transferFrom(
+            issuer,
+            user1,
+            100,
+            {"from": issuer}
+        )
+        share_token.setTransferApprovalRequired(
+            True,
+            {"from": issuer}
+        )
+        utils.register_personal_info(
+            from_account=user2,
+            personal_info=personal_info,
+            link_address=issuer
+        )
+        share_token.applyForTransfer(
+            user2,
+            100,
+            "test_data",
+            {"from": user1}  # from user1 to user2
+        )
+
+        # cancel transfer -> Success
+        share_token.cancelTransfer(
+            0,
+            {"from": user1}
+        )
+
+        # assertion (1)
+        assert share_token.balances(issuer) == deploy_args[3] - 100
+        assert share_token.balances(user1) == 100
+        assert share_token.pendingTransfer(user1) == 0
+        assert share_token.applicationsForTransfer(0) == \
+               (user1, user2, 100, False)
+
+        # cancel transfer -> Revert
+        share_token.cancelTransfer(
+            0,
+            {"from": user1}
+        )
+
+        # assertion (2)
+        assert share_token.balances(issuer) == deploy_args[3] - 100
+        assert share_token.balances(user1) == 100
+        assert share_token.pendingTransfer(user1) == 0
+        assert share_token.applicationsForTransfer(0) == \
+               (user1, user2, 100, False)
+
+
+# TEST_cancelTransfer
+class TestApproveTransfer:
+
+    ################################################################
+    # Normal Case
+    ################################################################
+
+    # Normal_1
+    def test_normal_1(self, users, personal_info):
+        issuer = users["issuer"]
+        user1 = users["user1"]
+
+        # prepare data
+        share_token, deploy_args = utils.issue_share_token(
+            users=users,
+            exchange_address=zero_address,
+            personal_info_address=personal_info.address
+        )
+        share_token.setTransferApprovalRequired(
+            True,
+            {"from": issuer}
+        )
+        utils.register_personal_info(
+            from_account=user1,
+            personal_info=personal_info,
+            link_address=issuer
+        )
+        share_token.applyForTransfer(
+            user1,
+            100,
+            "test_data",
+            {"from": issuer}  # from issuer to user1
+        )
+
+        # approve transfer
+        tx = share_token.approveTransfer(
+            0,
+            "test_data",
+            {"from": issuer}
+        )
+
+        # assertion
+        assert share_token.balances(issuer) == deploy_args[3] - 100
+        assert share_token.balances(user1) == 100
+        assert share_token.pendingTransfer(issuer) == 0
+        assert share_token.applicationsForTransfer(0) == \
+               (issuer, user1, 100, False)
+        assert tx.events["ApproveTransfer"] == OrderedDict([
+            ("index", 0),
+            ("from", issuer),
+            ("to", user1),
+            ("data", "test_data")
+        ])
+
+    ################################################################
+    # Error Case
+    ################################################################
+
+    # Error_1
+    # No execute permission
+    def test_error_1(self, users, personal_info):
+        issuer = users["issuer"]
+        user1 = users["user1"]
+
+        # prepare data
+        share_token, deploy_args = utils.issue_share_token(
+            users=users,
+            exchange_address=zero_address,
+            personal_info_address=personal_info.address
+        )
+        share_token.setTransferApprovalRequired(
+            True,
+            {"from": issuer}
+        )
+        utils.register_personal_info(
+            from_account=user1,
+            personal_info=personal_info,
+            link_address=issuer
+        )
+        share_token.applyForTransfer(
+            user1,
+            100,
+            "test_data",
+            {"from": issuer}  # from issuer to user1
+        )
+
+        # approve transfer
+        share_token.approveTransfer(
+            0,
+            "test_data",
+            {"from": user1}
+        )
+
+        # assertion
+        assert share_token.balances(issuer) == deploy_args[3] - 100
+        assert share_token.balances(user1) == 0
+        assert share_token.pendingTransfer(issuer) == 100
+        assert share_token.applicationsForTransfer(0) == \
+               (issuer, user1, 100, True)
+
+    # Error_2
+    # Invalid application
+    def test_error_2(self, users, personal_info):
+        issuer = users["issuer"]
+        user1 = users["user1"]
+
+        # prepare data
+        share_token, deploy_args = utils.issue_share_token(
+            users=users,
+            exchange_address=zero_address,
+            personal_info_address=personal_info.address
+        )
+        share_token.setTransferApprovalRequired(
+            True,
+            {"from": issuer}
+        )
+        utils.register_personal_info(
+            from_account=user1,
+            personal_info=personal_info,
+            link_address=issuer
+        )
+        share_token.applyForTransfer(
+            user1,
+            100,
+            "test_data",
+            {"from": issuer}  # from issuer to user1
+        )
+
+        # approve transfer (1) -> Success
+        share_token.approveTransfer(
+            0,
+            "test_data",
+            {"from": issuer}
+        )
+
+        # assertion
+        assert share_token.balances(issuer) == deploy_args[3] - 100
+        assert share_token.balances(user1) == 100
+        assert share_token.pendingTransfer(issuer) == 0
+        assert share_token.applicationsForTransfer(0) == \
+               (issuer, user1, 100, False)
+
+        # approve transfer (2) -> Revert
+        share_token.approveTransfer(
+            0,
+            "test_data",
+            {"from": issuer}
+        )
+
+        # assertion
+        assert share_token.balances(issuer) == deploy_args[3] - 100
+        assert share_token.balances(user1) == 100
+        assert share_token.pendingTransfer(issuer) == 0
+        assert share_token.applicationsForTransfer(0) == \
+               (issuer, user1, 100, False)
+
+
+# TEST_setTransferApprovalRequired
+class TestSetTransferApprovalRequired:
+
+    ################################################################
+    # Normal Case
+    ################################################################
+
+    # Normal_1
+    # Default value
+    def test_normal_1(self, users, personal_info):
+        # prepare data
+        share_token, deploy_args = utils.issue_share_token(
+            users=users,
+            exchange_address=zero_address,
+            personal_info_address=personal_info.address
+        )
+
+        # assertion
+        assert share_token.transferApprovalRequired() == False
+
+    # Normal_2
+    def test_normal_2(self, users, personal_info):
+        issuer = users["issuer"]
+
+        # prepare data
+        share_token, deploy_args = utils.issue_share_token(
+            users=users,
+            exchange_address=zero_address,
+            personal_info_address=personal_info.address
+        )
+
+        # set required to True
+        tx = share_token.setTransferApprovalRequired(
+            True,
+            {"from": issuer}
+        )
+
+        # assertion
+        assert share_token.transferApprovalRequired() == True
+        assert tx.events["ChangeTransferApprovalRequired"] == OrderedDict([("required", True)])
+
+    ################################################################
+    # Error Case
+    ################################################################
+
+    # Error_1
+    # No execute permission
+    def test_error_1(self, users, personal_info):
+        user1 = users["user1"]
+
+        # prepare data
+        share_token, deploy_args = utils.issue_share_token(
+            users=users,
+            exchange_address=zero_address,
+            personal_info_address=personal_info.address
+        )  # issued by issuer
+
+        # set required to True
+        tx = share_token.setTransferApprovalRequired(
+            True,
+            {"from": user1}
+        )
+
+        # assertion
+        assert share_token.transferApprovalRequired() == False

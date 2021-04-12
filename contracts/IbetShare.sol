@@ -38,6 +38,7 @@ contract IbetShare is Ownable, IbetStandardTokenInterface {
     string public memo; // 補足情報
     bool public transferable; // 譲渡可否
     bool public offeringStatus; // 募集ステータス（True：募集中、False：停止中）
+    bool public transferApprovalRequired; // 移転承認要否
 
     // 配当情報
     struct DividendInformation {
@@ -65,9 +66,26 @@ contract IbetShare is Ownable, IbetStandardTokenInterface {
         uint256 allottedAmount; // 割当数量
         string data; // その他データ
     }
+
     // 募集申込
     // account_address => data
     mapping(address => Application) public applications;
+
+    // 移転申請情報
+    struct ApplicationForTransfer {
+        address from; // 移転元アドレス
+        address to; // 移転先アドレス
+        uint256 amount; // 移転数量
+        bool valid; // 有効・無効
+    }
+
+    // 移転申請
+    // id => data
+    ApplicationForTransfer[] public applicationsForTransfer;
+
+    // 移転待ち数量
+    // address => balance
+    mapping(address => uint256) public pendingTransfer;
 
     // イベント：認可
     event Authorize(address indexed to, bool auth);
@@ -99,6 +117,18 @@ contract IbetShare is Ownable, IbetStandardTokenInterface {
 
     // イベント：減資
     event Redeem(address indexed from, address indexed target_address, address indexed locked_address, uint256 amount);
+
+    // イベント：移転承諾要否変更
+    event ChangeTransferApprovalRequired(bool required);
+
+    // イベント：移転申請
+    event ApplyForTransfer(uint256 indexed index, address from, address to, uint256 value, string data);
+
+    // イベント：移転申請取消
+    event CancelTransfer(uint256 indexed index, address from, address to);
+
+    // イベント：移転承認
+    event ApproveTransfer(uint256 indexed index, address from, address to, string data);
 
     // [CONSTRUCTOR]
     /// @param _name 名称
@@ -263,6 +293,17 @@ contract IbetShare is Ownable, IbetStandardTokenInterface {
         emit ChangeOfferingStatus(_status);
     }
 
+    /// @notice 移転承諾要否の更新
+    /// @dev オーナーのみ実行可能
+    /// @param _required 移転承諾要否
+    function setTransferApprovalRequired(bool _required)
+        public
+        onlyOwner()
+    {
+        transferApprovalRequired = _required;
+        emit ChangeTransferApprovalRequired(_required);
+    }
+
     /// @notice 残高の参照
     /// @param _address 保有者のアドレス
     /// @return 残高数量
@@ -409,8 +450,15 @@ contract IbetShare is Ownable, IbetStandardTokenInterface {
         override
         returns (bool success)
     {
-        //  数量が残高を超えている場合、エラーを返す
-        if (balanceOf(msg.sender) < _value) revert();
+        // <CHK>
+        //  1) 移転時の発行体承諾が必要な場合
+        //  2) 数量が残高を超えている場合
+        //  -> REVERT
+        if (transferApprovalRequired == true ||
+            balanceOf(msg.sender) < _value)
+        {
+            revert();
+        }
 
         // 実行者がtradableExchangeではない場合、譲渡可否のチェックを実施する
         if (msg.sender != tradableExchange) {
@@ -435,6 +483,10 @@ contract IbetShare is Ownable, IbetStandardTokenInterface {
         override
         returns (bool success)
     {
+        // <CHK>
+        // 移転時の発行体承諾が必要な場合、エラーを返す
+        if (transferApprovalRequired == true) revert();
+
         // <CHK>
         // リスト長が等しくない場合、エラーを返す
         if (_toList.length != _valueList.length) revert();
@@ -497,6 +549,108 @@ contract IbetShare is Ownable, IbetStandardTokenInterface {
 
         emit Transfer(_from, _to, _value);
         return true;
+    }
+
+    /// @notice 移転申請
+    /// @param _to 移転先アドレス
+    /// @param _value 移転数量
+    /// @param _data イベント出力用の任意のデータ
+    function applyForTransfer(address _to, uint256 _value, string memory _data)
+        public
+    {
+        // <CHK>
+        //  1) 移転時の発行体承諾が不要な場合
+        //  2) 数量が残高を超えている場合
+        //  -> REVERT
+        if (transferApprovalRequired == false ||
+            balanceOf(msg.sender) < _value)
+        {
+            revert();
+        }
+
+        // <CHK>
+        // 個人情報登録済みチェック
+        // 発行体への移転の場合はチェックを行わない
+        if (_to != owner) {
+            require(PersonalInfo(personalInfoAddress).isRegistered(_to, owner) == true);
+        }
+
+        balances[msg.sender] -= _value;
+        pendingTransfer[msg.sender] += _value;
+
+        uint256 index = applicationsForTransfer.length;
+        applicationsForTransfer.push(ApplicationForTransfer({
+            from: msg.sender,
+            to: _to,
+            amount: _value,
+            valid: true
+        }));
+
+        emit ApplyForTransfer(
+            index,
+            msg.sender,
+            _to,
+            _value,
+            _data
+        );
+    }
+
+    /// @notice 移転申請取消
+    /// @dev 発行体または申請者のみが実行可能
+    /// @param _index 取消対象のインデックス
+    function cancelTransfer(uint256 _index)
+        public
+    {
+        // <CHK>
+        // 実行者自身の移転申請ではない場合 かつ
+        // 実行者が発行体ではない場合
+        // -> REVERT
+        if (applicationsForTransfer[_index].from != msg.sender &&
+            msg.sender != owner)
+        {
+            revert();
+        }
+
+        // <CHK>
+        // すでに無効な申請に対する取消の場合
+        // -> REVERT
+        if (applicationsForTransfer[_index].valid == false) revert();
+
+        balances[applicationsForTransfer[_index].from] += applicationsForTransfer[_index].amount;
+        pendingTransfer[applicationsForTransfer[_index].from] -= applicationsForTransfer[_index].amount;
+
+        applicationsForTransfer[_index].valid = false;
+
+        emit CancelTransfer(
+            _index,
+            applicationsForTransfer[_index].from,
+            applicationsForTransfer[_index].to
+        );
+    }
+
+    /// @notice 移転承認
+    /// @param _index 承認対象のインデックス
+    /// @param _data イベント出力用の任意のデータ
+    function approveTransfer(uint256 _index, string memory _data)
+        public
+        onlyOwner()
+    {
+        // <CHK>
+        // すでに無効な申請に対する取消の場合
+        // -> REVERT
+        if (applicationsForTransfer[_index].valid == false) revert();
+
+        balances[applicationsForTransfer[_index].to] += applicationsForTransfer[_index].amount;
+        pendingTransfer[applicationsForTransfer[_index].from] -= applicationsForTransfer[_index].amount;
+
+        applicationsForTransfer[_index].valid = false;
+
+        emit ApproveTransfer(
+            _index,
+            applicationsForTransfer[_index].from,
+            applicationsForTransfer[_index].to,
+            _data
+        );
     }
 
     /// @notice 募集申込
