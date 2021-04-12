@@ -305,7 +305,7 @@ contract IbetShare is Ownable, IbetStandardTokenInterface {
     function lock(address _target_address, uint256 _value)
         public
     {
-        // ロック対象が認可済みアドレス、まはは発行者アドレスであることをチェック
+        // ロック対象が認可済みアドレス、または発行者アドレスであることをチェック
         require(
             authorizedAddress[_target_address] == true ||
             _target_address == owner
