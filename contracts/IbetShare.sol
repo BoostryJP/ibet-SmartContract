@@ -125,7 +125,7 @@ contract IbetShare is Ownable, IbetStandardTokenInterface {
     event ApplyForTransfer(uint256 indexed index, address from, address to, uint256 value, string data);
 
     // イベント：移転申請取消
-    event CancelTransfer(uint256 indexed index, address from, address to);
+    event CancelTransfer(uint256 indexed index, address from, address to, string data);
 
     // イベント：移転承認
     event ApproveTransfer(uint256 indexed index, address from, address to, string data);
@@ -598,7 +598,8 @@ contract IbetShare is Ownable, IbetStandardTokenInterface {
     /// @notice 移転申請取消
     /// @dev 発行体または申請者のみが実行可能
     /// @param _index 取消対象のインデックス
-    function cancelTransfer(uint256 _index)
+    /// @param _data イベント出力用の任意のデータ
+    function cancelTransfer(uint256 _index, string memory _data)
         public
     {
         // <CHK>
@@ -624,7 +625,8 @@ contract IbetShare is Ownable, IbetStandardTokenInterface {
         emit CancelTransfer(
             _index,
             applicationsForTransfer[_index].from,
-            applicationsForTransfer[_index].to
+            applicationsForTransfer[_index].to,
+            _data
         );
     }
 

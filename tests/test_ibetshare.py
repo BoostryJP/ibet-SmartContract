@@ -2619,6 +2619,7 @@ class TestCancelTransfer:
         # cancel transfer (from applicant)
         tx = share_token.cancelTransfer(
             0,
+            "test_data",
             {"from": user1}
         )
 
@@ -2631,7 +2632,8 @@ class TestCancelTransfer:
         assert tx.events["CancelTransfer"] == OrderedDict([
             ("index", 0),
             ("from", user1),
-            ("to", user2)
+            ("to", user2),
+            ("data", "test_data")
         ])
 
     # Normal_2
@@ -2672,6 +2674,7 @@ class TestCancelTransfer:
         # cancel transfer (from issuer)
         tx = share_token.cancelTransfer(
             0,
+            "test_data",
             {"from": issuer}
         )
 
@@ -2684,7 +2687,8 @@ class TestCancelTransfer:
         assert tx.events["CancelTransfer"] == OrderedDict([
             ("index", 0),
             ("from", user1),
-            ("to", user2)
+            ("to", user2),
+            ("data", "test_data")
         ])
 
     ################################################################
@@ -2729,6 +2733,7 @@ class TestCancelTransfer:
         # cancel transfer
         share_token.cancelTransfer(
             0,
+            "test_data",
             {"from": user2}
         )
 
@@ -2777,6 +2782,7 @@ class TestCancelTransfer:
         # cancel transfer -> Success
         share_token.cancelTransfer(
             0,
+            "test_data",
             {"from": user1}
         )
 
@@ -2790,6 +2796,7 @@ class TestCancelTransfer:
         # cancel transfer -> Revert
         share_token.cancelTransfer(
             0,
+            "test_data",
             {"from": user1}
         )
 
@@ -2801,7 +2808,7 @@ class TestCancelTransfer:
                (user1, user2, 100, False)
 
 
-# TEST_cancelTransfer
+# TEST_approveTransfer
 class TestApproveTransfer:
 
     ################################################################
