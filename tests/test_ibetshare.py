@@ -1118,184 +1118,279 @@ class TestUnlock:
 # TEST_transfer
 class TestTransfer:
 
-    # 正常系1: アカウントアドレスへの振替
-    def test_transfer_normal_1(self, users, share_exchange, personal_info):
-        from_address = users['issuer']
-        to_address = users['trader']
+    ################################################################
+    # Normal Case
+    ################################################################
+
+    # Normal_1
+    # Transfer to EOA
+    def test_normal_1(self, users, share_exchange, personal_info):
+        from_address = users["issuer"]
+        to_address = users["trader"]
         transfer_amount = 100
 
-        # 株式トークン新規発行
-        share_contract, deploy_args = utils. \
-            issue_share_token(users, share_exchange.address, personal_info.address)
+        # prepare the initial state
+        share_contract, deploy_args = utils.issue_share_token(
+            users=users,
+            exchange_address=share_exchange.address,
+            personal_info_address=personal_info.address
+        )
+        utils.register_personal_info(
+            from_account=to_address,
+            personal_info=personal_info,
+            link_address=from_address
+        )
 
-        # 振替先の個人情報登録
-        utils.register_personal_info(to_address, personal_info, from_address)
+        # transfer
+        tx = share_contract.transfer.transact(
+            to_address,
+            transfer_amount,
+            {"from": from_address}
+        )
 
-        # 振替
-        share_contract.transfer.transact(to_address, transfer_amount, {'from': from_address})
-
+        # assertion
         from_balance = share_contract.balanceOf(from_address)
         to_balance = share_contract.balanceOf(to_address)
-
         assert from_balance == deploy_args[3] - transfer_amount
         assert to_balance == transfer_amount
+        assert tx.events["Transfer"] == OrderedDict([
+            ("from", from_address),
+            ("to", to_address),
+            ("value", transfer_amount)
+        ])
 
-    # 正常系2: 株式取引コントラクトへの振替
-    def test_transfer_normal_2(self, users, share_exchange, personal_info):
-        from_address = users['issuer']
+    # Normal_2
+    # Transfer to contract address
+    def test_normal_2(self, users, share_exchange, personal_info):
+        from_address = users["issuer"]
         transfer_amount = 100
 
-        # 株式トークン新規発行
-        share_contract, deploy_args = utils. \
-            issue_share_token(users, share_exchange.address, personal_info.address)
+        # prepare the initial state
+        share_contract, deploy_args = utils.issue_share_token(
+            users=users,
+            exchange_address=share_exchange.address,
+            personal_info_address=personal_info.address
+        )
 
+        # transfer
         to_address = share_exchange.address
-        share_contract.transfer.transact(to_address, transfer_amount, {'from': from_address})
+        tx = share_contract.transfer.transact(
+            to_address,
+            transfer_amount,
+            {"from": from_address}
+        )
 
+        # assertion
         from_balance = share_contract.balanceOf(from_address)
         to_balance = share_contract.balanceOf(to_address)
-
         assert from_balance == deploy_args[3] - transfer_amount
         assert to_balance == transfer_amount
+        assert tx.events["Transfer"] == OrderedDict([
+            ("from", from_address),
+            ("to", to_address),
+            ("value", transfer_amount)
+        ])
 
-    # エラー系1: 入力値の型誤り（To）
-    def test_transfer_error_1(self, users, share_exchange, personal_info):
-        from_address = users['issuer']
-        to_address = 1234
-        transfer_amount = 100
+    ################################################################
+    # Error Case
+    ################################################################
 
-        # 株式トークン新規発行
-        share_contract, deploy_args = utils. \
-            issue_share_token(users, share_exchange.address, personal_info.address)
-
-        with pytest.raises(ValueError):
-            share_contract.transfer.transact(to_address, transfer_amount, {'from': from_address})
-
-    # エラー系2: 入力値の型誤り（Value）
-    def test_transfer_error_2(self, users, share_exchange, personal_info):
-        from_address = users['issuer']
-        to_address = users['trader']
-        transfer_amount = 'M'
-
-        # 株式トークン新規発行
-        share_contract, deploy_args = utils. \
-            issue_share_token(users, share_exchange.address, personal_info.address)
-
-        with pytest.raises(TypeError):
-            share_contract.transfer.transact(to_address, transfer_amount, {'from': from_address})
-
-    # エラー系3: 残高不足
-    def test_transfer_error_3(self, users, share_exchange, personal_info):
-        issuer = users['issuer']
+    # Error_1
+    # Insufficient balance
+    def test_error_1(self, users, share_exchange, personal_info):
+        issuer = users["issuer"]
         from_address = issuer
-        to_address = users['trader']
+        to_address = users["trader"]
 
-        # 株式トークン新規発行
-        share_contract, deploy_args = utils. \
-            issue_share_token(users, share_exchange.address, personal_info.address)
+        # prepare the initial state
+        share_contract, deploy_args = utils.issue_share_token(
+            users=users,
+            exchange_address=share_exchange.address,
+            personal_info_address=personal_info.address
+        )
+        utils.register_personal_info(
+            from_account=to_address,
+            personal_info=personal_info,
+            link_address=from_address
+        )
 
-        # 個人情報登録
-        utils.register_personal_info(from_address, personal_info, from_address)
+        # transfer
+        transfer_amount = deploy_args[3] + 1
+        share_contract.transfer.transact(
+            to_address,
+            transfer_amount,
+            {"from": issuer}
+        )
 
-        # 株式トークン振替（残高超）
-        transfer_amount = 10000000000
-        share_contract.transfer.transact(to_address, transfer_amount, {'from': issuer})  # エラーになる
-
-        assert share_contract.balanceOf(issuer) == 10000
+        # assertion
+        assert share_contract.balanceOf(issuer) == deploy_args[3]
         assert share_contract.balanceOf(to_address) == 0
 
-    # エラー系4: private functionにアクセスできない
-    def test_transfer_error_4(self, users, share_exchange, personal_info):
-        issuer = users['issuer']
+    # Error_2
+    # Cannot access private function
+    def test_error_2(self, users, share_exchange, personal_info):
+        issuer = users["issuer"]
         from_address = issuer
-        to_address = users['trader']
+        to_address = users["trader"]
 
         transfer_amount = 100
         data = 0
 
-        # 株式トークン新規発行
-        share_contract, deploy_args = utils. \
-            issue_share_token(users, share_exchange.address, personal_info.address)
+        # prepare the initial state
+        share_contract, deploy_args = utils.issue_share_token(
+            users=users,
+            exchange_address=share_exchange.address,
+            personal_info_address=personal_info.address
+        )
 
         with pytest.raises(AttributeError):
             share_contract.isContract(to_address)
 
         with pytest.raises(AttributeError):
-            share_contract.transferToAddress.transact(to_address, transfer_amount, data, {'from': from_address})
+            share_contract.transferToAddress.transact(
+                to_address,
+                transfer_amount,
+                data,
+                {"from": from_address}
+            )
 
         with pytest.raises(AttributeError):
-            share_contract.transferToContract.transact(to_address, transfer_amount, data, {'from': from_address})
+            share_contract.transferToContract.transact(
+                to_address,
+                transfer_amount,
+                data,
+                {"from": from_address}
+            )
 
-    # エラー系5: 取引不可Exchangeへの振替
-    def test_transfer_error_5(self, users, share_exchange, personal_info,
-                              coupon_exchange_storage, payment_gateway,
-                              IbetCouponExchange):
-        from_address = users['issuer']
+    # Error_3
+    # Transfer to non-tradable exchange
+    def test_error_3(
+            self, users,
+            share_exchange, personal_info,
+            coupon_exchange_storage, payment_gateway,
+            IbetCouponExchange
+    ):
+        from_address = users["issuer"]
         transfer_amount = 100
 
-        # 株式トークン新規発行
-        share_contract, deploy_args = utils. \
-            issue_share_token(users, share_exchange.address, personal_info.address)
-
-        # 取引不可Exchange
-        dummy_exchange = users['admin'].deploy(
-            IbetCouponExchange,  # IbetShareExchange以外を読み込む必要がある
+        # prepare the initial state
+        share_contract, deploy_args = utils.issue_share_token(
+            users=users,
+            exchange_address=share_exchange.address,
+            personal_info_address=personal_info.address
+        )
+        non_tradable_exchange = users["admin"].deploy(
+            IbetCouponExchange,
             payment_gateway.address,
             coupon_exchange_storage.address
         )
 
-        to_address = dummy_exchange.address
-        share_contract.transfer.transact(to_address, transfer_amount, {'from': users['admin']})  # エラーになる
+        # transfer
+        to_address = non_tradable_exchange.address
+        share_contract.transfer.transact(
+            to_address,
+            transfer_amount,
+            {"from": users["admin"]}
+        )
 
         from_balance = share_contract.balanceOf(from_address)
         to_balance = share_contract.balanceOf(to_address)
-
         assert from_balance == deploy_args[3]
         assert to_balance == 0
 
-    # エラー系6: 譲渡不可トークンの振替
-    def test_transfer_error_6(self, users, share_exchange, personal_info):
-        issuer = users['issuer']
-        to_address = users['trader']
+    # Error_4
+    # Not transferable token
+    def test_error_4(self, users, share_exchange, personal_info):
+        issuer = users["issuer"]
+        to_address = users["trader"]
         transfer_amount = 100
 
-        # 株式トークン新規発行
-        share_contract, deploy_args = \
-            utils.issue_share_token(users, share_exchange.address, personal_info.address)
+        # prepare the initial state
+        share_contract, deploy_args = utils.issue_share_token(
+            users=users,
+            exchange_address=share_exchange.address,
+            personal_info_address=personal_info.address
+        )
+        utils.register_personal_info(
+            from_account=to_address,
+            personal_info=personal_info,
+            link_address=issuer
+        )
 
-        # 個人情報登録
-        utils.register_personal_info(to_address, personal_info, issuer)
+        # set to non-transferable
+        share_contract.setTransferable.transact(
+            False,
+            {"from": issuer}
+        )
 
-        # 譲渡不可設定
-        share_contract.setTransferable.transact(False, {'from': issuer})
+        # transfer
+        share_contract.transfer.transact(
+            to_address,
+            transfer_amount,
+            {"from": issuer}
+        )
 
-        # 譲渡実行
-        share_contract.transfer.transact(to_address, transfer_amount, {'from': issuer})  # エラーとなる
-
+        # assertion
         from_balance = share_contract.balanceOf(issuer)
         to_balance = share_contract.balanceOf(to_address)
-
         assert from_balance == deploy_args[3]
         assert to_balance == 0
 
-    # エラー系7: 個人情報未登録アドレスへの振替
-    def test_transfer_error_7(self, users, share_exchange, personal_info):
-        issuer = users['issuer']
-        to_address = users['trader']
+    # Error_5
+    # Transfer to an address with personal information not registered
+    def test_error_5(self, users, share_exchange, personal_info):
+        issuer = users["issuer"]
+        to_address = users["trader"]
         transfer_amount = 100
 
-        # 株式トークン新規発行
-        share_contract, deploy_args = \
-            utils.issue_share_token(users, share_exchange.address, personal_info.address)
+        # prepare the initial state
+        share_contract, deploy_args = utils.issue_share_token(
+            users=users,
+            exchange_address=share_exchange.address,
+            personal_info_address=personal_info.address
+        )
 
-        # NOTE:個人情報未登録（to_address）
+        # transfer
+        share_contract.transfer.transact(
+            to_address,  # personal information not registered
+            transfer_amount,
+            {"from": issuer}
+        )
 
-        # 譲渡実行
-        share_contract.transfer.transact(to_address, transfer_amount, {'from': issuer})  # エラーとなる
-
+        # assertion
         from_balance = share_contract.balanceOf(issuer)
         to_balance = share_contract.balanceOf(to_address)
+        assert from_balance == deploy_args[3]
+        assert to_balance == 0
 
+    # Error_6
+    # Tokens that require transfer approval
+    def test_error_6(self, users, share_exchange, personal_info):
+        issuer = users["issuer"]
+        to_address = users["trader"]
+        transfer_amount = 100
+
+        # prepare the initial state
+        share_contract, deploy_args = utils.issue_share_token(
+            users=users,
+            exchange_address=share_exchange.address,
+            personal_info_address=personal_info.address
+        )
+        share_contract.setTransferApprovalRequired(
+            True,
+            {"from": issuer}
+        )
+
+        # transfer
+        share_contract.transfer.transact(
+            to_address,
+            transfer_amount,
+            {"from": issuer}
+        )
+
+        # assertion
+        from_balance = share_contract.balanceOf(issuer)
+        to_balance = share_contract.balanceOf(to_address)
         assert from_balance == deploy_args[3]
         assert to_balance == 0
 
@@ -1303,13 +1398,13 @@ class TestTransfer:
 # TEST_bulkTransfer
 class TestBulkTransfer:
 
-    #######################################
-    # Normal
-    #######################################
+    ################################################################
+    # Normal Case
+    ################################################################
 
     # Normal_1
     # Bulk transfer to account address (1 data)
-    def test_bulk_transfer_normal_1(self, users, share_exchange, personal_info):
+    def test_normal_1(self, users, share_exchange, personal_info):
         from_address = users["issuer"]
         to_address = users["trader"]
 
@@ -1336,7 +1431,7 @@ class TestBulkTransfer:
 
     # Normal_2
     # Bulk transfer to account address (multiple data)
-    def test_bulk_transfer_normal_2(self, users, share_exchange, personal_info):
+    def test_normal_2(self, users, share_exchange, personal_info):
         from_address = users["issuer"]
         to_address = users["trader"]
 
@@ -1371,7 +1466,7 @@ class TestBulkTransfer:
 
     # Normal_3
     # Bulk transfer to contract address
-    def test_bulk_transfer_normal_3(self, users, share_exchange, personal_info):
+    def test_normal_3(self, users, share_exchange, personal_info):
         from_address = users["issuer"]
 
         # issue share token
@@ -1396,13 +1491,13 @@ class TestBulkTransfer:
         assert from_balance == deploy_args[2] - 1
         assert to_balance == 1
 
-    #######################################
-    # Error
-    #######################################
+    ################################################################
+    # Error Case
+    ################################################################
 
     # Error_1_1
     # Input value type error (to_list)
-    def test_bulk_transfer_error_1_1(self, users, share_exchange, personal_info):
+    def test_error_1_1(self, users, share_exchange, personal_info):
         from_address = users["issuer"]
         to_address = 1234
         transfer_amount = 1
@@ -1424,7 +1519,7 @@ class TestBulkTransfer:
 
     # Error_1_2
     # Input value type error (value_list)
-    def test_bulk_transfer_error_1_2(self, users, share_exchange, personal_info):
+    def test_error_1_2(self, users, share_exchange, personal_info):
         from_address = users["issuer"]
         to_address = users["trader"]
         transfer_amount = "abc"
@@ -1446,7 +1541,7 @@ class TestBulkTransfer:
 
     # Error_2
     # Over/Under the limit
-    def test_bulk_transfer_error_2(self, users, share_exchange, personal_info):
+    def test_error_2(self, users, share_exchange, personal_info):
         from_address = users['issuer']
         to_address = users['trader']
 
@@ -1478,7 +1573,7 @@ class TestBulkTransfer:
 
     # Error_3
     # Insufficient balance
-    def test_bulk_transfer_error_3(self, users, share_exchange, personal_info):
+    def test_error_3(self, users, share_exchange, personal_info):
         issuer = users['issuer']
         from_address = issuer
         to_address = users['trader']
@@ -1504,7 +1599,7 @@ class TestBulkTransfer:
 
     # Error_4
     # Non-transferable token
-    def test_bulk_transfer_error_4(self, users, share_exchange, personal_info):
+    def test_error_4(self, users, share_exchange, personal_info):
         issuer = users["issuer"]
         to_address = users["trader"]
 
@@ -1536,7 +1631,7 @@ class TestBulkTransfer:
 
     # Error_5
     # Transfer to an address with no personal information registered
-    def test_bulk_transfer_error_5(self, users, share_exchange, personal_info):
+    def test_error_5(self, users, share_exchange, personal_info):
         issuer = users["issuer"]
         to_address = users["trader"]
 
@@ -1558,6 +1653,36 @@ class TestBulkTransfer:
         from_balance = share_contract.balanceOf(issuer)
         to_balance = share_contract.balanceOf(to_address)
         assert from_balance == deploy_args[2]
+        assert to_balance == 0
+
+    # Error_6
+    # Tokens that require transfer approval
+    def test_error_6(self, users, share_exchange, personal_info):
+        issuer = users["issuer"]
+        to_address = users["trader"]
+
+        # prepare the initial state
+        share_contract, deploy_args = utils.issue_share_token(
+            users=users,
+            exchange_address=share_exchange.address,
+            personal_info_address=personal_info.address
+        )
+        share_contract.setTransferApprovalRequired(
+            True,
+            {"from": issuer}
+        )
+
+        # bulk transfer
+        share_contract.bulkTransfer.transact(
+            [to_address],
+            [1],
+            {'from': issuer}
+        )
+
+        # assertion
+        from_balance = share_contract.balanceOf(issuer)
+        to_balance = share_contract.balanceOf(to_address)
+        assert from_balance == deploy_args[3]
         assert to_balance == 0
 
 
@@ -2891,7 +3016,7 @@ class TestSetTransferApprovalRequired:
         )  # issued by issuer
 
         # set required to True
-        tx = share_token.setTransferApprovalRequired(
+        share_token.setTransferApprovalRequired(
             True,
             {"from": user1}
         )
