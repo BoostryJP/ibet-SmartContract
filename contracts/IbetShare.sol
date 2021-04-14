@@ -653,6 +653,11 @@ contract IbetShare is Ownable, IbetStandardTokenInterface {
             applicationsForTransfer[_index].to,
             _data
         );
+        emit Transfer(
+            applicationsForTransfer[_index].from,
+            applicationsForTransfer[_index].to,
+            applicationsForTransfer[_index].amount
+        );
     }
 
     /// @notice 募集申込
