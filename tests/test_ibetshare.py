@@ -2861,6 +2861,11 @@ class TestApproveTransfer:
             ("to", user1),
             ("data", "test_data")
         ])
+        assert tx.events["Transfer"] == OrderedDict([
+            ("from", issuer),
+            ("to", user1),
+            ("value", 100)
+        ])
 
     ################################################################
     # Error Case
