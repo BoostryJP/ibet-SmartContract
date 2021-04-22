@@ -163,7 +163,7 @@ class TestSetPrincipalValue:
 
     # Error_1
     # type error
-    def test_setPrincipalValue_error_1(self, users, share_exchange, personal_info):
+    def test_setPrincipalValue_error_1(self, users):
         issuer = users["issuer"]
 
         # issue token (from issuer)
@@ -182,9 +182,7 @@ class TestSetPrincipalValue:
 
     # Error_2
     # authorization error
-    def test_setPrincipalValue_error_2(self, users, share_exchange, personal_info,
-                                         coupon_exchange_storage, payment_gateway,
-                                         IbetCouponExchange):
+    def test_setPrincipalValue_error_2(self, users):
         trader = users['trader']
 
         # issue token (form issuer)
