@@ -167,7 +167,7 @@ contract IbetShare is Ownable, IbetStandardTokenInterface {
         balances[owner] = totalSupply;
     }
 
-    /// @notice 一口あたりの額面の更新
+    /// @notice 一口あたりの元本額の更新
     /// @dev 発行体のみ実行可能
     /// @param _principalValue 一口あたりの元本額
     function setPrincipalValue(uint256 _principalValue)
