@@ -135,12 +135,12 @@ contract IbetShare is Ownable, IbetStandardTokenInterface {
     /// @param _name 名称
     /// @param _symbol 略称
     /// @param _issuePrice 発行価格
-    /// @param _principalValue 一口あたりの元本額
     /// @param _totalSupply 総発行数量
     /// @param _dividends 1口あたりの配当金・分配金
     /// @param _dividendRecordDate 権利確定日
     /// @param _dividendPaymentDate 配当支払日
     /// @param _cancellationDate 消却日
+    /// @param _principalValue 一口あたりの元本額
     constructor(
         string memory _name,
         string memory _symbol,
