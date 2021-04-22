@@ -39,6 +39,7 @@ contract IbetShare is Ownable, IbetStandardTokenInterface {
     bool public transferable; // 譲渡可否
     bool public offeringStatus; // 募集ステータス（True：募集中、False：停止中）
     bool public transferApprovalRequired; // 移転承認要否
+    uint256 public principalValue; // 一口あたりの元本額
 
     // 配当情報
     struct DividendInformation {
@@ -134,6 +135,7 @@ contract IbetShare is Ownable, IbetStandardTokenInterface {
     /// @param _name 名称
     /// @param _symbol 略称
     /// @param _issuePrice 発行価格
+    /// @param _principalValue 一口あたりの元本額
     /// @param _totalSupply 総発行数量
     /// @param _dividends 1口あたりの配当金・分配金
     /// @param _dividendRecordDate 権利確定日
@@ -147,13 +149,15 @@ contract IbetShare is Ownable, IbetStandardTokenInterface {
         uint256 _dividends,
         string memory _dividendRecordDate,
         string memory _dividendPaymentDate,
-        string memory _cancellationDate
+        string memory _cancellationDate,
+        uint256 _principalValue
     )
     {
         name = _name;
         symbol = _symbol;
         owner = msg.sender;
         issuePrice = _issuePrice;
+        principalValue = _principalValue;
         totalSupply = _totalSupply;
         dividendInformation.dividends = _dividends;
         dividendInformation.dividendRecordDate = _dividendRecordDate;
@@ -163,8 +167,18 @@ contract IbetShare is Ownable, IbetStandardTokenInterface {
         balances[owner] = totalSupply;
     }
 
+    /// @notice 一口あたりの額面の更新
+    /// @dev 発行体のみ実行可能
+    /// @param _principalValue 一口あたりの元本額
+    function setPrincipalValue(uint256 _principalValue)
+        public
+        onlyOwner()
+    {
+        principalValue = _principalValue;
+    }
+
     /// @notice 取引コントラクトの更新
-    /// @dev オーナーのみ実行可能
+    /// @dev 発行体のみ実行可能
     /// @param _exchange 取引コントラクトアドレス
     function setTradableExchange(address _exchange)
         public
@@ -175,7 +189,7 @@ contract IbetShare is Ownable, IbetStandardTokenInterface {
     }
 
     /// @notice 個人情報記帳コントラクトの更新
-    /// @dev オーナーのみ実行可能
+    /// @dev 発行体のみ実行可能
     /// @param _address 個人情報記帳コントラクトアドレス
     function setPersonalInfoAddress(address _address)
         public
@@ -185,7 +199,7 @@ contract IbetShare is Ownable, IbetStandardTokenInterface {
     }
 
     /// @notice 配当情報の更新
-    /// @dev オーナーのみ実行可能
+    /// @dev 発行体のみ実行可能
     /// @param _dividends 1口あたりの配当金・分配金
     /// @param _dividendRecordDate 権利確定日
     /// @param _dividendPaymentDate 配当支払日
@@ -208,7 +222,7 @@ contract IbetShare is Ownable, IbetStandardTokenInterface {
     }
 
     /// @notice 消却日の更新
-    /// @dev オーナーのみ実行可能
+    /// @dev 発行体のみ実行可能
     /// @param _cancellationDate 消却日
     function setCancellationDate(string memory _cancellationDate)
         public
@@ -218,7 +232,7 @@ contract IbetShare is Ownable, IbetStandardTokenInterface {
     }
 
     /// @notice トークンの関連URLを設定する
-    /// @dev オーナーのみ実行可能
+    /// @dev 発行体のみ実行可能
     /// @param _class 関連URL番号
     /// @param _referenceUrl 関連URL
     function setReferenceUrls(uint8 _class, string memory _referenceUrl)
@@ -229,7 +243,7 @@ contract IbetShare is Ownable, IbetStandardTokenInterface {
     }
 
     /// @notice 問い合わせ先情報更新
-    /// @dev オーナーのみ実行可能
+    /// @dev 発行体のみ実行可能
     /// @param _contactInformation 問い合わせ先情報
     function setContactInformation(string memory _contactInformation)
         public
@@ -240,7 +254,7 @@ contract IbetShare is Ownable, IbetStandardTokenInterface {
     }
 
     /// @notice プライバシーポリシー更新
-    /// @dev オーナーのみ実行可能
+    /// @dev 発行体のみ実行可能
     /// @param _privacyPolicy プライバシーポリシー
     function setPrivacyPolicy(string memory _privacyPolicy)
         public
@@ -251,7 +265,7 @@ contract IbetShare is Ownable, IbetStandardTokenInterface {
     }
 
     /// @notice 補足情報の更新
-    /// @dev オーナーのみ実行可能
+    /// @dev 発行体のみ実行可能
     /// @param _memo 補足情報
     function setMemo(string memory _memo)
         public
@@ -261,7 +275,7 @@ contract IbetShare is Ownable, IbetStandardTokenInterface {
     }
 
     /// @notice 取扱ステータスを更新する
-    /// @dev オーナーのみ実行可能
+    /// @dev 発行体のみ実行可能
     /// @param _status 更新後の取扱ステータス
     function setStatus(bool _status)
         public
@@ -273,7 +287,7 @@ contract IbetShare is Ownable, IbetStandardTokenInterface {
     }
 
     /// @notice 譲渡可否を更新
-    /// @dev オーナーのみ実行可能
+    /// @dev 発行体のみ実行可能
     /// @param _transferable 譲渡可否
     function setTransferable(bool _transferable)
         public
@@ -283,7 +297,7 @@ contract IbetShare is Ownable, IbetStandardTokenInterface {
     }
 
     /// @notice 募集ステータス更新
-    /// @dev オーナーのみ実行可能
+    /// @dev 発行体のみ実行可能
     /// @param _status 募集ステータス
     function setOfferingStatus(bool _status)
         public
@@ -294,7 +308,7 @@ contract IbetShare is Ownable, IbetStandardTokenInterface {
     }
 
     /// @notice 移転承諾要否の更新
-    /// @dev オーナーのみ実行可能
+    /// @dev 発行体のみ実行可能
     /// @param _required 移転承諾要否
     function setTransferApprovalRequired(bool _required)
         public
@@ -317,7 +331,7 @@ contract IbetShare is Ownable, IbetStandardTokenInterface {
     }
 
     /// @notice 資産ロック先アドレスの認可
-    /// @dev オーナーのみ実行可能
+    /// @dev 発行体のみ実行可能
     /// @param _address 認可対象のアドレス
     /// @param _auth 認可状態（true:認可、false:未認可）
     function authorize(address _address, bool _auth)
@@ -521,7 +535,7 @@ contract IbetShare is Ownable, IbetStandardTokenInterface {
     }
 
     /// @notice 強制移転
-    /// @dev オーナーのみ実行可能
+    /// @dev 発行体のみ実行可能
     /// @param _from 移転元アドレス
     /// @param _to 移転先アドレス
     /// @param _value 移転数量
@@ -631,6 +645,7 @@ contract IbetShare is Ownable, IbetStandardTokenInterface {
     }
 
     /// @notice 移転承認
+    /// @dev 発行体のみが実行可能
     /// @param _index 承認対象のインデックス
     /// @param _data イベント出力用の任意のデータ
     function approveTransfer(uint256 _index, string memory _data)
@@ -676,7 +691,7 @@ contract IbetShare is Ownable, IbetStandardTokenInterface {
     }
 
     /// @notice 募集割当
-    /// @dev オーナーのみ実行可能
+    /// @dev 発行体のみ実行可能
     /// @param _address 割当先アドレス
     /// @param _amount 割当数量
     function allot(address _address, uint256 _amount)
@@ -689,7 +704,7 @@ contract IbetShare is Ownable, IbetStandardTokenInterface {
 
     /// @notice 追加発行
     /// @dev 特定のアドレスの残高に対して、追加発行を行う
-    /// @dev オーナーのみ実行可能
+    /// @dev 発行体のみ実行可能
     /// @param _target_address 追加発行対象の残高を保有するアドレス
     /// @param _locked_address （任意）資産ロックアドレス
     /// @param _amount 追加発行数量
@@ -715,7 +730,7 @@ contract IbetShare is Ownable, IbetStandardTokenInterface {
 
     /// @dev 減資
     /// @dev 特定のアドレスの残高に対して、発行数量の削減を行う
-    /// @dev オーナーのみ実行可能
+    /// @dev 発行体のみ実行可能
     /// @param _target_address 減資対象の残高を保有するアドレス
     /// @param _locked_address （任意）資産ロックアドレス
     /// @param _amount 削減数量

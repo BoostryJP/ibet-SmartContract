@@ -62,15 +62,23 @@ def issue_share_token(users, exchange_address, personal_info_address):
     dividends = 1000
     devidend_record_date = '20200830'
     devidend_payment_date = '20200831'
-    cansellation_date = '20211231'
+    cancellation_date = '20211231'
+    principal_value = 10000
     contact_information = 'some_contact_information'
     privacy_policy = 'some_privacy_policy'
     memo = 'some_memo'
     transferable = True
 
     deploy_args = [
-        name, symbol, issue_price, total_supply,
-        dividends, devidend_record_date, devidend_payment_date, cansellation_date
+        name,
+        symbol,
+        issue_price,
+        total_supply,
+        dividends,
+        devidend_record_date,
+        devidend_payment_date,
+        cancellation_date,
+        principal_value
     ]
 
     issuer = users['issuer']
