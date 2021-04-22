@@ -34,10 +34,18 @@ def init_args():
     devidend_record_date = '20200829'
     devidend_payment_date = '20200831'
     cancellation_date = '20191231'
+    principal_value = 10000
 
     deploy_args = [
-        name, symbol, issue_price, total_supply,
-        devidends, devidend_record_date, devidend_payment_date, cancellation_date
+        name,
+        symbol,
+        issue_price,
+        total_supply,
+        devidends,
+        devidend_record_date,
+        devidend_payment_date,
+        cancellation_date,
+        principal_value
     ]
     return deploy_args
 
@@ -128,6 +136,70 @@ class TestDeploy:
         deploy_args[7] = '0x1596Ff8ED308a83897a731F3C1e814B19E11D68c'
         with pytest.raises(ValueError):
             users['admin'].deploy(IbetShare, *deploy_args)
+
+
+# TEST_setPrincipalValue
+class TestSetPrincipalValue:
+
+    # Normal_1
+    def test_setPrincipalValue_normal_1(self, users):
+        issuer = users["issuer"]
+
+        # issue token
+        share_token, deploy_args = utils.issue_share_token(
+            users=users,
+            exchange_address=zero_address,
+            personal_info_address=zero_address
+        )
+
+        # update principal value
+        share_token.setPrincipalValue.transact(
+            9000,
+            {"from": issuer}
+        )
+
+        # assertion
+        assert share_token.principalValue() == 9000
+
+    # Error_1
+    # type error
+    def test_setPrincipalValue_error_1(self, users):
+        issuer = users["issuer"]
+
+        # issue token (from issuer)
+        share_token, deploy_args = utils.issue_share_token(
+            users=users,
+            exchange_address=zero_address,
+            personal_info_address=zero_address
+        )
+
+        # update principal value
+        with pytest.raises(TypeError):
+            share_token.setPrincipalValue.transact(
+                "invalid type",
+                {"from": issuer}
+            )
+
+    # Error_2
+    # authorization error
+    def test_setPrincipalValue_error_2(self, users):
+        trader = users['trader']
+
+        # issue token (form issuer)
+        share_token, deploy_args = utils.issue_share_token(
+            users=users,
+            exchange_address=zero_address,
+            personal_info_address=zero_address
+        )
+
+        # update principal value
+        share_token.setPrincipalValue.transact(
+            9000,
+            {"from": trader}
+        )
+
+        # assertion
+        assert share_token.principalValue() == 10000
 
 
 # TEST_setTradableExchange
