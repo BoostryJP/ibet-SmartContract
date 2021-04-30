@@ -49,7 +49,7 @@ pluggy==0.13.1
 prompt-toolkit==3.0.8
 protobuf==3.11.3
 psutil==5.7.3
-py==1.8.2
+py==1.10.0
 py-geth==2.0.1
 py-solc==2.1.0
 py-solc-ast==1.2.7
@@ -89,7 +89,7 @@ typing-extensions==3.7.4.2
 urllib3==1.25.9
 varint==1.0.2
 vvm==0.1.0
-vyper==0.2.8
+vyper==0.2.12
 watchdog==0.8.3
 wcwidth==0.1.9
 web3==5.11.1

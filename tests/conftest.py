@@ -67,15 +67,15 @@ def users(web3, accounts):
     trader = accounts[1]
     issuer = accounts[2]
     agent = accounts[3]
-    web3.geth.personal.unlock_account(accounts[0].address, "password", 0)
-    web3.geth.personal.unlock_account(accounts[1].address, "password", 0)
-    web3.geth.personal.unlock_account(accounts[2].address, "password", 0)
-    web3.geth.personal.unlock_account(accounts[3].address, "password", 0)
+    user1 = accounts[4]
+    user2 = accounts[5]
     users = {
-        'admin': admin,
-        'trader': trader,
-        'issuer': issuer,
-        'agent': agent
+        "admin": admin,
+        "trader": trader,
+        "issuer": issuer,
+        "agent": agent,
+        "user1": user1,
+        "user2": user2
     }
 
     yield users
