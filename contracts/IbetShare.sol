@@ -574,9 +574,11 @@ contract IbetShare is Ownable, IbetStandardTokenInterface {
     {
         // <CHK>
         //  1) 移転時の発行体承諾が不要な場合
-        //  2) 数量が残高を超えている場合
+        //  2) 移転不可の場合
+        //  3) 数量が残高を超えている場合
         //  -> REVERT
         if (transferApprovalRequired == false ||
+            transferable == false ||
             balanceOf(msg.sender) < _value)
         {
             revert();
@@ -652,6 +654,11 @@ contract IbetShare is Ownable, IbetStandardTokenInterface {
         public
         onlyOwner()
     {
+        // <CHK>
+        // 移転不可の場合
+        // -> REVERT
+        if (transferable == false) revert();
+
         // <CHK>
         // すでに無効な申請に対する取消の場合
         // -> REVERT
