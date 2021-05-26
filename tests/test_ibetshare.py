@@ -817,7 +817,13 @@ class TestLock:
             issue_share_token(users, share_exchange.address, personal_info.address)
 
         # 投資家に移管
-        share_token.transferFrom.transact(issuer, trader, transfer_amount, {'from': issuer})
+        share_token.transferFrom.transact(
+            issuer,
+            trader,
+            transfer_amount,
+            '',
+            {'from': issuer}
+        )
 
         # agentを認可
         share_token.authorize.transact(agent, True, {'from': issuer})
@@ -844,7 +850,13 @@ class TestLock:
             issue_share_token(users, share_exchange.address, personal_info.address)
 
         # 投資家に移管
-        share_token.transferFrom.transact(issuer, trader, transfer_amount, {'from': issuer})
+        share_token.transferFrom.transact(
+            issuer,
+            trader,
+            transfer_amount,
+            '',
+            {'from': issuer}
+        )
 
         # issuerに対してtraderが自身の保有をロック
         share_token.lock.transact(issuer, lock_amount, {'from': trader})
@@ -868,7 +880,13 @@ class TestLock:
             issue_share_token(users, share_exchange.address, personal_info.address)
 
         # 投資家に移管
-        share_token.transferFrom.transact(issuer, trader, transfer_amount, {'from': issuer})
+        share_token.transferFrom.transact(
+            issuer,
+            trader,
+            transfer_amount,
+            '',
+            {'from': issuer}
+        )
 
         # アドレス指定誤り
         with pytest.raises(ValueError):
@@ -897,7 +915,13 @@ class TestLock:
             issue_share_token(users, share_exchange.address, personal_info.address)
 
         # 投資家に移管
-        share_token.transferFrom.transact(issuer, trader, transfer_amount, {'from': issuer})
+        share_token.transferFrom.transact(
+            issuer,
+            trader,
+            transfer_amount,
+            '',
+            {'from': issuer}
+        )
 
         share_token.lock.transact(issuer, lock_amount, {'from': trader})
 
@@ -920,7 +944,13 @@ class TestLock:
             issue_share_token(users, share_exchange.address, personal_info.address)
 
         # 投資家に移管
-        share_token.transferFrom.transact(issuer, trader, transfer_amount, {'from': issuer})
+        share_token.transferFrom.transact(
+            issuer,
+            trader,
+            transfer_amount,
+            '',
+            {'from': issuer}
+        )
 
         # agentを非認可
         share_token.authorize.transact(agent, False, {'from': issuer})
@@ -947,7 +977,13 @@ class TestLock:
             issue_share_token(users, share_exchange.address, personal_info.address)
 
         # 投資家に移管
-        share_token.transferFrom.transact(issuer, trader, transfer_amount, {'from': issuer})
+        share_token.transferFrom.transact(
+            issuer,
+            trader,
+            transfer_amount,
+            '',
+            {'from': issuer}
+        )
 
         # agentに対してtraderが自身の保有をロック
         share_token.lock.transact(agent, lock_amount, {'from': trader})
@@ -974,7 +1010,13 @@ class TestLockedOf:
             issue_share_token(users, share_exchange.address, personal_info.address)
 
         # 投資家に移管
-        share_token.transferFrom.transact(issuer, trader, transfer_amount, {'from': issuer})
+        share_token.transferFrom.transact(
+            issuer,
+            trader,
+            transfer_amount,
+            '',
+            {'from': issuer}
+        )
 
         # issuerに対してtraderが自身の保有をロック
         share_token.lock.transact(issuer, lock_amount, {'from': trader})
@@ -1005,7 +1047,13 @@ class TestUnlock:
             issue_share_token(users, share_exchange.address, personal_info.address)
 
         # 投資家に移管
-        share_token.transferFrom.transact(issuer, trader, transfer_amount, {'from': issuer})
+        share_token.transferFrom.transact(
+            issuer,
+            trader,
+            transfer_amount,
+            '',
+            {'from': issuer}
+        )
 
         # agentを認可
         share_token.authorize.transact(agent, True, {'from': issuer})
@@ -1041,7 +1089,13 @@ class TestUnlock:
             issue_share_token(users, share_exchange.address, personal_info.address)
 
         # 投資家に移管
-        share_token.transferFrom.transact(issuer, trader, transfer_amount, {'from': issuer})
+        share_token.transferFrom.transact(
+            issuer,
+            trader,
+            transfer_amount,
+            '',
+            {'from': issuer}
+        )
 
         # issuerに対してtraderが自身の保有をロック
         share_token.lock.transact(issuer, lock_amount, {'from': trader})
@@ -1074,7 +1128,13 @@ class TestUnlock:
             issue_share_token(users, share_exchange.address, personal_info.address)
 
         # 投資家に移管
-        share_token.transferFrom.transact(issuer, trader, transfer_amount, {'from': issuer})
+        share_token.transferFrom.transact(
+            issuer,
+            trader,
+            transfer_amount,
+            '',
+            {'from': issuer}
+        )
 
         # issuerに対してtraderが自身の保有をロック
         share_token.lock.transact(issuer, lock_amount, {'from': trader})
@@ -1111,7 +1171,13 @@ class TestUnlock:
             issue_share_token(users, share_exchange.address, personal_info.address)
 
         # 投資家に移管
-        share_token.transferFrom.transact(issuer, trader, transfer_amount, {'from': issuer})
+        share_token.transferFrom.transact(
+            issuer,
+            trader,
+            transfer_amount,
+            '',
+            {'from': issuer}
+        )
 
         # issuerに対してtraderが自身の保有をロック
         share_token.lock.transact(issuer, lock_amount, {'from': trader})
@@ -1140,7 +1206,13 @@ class TestUnlock:
             issue_share_token(users, share_exchange.address, personal_info.address)
 
         # 投資家に移管
-        share_token.transferFrom.transact(issuer, trader, transfer_amount, {'from': issuer})
+        share_token.transferFrom.transact(
+            issuer,
+            trader,
+            transfer_amount,
+            '',
+            {'from': issuer}
+        )
 
         # agentを非認可
         share_token.authorize.transact(agent, False, {'from': issuer})
@@ -1172,7 +1244,13 @@ class TestUnlock:
             issue_share_token(users, share_exchange.address, personal_info.address)
 
         # 投資家に移管
-        share_token.transferFrom.transact(issuer, trader, transfer_amount, {'from': issuer})
+        share_token.transferFrom.transact(
+            issuer,
+            trader,
+            transfer_amount,
+            '',
+            {'from': issuer}
+        )
 
         # issuerに対してtraderが自身の保有をロック
         share_token.lock.transact(issuer, lock_amount, {'from': trader})
@@ -1761,33 +1839,113 @@ class TestBulkTransfer:
 # TEST_transferFrom
 class TestTransferFrom:
 
-    # 正常系1: アカウントアドレスへの移転
+    # 正常系1: 強制移転
     def test_transferFrom_normal_1(self, users, share_exchange, personal_info):
         _issuer = users['issuer']
         _from = users['admin']
         _to = users['trader']
         _value = 100
 
-        # 株式トークン新規発行
-        share_contract, deploy_args = utils. \
-            issue_share_token(users, share_exchange.address, personal_info.address)
+        # トークン新規発行
+        share_contract, deploy_args = utils.issue_share_token(
+            users=users,
+            exchange_address=share_exchange.address,
+            personal_info_address=personal_info.address
+        )
 
-        # 振替先の個人情報登録（_from）
-        utils.register_personal_info(_from, personal_info, _issuer)
+        # 移転（issuer -> from）
+        utils.register_personal_info(
+            from_account=_from,
+            personal_info=personal_info,
+            link_address=_issuer
+        )
+        share_contract.transfer.transact(
+            _from,
+            _value,
+            {'from': _issuer}
+        )
 
-        # 譲渡（issuer -> _from）
-        share_contract.transfer.transact(_from, _value, {'from': _issuer})
+        # 強制移転（from -> to）
+        tx = share_contract.transferFrom.transact(
+            _from,
+            _to,
+            _value,
+            "test_data",
+            {'from': _issuer}
+        )
 
-        # 移転（_from -> _to）
-        share_contract.transferFrom.transact(_from, _to, _value, {'from': _issuer})
-
+        # 検証
         issuer_balance = share_contract.balanceOf(_issuer)
         from_balance = share_contract.balanceOf(_from)
         to_balance = share_contract.balanceOf(_to)
-
         assert issuer_balance == deploy_args[3] - _value
         assert from_balance == 0
         assert to_balance == _value
+        assert tx.events["Transfer"] == OrderedDict([
+            ("from", _from),
+            ("to", _to),
+            ("value", _value)
+        ])
+
+    # 正常系2: 移転承諾要
+    def test_transferFrom_normal_2(self, users, share_exchange, personal_info):
+        _issuer = users['issuer']
+        _from = users['admin']
+        _to = users['trader']
+        _value = 100
+
+        # トークン新規発行
+        share_contract, deploy_args = utils.issue_share_token(
+            users=users,
+            exchange_address=share_exchange.address,
+            personal_info_address=personal_info.address
+        )
+
+        # 移転（issuer -> from）
+        utils.register_personal_info(
+            from_account=_from,
+            personal_info=personal_info,
+            link_address=_issuer
+        )
+        share_contract.transfer.transact(
+            _from,
+            _value,
+            {"from": _issuer}
+        )
+
+        # 移転承諾設定
+        share_contract.setTransferApprovalRequired.transact(
+            True,
+            {"from": _issuer}
+        )
+
+        # 強制移転（from -> to）
+        tx = share_contract.transferFrom.transact(
+            _from,
+            _to,
+            _value,
+            "test_data",
+            {"from": _issuer}
+        )
+
+        # 検証
+        issuer_balance = share_contract.balanceOf(_issuer)
+        from_balance = share_contract.balanceOf(_from)
+        to_balance = share_contract.balanceOf(_to)
+        assert issuer_balance == deploy_args[3] - _value
+        assert from_balance == 0
+        assert to_balance == _value
+        assert tx.events["ApproveTransfer"] == OrderedDict([
+            ("index", 0),
+            ("from", _from),
+            ("to", _to),
+            ("data", "test_data")
+        ])
+        assert tx.events["Transfer"] == OrderedDict([
+            ("from", _from),
+            ("to", _to),
+            ("value", _value)
+        ])
 
     # エラー系1: 入力値の型誤り（From）
     def test_transferFrom_error_1(self, users, share_exchange, personal_info):
@@ -1795,17 +1953,31 @@ class TestTransferFrom:
         _to = users['trader']
         _value = 100
 
-        # 株式トークン新規発行
-        share_contract, deploy_args = utils. \
-            issue_share_token(users, share_exchange.address, personal_info.address)
+        # トークン新規発行
+        share_contract, deploy_args = utils.issue_share_token(
+            users=users,
+            exchange_address=share_exchange.address,
+            personal_info_address=personal_info.address
+        )
 
-        # 移転（_from -> _to）
+        # 強制移転（_from -> _to）
+        with pytest.raises(ValueError):
+            share_contract.transferFrom.transact(
+                '1234',
+                _to,
+                _value,
+                "test_data",
+                {'from': _issuer}
+            )
 
         with pytest.raises(ValueError):
-            share_contract.transferFrom.transact('1234', _to, _value, {'from': _issuer})
-
-        with pytest.raises(ValueError):
-            share_contract.transferFrom.transact(1234, _to, _value, {'from': _issuer})
+            share_contract.transferFrom.transact(
+                1234,
+                _to,
+                _value,
+                "test_data",
+                {'from': _issuer}
+            )
 
     # エラー系2: 入力値の型誤り（To）
     def test_transferFrom_error_2(self, users, share_exchange, personal_info):
@@ -1813,17 +1985,31 @@ class TestTransferFrom:
         _from = users['admin']
         _value = 100
 
-        # 株式トークン新規発行
-        share_contract, deploy_args = utils. \
-            issue_share_token(users, share_exchange.address, personal_info.address)
+        # トークン新規発行
+        share_contract, deploy_args = utils.issue_share_token(
+            users=users,
+            exchange_address=share_exchange.address,
+            personal_info_address=personal_info.address
+        )
 
-        # 移転（_from -> _to）
+        # 強制移転（_from -> _to）
+        with pytest.raises(ValueError):
+            share_contract.transferFrom.transact(
+                _from,
+                '1234',
+                _value,
+                "test_data",
+                {'from': _issuer}
+            )
 
         with pytest.raises(ValueError):
-            share_contract.transferFrom.transact(_from, '1234', _value, {'from': _issuer})
-
-        with pytest.raises(ValueError):
-            share_contract.transferFrom.transact(_from, 1234, _value, {'from': _issuer})
+            share_contract.transferFrom.transact(
+                _from,
+                1234,
+                _value,
+                "test_data",
+                {'from': _issuer}
+            )
 
     # エラー系3: 入力値の型誤り（Value）
     def test_transferFrom_error_3(self, users, share_exchange, personal_info):
@@ -1831,20 +2017,40 @@ class TestTransferFrom:
         _from = users['admin']
         _to = users['trader']
 
-        # 株式トークン新規発行
-        share_contract, deploy_args = utils. \
-            issue_share_token(users, share_exchange.address, personal_info.address)
+        # トークン新規発行
+        share_contract, deploy_args = utils.issue_share_token(
+            users=users,
+            exchange_address=share_exchange.address,
+            personal_info_address=personal_info.address
+        )
 
-        # 移転（_from -> _to）
+        # 強制移転（_from -> _to）
+        with pytest.raises(OverflowError):
+            share_contract.transferFrom.transact(
+                _from,
+                _to,
+                -1,
+                "test_data",
+                {'from': _issuer}
+            )
 
         with pytest.raises(OverflowError):
-            share_contract.transferFrom.transact(_from, _to, -1, {'from': _issuer})
-
-        with pytest.raises(OverflowError):
-            share_contract.transferFrom.transact(_from, _to, 2 ** 256, {'from': _issuer})
+            share_contract.transferFrom.transact(
+                _from,
+                _to,
+                2 ** 256,
+                "test_data",
+                {'from': _issuer}
+            )
 
         with pytest.raises(TypeError):
-            share_contract.transferFrom.transact(_from, _to, 'zero', {'from': _issuer})
+            share_contract.transferFrom.transact(
+                _from,
+                _to,
+                'zero',
+                "test_data",
+                {'from': _issuer}
+            )
 
     # エラー系4: 残高不足
     def test_transferFrom_error_4(self, users, share_exchange, personal_info):
@@ -1853,23 +2059,38 @@ class TestTransferFrom:
         _to = users['trader']
         _value = 100
 
-        # 株式トークン新規発行
-        share_contract, deploy_args = utils. \
-            issue_share_token(users, share_exchange.address, personal_info.address)
+        # トークン新規発行
+        share_contract, deploy_args = utils.issue_share_token(
+            users=users,
+            exchange_address=share_exchange.address,
+            personal_info_address=personal_info.address
+        )
 
-        # 振替先の個人情報登録（_from）
-        utils.register_personal_info(_from, personal_info, _issuer)
+        # 移転（issuer -> _from）
+        utils.register_personal_info(
+            from_account=_from,
+            personal_info=personal_info,
+            link_address=_issuer
+        )
+        share_contract.transfer.transact(
+            _from,
+            _value,
+            {'from': _issuer}
+        )
 
-        # 譲渡（issuer -> _from）
-        share_contract.transfer.transact(_from, _value, {'from': _issuer})
+        # 強制移転（_from -> _to）
+        share_contract.transferFrom.transact(
+            _from,
+            _to,
+            101,
+            'test_data',
+            {'from': _issuer}
+        )  # エラーになる
 
-        # 移転（_from -> _to）
-        share_contract.transferFrom.transact(_from, _to, 101, {'from': _issuer})  # エラーになる
-
+        # 検証
         issuer_balance = share_contract.balanceOf(_issuer)
         from_balance = share_contract.balanceOf(_from)
         to_balance = share_contract.balanceOf(_to)
-
         assert issuer_balance == deploy_args[3] - _value
         assert from_balance == _value
         assert to_balance == 0
@@ -1881,23 +2102,38 @@ class TestTransferFrom:
         _to = users['trader']
         _value = 100
 
-        # 株式トークン新規発行
-        share_contract, deploy_args = utils. \
-            issue_share_token(users, share_exchange.address, personal_info.address)
-
-        # 振替先の個人情報登録（_from）
-        utils.register_personal_info(_from, personal_info, _issuer)
+        # トークン新規発行
+        share_contract, deploy_args = utils.issue_share_token(
+            users=users,
+            exchange_address=share_exchange.address,
+            personal_info_address=personal_info.address
+        )
 
         # 譲渡（issuer -> _from）
-        share_contract.transfer.transact(_from, _value, {'from': _issuer})
+        utils.register_personal_info(
+            from_account=_from,
+            personal_info=personal_info,
+            link_address=_issuer
+        )
+        share_contract.transfer.transact(
+            _from,
+            _value,
+            {'from': _issuer}
+        )
 
-        # 移転（_from -> _to）
-        share_contract.transferFrom.transact(_from, _to, _value, {'from': _from})  # エラーになる
+        # 強制移転（_from -> _to）
+        share_contract.transferFrom.transact(
+            _from,
+            _to,
+            _value,
+            'test_data',
+            {'from': _from}
+        )  # エラーになる
 
+        # 検証
         issuer_balance = share_contract.balanceOf(_issuer)
         from_balance = share_contract.balanceOf(_from)
         to_balance = share_contract.balanceOf(_to)
-
         assert issuer_balance == deploy_args[3] - _value
         assert from_balance == _value
         assert to_balance == 0
@@ -2158,7 +2394,13 @@ class TestIssueFrom:
             issue_share_token(users, share_exchange.address, zero_address)
 
         # 投資家に移管
-        share_token.transferFrom.transact(issuer, trader, transfer_amount, {'from': issuer})
+        share_token.transferFrom.transact(
+            issuer,
+            trader,
+            transfer_amount,
+            '',
+            {'from': issuer}
+        )
 
         # issuerに対してtraderが自身の保有をロック
         share_token.lock.transact(issuer, lock_amount, {'from': trader})
@@ -2292,7 +2534,13 @@ class TestRedeemFrom:
         share_token, deploy_args = utils.issue_share_token(users, zero_address, zero_address)
 
         # traderとexchangeに譲渡
-        share_token.transferFrom.transact(issuer, trader, transfer_amount, {'from': issuer})
+        share_token.transferFrom.transact(
+            issuer,
+            trader,
+            transfer_amount,
+            '',
+            {'from': issuer}
+        )
 
         # 減資
         share_token.redeemFrom.transact(trader, zero_address, value, {'from': issuer})
@@ -2317,7 +2565,13 @@ class TestRedeemFrom:
         share_token, deploy_args = utils.issue_share_token(users, zero_address, zero_address)
 
         # traderに譲渡
-        share_token.transferFrom.transact(issuer, trader, transfer_amount, {'from': issuer})
+        share_token.transferFrom.transact(
+            issuer,
+            trader,
+            transfer_amount,
+            '',
+            {'from': issuer}
+        )
 
         # issuerに対してtraderが自身の保有をロック
         share_token.lock.transact(issuer, lock_amount, {'from': trader})
@@ -2395,7 +2649,13 @@ class TestRedeemFrom:
         share_token, deploy_args = utils.issue_share_token(users, zero_address, zero_address)
 
         # traderに譲渡
-        share_token.transferFrom.transact(issuer, trader, transfer_amount, {'from': issuer})
+        share_token.transferFrom.transact(
+            issuer,
+            trader,
+            transfer_amount,
+            '',
+            {'from': issuer}
+        )
 
         # issuerに対してtraderが自身の保有をロック
         share_token.lock.transact(issuer, lock_amount, {'from': trader})
@@ -2701,6 +2961,7 @@ class TestCancelTransfer:
             issuer,
             user1,
             100,
+            '',
             {"from": issuer}
         )
         share_token.setTransferApprovalRequired(
@@ -2756,6 +3017,7 @@ class TestCancelTransfer:
             issuer,
             user1,
             100,
+            '',
             {"from": issuer}
         )
         share_token.setTransferApprovalRequired(
@@ -2815,6 +3077,7 @@ class TestCancelTransfer:
             issuer,
             user1,
             100,
+            '',
             {"from": issuer}
         )
         share_token.setTransferApprovalRequired(
@@ -2864,6 +3127,7 @@ class TestCancelTransfer:
             issuer,
             user1,
             100,
+            '',
             {"from": issuer}
         )
         share_token.setTransferApprovalRequired(

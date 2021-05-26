@@ -539,13 +539,14 @@ contract IbetShare is Ownable, IbetStandardTokenInterface {
     /// @param _from 移転元アドレス
     /// @param _to 移転先アドレス
     /// @param _value 移転数量
+    /// @param _data イベント出力用の任意のデータ
     /// @return success 処理結果
-    function transferFrom(address _from, address _to, uint256 _value)
+    function transferFrom(address _from, address _to, uint256 _value, string memory _data)
         public
         onlyOwner()
         returns (bool success)
     {
-        //  数量が送信元アドレス（from）の残高を超えている場合、エラーを返す
+        // 数量が送信元アドレス（from）の残高を超えている場合、エラーを返す
         if (balanceOf(_from) < _value) revert();
 
         bytes memory empty;
@@ -559,6 +560,23 @@ contract IbetShare is Ownable, IbetStandardTokenInterface {
             // 送信先アドレスがアカウントアドレスの場合
             balances[_from] = balanceOf(_from).sub(_value);
             balances[_to] = balanceOf(_to).add(_value);
+        }
+
+        // 移転承諾要の場合、移転申請情報を追加する
+        if (transferApprovalRequired == true) {
+            uint256 index = applicationsForTransfer.length;
+            applicationsForTransfer.push(ApplicationForTransfer({
+                from: _from,
+                to: _to,
+                amount: _value,
+                valid: false
+            }));
+            emit ApproveTransfer(
+                index,
+                _from,
+                _to,
+                _data
+            );
         }
 
         emit Transfer(_from, _to, _value);
