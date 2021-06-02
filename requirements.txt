@@ -86,7 +86,7 @@ toposort==1.5
 tqdm==4.53.0
 typed-ast==1.4.1
 typing-extensions==3.7.4.2
-urllib3==1.25.9
+urllib3==1.26.5
 varint==1.0.2
 vvm==0.1.0
 vyper==0.2.12
