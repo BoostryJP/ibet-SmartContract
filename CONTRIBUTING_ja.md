@@ -1,9 +1,9 @@
 # 開発者ドキュメント（日本語）
 
 ## 0. 開発推奨環境
-* OS: macOS 10.14 (Mojave)
+* OS: macOS 11.2 (BigSur)
 * Homebrew
-* python（3.6.8）
+* python（3.6.13）
 * Ganache
 
 ### Ganache 設定
