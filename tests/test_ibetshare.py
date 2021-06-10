@@ -2584,8 +2584,39 @@ class TestApplyForTransfer:
         assert share_token.pendingTransfer(issuer) == 0
 
     # Error_2
-    # Insufficient balance
+    # transferable = false
     def test_error_2(self, users):
+        issuer = users["issuer"]
+        to_address = users["user1"]
+
+        # prepare data
+        share_token, deploy_args = utils.issue_share_token(
+            users=users,
+            exchange_address=zero_address,
+            personal_info_address=zero_address
+        )
+        share_token.setTransferApprovalRequired(
+            True,
+            {"from": issuer}
+        )
+        share_token.setTransferable.transact(False, {"from": issuer})
+
+        # apply for transfer
+        share_token.applyForTransfer(
+            to_address,
+            100,
+            "test_data",
+            {"from": issuer}
+        )
+
+        # assertion
+        assert share_token.balances(issuer) == deploy_args[3]
+        assert share_token.balances(to_address) == 0
+        assert share_token.pendingTransfer(issuer) == 0
+
+    # Error_3
+    # Insufficient balance
+    def test_error_3(self, users):
         issuer = users["issuer"]
         to_address = users["user1"]
 
@@ -2614,9 +2645,9 @@ class TestApplyForTransfer:
         assert share_token.balances(to_address) == 0
         assert share_token.pendingTransfer(issuer) == 0
 
-    # Error_3
+    # Error_4
     # Personal information is not registered
-    def test_error_3(self, users):
+    def test_error_4(self, users):
         issuer = users["issuer"]
         to_address = users["user1"]
 
@@ -2986,8 +3017,54 @@ class TestApproveTransfer:
                (issuer, user1, 100, True)
 
     # Error_2
-    # Invalid application
+    # transferable = false
     def test_error_2(self, users, personal_info):
+        issuer = users["issuer"]
+        user1 = users["user1"]
+
+        # prepare data
+        share_token, deploy_args = utils.issue_share_token(
+            users=users,
+            exchange_address=zero_address,
+            personal_info_address=personal_info.address
+        )
+        share_token.setTransferApprovalRequired(
+            True,
+            {"from": issuer}
+        )
+        utils.register_personal_info(
+            from_account=user1,
+            personal_info=personal_info,
+            link_address=issuer
+        )
+        share_token.applyForTransfer(
+            user1,
+            100,
+            "test_data",
+            {"from": issuer}
+        )
+
+        # approve transfer
+        share_token.setTransferable(
+            False,
+            {"from": issuer}
+        )
+        share_token.approveTransfer(
+            0,
+            "test_data",
+            {"from": issuer}
+        )
+
+        # assertion
+        assert share_token.balances(issuer) == deploy_args[3] - 100
+        assert share_token.balances(user1) == 0
+        assert share_token.pendingTransfer(issuer) == 100
+        assert share_token.applicationsForTransfer(0) == \
+               (issuer, user1, 100, True)
+
+    # Error_3
+    # Invalid application
+    def test_error_3(self, users, personal_info):
         issuer = users["issuer"]
         user1 = users["user1"]
 
