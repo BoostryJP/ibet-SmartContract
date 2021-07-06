@@ -67,9 +67,13 @@ class TestDeploy:
         name = share_contract.name()
         symbol = share_contract.symbol()
         issue_price = share_contract.issuePrice()
+        principal_value = share_contract.principalValue()
         total_supply = share_contract.totalSupply()
         dividend_information = share_contract.dividendInformation()
         cancellation_date = share_contract.cancellationDate()
+        is_canceled = share_contract.isCanceled()
+        status = share_contract.status()
+        balance = share_contract.balanceOf(account_address)
 
         assert owner_address == account_address
         assert name == deploy_args[0]
@@ -80,6 +84,10 @@ class TestDeploy:
         assert dividend_information[1] == deploy_args[5]
         assert dividend_information[2] == deploy_args[6]
         assert cancellation_date == deploy_args[7]
+        assert principal_value == deploy_args[8]
+        assert is_canceled == False
+        assert status == True
+        assert balance == total_supply
 
     # エラー系1: 入力値の型誤り（name）
     def test_deploy_error_1(self, users, IbetShare):
@@ -3184,3 +3192,56 @@ class TestSetTransferApprovalRequired:
 
         # assertion
         assert share_token.transferApprovalRequired() == False
+
+
+# TEST_Cancel
+class TestCancel:
+
+    ################################################################
+    # Normal Case
+    ################################################################
+
+    # Normal_1
+    def test_normal_1(self, users, personal_info):
+        issuer = users["issuer"]
+
+        # prepare data
+        share_token, deploy_args = utils.issue_share_token(
+            users=users,
+            exchange_address=zero_address,
+            personal_info_address=personal_info.address
+        )
+
+        # cancel
+        share_token.cancel(
+            {"from": issuer}
+        )
+
+        # assertion
+        is_canceled = share_token.isCanceled()
+        assert is_canceled is True
+
+    ################################################################
+    # Error Case
+    ################################################################
+
+    # Error_1
+    # No execute permission
+    def test_error_1(self, users, bond_exchange, personal_info):
+        user1 = users["user1"]
+
+        # prepare data
+        share_token, deploy_args = utils.issue_share_token(
+            users=users,
+            exchange_address=zero_address,
+            personal_info_address=personal_info.address
+        )
+
+        # cancel
+        share_token.cancel(
+            {"from": user1}
+        )
+
+        # assertion
+        is_canceled = share_token.isCanceled()
+        assert is_canceled is False

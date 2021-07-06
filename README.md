@@ -5,7 +5,7 @@
 # ibet Smart Contract
 
 <p>
-  <img alt="Version" src="https://img.shields.io/badge/version-21.5-blue.svg?cacheSeconds=2592000" />
+  <img alt="Version" src="https://img.shields.io/badge/version-21.6-blue.svg?cacheSeconds=2592000" />
   <a href="#" target="_blank">
     <img alt="License: Apache--2.0" src="https://img.shields.io/badge/License-Apache--2.0-yellow.svg" />
   </a>
@@ -50,7 +50,30 @@ To deploy, execute the following command.
 $ ./scripts/deploy.sh
 ```
 
-## Running the tests
+## Developing Smart Contracts
+
+### Requirements
+* Python(3.6)
+* Ganache
+
+### Setting up Ganache
+
+#### Server
+* hostname : 127.0.0.1 - lo0
+* port number : 8545
+* chain id : 2017
+
+#### Chain
+* gas price : 0
+* hard fork : Petersburg
+
+#### Importing network settings to Brownie
+
+```bash
+$ brownie networks import data/networks.yml
+```
+
+### Running the tests
 
 You can run the tests with:
 ```bash
@@ -65,6 +88,25 @@ $ pytest tests/
 ## License
 
 ibet-SmartContract is licensed under the Apache License, Version 2.0.
+
+
+## Contact information
+
+We are committed to open-sourcing our work to support your use cases. 
+We want to know how you use this library and what problems it helps you to solve. 
+We have two communication channels for you to contact us:
+
+* A [public discussion group](https://github.com/BoostryJP/ibet-SmartContract/discussions)
+where we will also share our preliminary roadmap, updates, events, and more.
+
+* A private email alias at
+[dev@boostry.co.jp](mailto:dev@boostry.co.jp)
+where you can reach out to us directly about your use cases and what more we can
+do to help and improve the library.
+  
+Please refrain from sending any sensitive or confidential information. 
+If you wish to delete a message you've previously sent, please contact us.
+
 
 ## Sponsors
 
