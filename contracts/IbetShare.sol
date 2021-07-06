@@ -40,6 +40,7 @@ contract IbetShare is Ownable, IbetStandardTokenInterface {
     bool public offeringStatus; // 募集ステータス（True：募集中、False：停止中）
     bool public transferApprovalRequired; // 移転承認要否
     uint256 public principalValue; // 一口あたりの元本額
+    bool public isCanceled; // 消却状況
 
     // 配当情報
     struct DividendInformation {
@@ -119,6 +120,9 @@ contract IbetShare is Ownable, IbetStandardTokenInterface {
     // イベント：減資
     event Redeem(address indexed from, address indexed target_address, address indexed locked_address, uint256 amount);
 
+    // イベント：消却
+    event Cancel();
+
     // イベント：移転承諾要否変更
     event ChangeTransferApprovalRequired(bool required);
 
@@ -163,6 +167,7 @@ contract IbetShare is Ownable, IbetStandardTokenInterface {
         dividendInformation.dividendRecordDate = _dividendRecordDate;
         dividendInformation.dividendPaymentDate = _dividendPaymentDate;
         cancellationDate = _cancellationDate;
+        isCanceled = false;
         status = true;
         balances[owner] = totalSupply;
     }
@@ -763,5 +768,15 @@ contract IbetShare is Ownable, IbetStandardTokenInterface {
             totalSupply = totalSupply.sub(_amount);
         }
         emit Redeem(msg.sender, _target_address, _locked_address, _amount);
+    }
+
+    /// @notice 消却する
+    /// @dev オーナーのみ実行可能
+    function cancel()
+        public
+        onlyOwner()
+    {
+        isCanceled = true;
+        emit Cancel();
     }
 }
