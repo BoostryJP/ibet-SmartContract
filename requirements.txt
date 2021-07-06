@@ -17,7 +17,7 @@ contextlib2==0.5.5
 coverage==4.5.4
 cytoolz==0.10.1
 eth-account==0.5.2
-eth-brownie==1.12.4
+eth-brownie==1.14.6
 eth-event==1.2.0
 eth-keyfile==0.5.1
 eth-rlp==0.1.2
