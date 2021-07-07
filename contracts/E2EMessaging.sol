@@ -115,13 +115,13 @@ contract E2EMessaging {
     /// @notice Get public key
     /// @param _who Message receiver address
     /// @return _key Public key
-    /// @return _type Key type
+    /// @return _key_type Key type
     function getPublicKey(address _who)
         public
         view
         returns (
             string memory _key,
-            string memory _type
+            string memory _key_type
         )
     {
         return (
@@ -132,12 +132,12 @@ contract E2EMessaging {
 
     /// @notice Set public key
     /// @param _key Public key
-    /// @param _type Key type
-    function setPublicKey(string memory _key, string memory _type)
+    /// @param _key_type Key type
+    function setPublicKey(string memory _key, string memory _key_type)
         public
     {
         keys[msg.sender].key = _key;
-        keys[msg.sender].key_type = _type;
-        emit PublicKeyUpdated(msg.sender, _key, _type);
+        keys[msg.sender].key_type = _key_type;
+        emit PublicKeyUpdated(msg.sender, _key, _key_type);
     }
 }
