@@ -1,4 +1,4 @@
-FROM python:3.8.11-alpine3.14
+FROM python:3.8.11-alpine3.13
 
 # make application directory
 RUN mkdir -p /app/ibet-SmartContract/
