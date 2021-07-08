@@ -58,14 +58,14 @@ contract E2EMessaging {
     }
 
     /// @notice Get last index
-    /// @param _owner Message sender address
+    /// @param _who Message receiver address
     /// @return _index Last index
-    function lastIndex(address _owner)
+    function lastIndex(address _who)
         public
         view
         returns (uint256 _index)
     {
-        return last_msg_index[_owner];
+        return last_msg_index[_who];
     }
 
     /// @notice Get last message
