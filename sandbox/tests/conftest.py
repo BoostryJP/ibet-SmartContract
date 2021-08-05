@@ -16,49 +16,11 @@ limitations under the License.
 
 SPDX-License-Identifier: Apache-2.0
 """
-
 import pytest
-from brownie.exceptions import VirtualMachineError
 from brownie import web3
 from web3.middleware import geth_poa_middleware
 
 web3.middleware_onion.inject(geth_poa_middleware, layer=0)
-
-
-@pytest.fixture(scope='session')
-def accounts(accounts):
-    # HACK: BrownieやGanacheが発生させるエラーを抑止する。
-    for account in accounts:
-        _simulate_asynchronous_tx(account)
-
-    return accounts
-
-
-def _simulate_asynchronous_tx(account_object):
-    """
-    トランザクションリバート時のエラーを抑止する。
-
-    Brownieではリバート時に brownie.exceptions.VirtualMachineError を発生させる仕様となっている。
-    一方、Brownieを使わずにQuorumに接続した場合など、非テスト環境ではエラーは発生しない。
-    この関数を呼び出すことにより、Brownieでも非テスト環境と同様にエラーを発生させないようにする。
-
-    :param account_object: Brownieのアカウントオブジェクト。このアカウントが送信するトランザクションはエラーを発生しなくなる。
-    """
-    account_object.transfer_or_raise = account_object.transfer
-
-    def proxy(*args, **kwargs):
-        try:
-            return account_object.transfer_or_raise(*args, **kwargs)
-        except (VirtualMachineError, ValueError, AttributeError) as e:
-            # 実行環境によって挙動が異なるためエラー発生を抑止する。
-            # VirtualMachineError: 通常のBrownieにおいてトランザクションリバート時に発生するエラー
-            # ValueError: Live環境のGanacheでトランザクションリバート時に発生するエラー
-            # AttributeError: Quorumでトランザクションリバート時に発生するエラー（おそらくBrownieのバグ）
-            print(e)
-            return e
-
-    # transferメソッドを、例外を握りつぶすようにラップした関数で置き換える
-    account_object.transfer = proxy
 
 
 @pytest.fixture()
