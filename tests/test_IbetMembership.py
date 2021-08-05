@@ -16,15 +16,14 @@ limitations under the License.
 
 SPDX-License-Identifier: Apache-2.0
 """
-
+import brownie
 import pytest
-from eth_utils import to_checksum_address
 
 
 def init_args(exchange_address):
     name = 'test_membership'
     symbol = 'MEM'
-    initial_supply = 10000
+    initial_supply = 1000000
     tradable_exchange = exchange_address
     details = 'some_details'
     return_details = 'some_return'
@@ -46,14 +45,19 @@ def init_args(exchange_address):
 # TEST_deploy
 class TestDeploy:
 
-    # 正常系1: deploy
-    def test_deploy_normal_1(self, users, IbetMembership, membership_exchange):
+    ##########################################################
+    # Normal
+    ##########################################################
+
+    # Normal_1
+    def test_normal_1(self, users, IbetMembership, membership_exchange):
         issuer = users['issuer']
 
-        # 新規発行
+        # deploy
         deploy_args = init_args(membership_exchange.address)
         membership_contract = issuer.deploy(IbetMembership, *deploy_args)
 
+        # assertion
         owner_address = membership_contract.owner()
         name = membership_contract.name()
         symbol = membership_contract.symbol()
@@ -68,12 +72,11 @@ class TestDeploy:
         balance = membership_contract.balanceOf(issuer)
         contact_information = membership_contract.contactInformation()
         privacy_policy = membership_contract.privacyPolicy()
-
         assert owner_address == issuer
         assert name == deploy_args[0]
         assert symbol == deploy_args[1]
         assert total_supply == deploy_args[2]
-        assert tradable_exchange == to_checksum_address(deploy_args[3])
+        assert tradable_exchange == deploy_args[3]
         assert details == deploy_args[4]
         assert return_details == deploy_args[5]
         assert expiration_date == deploy_args[6]
@@ -84,356 +87,239 @@ class TestDeploy:
         assert contact_information == deploy_args[9]
         assert privacy_policy == deploy_args[10]
 
-    # エラー系1: 入力値の型誤り（name）
-    def test_deploy_error_1(self, users, IbetMembership, membership_exchange):
-        issuer = users['issuer']
-
-        deploy_args = init_args(membership_exchange.address)
-        deploy_args[0] = '0x66aB6D9362d4F35596279692F0251Db635165871'  # stringに変換できないデータ
-
-        with pytest.raises(ValueError):
-            issuer.deploy(IbetMembership, *deploy_args)
-
-    # エラー系2: 入力値の型誤り（symbol）
-    def test_deploy_error_2(self, users, IbetMembership, membership_exchange):
-        issuer = users['issuer']
-
-        deploy_args = init_args(membership_exchange.address)
-        deploy_args[1] = '0x66aB6D9362d4F35596279692F0251Db635165871'  # stringに変換できないデータ
-
-        with pytest.raises(ValueError):
-            issuer.deploy(IbetMembership, *deploy_args)
-
-    # エラー系3: 入力値の型誤り（initialSupply）
-    def test_deploy_error_3(self, users, IbetMembership, membership_exchange):
-        issuer = users['issuer']
-
-        deploy_args = init_args(membership_exchange.address)
-        deploy_args[2] = "a10000"
-
-        with pytest.raises(TypeError):
-            issuer.deploy(IbetMembership, *deploy_args)
-
-    # エラー系4: 入力値の型誤り（details）
-    def test_deploy_error_4(self, users, IbetMembership, membership_exchange):
-        issuer = users['issuer']
-
-        deploy_args = init_args(membership_exchange.address)
-        deploy_args[4] = '0x66aB6D9362d4F35596279692F0251Db635165871'  # stringに変換できないデータ
-
-        with pytest.raises(ValueError):
-            issuer.deploy(IbetMembership, *deploy_args)
-
-    # エラー系5: 入力値の型誤り（returnDetails）
-    def test_deploy_error_5(self, users, IbetMembership, membership_exchange):
-        issuer = users['issuer']
-
-        deploy_args = init_args(membership_exchange.address)
-        deploy_args[5] = '0x66aB6D9362d4F35596279692F0251Db635165871'  # stringに変換できないデータ
-
-        with pytest.raises(ValueError):
-            issuer.deploy(IbetMembership, *deploy_args)
-
-    # エラー系6: 入力値の型誤り（expirationDate）
-    def test_deploy_error_6(self, users, IbetMembership, membership_exchange):
-        issuer = users['issuer']
-
-        deploy_args = init_args(membership_exchange.address)
-        deploy_args[6] = '0x66aB6D9362d4F35596279692F0251Db635165871'  # stringに変換できないデータ
-
-        with pytest.raises(ValueError):
-            issuer.deploy(IbetMembership, *deploy_args)
-
-    # エラー系7: 入力値の型誤り（memo）
-    def test_deploy_error_7(self, users, IbetMembership, membership_exchange):
-        issuer = users['issuer']
-
-        deploy_args = init_args(membership_exchange.address)
-        deploy_args[7] = '0x66aB6D9362d4F35596279692F0251Db635165871'  # stringに変換できないデータ
-
-        with pytest.raises(ValueError):
-            issuer.deploy(IbetMembership, *deploy_args)
-
-    # エラー系8: 入力値の型誤り（transferable）
-    def test_deploy_error_8(self, users, IbetMembership, membership_exchange):
-        issuer = users['issuer']
-
-        deploy_args = init_args(membership_exchange.address)
-        deploy_args[8] = 'True'
-
-        with pytest.raises(ValueError):
-            issuer.deploy(IbetMembership, *deploy_args)
-
-    # エラー系9: 入力値の型誤り（tradableExchange）
-    def test_deploy_error_9(self, users, IbetMembership, membership_exchange):
-        issuer = users['issuer']
-
-        deploy_args = init_args(membership_exchange.address)
-        deploy_args[3] = '0xaaaa'
-
-        with pytest.raises(ValueError):
-            issuer.deploy(IbetMembership, *deploy_args)
-
-    # エラー系10: 入力値の型誤り（contactInformation）
-    def test_deploy_error_10(self, users, IbetMembership, membership_exchange):
-        issuer = users['issuer']
-
-        deploy_args = init_args(membership_exchange.address)
-        deploy_args[9] = '0x66aB6D9362d4F35596279692F0251Db635165871'  # stringに変換できないデータ
-
-        with pytest.raises(ValueError):
-            issuer.deploy(IbetMembership, *deploy_args)
-
-    # エラー系10: 入力値の型誤り（privacyPolicy）
-    def test_deploy_error_11(self, users, IbetMembership, membership_exchange):
-        issuer = users['issuer']
-
-        deploy_args = init_args(membership_exchange.address)
-        deploy_args[10] = '0x66aB6D9362d4F35596279692F0251Db635165871'  # stringに変換できないデータ
-
-        with pytest.raises(ValueError):
-            issuer.deploy(IbetMembership, *deploy_args)
-
 
 # TEST_transfer
 class TestTransfer:
 
-    # 正常系1: アカウントアドレスへの振替
-    def test_transfer_normal_1(self, users, IbetMembership, membership_exchange):
+    ##########################################################
+    # Normal
+    ##########################################################
+
+    # Normal_1_1
+    # Transfer to account address
+    def test_normal_1_1(self, users, IbetMembership, membership_exchange):
         issuer = users['issuer']
         trader = users['trader']
         transfer_amount = 100
 
-        # 新規発行
+        # issue token
         deploy_args = init_args(membership_exchange.address)
         membership_contract = issuer.deploy(IbetMembership, *deploy_args)
 
-        # 振替
-        membership_contract.transfer.transact(trader, transfer_amount, {'from': issuer})
+        # transfer
+        tx = membership_contract.transfer.transact(
+            trader,
+            transfer_amount,
+            {'from': issuer}
+        )
 
-        # 振替後の残高取得
+        # assertion
         issuer_balance = membership_contract.balanceOf(issuer)
         trader_balance = membership_contract.balanceOf(trader)
-
         assert issuer_balance == deploy_args[2] - transfer_amount
         assert trader_balance == transfer_amount
 
-    # 正常系2: 会員権取引コントラクトへの振替
-    def test_transfer_normal_2(self, users, IbetMembership, membership_exchange):
-        issuer = users['issuer']
-        transfer_amount = 100
+        assert tx.events["Transfer"]["from"] == issuer
+        assert tx.events["Transfer"]["to"] == trader
+        assert tx.events["Transfer"]["value"] == transfer_amount
 
-        # 新規発行
-        deploy_args = init_args(membership_exchange.address)
-        membership_contract = issuer.deploy(IbetMembership, *deploy_args)
-
-        exchange_address = membership_exchange.address
-        membership_contract.transfer.transact(exchange_address, transfer_amount, {'from': issuer})
-
-        issuer_balance = membership_contract.balanceOf(issuer)
-        exchange_balance = membership_contract.balanceOf(exchange_address)
-
-        assert issuer_balance == deploy_args[2] - transfer_amount
-        assert exchange_balance == transfer_amount
-
-    # 正常系3-1: 限界値：上限値
-    # アカウントアドレスへの振替
-    def test_transfer_normal_3_1(self, users, IbetMembership, membership_exchange):
+    # Normal_1_2
+    # Transfer to account address
+    # Upper limit
+    def test_normal_1_2(self, users, IbetMembership, membership_exchange):
         issuer = users['issuer']
         trader = users['trader']
 
-        # 発行
+        # issue token
         deploy_args = init_args(membership_exchange.address)
-        deploy_args[2] = 2 ** 256 - 1  # 上限まで発行する
+        deploy_args[2] = 2 ** 256 - 1
         membership_contract = issuer.deploy(IbetMembership, *deploy_args)
 
-        # 振替
+        # transfer
         transfer_amount = 2 ** 256 - 1
-        membership_contract.transfer.transact(trader, transfer_amount, {'from': issuer})
+        tx = membership_contract.transfer.transact(
+            trader,
+            transfer_amount,
+            {'from': issuer}
+        )
 
+        # assertion
         assert membership_contract.balanceOf(issuer) == 0
         assert membership_contract.balanceOf(trader) == 2 ** 256 - 1
 
-    # 正常系3-2: 限界値：下限値
-    # アカウントアドレスへの振替
-    def test_transfer_normal_3_2(self, users, IbetMembership, membership_exchange):
-        issuer = users['issuer']
-        trader = users['trader']
+        assert tx.events["Transfer"]["from"] == issuer
+        assert tx.events["Transfer"]["to"] == trader
+        assert tx.events["Transfer"]["value"] == transfer_amount
 
-        # 発行
+    # Normal_2_1
+    # Transfer to contract address
+    def test_normal_2_1(self, users, IbetMembership, membership_exchange):
+        issuer = users['issuer']
+        transfer_amount = 100
+
+        # issue token
         deploy_args = init_args(membership_exchange.address)
-        deploy_args[2] = 0
         membership_contract = issuer.deploy(IbetMembership, *deploy_args)
 
-        # 振替
-        transfer_amount = 0
-        membership_contract.transfer.transact(trader, transfer_amount, {'from': issuer})
+        # transfer to contract address
+        exchange_address = membership_exchange.address
+        tx = membership_contract.transfer.transact(
+            exchange_address,
+            transfer_amount,
+            {'from': issuer}
+        )
 
-        assert membership_contract.balanceOf(issuer) == 0
-        assert membership_contract.balanceOf(trader) == 0
+        # assertion
+        assert membership_contract.balanceOf(issuer) == deploy_args[2] - transfer_amount
+        assert membership_contract.balanceOf(exchange_address) == transfer_amount
 
-    # 正常系3-3: 限界値：上限値
-    # コントラクトアドレスへの振替
-    def test_transfer_normal_3_3(self, users, IbetMembership, membership_exchange):
+        assert tx.events["Transfer"]["from"] == issuer
+        assert tx.events["Transfer"]["to"] == exchange_address
+        assert tx.events["Transfer"]["value"] == transfer_amount
+
+    # Normal_2_2
+    # Transfer to contract address
+    # Upper limit
+    def test_normal_2_2(self, users, IbetMembership, membership_exchange):
         issuer = users['issuer']
 
-        # 発行
+        # issue token
         deploy_args = init_args(membership_exchange.address)
-        deploy_args[2] = 2 ** 256 - 1  # 上限まで発行する
+        deploy_args[2] = 2 ** 256 - 1
         membership_contract = issuer.deploy(IbetMembership, *deploy_args)
 
-        # 振替
+        # transfer
         exchange_address = membership_exchange.address
         transfer_amount = 2 ** 256 - 1
-        membership_contract. \
-            transfer.transact(exchange_address, transfer_amount, {'from': issuer})
+        tx = membership_contract.transfer.transact(
+            exchange_address,
+            transfer_amount,
+            {'from': issuer}
+        )
 
+        # assertion
         assert membership_contract.balanceOf(issuer) == 0
         assert membership_contract.balanceOf(exchange_address) == 2 ** 256 - 1
 
-    # 正常系3-4: 限界値：下限値
-    # コントラクトアドレスへの振替
-    def test_transfer_normal_3_4(self, users, IbetMembership, membership_exchange):
-        issuer = users['issuer']
+        assert tx.events["Transfer"]["from"] == issuer
+        assert tx.events["Transfer"]["to"] == exchange_address
+        assert tx.events["Transfer"]["value"] == transfer_amount
 
-        # 発行
-        deploy_args = init_args(membership_exchange.address)
-        deploy_args[2] = 0
-        membership_contract = issuer.deploy(IbetMembership, *deploy_args)
+    ##########################################################
+    # Error
+    ##########################################################
 
-        # 振替
-        exchange_address = membership_exchange.address
-        transfer_amount = 0
-        membership_contract. \
-            transfer.transact(exchange_address, transfer_amount, {'from': issuer})
-
-        assert membership_contract.balanceOf(issuer) == 0
-        assert membership_contract.balanceOf(exchange_address) == 0
-
-    # エラー系1-1: 入力値の型誤り（to）
-    def test_transfer_error_1_1(self, users, IbetMembership, membership_exchange):
-        issuer = users['issuer']
-        to = 1234
-        transfer_amount = 100
-
-        # 新規発行
-        deploy_args = init_args(membership_exchange.address)
-        membership_contract = issuer.deploy(IbetMembership, *deploy_args)
-
-        # 振替
-        with pytest.raises(ValueError):
-            membership_contract.transfer.transact(to, transfer_amount, {'from': issuer})
-
-    # エラー系1-2: 入力値の型誤り（value）
-    def test_transfer_error_1_2(self, users, IbetMembership, membership_exchange):
-        issuer = users['issuer']
-        to = users['trader'].address
-
-        # 新規発行
-        deploy_args = init_args(membership_exchange.address)
-        membership_contract = issuer.deploy(IbetMembership, *deploy_args)
-
-        # 振替（String）
-        with pytest.raises(TypeError):
-            membership_contract.transfer.transact(to, 'ABC', {'from': issuer})
-
-        # 振替（負の値）
-        with pytest.raises(OverflowError):
-            membership_contract.transfer.transact(to, -1, {'from': issuer})
-
-    # エラー系2: 限界値超
-    def test_transfer_error_2(self, users, IbetMembership, membership_exchange):
-        issuer = users['issuer']
-        to = users['trader']
-
-        # 新規発行
-        deploy_args = init_args(membership_exchange.address)
-        membership_contract = issuer.deploy(IbetMembership, *deploy_args)
-
-        # 振替（上限値超え）
-        with pytest.raises(OverflowError):
-            membership_contract.transfer.transact(to, 2 ** 256, {'from': issuer})
-
-        # 振替（下限値超え）
-        with pytest.raises(OverflowError):
-            membership_contract.transfer.transact(to, -1, {'from': issuer})
-
-    # エラー系3: 残高不足
-    def test_transfer_error_3(self, users, IbetMembership, membership_exchange):
+    # Error_1
+    # Insufficient balance
+    def test_error_1(self, users, IbetMembership, membership_exchange):
         issuer = users['issuer']
         trader = users['trader']
 
-        # 新規発行
+        # issue token
         deploy_args = init_args(membership_exchange.address)
         membership_contract = issuer.deploy(IbetMembership, *deploy_args)
 
-        # 振替（残高超）
+        # transfer
         transfer_amount = 10000000000
-        membership_contract.transfer.transact(trader, transfer_amount, {'from': issuer, 'gas': 4})
+        with brownie.reverts():
+            membership_contract.transfer.transact(
+                trader,
+                transfer_amount,
+                {'from': issuer}
+            )
 
         assert membership_contract.balanceOf(issuer) == deploy_args[2]
         assert membership_contract.balanceOf(trader) == 0
 
-    # エラー系4: private functionにアクセスできない
-    def test_transfer_error_4(self, users, IbetMembership, membership_exchange):
+    # Error_2
+    # Cannot access private functions
+    def test_error_2(self, users, IbetMembership, membership_exchange):
         issuer = users['issuer']
         trader = users['trader']
 
         transfer_amount = 100
-        data = 0
+        data = 'test_data'
 
-        # 新規発行
+        # issue token
         deploy_args = init_args(membership_exchange.address)
         membership_contract = issuer.deploy(IbetMembership, *deploy_args)
 
         with pytest.raises(AttributeError):
-            membership_contract.isContract(trader, {'from': issuer})
+            membership_contract.isContract(
+                trader,
+                {'from': issuer}
+            )
 
         with pytest.raises(AttributeError):
-            membership_contract.transferToAddress.transact(trader, transfer_amount, data, {'from': issuer})
+            membership_contract.transferToAddress.transact(
+                trader,
+                transfer_amount,
+                data,
+                {'from': issuer}
+            )
 
         with pytest.raises(AttributeError):
-            membership_contract.transferToContract.transact(trader, transfer_amount, data, {'from': issuer})
+            membership_contract.transferToContract.transact(
+                trader,
+                transfer_amount,
+                data,
+                {'from': issuer}
+            )
 
-    # エラー系5: 譲渡不可
-    def test_transfer_error_5(self, users, IbetMembership, membership_exchange):
+    # Error_3
+    # Not transferable token
+    def test_error_3(self, users, IbetMembership, membership_exchange):
         issuer = users['issuer']
         trader = users['trader']
 
-        # 新規発行
+        # issue token
         deploy_args = init_args(membership_exchange.address)
         deploy_args[8] = False
         membership_contract = issuer.deploy(IbetMembership, *deploy_args)
 
-        # 振替：譲渡不可
+        # transfer
         transfer_amount = 10
-        membership_contract.transfer(trader, transfer_amount, {'from': issuer})  # エラーになる
+        with brownie.reverts():
+            membership_contract.transfer(
+                trader,
+                transfer_amount,
+                {'from': issuer}
+            )
 
+        # assertion
         assert membership_contract.balanceOf(issuer) == deploy_args[2]
         assert membership_contract.balanceOf(trader) == 0
 
-    # エラー系6: 取引不可Exchangeへの振替
-    def test_transfer_error_6(self, users, IbetMembership, membership_exchange,
-                              membership_exchange_storage, payment_gateway,
-                              IbetCouponExchange):
+    # Error_4
+    # Transfer to contract address
+    # Not tradable exchange
+    def test_error_4(self, users, IbetMembership, IbetMembershipExchange,
+                     membership_exchange, membership_exchange_storage, payment_gateway):
         issuer = users['issuer']
 
-        # 新規発行
+        # issue token
         deploy_args = init_args(membership_exchange.address)
         membership_contract = issuer.deploy(IbetMembership, *deploy_args)
 
-        # 取引不可Exchange
-        dummy_exchange = users['admin'].deploy(
-            IbetCouponExchange,  # IbetMembershipExchange以外を読み込む必要がある
-            payment_gateway.address, membership_exchange_storage.address
+        # deploy (not tradable exchange)
+        not_tradable_exchange = users['admin'].deploy(
+            IbetMembershipExchange,
+            payment_gateway.address,
+            membership_exchange_storage.address
         )
 
-        # 振替
+        # transfer
         transfer_amount = 10
-        membership_contract.transfer.transact(dummy_exchange.address, transfer_amount, {'from': issuer})  # エラーになる
+        with brownie.reverts():
+            membership_contract.transfer.transact(
+                not_tradable_exchange.address,
+                transfer_amount,
+                {'from': issuer}
+            )
 
+        # assertion
         assert membership_contract.balanceOf(issuer) == deploy_args[2]
-        assert membership_contract.balanceOf(dummy_exchange.address) == 0
+        assert membership_contract.balanceOf(not_tradable_exchange.address) == 0
 
 
 # TEST_bulkTransfer
@@ -445,7 +331,7 @@ class TestBulkTransfer:
 
     # Normal_1
     # Bulk transfer to account address (1 data)
-    def test_bulk_transfer_normal_1(self, IbetMembership, users, membership_exchange):
+    def test_normal_1(self, IbetMembership, users, membership_exchange):
         from_address = users["issuer"]
         to_address = users["trader"]
 
@@ -470,7 +356,7 @@ class TestBulkTransfer:
 
     # Normal_2
     # Bulk transfer to account address (multiple data)
-    def test_bulk_transfer_normal_2(self, IbetMembership, users, membership_exchange):
+    def test_normal_2(self, IbetMembership, users, membership_exchange):
         from_address = users["issuer"]
         to_address = users["trader"]
 
@@ -498,7 +384,7 @@ class TestBulkTransfer:
 
     # Normal_3
     # Bulk transfer to contract address
-    def test_bulk_transfer_normal_3(self, IbetMembership, users, membership_exchange):
+    def test_normal_3(self, IbetMembership, users, membership_exchange):
         from_address = users["issuer"]
 
         # issue membership token
@@ -524,47 +410,9 @@ class TestBulkTransfer:
     # Error
     #######################################
 
-    # Error_1_1
-    # Input value type error (to_list)
-    def test_bulk_transfer_error_1_1(self, IbetMembership, users, membership_exchange):
-        from_address = users["issuer"]
-        to_address = 1234
-        transfer_amount = 1
-
-        # issue membership token
-        deploy_args = init_args(membership_exchange.address)
-        membership_contract = from_address.deploy(IbetMembership, *deploy_args)
-
-        # bulk transfer
-        with pytest.raises(ValueError):
-            membership_contract.bulkTransfer.transact(
-                [to_address],
-                [transfer_amount],
-                {"from": from_address}
-            )
-
-    # Error_1_2
-    # Input value type error (value_list)
-    def test_bulk_transfer_error_1_2(self, IbetMembership, users, membership_exchange):
-        from_address = users["issuer"]
-        to_address = users["trader"]
-        transfer_amount = "abc"
-
-        # issue membership token
-        deploy_args = init_args(membership_exchange.address)
-        membership_contract = from_address.deploy(IbetMembership, *deploy_args)
-
-        # bulk transfer
-        with pytest.raises(TypeError):
-            membership_contract.bulkTransfer.transact(
-                [to_address],
-                [transfer_amount],
-                {"from": from_address}
-            )
-
-    # Error_2
-    # Over/Under the limit
-    def test_bulk_transfer_error_2(self, IbetMembership, users, membership_exchange):
+    # Error_1
+    # Over the limit
+    def test_error_1(self, IbetMembership, users, membership_exchange):
         from_address = users['issuer']
         to_address = users['trader']
 
@@ -574,27 +422,21 @@ class TestBulkTransfer:
         membership_contract = from_address.deploy(IbetMembership, *deploy_args)
 
         # over the upper limit
-        membership_contract.bulkTransfer.transact(
-            [to_address, to_address],
-            [2 ** 256 - 1, 1],
-            {'from': from_address}
-        )  # error
+        with brownie.reverts():
+            membership_contract.bulkTransfer.transact(
+                [to_address, to_address],
+                [2 ** 256 - 1, 1],
+                {'from': from_address}
+            )
+
         from_balance = membership_contract.balanceOf(from_address)
         to_balance = membership_contract.balanceOf(to_address)
         assert from_balance == deploy_args[2]
         assert to_balance == 0
 
-        # under the lower limit
-        with pytest.raises(OverflowError):
-            membership_contract.bulkTransfer.transact(
-                [to_address],
-                [-1],
-                {'from': from_address}
-            )
-
-    # Error_3
+    # Error_2
     # Insufficient balance
-    def test_bulk_transfer_error_3(self, IbetMembership, users, membership_exchange):
+    def test_error_2(self, IbetMembership, users, membership_exchange):
         from_address = users["issuer"]
         to_address = users["trader"]
 
@@ -603,18 +445,19 @@ class TestBulkTransfer:
         membership_contract = from_address.deploy(IbetMembership, *deploy_args)
 
         # bulk transfer
-        membership_contract.bulkTransfer.transact(
-            [to_address, to_address],
-            [deploy_args[2], 1],
-            {'from': from_address}
-        )  # error
+        with brownie.reverts():
+            membership_contract.bulkTransfer.transact(
+                [to_address, to_address],
+                [deploy_args[2], 1],
+                {'from': from_address}
+            )  # error
 
         assert membership_contract.balanceOf(from_address) == deploy_args[2]
         assert membership_contract.balanceOf(to_address) == 0
 
-    # Error_4
+    # Error_3
     # Non-transferable token
-    def test_bulk_transfer_error_4(self, IbetMembership, users, membership_exchange):
+    def test_error_3(self, IbetMembership, users, membership_exchange):
         from_address = users["issuer"]
         to_address = users["trader"]
 
@@ -626,11 +469,12 @@ class TestBulkTransfer:
         membership_contract.setTransferable.transact(False, {"from": from_address})
 
         # bulk transfer
-        membership_contract.bulkTransfer.transact(
-            [to_address],
-            [1],
-            {"from": from_address}
-        )  # error
+        with brownie.reverts():
+            membership_contract.bulkTransfer.transact(
+                [to_address],
+                [1],
+                {"from": from_address}
+            )  # error
 
         # assertion
         from_balance = membership_contract.balanceOf(from_address)
@@ -642,136 +486,157 @@ class TestBulkTransfer:
 # TEST_transferFrom
 class TestTransferFrom:
 
-    # 正常系1: アカウントアドレスへの移転
-    def test_transferFrom_normal_1(self, users, IbetMembership, membership_exchange):
+    ##########################################################
+    # Normal
+    ##########################################################
+
+    # Normal_1_1
+    # Transfer to account address
+    def test_normal_1_1(self, users, IbetMembership, membership_exchange):
         issuer = users['issuer']
         from_address = users['admin']
         to_address = users['trader']
         value = 100
 
-        # 新規発行
+        # issue token
         deploy_args = init_args(membership_exchange.address)
         membership_contract = issuer.deploy(IbetMembership, *deploy_args)
 
-        # 譲渡（issuer -> from_address）
-        membership_contract. \
-            transfer.transact(from_address, value, {'from': issuer})
+        # transfer
+        membership_contract.transfer.transact(
+            from_address,
+            value,
+            {'from': issuer}
+        )
 
-        # 移転（_from -> _to）
-        membership_contract. \
-            transferFrom.transact(from_address, to_address, value, {'from': issuer})
+        # forced transfer
+        tx = membership_contract.transferFrom.transact(
+            from_address,
+            to_address,
+            value,
+            {'from': issuer}
+        )
 
+        # assertion
         issuer_balance = membership_contract.balanceOf(issuer)
         from_balance = membership_contract.balanceOf(from_address)
         to_balance = membership_contract.balanceOf(to_address)
-
         assert issuer_balance == deploy_args[2] - value
         assert from_balance == 0
         assert to_balance == value
 
-    # 正常系2: コントラクトアドレスへの移転
-    def test_transferFrom_normal_2(self, users, IbetMembership, membership_exchange):
+        assert tx.events["Transfer"]["from"] == from_address
+        assert tx.events["Transfer"]["to"] == to_address
+        assert tx.events["Transfer"]["value"] == value
+
+    # Normal_1_2
+    # Transfer to account address
+    # Upper limit
+    def test_normal_1_2(self, users, IbetMembership, membership_exchange):
+        issuer = users['issuer']
+        from_address = users['admin']
+        to_address = users['trader']
+        max_value = 2 ** 256 - 1
+
+        # issue token
+        deploy_args = init_args(membership_exchange.address)
+        deploy_args[2] = max_value
+        membership_contract = issuer.deploy(IbetMembership, *deploy_args)
+
+        # transfer
+        membership_contract.transfer.transact(
+            from_address,
+            max_value,
+            {'from': issuer}
+        )
+
+        # forced transfer
+        tx = membership_contract.transferFrom.transact(
+            from_address,
+            to_address,
+            max_value,
+            {'from': issuer}
+        )
+
+        # assertion
+        issuer_balance = membership_contract.balanceOf(issuer)
+        from_balance = membership_contract.balanceOf(from_address)
+        to_balance = membership_contract.balanceOf(to_address)
+        assert issuer_balance == 0
+        assert from_balance == 0
+        assert to_balance == max_value
+
+        assert tx.events["Transfer"]["from"] == from_address
+        assert tx.events["Transfer"]["to"] == to_address
+        assert tx.events["Transfer"]["value"] == max_value
+
+    # Normal_2_1
+    # Transfer to contract address
+    def test_normal_2_1(self, users, IbetMembership, membership_exchange):
         issuer = users['issuer']
         from_address = users['trader']
         value = 100
 
-        # 新規発行
+        # issue token
         deploy_args = init_args(membership_exchange.address)
         membership_contract = issuer.deploy(IbetMembership, *deploy_args)
         to_address = membership_exchange.address
 
-        # 譲渡（issuer -> from_address）
-        membership_contract. \
-            transfer.transact(from_address, value, {'from': issuer})
+        # transfer
+        membership_contract.transfer.transact(
+            from_address,
+            value,
+            {'from': issuer}
+        )
 
-        # 移転（_from -> _to）
-        membership_contract. \
-            transferFrom.transact(from_address, to_address, value, {'from': issuer})
+        # forced transfer
+        tx = membership_contract.transferFrom.transact(
+            from_address,
+            to_address,
+            value,
+            {'from': issuer}
+        )
 
+        # assertion
         issuer_balance = membership_contract.balanceOf(issuer)
         from_balance = membership_contract.balanceOf(from_address)
         to_balance = membership_contract.balanceOf(to_address)
-
         assert issuer_balance == deploy_args[2] - value
         assert from_balance == 0
         assert to_balance == value
 
-    # 正常系3-1: 限界値：上限値
-    #  アカウントアドレスへの移転
-    def test_transferFrom_normal_3_1(self, users, IbetMembership, membership_exchange):
-        issuer = users['issuer']
-        from_address = users['admin']
-        to_address = users['trader']
-        max_value = 2 ** 256 - 1
+        assert tx.events["Transfer"]["from"] == from_address
+        assert tx.events["Transfer"]["to"] == to_address
+        assert tx.events["Transfer"]["value"] == value
 
-        # 発行
-        deploy_args = init_args(membership_exchange.address)
-        deploy_args[2] = max_value
-        membership_contract = issuer.deploy(IbetMembership, *deploy_args)
-
-        # 譲渡（issuer -> from_address）
-        membership_contract. \
-            transfer.transact(from_address, max_value, {'from': issuer})
-
-        # 移転（from -> to）
-        membership_contract. \
-            transferFrom.transact(from_address, to_address, max_value, {'from': issuer})
-
-        issuer_balance = membership_contract.balanceOf(issuer)
-        from_balance = membership_contract.balanceOf(from_address)
-        to_balance = membership_contract.balanceOf(to_address)
-
-        assert issuer_balance == 0
-        assert from_balance == 0
-        assert to_balance == max_value
-
-    # 正常系3-2: 限界値：下限値
-    #  アカウントアドレスへの移転
-    def test_transferFrom_normal_3_2(self, users, IbetMembership, membership_exchange):
-        issuer = users['issuer']
-        from_address = users['admin']
-        to_address = users['trader']
-        min_value = 0
-
-        # 発行
-        deploy_args = init_args(membership_exchange.address)
-        deploy_args[2] = min_value
-        membership_contract = issuer.deploy(IbetMembership, *deploy_args)
-
-        # 譲渡（issuer -> from_address）
-        membership_contract. \
-            transfer.transact(from_address, min_value, {'from': issuer})
-
-        # 移転（from -> to）
-        membership_contract. \
-            transferFrom.transact(from_address, to_address, min_value, {'from': issuer})
-
-        issuer_balance = membership_contract.balanceOf(issuer)
-        from_balance = membership_contract.balanceOf(from_address)
-        to_balance = membership_contract.balanceOf(to_address)
-
-        assert issuer_balance == 0
-        assert from_balance == 0
-        assert to_balance == 0
-
-    # 正常系3-3: 限界値：上限値
-    #  コントラクトアドレスへの移転
-    def test_transferFrom_normal_3_3(self, users, IbetMembership, membership_exchange):
+    # Normal_2_2
+    # Transfer to contract address
+    # Upper limit
+    def test_normal_2_2(self, users, IbetMembership, membership_exchange):
         issuer = users['issuer']
         from_address = users['admin']
         to_address = membership_exchange.address
         max_value = 2 ** 256 - 1
 
-        # 発行
+        # issue token
         deploy_args = init_args(membership_exchange.address)
         deploy_args[2] = max_value
         membership_contract = issuer.deploy(IbetMembership, *deploy_args)
 
-        # 譲渡（issuer -> from_address）
-        membership_contract.transfer.transact(from_address, max_value, {'from': issuer})
+        # transfer
+        membership_contract.transfer.transact(
+            from_address,
+            max_value,
+            {'from': issuer}
+        )
 
-        # 移転（from -> to）
-        membership_contract.transferFrom.transact(from_address, to_address, max_value, {'from': issuer})
+        # forced transfer
+        tx = membership_contract.transferFrom.transact(
+            from_address,
+            to_address,
+            max_value,
+            {'from': issuer}
+        )
 
         issuer_balance = membership_contract.balanceOf(issuer)
         from_balance = membership_contract.balanceOf(from_address)
@@ -780,139 +645,59 @@ class TestTransferFrom:
         assert from_balance == 0
         assert to_balance == max_value
 
-    # 正常系3-4: 限界値：下限値
-    #  コントラクトアドレスへの移転
-    def test_transferFrom_normal_3_4(self, users, IbetMembership, membership_exchange):
-        issuer = users['issuer']
-        from_address = users['admin']
-        to_address = membership_exchange.address
-        min_value = 0
+        assert tx.events["Transfer"]["from"] == from_address
+        assert tx.events["Transfer"]["to"] == to_address
+        assert tx.events["Transfer"]["value"] == max_value
 
-        # 発行
-        deploy_args = init_args(membership_exchange.address)
-        deploy_args[2] = min_value
-        membership_contract = issuer.deploy(IbetMembership, *deploy_args)
+    ##########################################################
+    # Error
+    ##########################################################
 
-        # 譲渡（issuer -> from_address）
-        membership_contract.transfer.transact(from_address, min_value, {'from': issuer})
-
-        # 移転（from -> to）
-        membership_contract.transferFrom.transact(from_address, to_address, min_value, {'from': issuer})
-
-        issuer_balance = membership_contract.balanceOf(issuer)
-        from_balance = membership_contract.balanceOf(from_address)
-        to_balance = membership_contract.balanceOf(to_address)
-        assert issuer_balance == 0
-        assert from_balance == 0
-        assert to_balance == 0
-
-    # エラー系1-1: 入力値の型誤り（from_address）
-    def test_transferFrom_error_1_1(self, users, IbetMembership, membership_exchange):
-        issuer = users['issuer']
-        to_address = users['trader']
-        value = 100
-
-        # 新規発行
-        deploy_args = init_args(membership_exchange.address)
-        membership_contract = issuer.deploy(IbetMembership, *deploy_args)
-
-        # String
-        with pytest.raises(ValueError):
-            membership_contract. \
-                transferFrom.transact('1234', to_address, value, {'from': issuer})
-
-        # Int
-        with pytest.raises(ValueError):
-            membership_contract. \
-                transferFrom.transact(1234, to_address, value, {'from': issuer})
-
-    # エラー系1-2: 入力値の型誤り（to_address）
-    def test_transferFrom_error_1_2(self, users, IbetMembership, membership_exchange):
-        issuer = users['issuer']
-        value = 100
-
-        # 新規発行
-        deploy_args = init_args(membership_exchange.address)
-        membership_contract = issuer.deploy(IbetMembership, *deploy_args)
-
-        # String
-        with pytest.raises(ValueError):
-            membership_contract. \
-                transferFrom.transact(issuer, '1234', value, {'from': issuer})
-
-        # Int
-        with pytest.raises(ValueError):
-            membership_contract. \
-                transferFrom.transact(issuer, 1234, value, {'from': issuer})
-
-    # エラー系1-3: 入力値の型誤り（value）
-    def test_transferFrom_error_1_3(self, users, IbetMembership, membership_exchange):
+    # Error_1
+    # Insufficient balance
+    def test_error_1(self, users, IbetMembership, membership_exchange):
         issuer = users['issuer']
         to_address = users['trader']
 
-        # 新規発行
+        # issue token
         deploy_args = init_args(membership_exchange.address)
         membership_contract = issuer.deploy(IbetMembership, *deploy_args)
 
-        # String
-        with pytest.raises(TypeError):
-            membership_contract. \
-                transferFrom.transact(issuer, to_address, 'hundred', {'from': issuer})
-
-        # 負の値
-        with pytest.raises(OverflowError):
-            membership_contract. \
-                transferFrom.transact(issuer, to_address, -1, {'from': issuer})
-
-    # エラー系2: 限界値超
-    def test_transferFrom_error_2(self, users, IbetMembership, membership_exchange):
-        issuer = users['issuer']
-        to_address = users['trader']
-
-        # 新規発行
-        deploy_args = init_args(membership_exchange.address)
-        membership_contract = issuer.deploy(IbetMembership, *deploy_args)
-
-        # 上限値超
-        with pytest.raises(OverflowError):
-            membership_contract. \
-                transferFrom.transact(issuer, to_address, 2 ** 256, {'from': issuer})
-
-        # 下限値超
-        with pytest.raises(OverflowError):
-            membership_contract. \
-                transferFrom.transact(issuer, to_address, -1, {'from': issuer})
-
-    # エラー系3: 残高不足
-    def test_transferFrom_error_3(self, users, IbetMembership, membership_exchange):
-        issuer = users['issuer']
-        to_address = users['trader']
-
-        # 新規発行
-        deploy_args = init_args(membership_exchange.address)
-        membership_contract = issuer.deploy(IbetMembership, *deploy_args)
-
-        # 残高超
+        # forced transfer
         transfer_amount = 10000000000
-        membership_contract.transferFrom.transact(issuer, to_address, transfer_amount, {'from': issuer})
+        with brownie.reverts():
+            membership_contract.transferFrom.transact(
+                issuer,
+                to_address,
+                transfer_amount,
+                {'from': issuer}
+            )
 
+        # assertion
         assert membership_contract.balanceOf(issuer) == deploy_args[2]
         assert membership_contract.balanceOf(to_address) == 0
 
-    # エラー系4: 権限エラー（発行者以外が実行）
-    def test_transferFrom_error_4(self, users, IbetMembership, membership_exchange):
+    # Unauthorized
+    def test_error_2(self, users, IbetMembership, membership_exchange):
         issuer = users['issuer']
         admin = users['admin']
         to_address = users['trader']
         transfer_amount = 100
 
-        # 新規発行
+        # issue token
         deploy_args = init_args(membership_exchange.address)
         membership_contract = issuer.deploy(IbetMembership, *deploy_args)
 
-        # 残高超
-        membership_contract.transferFrom.transact(issuer, to_address, transfer_amount, {'from': admin})  # エラーになる
+        # forced transfer
+        with brownie.reverts():
+            membership_contract.transferFrom.transact(
+                issuer,
+                to_address,
+                transfer_amount,
+                {'from': admin}
+            )
 
+        # assertion
         assert membership_contract.balanceOf(issuer) == deploy_args[2]
         assert membership_contract.balanceOf(to_address) == 0
 
@@ -920,90 +705,86 @@ class TestTransferFrom:
 # TEST_balanceOf
 class TestBalanceOf:
 
-    # 正常系1: 発行 -> 残高確認
-    def test_balanceOf_normal_1(self, users, IbetMembership, membership_exchange):
+    ##########################################################
+    # Normal
+    ##########################################################
+
+    # Normal_1
+    def test_normal_1(self, users, IbetMembership, membership_exchange):
         issuer = users['issuer']
 
-        # 新規発行
+        # issue token
         deploy_args = init_args(membership_exchange.address)
         membership_contract = issuer.deploy(IbetMembership, *deploy_args)
 
+        # assertion
         balance = membership_contract.balanceOf(issuer)
         assert balance == deploy_args[2]
 
-    # 正常系2: データなし -> 残高ゼロ
-    def test_balanceOf_normal_2(self, users, IbetMembership, membership_exchange):
+    # Normal_2
+    # No data
+    def test_normal_2(self, users, IbetMembership, membership_exchange):
         issuer = users['issuer']
         trader = users['trader']
 
-        # 新規発行
+        # issue token
         deploy_args = init_args(membership_exchange.address)
         membership_contract = issuer.deploy(IbetMembership, *deploy_args)
 
+        # assertion
         balance = membership_contract.balanceOf(trader)
         assert balance == 0
-
-    # エラー系1: 入力値の型誤り
-    def test_balanceOf_error_1(self, users, IbetMembership, membership_exchange):
-        issuer = users['issuer']
-
-        # 新規発行
-        deploy_args = init_args(membership_exchange.address)
-        membership_contract = issuer.deploy(IbetMembership, *deploy_args)
-
-        # 型誤り：String
-        with pytest.raises(ValueError):
-            membership_contract.balanceOf('1234')
-
-        # 型誤り：Int
-        with pytest.raises(ValueError):
-            membership_contract.balanceOf(1234)
 
 
 # TEST_setDetails
 class TestSetDetails:
 
-    # 正常系1: 発行 -> 詳細更新
-    def test_setDetails_normal_1(self, users, IbetMembership, membership_exchange):
+    ##########################################################
+    # Normal
+    ##########################################################
+
+    # Normal_1
+    def test_normal_1(self, users, IbetMembership, membership_exchange):
         issuer = users['issuer']
         after_details = 'after_details'
 
-        # 新規発行
+        # issue token
         deploy_args = init_args(membership_exchange.address)
         membership_contract = issuer.deploy(IbetMembership, *deploy_args)
 
-        # 会員権詳細更新
-        membership_contract. \
-            setDetails.transact(after_details, {'from': issuer})
+        # change token details
+        membership_contract.setDetails.transact(
+            after_details,
+            {'from': issuer}
+        )
 
+        # assertion
         details = membership_contract.details()
         assert after_details == details
 
-    # エラー系1: 入力値の型誤り
-    def test_setDetails_error_1(self, users, IbetMembership, membership_exchange):
-        issuer = users['issuer']
+    ##########################################################
+    # Error
+    ##########################################################
 
-        # 新規発行
-        deploy_args = init_args(membership_exchange.address)
-        membership_contract = issuer.deploy(IbetMembership, *deploy_args)
-
-        # 型誤り
-        with pytest.raises(ValueError):
-            membership_contract.setDetails.transact('0x66aB6D9362d4F35596279692F0251Db635165871', {'from': issuer})
-
-    # エラー系2: 権限エラー
-    def test_setDetails_error_2(self, users, IbetMembership, membership_exchange):
+    # Error_1
+    # Unauthorized
+    def test_error_1(self, users, IbetMembership, membership_exchange):
         issuer = users['issuer']
         attacker = users['trader']
         after_details = 'after_details'
 
-        # 新規発行
+        # issue token
         deploy_args = init_args(membership_exchange.address)
         membership_contract = issuer.deploy(IbetMembership, *deploy_args)
 
-        # 会員権詳細更新
-        membership_contract.setDetails.transact(after_details, {'from': attacker})  # エラーになる
+        # change token details
+        with brownie.reverts():
+            membership_contract.setDetails.transact(
+                after_details,
+                {'from': attacker}
+            )
 
+        # assertion
         details = membership_contract.details()
         assert details == deploy_args[4]
 
@@ -1011,47 +792,50 @@ class TestSetDetails:
 # TEST_setReturnDetails
 class TestSetReturnDetails:
 
-    # 正常系1: 発行 -> 詳細更新
-    def test_setReturnDetails_normal_1(self, users, IbetMembership, membership_exchange):
+    ##########################################################
+    # Normal
+    ##########################################################
+
+    # Normal_1
+    def test_normal_1(self, users, IbetMembership, membership_exchange):
         issuer = users['issuer']
         after_return_details = 'after_return_details'
 
-        # 新規発行
+        # issue token
         deploy_args = init_args(membership_exchange.address)
         membership_contract = issuer.deploy(IbetMembership, *deploy_args)
 
-        # リターン詳細更新
+        # set return details
         membership_contract. \
             setReturnDetails.transact(after_return_details, {'from': issuer})
 
+        # assertion
         return_details = membership_contract.returnDetails()
         assert after_return_details == return_details
 
-    # エラー系1: 入力値の型誤り
-    def test_setReturnDetails_error_1(self, users, IbetMembership, membership_exchange):
-        issuer = users['issuer']
+    ##########################################################
+    # Error
+    ##########################################################
 
-        # 新規発行
-        deploy_args = init_args(membership_exchange.address)
-        membership_contract = issuer.deploy(IbetMembership, *deploy_args)
-
-        # 型誤り
-        with pytest.raises(ValueError):
-            membership_contract.setReturnDetails.transact('0x66aB6D9362d4F35596279692F0251Db635165871', {'from': issuer})
-
-    # エラー系2: 権限エラー
-    def test_setReturnDetails_error_2(self, users, IbetMembership, membership_exchange):
+    # Error_1
+    # Unauthorized
+    def test_error_1(self, users, IbetMembership, membership_exchange):
         issuer = users['issuer']
         attacker = users['trader']
         after_return_details = 'after_return_details'
 
-        # 新規発行
+        # issue token
         deploy_args = init_args(membership_exchange.address)
         membership_contract = issuer.deploy(IbetMembership, *deploy_args)
 
-        # リターン詳細更新：権限エラー
-        membership_contract.setReturnDetails.transact(after_return_details, {'from': attacker})  # エラーになる
+        # set return details
+        with brownie.reverts():
+            membership_contract.setReturnDetails.transact(
+                after_return_details,
+                {'from': attacker}
+            )
 
+        # assertion
         return_details = membership_contract.returnDetails()
         assert return_details == deploy_args[5]
 
@@ -1059,47 +843,52 @@ class TestSetReturnDetails:
 # TEST_setExpirationDate
 class TestSetExpirationDate:
 
-    # 正常系1: 発行 -> 有効期限更新
-    def test_setExpirationDate_normal_1(self, users, IbetMembership, membership_exchange):
+    ##########################################################
+    # Normal
+    ##########################################################
+
+    # Normal_1
+    def test_normal_1(self, users, IbetMembership, membership_exchange):
         issuer = users['issuer']
         after_expiration_date = 'after_expiration_date'
 
-        # 新規発行
+        # issue token
         deploy_args = init_args(membership_exchange.address)
         membership_contract = issuer.deploy(IbetMembership, *deploy_args)
 
-        # 有効期限更新
-        membership_contract. \
-            setExpirationDate.transact(after_expiration_date, {'from': issuer})
+        # set expiration date
+        membership_contract.setExpirationDate.transact(
+            after_expiration_date,
+            {'from': issuer}
+        )
 
+        # assertion
         expiration_date = membership_contract.expirationDate()
         assert after_expiration_date == expiration_date
 
-    # エラー系1: 入力値の型誤り
-    def test_setExpirationDate_errors_1(self, users, IbetMembership, membership_exchange):
-        issuer = users['issuer']
+    ##########################################################
+    # Error
+    ##########################################################
 
-        # 新規発行
-        deploy_args = init_args(membership_exchange.address)
-        membership_contract = issuer.deploy(IbetMembership, *deploy_args)
-
-        # 型誤り
-        with pytest.raises(ValueError):
-            membership_contract.setExpirationDate.transact('0x66aB6D9362d4F35596279692F0251Db635165871', {'from': issuer})
-
-    # エラー系2: 権限エラー
-    def test_setExpirationDate_error_2(self, users, IbetMembership, membership_exchange):
+    # Error_1
+    # Unauthorized
+    def test_error_1(self, users, IbetMembership, membership_exchange):
         issuer = users['issuer']
         attacker = users['trader']
         after_expiration_date = 'after_expiration_date'
 
-        # 新規発行
+        # issue token
         deploy_args = init_args(membership_exchange.address)
         membership_contract = issuer.deploy(IbetMembership, *deploy_args)
 
-        # 有効期限更新：権限エラー
-        membership_contract.setExpirationDate.transact(after_expiration_date, {'from': attacker})  # エラーになる
+        # set expiration date
+        with brownie.reverts():
+            membership_contract.setExpirationDate.transact(
+                after_expiration_date,
+                {'from': attacker}
+            )
 
+        # assertion
         expiration_date = membership_contract.expirationDate()
         assert expiration_date == deploy_args[6]
 
@@ -1107,46 +896,49 @@ class TestSetExpirationDate:
 # TEST_setMemo
 class TestSetMemo:
 
-    # 正常系1: 発行 -> メモ欄更新
-    def test_setMemo_normal_1(self, users, IbetMembership, membership_exchange):
+    ##########################################################
+    # Normal
+    ##########################################################
+
+    # Normal_1
+    def test_normal_1(self, users, IbetMembership, membership_exchange):
         issuer = users['issuer']
         after_memo = 'after_memo'
 
-        # 新規発行
+        # issue token
         deploy_args = init_args(membership_exchange.address)
         membership_contract = issuer.deploy(IbetMembership, *deploy_args)
 
-        # メモ欄更新
+        # set memo
         membership_contract.setMemo.transact(after_memo, {'from': issuer})
 
+        # assertion
         memo = membership_contract.memo()
         assert after_memo == memo
 
-    # エラー系1: 入力値の型誤り
-    def test_setMemo_error_1(self, users, IbetMembership, membership_exchange):
-        issuer = users['issuer']
+    ##########################################################
+    # Error
+    ##########################################################
 
-        # 新規発行
-        deploy_args = init_args(membership_exchange.address)
-        membership_contract = issuer.deploy(IbetMembership, *deploy_args)
-
-        # 型誤り
-        with pytest.raises(ValueError):
-            membership_contract.setMemo.transact('0x66aB6D9362d4F35596279692F0251Db635165871', {'from': issuer})
-
-    # エラー系1: 権限エラー
-    def test_setMemo_error_2(self, users, IbetMembership, membership_exchange):
+    # Error_1
+    # Unauthorized
+    def test_error_1(self, users, IbetMembership, membership_exchange):
         issuer = users['issuer']
         attacker = users['trader']
         after_memo = 'after_memo'
 
-        # 新規発行
+        # issue token
         deploy_args = init_args(membership_exchange.address)
         membership_contract = issuer.deploy(IbetMembership, *deploy_args)
 
-        # メモ欄更新：権限エラー
-        membership_contract.setMemo.transact(after_memo, {'from': attacker})  # エラーになる
+        # set memo
+        with brownie.reverts():
+            membership_contract.setMemo.transact(
+                after_memo,
+                {'from': attacker}
+            )
 
+        # assertion
         memo = membership_contract.memo()
         assert memo == deploy_args[7]
 
@@ -1154,46 +946,49 @@ class TestSetMemo:
 # TEST_setTransferable
 class TestSetTransferable:
 
-    # 正常系1: 発行 -> 譲渡可能更新
-    def test_setTransferable_normal_1(self, users, IbetMembership, membership_exchange):
+    ##########################################################
+    # Normal
+    ##########################################################
+
+    # Normal_1
+    def test_normal_1(self, users, IbetMembership, membership_exchange):
         issuer = users['issuer']
         after_transferable = False
 
-        # 新規発行
+        # issue token
         deploy_args = init_args(membership_exchange.address)
         membership_contract = issuer.deploy(IbetMembership, *deploy_args)
 
-        # 譲渡可能更新
+        # set transferable
         membership_contract.setTransferable.transact(after_transferable, {'from': issuer})
 
+        # assertion
         transferable = membership_contract.transferable()
         assert after_transferable == transferable
 
-    # エラー系1: 入力値の型誤り
-    def test_setTransferable_error_1(self, users, IbetMembership, membership_exchange):
-        issuer = users['issuer']
+    ##########################################################
+    # Error
+    ##########################################################
 
-        # 新規発行
-        deploy_args = init_args(membership_exchange.address)
-        membership_contract = issuer.deploy(IbetMembership, *deploy_args)
-
-        # 型誤り
-        with pytest.raises(ValueError):
-            membership_contract.setTransferable.transact('True', {'from': issuer})
-
-    # エラー系2: 権限エラー
-    def test_setTransferable_error_2(self, users, IbetMembership, membership_exchange):
+    # Error_1
+    # Unauthorized
+    def test_error_1(self, users, IbetMembership, membership_exchange):
         issuer = users['issuer']
         attacker = users['trader']
         after_transferable = False
 
-        # 新規発行
+        # issue token
         deploy_args = init_args(membership_exchange.address)
         membership_contract = issuer.deploy(IbetMembership, *deploy_args)
 
-        # 譲渡可能更新
-        membership_contract.setTransferable.transact(after_transferable, {'from': attacker})  # エラーになる
+        # set transferable
+        with brownie.reverts():
+            membership_contract.setTransferable.transact(
+                after_transferable,
+                {'from': attacker}
+            )
 
+        # assertion
         transferable = membership_contract.transferable()
         assert transferable == deploy_args[8]
 
@@ -1201,46 +996,49 @@ class TestSetTransferable:
 # TEST_setStatus
 class TestSetStatus:
 
-    # 正常系1: 発行 -> 取扱ステータス更新
-    def test_setStatus_normal_1(self, users, IbetMembership, membership_exchange):
+    ##########################################################
+    # Normal
+    ##########################################################
+
+    # Normal_1
+    def test_normal_1(self, users, IbetMembership, membership_exchange):
         issuer = users['issuer']
         after_status = False
 
-        # 新規発行
+        # issue token
         deploy_args = init_args(membership_exchange.address)
         membership_contract = issuer.deploy(IbetMembership, *deploy_args)
 
-        # 取扱ステータス更新
+        # change status
         membership_contract.setStatus.transact(after_status, {'from': issuer})
 
+        # assertion
         status = membership_contract.status()
         assert after_status == status
 
-    # エラー系1: 入力値の型誤り
-    def test_setStatus_error_1(self, users, IbetMembership, membership_exchange):
-        issuer = users['issuer']
+    ##########################################################
+    # Error
+    ##########################################################
 
-        # 新規発行
-        deploy_args = init_args(membership_exchange.address)
-        membership_contract = issuer.deploy(IbetMembership, *deploy_args)
-
-        # 型誤り
-        with pytest.raises(ValueError):
-            membership_contract.setStatus.transact('True', {'from': issuer})
-
-    # エラー系2: 権限エラー
-    def test_setStatus_error_2(self, users, IbetMembership, membership_exchange):
+    # Error_1
+    # Unauthorized
+    def test_error_1(self, users, IbetMembership, membership_exchange):
         issuer = users['issuer']
         attacker = users['trader']
         after_status = False
 
-        # 新規発行
+        # issue token
         deploy_args = init_args(membership_exchange.address)
         membership_contract = issuer.deploy(IbetMembership, *deploy_args)
 
-        # 取扱ステータス更新
-        membership_contract.setStatus.transact(after_status, {'from': attacker})  # エラーになる
+        # change status
+        with brownie.reverts():
+            membership_contract.setStatus.transact(
+                after_status,
+                {'from': attacker}
+            )
 
+        # assertion
         status = membership_contract.status()
         assert status is True
 
@@ -1248,58 +1046,50 @@ class TestSetStatus:
 # TEST_setImageURL, getImageURL
 class TestSetImageUrl:
 
-    # 正常系1: 発行 -> 商品画像更新
-    def test_setImageURL_normal_1(self, users, IbetMembership, membership_exchange):
+    ##########################################################
+    # Normal
+    ##########################################################
+
+    # Normal_1
+    def test_normal_1(self, users, IbetMembership, membership_exchange):
         issuer = users['issuer']
         after_url = 'http://hoge.com'
 
-        # 新規発行
+        # issue token
         deploy_args = init_args(membership_exchange.address)
         membership_contract = issuer.deploy(IbetMembership, *deploy_args)
 
-        # 商品画像更新
+        # set image url
         membership_contract.setImageURL.transact(0, after_url, {'from': issuer})
 
+        # assertion
         url = membership_contract.getImageURL(0)
         assert after_url == url
 
-    # エラー系1-1: 入力値の型誤り：Class
-    def test_setImageURL_error_1_1(self, users, IbetMembership, membership_exchange):
-        issuer = users['issuer']
+    ##########################################################
+    # Error
+    ##########################################################
 
-        # 新規発行
-        deploy_args = init_args(membership_exchange.address)
-        membership_contract = issuer.deploy(IbetMembership, *deploy_args)
-
-        # 型誤り
-        with pytest.raises(TypeError):
-            membership_contract.setImageURL.transact('A', 'after_url', {'from': issuer})
-
-    # エラー系1-2: 入力値の型誤り：ImageURL
-    def test_setImageURL_error_1_2(self, users, IbetMembership, membership_exchange):
-        issuer = users['issuer']
-
-        # 新規発行
-        deploy_args = init_args(membership_exchange.address)
-        membership_contract = issuer.deploy(IbetMembership, *deploy_args)
-
-        # 型誤り
-        with pytest.raises(ValueError):
-            membership_contract.setImageURL.transact(0, '0x66aB6D9362d4F35596279692F0251Db635165871', {'from': issuer})
-
-    # エラー系2: 権限エラー
-    def test_setImageURL_error_2(self, users, IbetMembership, membership_exchange):
+    # Error_1
+    # Unauthorized
+    def test_error_1(self, users, IbetMembership, membership_exchange):
         issuer = users['issuer']
         attacker = users['trader']
         after_url = 'http://hoge.com'
 
-        # 新規発行
+        # issue token
         deploy_args = init_args(membership_exchange.address)
         membership_contract = issuer.deploy(IbetMembership, *deploy_args)
 
-        # 商品画像更新
-        membership_contract.setImageURL.transact(0, after_url, {'from': attacker})  # エラーになる
+        # set image url
+        with brownie.reverts():
+            membership_contract.setImageURL.transact(
+                0,
+                after_url,
+                {'from': attacker}
+            )
 
+        # assertion
         url = membership_contract.getImageURL(0)
         assert url == ''
 
@@ -1307,103 +1097,88 @@ class TestSetImageUrl:
 # TEST_issue
 class TestIssue:
 
-    # 正常系1: 発行 -> 追加発行
-    def test_issue_normal_1(self, users, IbetMembership, membership_exchange):
+    ##########################################################
+    # Normal
+    ##########################################################
+
+    # Normal_1
+    def test_normal_1(self, users, IbetMembership, membership_exchange):
         issuer = users['issuer']
         value = 10
 
-        # 新規発行
+        # issue token
         deploy_args = init_args(membership_exchange.address)
         membership_contract = issuer.deploy(IbetMembership, *deploy_args)
 
-        # 追加発行
+        # additional issue
         membership_contract.issue.transact(value, {'from': issuer})
 
+        # assertion
         total_supply = membership_contract.totalSupply()
         balance = membership_contract.balanceOf(issuer)
-
         assert total_supply == deploy_args[2] + value
         assert balance == deploy_args[2] + value
 
-    # 正常系2: 限界値
-    def test_issue_normal_2(self, users, IbetMembership, membership_exchange):
+    # Normal_2
+    # Upper limit
+    def test_normal_2(self, users, IbetMembership, membership_exchange):
         issuer = users['issuer']
 
-        # 発行
+        # issue token
         deploy_args = init_args(membership_exchange.address)
         deploy_args[2] = 2 ** 256 - 2
         membership_contract = issuer.deploy(IbetMembership, *deploy_args)
 
-        # 追加発行（限界値）
+        # additional issue
         membership_contract.issue.transact(1, {'from': issuer})
 
+        # assertion
         total_supply = membership_contract.totalSupply()
         balance = membership_contract.balanceOf(issuer)
-
         assert total_supply == 2 ** 256 - 1
         assert balance == 2 ** 256 - 1
 
-    # エラー系1: 入力値の型誤り
-    def test_issue_error_1(self, users, IbetMembership, membership_exchange):
+    ##########################################################
+    # Error
+    ##########################################################
+
+    # Error_1
+    # Exceeding the upper limit
+    def test_error_1(self, users, IbetMembership, membership_exchange):
         issuer = users['issuer']
 
-        # 新規発行
+        # issue token
         deploy_args = init_args(membership_exchange.address)
+        deploy_args[2] = 2 ** 256 - 1
         membership_contract = issuer.deploy(IbetMembership, *deploy_args)
 
-        # String
-        with pytest.raises(TypeError):
-            membership_contract.issue.transact("abc", {'from': issuer})
+        # additional issue
+        with brownie.reverts():
+            membership_contract.issue.transact(1, {'from': issuer})
 
-    # エラー系2: 限界値超
-    def test_issue_error_2(self, users, IbetMembership, membership_exchange):
-        issuer = users['issuer']
-
-        # 新規発行
-        deploy_args = init_args(membership_exchange.address)
-        membership_contract = issuer.deploy(IbetMembership, *deploy_args)
-
-        # 上限値超
-        with pytest.raises(OverflowError):
-            membership_contract.issue.transact(2 ** 256, {'from': issuer})
-
-        # 下限値超
-        with pytest.raises(OverflowError):
-            membership_contract.issue.transact(-1, {'from': issuer})
-
-    # エラー系3: 発行→追加発行→上限界値超
-    def test_issue_error_3(self, users, IbetMembership, membership_exchange):
-        issuer = users['issuer']
-
-        # 発行
-        deploy_args = init_args(membership_exchange.address)
-        deploy_args[2] = 2 ** 256 - 1  # 限界値
-        membership_contract = issuer.deploy(IbetMembership, *deploy_args)
-
-        # 追加発行（限界値超）
-        membership_contract.issue.transact(1, {'from': issuer})  # エラーになる
-
+        # assertion
         total_supply = membership_contract.totalSupply()
         balance = membership_contract.balanceOf(issuer)
-
         assert total_supply == deploy_args[2]
         assert balance == deploy_args[2]
 
-    # エラー系4: 権限エラー
-    def test_issue_error_4(self, users, IbetMembership, membership_exchange):
+    # Error_2
+    # Unauthorized
+    def test_error_2(self, users, IbetMembership, membership_exchange):
         issuer = users['issuer']
         attacker = users['trader']
 
-        # 新規発行
+        # issue token
         deploy_args = init_args(membership_exchange.address)
         membership_contract = issuer.deploy(IbetMembership, *deploy_args)
 
-        # 追加発行：権限エラー
-        membership_contract.issue.transact(1, {'from': attacker})  # エラーになる
+        # additional issue
+        with brownie.reverts():
+            membership_contract.issue.transact(1, {'from': attacker})
 
+        # assertion
         total_supply = membership_contract.totalSupply()
         balance = membership_contract.balanceOf(issuer)
-
         assert total_supply == deploy_args[2]
         assert balance == deploy_args[2]
 
@@ -1411,235 +1186,214 @@ class TestIssue:
 # TEST_setTradableExchange
 class TestSetTradableExchange:
 
-    # 正常系1: 発行 -> Exchangeの更新
-    def test_setTradableExchange_normal_1(self, users, IbetMembership, membership_exchange,
-                                          membership_exchange_storage, payment_gateway, IbetCouponExchange):
+    ##########################################################
+    # Normal
+    ##########################################################
+
+    # Normal_1
+    def test_normal_1(self, users, IbetMembership, membership_exchange):
         issuer = users['issuer']
 
-        # トークン新規発行
+        # issue token
         deploy_args = init_args(membership_exchange.address)
         membership_contract = issuer.deploy(IbetMembership, *deploy_args)
 
-        # その他Exchange
-        other_exchange = users['admin'].deploy(
-            IbetCouponExchange,  # IbetMembershipExchange以外を読み込む必要がある
-            payment_gateway.address,
-            membership_exchange_storage.address
+        # change exchange contract
+        membership_contract.setTradableExchange.transact(
+            brownie.ZERO_ADDRESS,
+            {'from': issuer}
         )
 
-        # Exchangeの更新
-        membership_contract. \
-            setTradableExchange.transact(other_exchange.address, {'from': issuer})
+        # assertion
+        assert membership_contract.tradableExchange() == brownie.ZERO_ADDRESS
 
-        assert membership_contract.tradableExchange() == to_checksum_address(other_exchange.address)
+    ##########################################################
+    # Error
+    ##########################################################
 
-    # エラー系1: 発行 -> Exchangeの更新（入力値の型誤り）
-    def test_setTradableExchange_error_1(self, users, IbetMembership, membership_exchange):
-        issuer = users['issuer']
-
-        # トークン新規発行
-        deploy_args = init_args(membership_exchange.address)
-        membership_contract = issuer.deploy(IbetMembership, *deploy_args)
-
-        # Exchangeの更新
-        with pytest.raises(ValueError):
-            membership_contract.setTradableExchange.transact('0xaaaa', {'from': issuer})
-
-    # エラー系2: 発行 -> Exchangeの更新（権限エラー）
-    def test_setTradableExchange_error_2(self, users, IbetMembership, membership_exchange,
-                                         membership_exchange_storage, payment_gateway, IbetCouponExchange):
+    # Error_1
+    # Unauthorized
+    def test_error_1(self, users, IbetMembership, membership_exchange):
         issuer = users['issuer']
         trader = users['trader']
 
-        # トークン新規発行
+        # issue token
         deploy_args = init_args(membership_exchange.address)
         membership_contract = issuer.deploy(IbetMembership, *deploy_args)
 
-        # その他Exchange
-        other_exchange = users['admin'].deploy(
-            IbetCouponExchange,  # IbetMembershipExchange以外を読み込む必要がある
-            payment_gateway.address,
-            membership_exchange_storage.address
-        )
+        # change exchange contract
+        with brownie.reverts():
+            membership_contract.setTradableExchange.transact(
+                brownie.ZERO_ADDRESS,
+                {'from': trader}
+            )
 
-        # Exchangeの更新
-        membership_contract.setTradableExchange.transact(other_exchange.address, {'from': trader})  # エラーになる
-
-        assert membership_contract.tradableExchange() == to_checksum_address(membership_exchange.address)
+        # assertion
+        assert membership_contract.tradableExchange() == membership_exchange.address
 
 
 # TEST_setInitialOfferingStatus
 class TestSetInitialOfferingStatus:
 
-    # 正常系1: 発行 -> 新規募集ステータス更新（False→True）
-    def test_setInitialOfferingStatus_normal_1(self, users, IbetMembership, membership_exchange):
+    ##########################################################
+    # Normal
+    ##########################################################
+
+    # Normal_1
+    def test_normal_1(self, users, IbetMembership, membership_exchange):
         issuer = users['issuer']
 
-        # トークン新規発行
+        # issue token
         deploy_args = init_args(membership_exchange.address)
         membership_contract = issuer.deploy(IbetMembership, *deploy_args)
-
-        # 初期状態 == False
         assert membership_contract.initialOfferingStatus() is False
 
-        # 新規募集ステータスの更新
-        membership_contract.setInitialOfferingStatus.transact(True, {'from': issuer})
+        # change offering status
+        membership_contract.setInitialOfferingStatus.transact(
+            True,
+            {'from': issuer}
+        )
 
+        # assertion
         assert membership_contract.initialOfferingStatus() is True
 
-    # 正常系2:
-    #   発行 -> 新規募集ステータス更新（False→True） -> 2回目更新（True→False）
-    def test_setInitialOfferingStatus_normal_2(self, users, IbetMembership, membership_exchange):
+    ##########################################################
+    # Error
+    ##########################################################
+
+    # Error_1
+    # Unauthorized
+    def test_error_1(self, users, IbetMembership, membership_exchange):
         issuer = users['issuer']
 
-        # トークン新規発行
+        # issue token
         deploy_args = init_args(membership_exchange.address)
         membership_contract = issuer.deploy(IbetMembership, *deploy_args)
 
-        # 新規募集ステータスの更新
-        membership_contract.setInitialOfferingStatus.transact(True, {'from': issuer})
+        # change offering status
+        with brownie.reverts():
+            membership_contract.setInitialOfferingStatus.transact(
+                True,
+                {'from': users['user1']}
+            )
 
-        # 新規募集ステータスの更新（2回目）
-        membership_contract.setInitialOfferingStatus.transact(False, {'from': issuer})
-
+        # assertion
         assert membership_contract.initialOfferingStatus() is False
-
-    # エラー系1: 発行 -> 新規募集ステータス更新（入力値の型誤り）
-    def test_setInitialOfferingStatus_error_1(self, users, IbetMembership, membership_exchange):
-        issuer = users['issuer']
-
-        # トークン新規発行
-        deploy_args = init_args(membership_exchange.address)
-        membership_contract = issuer.deploy(IbetMembership, *deploy_args)
-
-        # 新規募集ステータスの更新
-        with pytest.raises(ValueError):
-            membership_contract.setInitialOfferingStatus.transact('True', {'from': issuer})
 
 
 # TEST_applyForOffering
 class TestApplyForOffering:
 
-    # 正常系1
-    #   発行：発行体 -> 投資家：募集申込
-    def test_applyForOffering_normal_1(self, users, IbetMembership, membership_exchange):
+    ##########################################################
+    # Normal
+    ##########################################################
+
+    # Normal_1
+    # Default value
+    def test_normal_1(self, users, IbetMembership, membership_exchange):
         issuer = users['issuer']
         trader = users['trader']
 
-        # トークン新規発行
+        # issue token
         deploy_args = init_args(membership_exchange.address)
         membership_contract = issuer.deploy(IbetMembership, *deploy_args)
-
-        # 新規募集ステータスの更新
         membership_contract.setInitialOfferingStatus.transact(True, {'from': issuer})
 
-        # 募集申込
-        membership_contract.applyForOffering.transact('abcdefgh', {'from': trader})
-
-        assert membership_contract.applications(trader) == 'abcdefgh'
-
-    # 正常系2
-    #   発行：発行体 -> （申込なし）初期データ参照
-    def test_applyForOffering_normal_2(self, users, IbetMembership, membership_exchange):
-        issuer = users['issuer']
-        trader = users['trader']
-
-        # トークン新規発行
-        deploy_args = init_args(membership_exchange.address)
-        membership_contract = issuer.deploy(IbetMembership, *deploy_args)
-
-        # 新規募集ステータスの更新
-        membership_contract.setInitialOfferingStatus.transact(True, {'from': issuer})
-
+        # assertion
         assert membership_contract.applications(trader) == ''
 
-    # エラー系1:
-    #   発行：発行体 -> 投資家：募集申込（入力値の型誤り）
-    def test_applyForOffering_error_1(self, users, IbetMembership, membership_exchange):
+    # Normal_2
+    def test_normal_2(self, users, IbetMembership, membership_exchange):
         issuer = users['issuer']
         trader = users['trader']
 
-        # トークン新規発行
+        # issue token
+        deploy_args = init_args(membership_exchange.address)
+        membership_contract = issuer.deploy(IbetMembership, *deploy_args)
+        membership_contract.setInitialOfferingStatus.transact(True, {'from': issuer})
+
+        # apply for
+        tx = membership_contract.applyForOffering.transact(
+            'abcdefgh',
+            {'from': trader}
+        )
+
+        # assertion
+        assert membership_contract.applications(trader) == 'abcdefgh'
+
+        assert tx.events["ApplyFor"]["accountAddress"] == trader
+
+    ##########################################################
+    # Error
+    ##########################################################
+
+    # Error_1
+    # Offering status is False
+    def test_error_1(self, users, IbetMembership, membership_exchange):
+        issuer = users['issuer']
+        trader = users['trader']
+
+        # issue token
         deploy_args = init_args(membership_exchange.address)
         membership_contract = issuer.deploy(IbetMembership, *deploy_args)
 
-        # 新規募集ステータスの更新
-        membership_contract.setInitialOfferingStatus.transact(True, {'from': issuer})
-
-        # 募集申込
-        with pytest.raises(ValueError):
+        # apply for
+        with brownie.reverts():
             membership_contract.applyForOffering.transact(
-                "0x66aB6D9362d4F35596279692F0251Db635165871",
+                'abcdefgh',
                 {'from': trader}
             )
 
-    # エラー系2:
-    #   発行：発行体 -> 投資家：募集申込（申込ステータスが停止中）
-    def test_applyForOffering_error_2(self, users, IbetMembership, membership_exchange):
-        issuer = users['issuer']
-        trader = users['trader']
-
-        # トークン新規発行
-        deploy_args = init_args(membership_exchange.address)
-        membership_contract = issuer.deploy(IbetMembership, *deploy_args)
-
-        # 募集申込
-        membership_contract.applyForOffering.transact('abcdefgh', {'from': trader})
-
+        # assertion
         assert membership_contract.applications(trader) == ''
 
 
 # TEST_setContactInformation
 class TestSetContactInformation:
 
-    # 正常系1
-    # ＜発行者＞発行 -> ＜発行者＞問い合わせ先情報の修正
-    def test_setContactInformation_normal_1(self, users, IbetMembership, membership_exchange):
+    #######################################
+    # Normal
+    #######################################
+
+    # Normal_1
+    def test_normal_1(self, users, IbetMembership, membership_exchange):
         issuer = users['issuer']
 
-        # 新規発行
+        # issue token
         deploy_args = init_args(membership_exchange.address)
         membership_contract = issuer.deploy(IbetMembership, *deploy_args)
 
-        # 修正
+        # set contact information
         membership_contract.setContactInformation.transact(
             'updated contact information',
             {'from': issuer}
         )
 
+        # assertion
         contact_information = membership_contract.contactInformation()
         assert contact_information == 'updated contact information'
 
-    # エラー系1: 入力値の型誤り
-    def test_setContactInformation_error_1(self, users, IbetMembership, membership_exchange):
-        issuer = users['issuer']
+    #######################################
+    # Error
+    #######################################
 
-        # 新規発行
-        deploy_args = init_args(membership_exchange.address)
-        membership_contract = issuer.deploy(IbetMembership, *deploy_args)
-
-        # 修正
-        with pytest.raises(ValueError):
-            membership_contract.setContactInformation.transact(
-                '0x66aB6D9362d4F35596279692F0251Db635165871',
-                {'from': issuer}
-            )
-
-    # エラー系2: 権限エラー
-    def test_setContactInformation_error_2(self, users, IbetMembership, membership_exchange):
+    # Error_1
+    def test_error_1(self, users, IbetMembership, membership_exchange):
         issuer = users['issuer']
         other = users['trader']
 
-        # 新規発行
+        # issue token
         deploy_args = init_args(membership_exchange.address)
         membership_contract = issuer.deploy(IbetMembership, *deploy_args)
 
-        # 修正
-        membership_contract.setContactInformation.transact(
-            'updated contact information',
-            {'from': other}
-        )
+        # set contact information
+        with brownie.reverts():
+            membership_contract.setContactInformation.transact(
+                'updated contact information',
+                {'from': other}
+            )
 
+        # assertion
         contact_information = membership_contract.contactInformation()
         assert contact_information == 'some_contact_information'
 
@@ -1647,53 +1401,49 @@ class TestSetContactInformation:
 # TEST_setPrivacyPolicy
 class TestSetPrivacyPolicy:
 
-    # 正常系1
-    # ＜発行者＞発行 -> ＜発行者＞プライバシーポリシーの修正
-    def test_setPrivacyPolicy_normal_1(self, users, IbetMembership, membership_exchange):
+    #######################################
+    # Normal
+    #######################################
+
+    # Normal_1
+    def test_normal_1(self, users, IbetMembership, membership_exchange):
         issuer = users['issuer']
 
-        # 新規発行
+        # issue token
         deploy_args = init_args(membership_exchange.address)
         membership_contract = issuer.deploy(IbetMembership, *deploy_args)
 
-        # 修正
+        # set privacy policy
         membership_contract.setPrivacyPolicy.transact(
             'updated privacy policy',
             {'from': issuer}
         )
 
+        # assertion
         privacy_policy = membership_contract.privacyPolicy()
         assert privacy_policy == 'updated privacy policy'
 
-    # エラー系1: 入力値の型誤り
-    def test_setPrivacyPolicy_error_1(self, users, IbetMembership, membership_exchange):
-        issuer = users['issuer']
+    #######################################
+    # Error
+    #######################################
 
-        # 新規発行
-        deploy_args = init_args(membership_exchange.address)
-        membership_contract = issuer.deploy(IbetMembership, *deploy_args)
-
-        # 修正
-        with pytest.raises(ValueError):
-            membership_contract.setPrivacyPolicy.transact(
-                '0x66aB6D9362d4F35596279692F0251Db635165871',
-                {'from': issuer}
-            )
-
-    # エラー系2: 権限エラー
-    def test_setPrivacyPolicy_error_2(self, users, IbetMembership, membership_exchange):
+    # Error_1
+    # Unauthorized
+    def test_error_1(self, users, IbetMembership, membership_exchange):
         issuer = users['issuer']
         other = users['trader']
 
-        # 新規発行
+        # issue token
         deploy_args = init_args(membership_exchange.address)
         membership_contract = issuer.deploy(IbetMembership, *deploy_args)
 
-        # 修正
-        membership_contract.setPrivacyPolicy.transact(
-            'updated privacy policy',
-            {'from': other}
-        )
+        # set privacy policy
+        with brownie.reverts():
+            membership_contract.setPrivacyPolicy.transact(
+                'updated privacy policy',
+                {'from': other}
+            )
 
+        # assertion
         privacy_policy = membership_contract.privacyPolicy()
         assert privacy_policy == 'some_privacy_policy'

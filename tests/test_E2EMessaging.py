@@ -383,7 +383,7 @@ class TestSetPublicKey:
             {"from": who}
         )
 
-        # Set public key (1)
+        # Set public key (2)
         e2e_messaging.setPublicKey.transact(
             "test_key_2",
             "test_key_type_2",

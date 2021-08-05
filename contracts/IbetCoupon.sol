@@ -252,8 +252,6 @@ contract IbetCoupon is Ownable, IbetStandardTokenInterface {
     {
         // 消費しようとしている数量が残高を超えている場合、エラーを返す
         if (balanceOf(msg.sender) < _value) revert();
-        // 無効化されている場合、エラーを返す
-        if (status == false) revert();
 
         // 残高数量を更新する
         balances[msg.sender] = balanceOf(msg.sender).sub(_value);
