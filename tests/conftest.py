@@ -60,48 +60,14 @@ def payment_gateway(PaymentGateway, users):
 
 
 @pytest.fixture()
-def membership_exchange_storage(ExchangeStorage, users):
-    membership_exchange_storage = users['admin'].deploy(ExchangeStorage)
-    return membership_exchange_storage
+def exchange_storage(ExchangeStorage, users):
+    exchange_storage = users['admin'].deploy(ExchangeStorage)
+    return exchange_storage
 
 
 @pytest.fixture()
-def membership_exchange(IbetMembershipExchange, users, payment_gateway, membership_exchange_storage):
-    deploy_args = [payment_gateway.address, membership_exchange_storage.address]
-    membership_exchange = users['admin'].deploy(IbetMembershipExchange, *deploy_args)
-    membership_exchange_storage.upgradeVersion.transact(membership_exchange.address, {'from': users['admin']})
-    return membership_exchange
-
-
-@pytest.fixture()
-def coupon_exchange_storage(ExchangeStorage, users):
-    coupon_exchange_storage = users['admin'].deploy(ExchangeStorage)
-    return coupon_exchange_storage
-
-
-@pytest.fixture()
-def coupon_exchange(IbetCouponExchange, users, payment_gateway, coupon_exchange_storage):
-    deploy_args = [payment_gateway.address, coupon_exchange_storage.address]
-    coupon_exchange = users['admin'].deploy(
-        IbetCouponExchange,
-        *deploy_args
-    )
-    coupon_exchange_storage.upgradeVersion.transact(coupon_exchange.address, {'from': users['admin']})
-    return coupon_exchange
-
-
-@pytest.fixture()
-def mock_exchange_storage(users, ExchangeStorage):
-    mock_exchange_storage = users['admin'].deploy(ExchangeStorage)
-    return mock_exchange_storage
-
-
-@pytest.fixture()
-def mock_exchange(users, MockExchange, mock_exchange_storage):
-    deploy_args = [mock_exchange_storage.address]
-    mock_exchange = users['admin'].deploy(
-        MockExchange,
-        *deploy_args
-    )
-    mock_exchange_storage.upgradeVersion.transact(mock_exchange.address, {'from': users['admin']})
-    return mock_exchange
+def exchange(IbetExchange, users, payment_gateway, exchange_storage):
+    deploy_args = [payment_gateway.address, exchange_storage.address]
+    exchange = users['admin'].deploy(IbetExchange, *deploy_args)
+    exchange_storage.upgradeVersion.transact(exchange.address, {'from': users['admin']})
+    return exchange

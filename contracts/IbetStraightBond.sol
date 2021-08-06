@@ -52,10 +52,6 @@ contract IbetStraightBond is Ownable, IbetStandardTokenInterface {
     bool public transferable; // 譲渡可否
     address public personalInfoAddress; // 個人情報記帳コントラクト
 
-    // 残高数量
-    // account_address => balance
-    mapping(address => uint256) public balances;
-
     // 第三者認定情報
     // signer_address => status
     mapping(address => uint8) public signatures;

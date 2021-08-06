@@ -25,46 +25,15 @@ import "../interfaces/ContractReceiver.sol";
 import "../interfaces/IbetStandardTokenInterface.sol";
 
 
-/// @title ibet Coupon Token
-contract IbetCoupon is Ownable, IbetStandardTokenInterface {
+/// @title ibet Standard Token
+contract IbetStandardToken is Ownable, IbetStandardTokenInterface {
     using SafeMath for uint;
-
-    // 属性情報
-    string public details; // 詳細
-    string public returnDetails; // 特典詳細
-    string public expirationDate; // 有効期限
-    string public memo; // 補足情報
-    bool public transferable; // 譲渡可否
-    bool public initialOfferingStatus; // 新規募集ステータス（True：募集中、False：停止中）
-
-    // 使用済数量
-    // account_address => used quantity
-    mapping(address => uint) public useds;
-
-    // クーポン画像
-    // image class => url
-    mapping(uint8 => string) public image_urls;
-
-    // 募集申込
-    // account_address => data
-    mapping(address => string) public applications;
-
-    // イベント:消費
-    event Consume(address indexed consumer, uint balance, uint used, uint value);
-
-    // イベント：募集申込
-    event ApplyFor(address indexed accountAddress);
 
     // [CONSTRUCTOR]
     /// @param _name 名称
     /// @param _symbol 略称
     /// @param _totalSupply 総発行数量
     /// @param _tradableExchange 取引コントラクト
-    /// @param _details 詳細
-    /// @param _returnDetails 特典詳細
-    /// @param _memo 補足情報
-    /// @param _expirationDate 有効期限
-    /// @param _transferable 譲渡可否
     /// @param _contactInformation 問い合わせ先
     /// @param _privacyPolicy プライバシーポリシー
     constructor(
@@ -72,11 +41,6 @@ contract IbetCoupon is Ownable, IbetStandardTokenInterface {
         string memory _symbol,
         uint256 _totalSupply,
         address _tradableExchange,
-        string memory _details,
-        string memory _returnDetails,
-        string memory _memo,
-        string memory _expirationDate,
-        bool _transferable,
         string memory _contactInformation,
         string memory _privacyPolicy
     )
@@ -86,12 +50,7 @@ contract IbetCoupon is Ownable, IbetStandardTokenInterface {
         symbol = _symbol;
         totalSupply = _totalSupply;
         tradableExchange = _tradableExchange;
-        details = _details;
-        returnDetails = _returnDetails;
-        memo = _memo;
-        expirationDate = _expirationDate;
         balances[owner] = totalSupply;
-        transferable = _transferable;
         status = true;
         contactInformation = _contactInformation;
         privacyPolicy = _privacyPolicy;
@@ -155,10 +114,7 @@ contract IbetCoupon is Ownable, IbetStandardTokenInterface {
     {
         // 譲渡しようとしている数量が残高を超えている場合、エラーを返す
         if (balanceOf(msg.sender) < _value) revert();
-        if (msg.sender != tradableExchange) {
-            // 譲渡可能なクーポンではない場合、エラーを返す
-            require(transferable == true);
-        }
+
         bytes memory empty;
         if (isContract(_to)) {
             return transferToContract(_to, _value, empty);
@@ -189,12 +145,6 @@ contract IbetCoupon is Ownable, IbetStandardTokenInterface {
         }
         if (balanceOf(msg.sender) < totalValue) revert();
 
-        // <CHK>
-        // 譲渡可能ではない場合、エラーを返す
-        if (msg.sender != tradableExchange) {
-            require(transferable == true);
-        }
-
         bytes memory empty;
         bool result = false;
         for(uint i = 0; i < _toList.length; i++) {
@@ -210,64 +160,6 @@ contract IbetCoupon is Ownable, IbetStandardTokenInterface {
         return success;
     }
 
-    /// @notice 強制移転
-    /// @dev オーナーのみ実行可能
-    /// @param _from 移転元アドレス
-    /// @param _to 移転先アドレス
-    /// @param _value 移転数量
-    /// @return 処理結果
-    function transferFrom(address _from, address _to, uint _value)
-        public
-        onlyOwner()
-        returns (bool)
-    {
-        //  数量が送信元アドレス（from）の残高を超えている場合、エラーを返す
-        if (balanceOf(_from) < _value) revert();
-
-        bytes memory empty;
-        if (isContract(_to)) {// 送信先アドレスがコントラクトアドレスの場合
-            balances[_from] = balanceOf(_from).sub(_value);
-            balances[_to] = balanceOf(_to).add(_value);
-            ContractReceiver receiver = ContractReceiver(_to);
-            receiver.tokenFallback(msg.sender, _value, empty);
-        } else {// 送信先アドレスがアカウントアドレスの場合
-            balances[_from] = balanceOf(_from).sub(_value);
-            balances[_to] = balanceOf(_to).add(_value);
-        }
-
-        // イベント登録
-        emit Transfer(_from, _to, _value);
-
-        return true;
-    }
-
-    /// @notice クーポンの消費
-    /// @param _value 消費数量
-    function consume(uint _value)
-        public
-    {
-        // 消費しようとしている数量が残高を超えている場合、エラーを返す
-        if (balanceOf(msg.sender) < _value) revert();
-
-        // 残高数量を更新する
-        balances[msg.sender] = balanceOf(msg.sender).sub(_value);
-        // 使用済数量を更新する
-        useds[msg.sender] = usedOf(msg.sender).add(_value);
-
-        emit Consume(msg.sender, balances[msg.sender], useds[msg.sender], _value);
-    }
-
-    /// @notice 追加発行
-    /// @dev オーナーのみ実行可能
-    /// @param _value 追加発行数量
-    function issue(uint _value)
-        public
-        onlyOwner()
-    {
-        totalSupply = totalSupply.add(_value);
-        balances[owner] = balanceOf(owner).add(_value);
-    }
-
     /// @notice 残高の参照
     /// @param _owner 保有者のアドレス
     /// @return 残高数量
@@ -278,17 +170,6 @@ contract IbetCoupon is Ownable, IbetStandardTokenInterface {
         returns (uint256)
     {
         return balances[_owner];
-    }
-
-    /// @notice 消費済数量の参照
-    /// @param _owner 保有者のアドレス
-    /// @return 消費済数量
-    function usedOf(address _owner)
-        public
-        view
-        returns (uint)
-    {
-        return useds[_owner];
     }
 
     /// @notice 取引コントラクトの更新
@@ -324,46 +205,6 @@ contract IbetCoupon is Ownable, IbetStandardTokenInterface {
         privacyPolicy = _privacyPolicy;
     }
 
-    /// @notice 詳細の更新
-    /// @dev オーナーのみ実行可能
-    /// @param _details クーポン詳細情報
-    function setDetails(string memory _details)
-        public
-        onlyOwner()
-    {
-        details = _details;
-    }
-
-    /// @notice 特典詳細の更新
-    /// @dev オーナーのみ実行可能
-    /// @param _returnDetails 特典詳細
-    function setReturnDetails(string memory _returnDetails)
-        public
-        onlyOwner()
-    {
-        returnDetails = _returnDetails;
-    }
-
-    /// @notice 補足情報の更新
-    /// @dev オーナーのみ実行可能
-    /// @param _memo 補足情報
-    function setMemo(string memory _memo)
-        public
-        onlyOwner()
-    {
-        memo = _memo;
-    }
-
-    /// @notice 有効期限の更新
-    /// @dev オーナーのみ実行可能
-    /// @param _expirationDate 有効期限
-    function setExpirationDate(string memory _expirationDate)
-        public
-        onlyOwner()
-    {
-        expirationDate = _expirationDate;
-    }
-
     /// @notice 取扱ステータスの更新
     /// @dev オーナーのみ実行可能
     /// @param _status 更新後の取扱ステータス
@@ -374,59 +215,6 @@ contract IbetCoupon is Ownable, IbetStandardTokenInterface {
     {
         status = _status;
         emit ChangeStatus(status);
-    }
-
-    /// @notice 譲渡可否の更新
-    /// @dev オーナーのみ実行可能
-    /// @param _transferable 譲渡可否
-    function setTransferable(bool _transferable)
-        public
-        onlyOwner()
-    {
-        transferable = _transferable;
-    }
-
-    /// @notice 商品画像の更新
-    /// @dev オーナーのみ実行可能
-    /// @param _class 画像番号
-    /// @param _image_url 画像URL
-    function setImageURL(uint8 _class, string memory _image_url)
-        public
-        onlyOwner()
-    {
-        image_urls[_class] = _image_url;
-    }
-
-    /// @notice 商品画像の参照
-    /// @param _class 画像番号
-    /// @return 画像URL
-    function getImageURL(uint8 _class)
-        public
-        view
-        returns (string memory)
-    {
-        return image_urls[_class];
-    }
-
-    /// @notice 新規募集ステータスの更新
-    /// @dev オーナーのみ実行可能
-    /// @param _status 募集ステータス
-    function setInitialOfferingStatus(bool _status)
-        public
-        onlyOwner()
-    {
-        initialOfferingStatus = _status;
-    }
-
-    /// @notice 募集申込
-    /// @param _data 申込付与情報
-    function applyForOffering(string memory _data)
-        public
-    {
-        // 申込ステータスが停止中の場合、エラーを返す
-        require(initialOfferingStatus == true);
-        applications[msg.sender] = _data;
-        emit ApplyFor(msg.sender);
     }
 
 }

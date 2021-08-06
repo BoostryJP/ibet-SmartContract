@@ -37,10 +37,6 @@ contract IbetMembership is Ownable, IbetStandardTokenInterface {
     bool public transferable; // 譲渡可否
     bool public initialOfferingStatus; // 新規募集ステータス（True：募集中、False：停止中）
 
-    // 残高数量
-    // account_address => balance
-    mapping(address => uint256) public balances;
-
     // 商品画像
     // image class => url
     mapping(uint8 => string) public image_urls;

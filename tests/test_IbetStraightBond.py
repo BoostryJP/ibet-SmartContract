@@ -169,7 +169,7 @@ class TestTransfer:
 
     # Normal_2
     # Transfer to contract address
-    def test_normal_2(self, users, mock_exchange, personal_info):
+    def test_normal_2(self, users, exchange, personal_info):
         issuer = users["issuer"]
         from_address = issuer
         transfer_amount = 100
@@ -177,12 +177,12 @@ class TestTransfer:
         # issue token
         bond_token, deploy_args = issue_transferable_bond_token(
             issuer=issuer,
-            exchange_address=mock_exchange.address,
+            exchange_address=exchange.address,
             personal_info_address=personal_info.address
         )
 
         # transfer
-        to_address = mock_exchange.address
+        to_address = exchange.address
         tx = bond_token.transfer.transact(
             to_address,
             transfer_amount,
@@ -296,7 +296,7 @@ class TestTransfer:
 
     # Error_4
     # Transfer to non-tradable exchange
-    def test_error_4(self, users, mock_exchange):
+    def test_error_4(self, users, exchange):
         issuer = users['issuer']
         transfer_amount = 100
 
@@ -310,13 +310,13 @@ class TestTransfer:
         # transfer
         with brownie.reverts():
             bond_token.transfer.transact(
-                mock_exchange,
+                exchange,
                 transfer_amount,
                 {"from": users["admin"]}
             )
 
         assert bond_token.balanceOf(issuer) == deploy_args[3]
-        assert bond_token.balanceOf(mock_exchange) == 0
+        assert bond_token.balanceOf(exchange) == 0
 
     # Error_5
     # Transfer to an address with personal information not registered
@@ -430,19 +430,19 @@ class TestBulkTransfer:
 
     # Normal_3
     # Bulk transfer to contract address
-    def test_normal_3(self, users, mock_exchange, personal_info):
+    def test_normal_3(self, users, exchange, personal_info):
         issuer = users["issuer"]
         from_address = issuer
 
         # issue token
         bond_token, deploy_args = issue_transferable_bond_token(
             issuer=issuer,
-            exchange_address=mock_exchange.address,
+            exchange_address=exchange.address,
             personal_info_address=personal_info.address
         )
 
         # bulk transfer
-        to_address_list = [mock_exchange.address]
+        to_address_list = [exchange.address]
         amount_list = [1]
         bond_token.bulkTransfer.transact(
             to_address_list,
@@ -452,7 +452,7 @@ class TestBulkTransfer:
 
         # assertion
         from_balance = bond_token.balanceOf(from_address)
-        to_balance = bond_token.balanceOf(mock_exchange.address)
+        to_balance = bond_token.balanceOf(exchange.address)
         assert from_balance == deploy_args[3] - 1
         assert to_balance == 1
 

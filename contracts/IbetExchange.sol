@@ -21,14 +21,14 @@ pragma solidity ^0.8.0;
 
 import "./SafeMath.sol";
 import "./Ownable.sol";
-import "./IbetCoupon.sol";
 import "./ExchangeStorage.sol";
 import "./PaymentGateway.sol";
 import "../interfaces/ContractReceiver.sol";
+import "../interfaces/IbetStandardTokenInterface.sol";
 
 
-/// @title ibet Coupon DEX
-contract IbetCouponExchange is Ownable, ContractReceiver {
+/// @title ibet Decentralized Exchange
+contract IbetExchange is Ownable, ContractReceiver {
     using SafeMath for uint256;
 
     // 約定明細の有効期限
@@ -130,7 +130,7 @@ contract IbetCouponExchange is Ownable, ContractReceiver {
         uint256 price; // 注文単価
         bool isBuy; // 売買区分（買い：True）
         address agent; // 決済業者のアドレス
-        bool canceled; // キャンセル済み状態
+        bool canceled; // キャンセル済みフラグ
     }
 
     // 約定情報
@@ -138,9 +138,9 @@ contract IbetCouponExchange is Ownable, ContractReceiver {
         address counterpart; // 約定相手
         uint256 amount; // 約定数量
         uint256 price; // 約定単価
-        bool canceled; // キャンセル済み状態
-        bool paid; // 支払済状態
-        uint256 expiry; // 有効期限
+        bool canceled; // キャンセル済みフラグ
+        bool paid; // 支払済フラグ
+        uint256 expiry; // 有効期限（約定から１４日）
     }
 
     /// @notice 注文情報取得
@@ -419,10 +419,11 @@ contract IbetCouponExchange is Ownable, ContractReceiver {
             // <CHK>
             //  1) 注文数量が0の場合
             //  2) 取扱ステータスがFalseの場合
-            //  3) 有効な収納代行業者（Agent）を指定していない場合
+            //  3) 買注文者がコントラクトアドレスの場合
+            //  4) 有効な収納代行業者（Agent）を指定していない場合
             //   -> REVERT
             if (_amount == 0 ||
-                IbetCoupon(_token).status() == false ||
+                IbetStandardTokenInterface(_token).status() == false ||
                 isContract(msg.sender) == true ||
                 validateAgent(_agent) == false)
             {
@@ -439,10 +440,10 @@ contract IbetCouponExchange is Ownable, ContractReceiver {
             //   -> 更新処理：全ての残高を投資家のアカウントに戻し、falseを返す
             if (_amount == 0 ||
                 balanceOf(msg.sender, _token) < _amount ||
-                IbetCoupon(_token).status() == false ||
+                IbetStandardTokenInterface(_token).status() == false ||
                 validateAgent(_agent) == false)
             {
-                IbetCoupon(_token).transfer(msg.sender, balanceOf(msg.sender, _token));
+                IbetStandardTokenInterface(_token).transfer(msg.sender, balanceOf(msg.sender, _token));
                 setBalance(msg.sender, _token, 0);
                 return false;
             }
@@ -495,7 +496,7 @@ contract IbetCouponExchange is Ownable, ContractReceiver {
         // 更新処理：売り注文の場合、注文で拘束している預かりを解放 => 残高を投資家のアカウントに戻す
         if (!order.isBuy) {
             setCommitment(msg.sender, order.token, commitmentOf(msg.sender, order.token).sub(order.amount));
-            IbetCoupon(order.token).transfer(msg.sender,order.amount);
+            IbetStandardTokenInterface(order.token).transfer(msg.sender,order.amount);
         }
 
         // 更新処理：キャンセル済みフラグをキャンセル済み（True）に更新
@@ -540,7 +541,7 @@ contract IbetCouponExchange is Ownable, ContractReceiver {
                 msg.sender == order.owner ||
                 isContract(msg.sender) == true ||
                 order.canceled == true ||
-                IbetCoupon(order.token).status() == false ||
+                IbetStandardTokenInterface(order.token).status() == false ||
                 order.amount < _amount )
             {
                 revert();
@@ -561,11 +562,11 @@ contract IbetCouponExchange is Ownable, ContractReceiver {
                 order.isBuy == _isBuy ||
                 msg.sender == order.owner ||
                 order.canceled == true ||
-                IbetCoupon(order.token).status() == false ||
+                IbetStandardTokenInterface(order.token).status() == false ||
                 balanceOf(msg.sender, order.token) < _amount ||
                 order.amount < _amount )
             {
-                IbetCoupon(order.token).transfer(msg.sender, balanceOf(msg.sender, order.token));
+                IbetStandardTokenInterface(order.token).transfer(msg.sender, balanceOf(msg.sender, order.token));
                 setBalance(msg.sender, order.token, 0);
                 return false;
             }
@@ -643,7 +644,7 @@ contract IbetCouponExchange is Ownable, ContractReceiver {
             setCommitment(
                 agreement.counterpart, order.token,
                     commitmentOf(agreement.counterpart, order.token).sub(agreement.amount));
-            IbetCoupon(order.token).transfer(order.owner,agreement.amount);
+            IbetStandardTokenInterface(order.token).transfer(order.owner,agreement.amount);
             // イベント登録：決済OK
             emit SettlementOK(order.token, _orderId, _agreementId,
                 order.owner, agreement.counterpart, order.price,
@@ -653,7 +654,7 @@ contract IbetCouponExchange is Ownable, ContractReceiver {
             setCommitment(
                 order.owner, order.token,
                     commitmentOf(order.owner, order.token).sub(agreement.amount));
-            IbetCoupon(order.token).transfer(agreement.counterpart, agreement.amount);
+            IbetStandardTokenInterface(order.token).transfer(agreement.counterpart, agreement.amount);
             // イベント登録：決済OK
             emit SettlementOK(order.token, _orderId, _agreementId,
                 agreement.counterpart, order.owner, order.price,
@@ -731,7 +732,7 @@ contract IbetCouponExchange is Ownable, ContractReceiver {
             // 取り消した注文は無効化する（注文中状態に戻さない）
             setCommitment(agreement.counterpart, order.token,
                 commitmentOf(agreement.counterpart, order.token).sub(agreement.amount));
-            IbetCoupon(order.token).transfer(agreement.counterpart, agreement.amount);
+            IbetStandardTokenInterface(order.token).transfer(agreement.counterpart, agreement.amount);
             // イベント登録：決済NG
             emit SettlementNG(order.token, _orderId, _agreementId,
                 order.owner, agreement.counterpart, order.price,
@@ -759,13 +760,15 @@ contract IbetCouponExchange is Ownable, ContractReceiver {
     {
         uint256 balance = balanceOf(msg.sender, _token);
 
-        // <CHK>残高がゼロの場合、REVERT
+        // <CHK>
+        //  残高がゼロの場合、REVERT
         if (balance == 0 ) { revert(); }
 
         // 更新処理：トークン引き出し（送信）
-        IbetCoupon(_token).transfer(msg.sender,balance);
+        IbetStandardTokenInterface(_token).transfer(msg.sender, balance);
         setBalance(msg.sender, _token, 0);
 
+        // イベント登録
         emit Withdrawal(_token, msg.sender);
 
         return true;
@@ -789,15 +792,15 @@ contract IbetCouponExchange is Ownable, ContractReceiver {
     /// @param _addr アドレス
     /// @return is_contract 判定結果
     function isContract(address _addr)
-        private
-        view
-        returns (bool is_contract)
+      private
+      view
+      returns (bool is_contract)
     {
-        uint length;
-        assembly {
-            length := extcodesize(_addr)
-        }
-        return (length>0);
+      uint length;
+      assembly {
+        length := extcodesize(_addr)
+      }
+      return (length>0);
     }
 
     /// @notice Agentアドレスが有効なものであることをチェックする

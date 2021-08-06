@@ -20,15 +20,12 @@ import brownie
 
 
 deploy_args = [
-    'test_share',
-    'test_symbol',
-    100000,
-    1000,
-    1000,
-    '20200829',
-    '20200831',
-    '20191231',
-    10000
+    'test_share',  # name
+    'test_symbol',  # symbol
+    100000,  # total supply
+    brownie.ZERO_ADDRESS,  # tradable exchange
+    'test_contact_information',
+    'test_privacy_policy'
 ]
 
 
@@ -40,7 +37,7 @@ class TestRegister:
     #######################################
     
     # Normal_1
-    def test_normal_1(self, users, TokenList, IbetShare):
+    def test_normal_1(self, users, TokenList, IbetStandardToken):
         admin = users['admin']
         issuer = users['issuer']
     
@@ -48,30 +45,30 @@ class TestRegister:
         token_list = admin.deploy(TokenList)
     
         # issue token
-        token = issuer.deploy(IbetShare, *deploy_args)
+        token = issuer.deploy(IbetStandardToken, *deploy_args)
 
         # register to list
         tx = token_list.register.transact(
             token.address,
-            'IbetShare',
+            'IbetStandardToken',
             {'from': issuer}
         )
 
         # assertion
         assert token_list.tokens(token.address) == (
             token.address,
-            'IbetShare',
+            'IbetStandardToken',
             issuer.address
         )
 
         assert token_list.token_list(0) == (
             token.address,
-            'IbetShare',
+            'IbetStandardToken',
             issuer.address
         )
 
         assert tx.events["Register"]["token_address"] == token.address
-        assert tx.events["Register"]["token_template"] == 'IbetShare'
+        assert tx.events["Register"]["token_template"] == 'IbetStandardToken'
         assert tx.events["Register"]["owner_address"] == issuer.address
 
     #######################################
@@ -80,7 +77,7 @@ class TestRegister:
 
     # Error_1
     # Registration can be done only once.
-    def test_error_1(self, users, TokenList, IbetShare):
+    def test_error_1(self, users, TokenList, IbetStandardToken):
         admin = users['admin']
         issuer = users['issuer']
 
@@ -88,12 +85,12 @@ class TestRegister:
         token_list = admin.deploy(TokenList)
 
         # issue token
-        token = issuer.deploy(IbetShare, *deploy_args)
+        token = issuer.deploy(IbetStandardToken, *deploy_args)
 
         # register to list (1)
         token_list.register.transact(
             token.address,
-            'IbetShare',
+            'IbetStandardToken',
             {'from': issuer}
         )
 
@@ -101,13 +98,13 @@ class TestRegister:
         with brownie.reverts():
             token_list.register.transact(
                 token.address,
-                'IbetShare',
+                'IbetStandardToken',
                 {'from': issuer}
             )
 
     # Error_2
     # Not authorized
-    def test_error_2(self, users, TokenList, IbetShare):
+    def test_error_2(self, users, TokenList, IbetStandardToken):
         admin = users['admin']
         issuer = users['issuer']
 
@@ -115,13 +112,13 @@ class TestRegister:
         token_list = admin.deploy(TokenList)
 
         # issue token
-        token = issuer.deploy(IbetShare, *deploy_args)
+        token = issuer.deploy(IbetStandardToken, *deploy_args)
 
         # register to list
         with brownie.reverts():
             token_list.register.transact(
                 token.address,
-                'IbetShare',
+                'IbetStandardToken',
                 {'from': users["user1"]}
             )
 
@@ -134,7 +131,7 @@ class TestChangeOwner:
     #######################################
 
     # Normal_1
-    def test_normal_1(self, users, TokenList, IbetShare):
+    def test_normal_1(self, users, TokenList, IbetStandardToken):
         admin = users['admin']
         issuer = users['issuer']
         new_owner = users['user1']
@@ -143,12 +140,12 @@ class TestChangeOwner:
         token_list = admin.deploy(TokenList)
 
         # issue token
-        token = issuer.deploy(IbetShare, *deploy_args)
+        token = issuer.deploy(IbetStandardToken, *deploy_args)
 
         # register to list
         token_list.register.transact(
             token.address,
-            'IbetShare',
+            'IbetStandardToken',
             {'from': issuer}
         )
 
@@ -162,13 +159,13 @@ class TestChangeOwner:
         # assertion
         assert token_list.tokens(token.address) == (
             token.address,
-            'IbetShare',
+            'IbetStandardToken',
             new_owner.address
         )
 
         assert token_list.token_list(0) == (
             token.address,
-            'IbetShare',
+            'IbetStandardToken',
             new_owner.address
         )
 
@@ -178,7 +175,7 @@ class TestChangeOwner:
 
     # Error_1
     # Not registered
-    def test_error_1(self, users, TokenList, IbetShare):
+    def test_error_1(self, users, TokenList, IbetStandardToken):
         admin = users['admin']
         issuer = users['issuer']
         new_owner = users['user1']
@@ -187,7 +184,7 @@ class TestChangeOwner:
         token_list = admin.deploy(TokenList)
 
         # issue token
-        token = issuer.deploy(IbetShare, *deploy_args)
+        token = issuer.deploy(IbetStandardToken, *deploy_args)
 
         # change token owner
         with brownie.reverts():
@@ -206,7 +203,7 @@ class TestChangeOwner:
 
     # Error_2
     # Not authorized
-    def test_error_2(self, users, TokenList, IbetShare):
+    def test_error_2(self, users, TokenList, IbetStandardToken):
         admin = users['admin']
         issuer = users['issuer']
         new_owner = users['user1']
@@ -215,12 +212,12 @@ class TestChangeOwner:
         token_list = admin.deploy(TokenList)
 
         # issue token
-        token = issuer.deploy(IbetShare, *deploy_args)
+        token = issuer.deploy(IbetStandardToken, *deploy_args)
 
         # register to list
         token_list.register.transact(
             token.address,
-            'IbetShare',
+            'IbetStandardToken',
             {'from': issuer}
         )
 
@@ -235,13 +232,13 @@ class TestChangeOwner:
         # assertion
         assert token_list.tokens(token.address) == (
             token.address,
-            'IbetShare',
+            'IbetStandardToken',
             issuer.address
         )
 
         assert token_list.token_list(0) == (
             token.address,
-            'IbetShare',
+            'IbetStandardToken',
             issuer.address
         )
 
@@ -254,7 +251,7 @@ class TestGetOwnerAddress:
     #######################################
 
     # Normal_1
-    def test_normal_1(self, users, TokenList, IbetShare):
+    def test_normal_1(self, users, TokenList, IbetStandardToken):
         admin = users['admin']
         issuer = users['issuer']
 
@@ -262,12 +259,12 @@ class TestGetOwnerAddress:
         token_list = admin.deploy(TokenList)
 
         # issue token
-        token = issuer.deploy(IbetShare, *deploy_args)
+        token = issuer.deploy(IbetStandardToken, *deploy_args)
 
         # register to list
         token_list.register.transact(
             token.address,
-            'IbetShare',
+            'IbetStandardToken',
             {'from': issuer}
         )
 
@@ -283,7 +280,7 @@ class TestGetListLength:
     #######################################
 
     # Normal_1
-    def test_normal_1(self, users, TokenList, IbetShare):
+    def test_normal_1(self, users, TokenList, IbetStandardToken):
         admin = users['admin']
         issuer = users['issuer']
 
@@ -291,12 +288,12 @@ class TestGetListLength:
         token_list = admin.deploy(TokenList)
 
         # issue token
-        token = issuer.deploy(IbetShare, *deploy_args)
+        token = issuer.deploy(IbetStandardToken, *deploy_args)
 
         # register to list
         token_list.register.transact(
             token.address,
-            'IbetShare',
+            'IbetStandardToken',
             {'from': issuer}
         )
 
@@ -312,7 +309,7 @@ class TestGetTokenByNum:
     #######################################
 
     # Normal_1
-    def test_normal_1(self, users, TokenList, IbetShare):
+    def test_normal_1(self, users, TokenList, IbetStandardToken):
         admin = users['admin']
         issuer = users['issuer']
 
@@ -320,19 +317,19 @@ class TestGetTokenByNum:
         token_list = admin.deploy(TokenList)
 
         # issue token
-        token = issuer.deploy(IbetShare, *deploy_args)
+        token = issuer.deploy(IbetStandardToken, *deploy_args)
 
         # register to list
         token_list.register.transact(
             token.address,
-            'IbetShare',
+            'IbetStandardToken',
             {'from': issuer}
         )
 
         # assertion
         assert token_list.getTokenByNum(0) == (
             token.address,
-            'IbetShare',
+            'IbetStandardToken',
             issuer.address
         )
 
@@ -345,7 +342,7 @@ class TestGetTokenByAddress:
     #######################################
 
     # Normal_1
-    def test_normal_1(self, users, TokenList, IbetShare):
+    def test_normal_1(self, users, TokenList, IbetStandardToken):
         admin = users['admin']
         issuer = users['issuer']
 
@@ -353,18 +350,18 @@ class TestGetTokenByAddress:
         token_list = admin.deploy(TokenList)
 
         # issue token
-        token = issuer.deploy(IbetShare, *deploy_args)
+        token = issuer.deploy(IbetStandardToken, *deploy_args)
 
         # register to list
         token_list.register.transact(
             token.address,
-            'IbetShare',
+            'IbetStandardToken',
             {'from': issuer}
         )
 
         # assertion
         assert token_list.getTokenByAddress(token.address) == (
             token.address,
-            'IbetShare',
+            'IbetStandardToken',
             issuer.address
         )
