@@ -81,18 +81,18 @@ class TestTokenFallback:
 
         # issue token
         deploy_args = init_args(exchange.address)
-        membership_token = deploy(users, deploy_args)
+        token = deploy(users, deploy_args)
 
         # transfer to exchange contract
-        membership_token.transfer.transact(
+        token.transfer.transact(
             exchange.address,
             _value,
             {'from': _issuer}
         )
 
         # assertion
-        balance_membership = membership_token.balanceOf(_issuer)
-        balance_exchange = exchange.balanceOf(_issuer, membership_token.address)
+        balance_membership = token.balanceOf(_issuer)
+        balance_exchange = exchange.balanceOf(_issuer, token.address)
         assert balance_membership == deploy_args[2] - _value
         assert balance_exchange == _value
 
@@ -104,25 +104,25 @@ class TestTokenFallback:
 
         # issue token
         deploy_args = init_args(exchange.address)
-        membership_token = deploy(users, deploy_args)
+        token = deploy(users, deploy_args)
 
         # transfer to exchange contract (1)
-        membership_token.transfer.transact(
+        token.transfer.transact(
             exchange.address,
             _value,
             {'from': _issuer}
         )
 
         # transfer to exchange contract (2)
-        membership_token.transfer.transact(
+        token.transfer.transact(
             exchange.address,
             _value,
             {'from': _issuer}
         )
 
         # assertion
-        balance_membership = membership_token.balanceOf(_issuer)
-        balance_exchange = exchange.balanceOf(_issuer, membership_token.address)
+        balance_membership = token.balanceOf(_issuer)
+        balance_exchange = exchange.balanceOf(_issuer, token.address)
         assert balance_membership == deploy_args[2] - _value * 2
         assert balance_exchange == _value * 2
 
@@ -200,7 +200,7 @@ class TestCreateOrder:
 
         # issue token
         deploy_args = init_args(exchange.address)
-        membership_token = deploy(users, deploy_args)
+        token = deploy(users, deploy_args)
 
         # make order: BUY
         _amount = 2 ** 256 - 1
@@ -208,7 +208,7 @@ class TestCreateOrder:
         _isBuy = True
 
         tx = exchange.createOrder.transact(
-            membership_token.address,
+            token.address,
             _amount,
             _price,
             _isBuy,
@@ -220,17 +220,17 @@ class TestCreateOrder:
         order_id = exchange.latestOrderId()
         assert exchange.getOrder(order_id) == [
             trader.address,
-            membership_token.address,
+            token.address,
             _amount,
             _price,
             _isBuy,
             agent.address,
             False
         ]
-        assert membership_token.balanceOf(issuer) == deploy_args[2]
-        assert membership_token.balanceOf(trader) == 0
+        assert token.balanceOf(issuer) == deploy_args[2]
+        assert token.balanceOf(trader) == 0
 
-        assert tx.events["NewOrder"]["tokenAddress"] == membership_token.address
+        assert tx.events["NewOrder"]["tokenAddress"] == token.address
         assert tx.events["NewOrder"]["orderId"] == order_id
         assert tx.events["NewOrder"]["accountAddress"] == trader
         assert tx.events["NewOrder"]["isBuy"] is True
@@ -246,20 +246,20 @@ class TestCreateOrder:
 
         # issue token
         deploy_args = init_args(exchange.address)
-        membership_token = deploy(users, deploy_args)
+        token = deploy(users, deploy_args)
 
         # transfer to contract -> make order: SELL
         _amount = 2 ** 256 - 1
         _price = 123
         _isBuy = False
 
-        membership_token.transfer.transact(
+        token.transfer.transact(
             exchange.address,
             _amount,
             {'from': issuer}
         )
         tx = exchange.createOrder.transact(
-            membership_token.address,
+            token.address,
             _amount,
             _price,
             _isBuy,
@@ -271,17 +271,17 @@ class TestCreateOrder:
         order_id = exchange.latestOrderId()
         assert exchange.getOrder(order_id) == [
             issuer.address,
-            membership_token.address,
+            token.address,
             _amount,
             _price,
             _isBuy,
             agent.address,
             False
         ]
-        assert membership_token.balanceOf(issuer) == deploy_args[2] - _amount
-        assert exchange.commitmentOf(issuer, membership_token.address) == _amount
+        assert token.balanceOf(issuer) == deploy_args[2] - _amount
+        assert exchange.commitmentOf(issuer, token.address) == _amount
 
-        assert tx.events["NewOrder"]["tokenAddress"] == membership_token.address
+        assert tx.events["NewOrder"]["tokenAddress"] == token.address
         assert tx.events["NewOrder"]["orderId"] == order_id
         assert tx.events["NewOrder"]["accountAddress"] == issuer
         assert tx.events["NewOrder"]["isBuy"] is False
@@ -303,7 +303,7 @@ class TestCreateOrder:
 
         # issue token
         deploy_args = init_args(exchange.address)
-        membership_token = deploy(users, deploy_args)
+        token = deploy(users, deploy_args)
 
         # make order: BUY
         _amount = 0
@@ -313,7 +313,7 @@ class TestCreateOrder:
         order_id_before = exchange.latestOrderId()
         with brownie.reverts():
             exchange.createOrder.transact(
-                membership_token.address,
+                token.address,
                 _amount,
                 _price,
                 _isBuy,
@@ -323,8 +323,8 @@ class TestCreateOrder:
 
         # assertion
         order_id_after = exchange.latestOrderId()
-        assert membership_token.balanceOf(issuer) == deploy_args[2]
-        assert membership_token.balanceOf(trader) == 0
+        assert token.balanceOf(issuer) == deploy_args[2]
+        assert token.balanceOf(trader) == 0
         assert order_id_before == order_id_after
 
     # Error_1_2
@@ -337,10 +337,10 @@ class TestCreateOrder:
 
         # issue token
         deploy_args = init_args(exchange.address)
-        membership_token = deploy(users, deploy_args)
+        token = deploy(users, deploy_args)
 
         # change token status
-        membership_token.setStatus.transact(False, {'from': issuer})
+        token.setStatus.transact(False, {'from': issuer})
 
         # make order: BUY
         _amount = 100
@@ -350,7 +350,7 @@ class TestCreateOrder:
         order_id_before = exchange.latestOrderId()
         with brownie.reverts():
             exchange.createOrder.transact(
-                membership_token.address,
+                token.address,
                 _amount,
                 _price,
                 _isBuy,
@@ -360,8 +360,8 @@ class TestCreateOrder:
 
         # assertion
         order_id_after = exchange.latestOrderId()
-        assert membership_token.balanceOf(issuer) == deploy_args[2]
-        assert membership_token.balanceOf(trader) == 0
+        assert token.balanceOf(issuer) == deploy_args[2]
+        assert token.balanceOf(trader) == 0
         assert order_id_before == order_id_after
 
     # Error_1_3
@@ -373,7 +373,7 @@ class TestCreateOrder:
 
         # issue token
         deploy_args = init_args(exchange.address)
-        membership_token = deploy(users, deploy_args)
+        token = deploy(users, deploy_args)
 
         # make order: BUY
         _amount = 0
@@ -383,7 +383,7 @@ class TestCreateOrder:
         order_id_before = exchange.latestOrderId()
         with brownie.reverts():
             exchange.createOrder.transact(
-                membership_token.address,
+                token.address,
                 _amount,
                 _price,
                 _isBuy,
@@ -393,8 +393,8 @@ class TestCreateOrder:
 
         # assertion
         order_id_after = exchange.latestOrderId()
-        assert membership_token.balanceOf(issuer) == deploy_args[2]
-        assert membership_token.balanceOf(trader) == 0
+        assert token.balanceOf(issuer) == deploy_args[2]
+        assert token.balanceOf(trader) == 0
         assert order_id_before == order_id_after
 
     # Error_2_1
@@ -406,20 +406,20 @@ class TestCreateOrder:
 
         # issue token
         deploy_args = init_args(exchange.address)
-        membership_token = deploy(users, deploy_args)
+        token = deploy(users, deploy_args)
 
         # transfer to contract -> make order: SELL
         _amount = 2 ** 256 - 1
         _price = 123
         _isBuy = False
 
-        membership_token.transfer.transact(
+        token.transfer.transact(
             exchange.address,
             _amount,
             {'from': issuer}
         )
         exchange.createOrder.transact(
-            membership_token.address,
+            token.address,
             0,  # zero
             _price,
             _isBuy,
@@ -428,8 +428,8 @@ class TestCreateOrder:
         )
 
         # assertion
-        assert exchange.commitmentOf(issuer, membership_token.address) == 0
-        assert membership_token.balanceOf(issuer) == deploy_args[2]
+        assert exchange.commitmentOf(issuer, token.address) == 0
+        assert token.balanceOf(issuer) == deploy_args[2]
 
     # Error_2_2
     # Make order: SELL
@@ -440,20 +440,20 @@ class TestCreateOrder:
 
         # issue token
         deploy_args = init_args(exchange.address)
-        membership_token = deploy(users, deploy_args)
+        token = deploy(users, deploy_args)
 
         # transfer to contract -> make order: SELL
         _amount = 100
         _price = 123
         _isBuy = False
 
-        membership_token.transfer.transact(
+        token.transfer.transact(
             exchange.address,
             _amount,
             {'from': issuer}
         )
         exchange.createOrder.transact(
-            membership_token.address,
+            token.address,
             101,  # greater than deposit amount
             _price,
             _isBuy,
@@ -462,8 +462,8 @@ class TestCreateOrder:
         )
 
         # assertion
-        assert exchange.commitmentOf(issuer, membership_token.address) == 0
-        assert membership_token.balanceOf(issuer) == deploy_args[2]
+        assert exchange.commitmentOf(issuer, token.address) == 0
+        assert token.balanceOf(issuer) == deploy_args[2]
 
     # Error_2_3
     # Make order: SELL
@@ -474,23 +474,23 @@ class TestCreateOrder:
 
         # issuer token
         deploy_args = init_args(exchange.address)
-        membership_token = deploy(users, deploy_args)
+        token = deploy(users, deploy_args)
 
         # change token status
-        membership_token.setStatus.transact(False, {'from': issuer})
+        token.setStatus.transact(False, {'from': issuer})
 
         # transfer to contract -> make order: SELL
         _amount = 100
         _price = 123
         _isBuy = False
 
-        membership_token.transfer.transact(
+        token.transfer.transact(
             exchange.address,
             _amount,
             {'from': issuer}
         )
         exchange.createOrder.transact(
-            membership_token.address,
+            token.address,
             _amount,
             _price,
             _isBuy,
@@ -499,8 +499,8 @@ class TestCreateOrder:
         )
 
         # assertion
-        assert exchange.commitmentOf(issuer, membership_token.address) == 0
-        assert membership_token.balanceOf(issuer) == deploy_args[2]
+        assert exchange.commitmentOf(issuer, token.address) == 0
+        assert token.balanceOf(issuer) == deploy_args[2]
 
     # Error_2_4
     # Make order: SELL
@@ -510,20 +510,20 @@ class TestCreateOrder:
 
         # issue token
         deploy_args = init_args(exchange.address)
-        membership_token = deploy(users, deploy_args)
+        token = deploy(users, deploy_args)
 
         # transfer to contract -> make order: SELL
         _amount = 100
         _price = 123
         _isBuy = False
 
-        membership_token.transfer.transact(
+        token.transfer.transact(
             exchange.address,
             _amount,
             {'from': issuer}
         )
         exchange.createOrder.transact(
-            membership_token.address,
+            token.address,
             _amount,
             _price,
             _isBuy,
@@ -532,8 +532,8 @@ class TestCreateOrder:
         )
 
         # assertion
-        assert exchange.commitmentOf(issuer, membership_token.address) == 0
-        assert membership_token.balanceOf(issuer) == deploy_args[2]
+        assert exchange.commitmentOf(issuer, token.address) == 0
+        assert token.balanceOf(issuer) == deploy_args[2]
 
 
 # TEST_cancelOrder
@@ -552,7 +552,7 @@ class TestCancelOrder:
 
         # issue token
         deploy_args = init_args(exchange.address)
-        membership_token = deploy(users, deploy_args)
+        token = deploy(users, deploy_args)
 
         # make order: BUY
         _amount = 2 ** 256 - 1
@@ -560,7 +560,7 @@ class TestCancelOrder:
         _isBuy = True
 
         exchange.createOrder.transact(
-            membership_token.address,
+            token.address,
             _amount,
             _price,
             _isBuy,
@@ -578,17 +578,17 @@ class TestCancelOrder:
         # assertion
         assert exchange.getOrder(order_id) == [
             trader.address,
-            membership_token.address,
+            token.address,
             _amount,
             _price,
             _isBuy,
             agent.address,
             True
         ]
-        assert membership_token.balanceOf(issuer) == deploy_args[2]
-        assert membership_token.balanceOf(trader) == 0
+        assert token.balanceOf(issuer) == deploy_args[2]
+        assert token.balanceOf(trader) == 0
 
-        assert tx.events["CancelOrder"]["tokenAddress"] == membership_token.address
+        assert tx.events["CancelOrder"]["tokenAddress"] == token.address
         assert tx.events["CancelOrder"]["orderId"] == order_id
         assert tx.events["CancelOrder"]["accountAddress"] == trader
         assert tx.events["CancelOrder"]["isBuy"] is True
@@ -604,20 +604,20 @@ class TestCancelOrder:
 
         # issue token
         deploy_args = init_args(exchange.address)
-        membership_token = deploy(users, deploy_args)
+        token = deploy(users, deploy_args)
 
         # transfer to contract -> make order: SELL
         _amount = 2 ** 256 - 1
         _price = 2 ** 256 - 1
         _isBuy = False
 
-        membership_token.transfer.transact(
+        token.transfer.transact(
             exchange.address,
             _amount,
             {'from': issuer}
         )
         exchange.createOrder.transact(
-            membership_token.address,
+            token.address,
             _amount,
             _price,
             _isBuy,
@@ -635,17 +635,17 @@ class TestCancelOrder:
         # assertion
         assert exchange.getOrder(order_id) == [
             issuer.address,
-            membership_token.address,
+            token.address,
             _amount,
             _price,
             _isBuy,
             agent.address,
             True
         ]
-        assert membership_token.balanceOf(issuer) == deploy_args[2]
-        assert exchange.commitmentOf(issuer, membership_token.address) == 0
+        assert token.balanceOf(issuer) == deploy_args[2]
+        assert exchange.commitmentOf(issuer, token.address) == 0
 
-        assert tx.events["CancelOrder"]["tokenAddress"] == membership_token.address
+        assert tx.events["CancelOrder"]["tokenAddress"] == token.address
         assert tx.events["CancelOrder"]["orderId"] == order_id
         assert tx.events["CancelOrder"]["accountAddress"] == issuer
         assert tx.events["CancelOrder"]["isBuy"] is False
@@ -665,20 +665,20 @@ class TestCancelOrder:
 
         # issue token
         deploy_args = init_args(exchange.address)
-        membership_token = deploy(users, deploy_args)
+        token = deploy(users, deploy_args)
 
         # transfer to contract -> make order: SELL
         _amount = 2 ** 256 - 1
         _price = 2 ** 256 - 1
         _isBuy = False
 
-        membership_token.transfer.transact(
+        token.transfer.transact(
             exchange.address,
             _amount,
             {'from': issuer}
         )
         exchange.createOrder.transact(
-            membership_token.address,
+            token.address,
             _amount,
             _price,
             _isBuy,
@@ -697,15 +697,15 @@ class TestCancelOrder:
         # assertion
         assert exchange.getOrder(latest_order_id) == [
             issuer.address,
-            membership_token.address,
+            token.address,
             _amount,
             _price,
             _isBuy,
             agent.address,
             False
         ]
-        assert membership_token.balanceOf(issuer) == deploy_args[2] - _amount
-        assert exchange.commitmentOf(issuer, membership_token.address) == _amount
+        assert token.balanceOf(issuer) == deploy_args[2] - _amount
+        assert exchange.commitmentOf(issuer, token.address) == _amount
 
     # Error_2
     # The remaining amount of the original order must be greater than zero
@@ -716,13 +716,13 @@ class TestCancelOrder:
 
         # issue token
         deploy_args = init_args(exchange.address)
-        membership_token = deploy(users, deploy_args)
+        token = deploy(users, deploy_args)
 
         # make BUY order by trader
         _amount = 2 ** 256 - 1
         _price = 2 ** 256 - 1
         exchange.createOrder.transact(
-            membership_token.address,
+            token.address,
             _amount,
             _price,
             True,
@@ -732,7 +732,7 @@ class TestCancelOrder:
 
         # take SELL order by issuer
         order_id = exchange.latestOrderId()
-        membership_token.transfer.transact(
+        token.transfer.transact(
             exchange.address,
             _amount,
             {'from': issuer}
@@ -763,15 +763,15 @@ class TestCancelOrder:
         # assertion
         assert exchange.getOrder(order_id) == [
             trader.address,
-            membership_token.address,
+            token.address,
             0,
             _price,
             True,
             agent.address,
             False
         ]
-        assert membership_token.balanceOf(issuer) == deploy_args[2] - _amount
-        assert membership_token.balanceOf(trader) == _amount
+        assert token.balanceOf(issuer) == deploy_args[2] - _amount
+        assert token.balanceOf(trader) == _amount
 
     # Error_3
     # Order must not have been cancelled
@@ -782,13 +782,13 @@ class TestCancelOrder:
 
         # issue token
         deploy_args = init_args(exchange.address)
-        membership_token = deploy(users, deploy_args)
+        token = deploy(users, deploy_args)
 
         # make BUY order
         _amount = 2 ** 256 - 1
         _price = 2 ** 256 - 1
         exchange.createOrder.transact(
-            membership_token.address,
+            token.address,
             _amount,
             _price,
             True,
@@ -807,15 +807,15 @@ class TestCancelOrder:
         # assertion
         assert exchange.getOrder(order_id) == [
             trader.address,
-            membership_token.address,
+            token.address,
             _amount,
             _price,
             True,
             agent.address,
             True
         ]
-        assert membership_token.balanceOf(issuer) == deploy_args[2]
-        assert membership_token.balanceOf(trader) == 0
+        assert token.balanceOf(issuer) == deploy_args[2]
+        assert token.balanceOf(trader) == 0
 
     # Error_4
     # The Orderer and the Order Cancellation Executor must be the same
@@ -826,13 +826,13 @@ class TestCancelOrder:
 
         # issue token
         deploy_args = init_args(exchange.address)
-        membership_token = deploy(users, deploy_args)
+        token = deploy(users, deploy_args)
 
         # make BUY order by trader
         _amount = 2 ** 256 - 1
         _price = 2 ** 256 - 1
         exchange.createOrder.transact(
-            membership_token.address,
+            token.address,
             _amount,
             _price,
             True,
@@ -851,15 +851,15 @@ class TestCancelOrder:
         # assertion
         assert exchange.getOrder(order_id) == [
             trader.address,
-            membership_token.address,
+            token.address,
             _amount,
             _price,
             True,
             agent.address,
             False
         ]
-        assert membership_token.balanceOf(issuer) == deploy_args[2]
-        assert membership_token.balanceOf(trader) == 0
+        assert token.balanceOf(issuer) == deploy_args[2]
+        assert token.balanceOf(trader) == 0
 
 
 # TEST_executeOrder
@@ -878,20 +878,20 @@ class TestExecuteOrder:
 
         # issue token
         deploy_args = init_args(exchange.address)
-        membership_token = deploy(users, deploy_args)
+        token = deploy(users, deploy_args)
 
         # make SELL order by issuer
         _make_amount = 2 ** 256 - 1
         _price = 2 ** 256 - 1
         _isBuy = False
 
-        membership_token.transfer.transact(
+        token.transfer.transact(
             exchange.address,
             _make_amount,
             {'from': issuer}
         )
         exchange.createOrder.transact(
-            membership_token.address,
+            token.address,
             _make_amount,
             _price,
             _isBuy,
@@ -912,16 +912,16 @@ class TestExecuteOrder:
         # assertion
         assert exchange.getOrder(order_id) == [
             issuer.address,
-            membership_token.address,
+            token.address,
             _make_amount - _take_amount,
             _price,
             False,
             agent.address,
             False
         ]
-        assert membership_token.balanceOf(issuer) == deploy_args[2] - _make_amount
-        assert membership_token.balanceOf(trader) == 0
-        assert exchange.commitmentOf(issuer, membership_token.address) == _take_amount
+        assert token.balanceOf(issuer) == deploy_args[2] - _make_amount
+        assert token.balanceOf(trader) == 0
+        assert exchange.commitmentOf(issuer, token.address) == _take_amount
         agreement_id = exchange.latestAgreementId(order_id)
         assert exchange.getAgreement(order_id, agreement_id)[0:5] == [
             trader.address,
@@ -930,7 +930,7 @@ class TestExecuteOrder:
             False,
             False
         ]
-        assert exchange.lastPrice(membership_token.address) == 0
+        assert exchange.lastPrice(token.address) == 0
 
     # Normal_2
     # Take order: SELL
@@ -941,7 +941,7 @@ class TestExecuteOrder:
 
         # issue token
         deploy_args = init_args(exchange.address)
-        membership_token = deploy(users, deploy_args)
+        token = deploy(users, deploy_args)
 
         # make BUY order by trader
         _make_amount = 2 ** 256 - 1
@@ -949,7 +949,7 @@ class TestExecuteOrder:
         _isBuy = True
 
         exchange.createOrder.transact(
-            membership_token.address,
+            token.address,
             _make_amount,
             _price,
             _isBuy,
@@ -961,7 +961,7 @@ class TestExecuteOrder:
         _take_amount = 2 ** 256 - 1
 
         order_id = exchange.latestOrderId()
-        membership_token.transfer.transact(
+        token.transfer.transact(
             exchange.address,
             _take_amount,
             {'from': issuer}
@@ -976,16 +976,16 @@ class TestExecuteOrder:
         # assertion
         assert exchange.getOrder(order_id) == [
             trader.address,
-            membership_token.address,
+            token.address,
             _make_amount - _take_amount,
             _price,
             True,
             agent.address,
             False
         ]
-        assert membership_token.balanceOf(issuer) == deploy_args[2] - _take_amount
-        assert membership_token.balanceOf(trader) == 0
-        assert exchange.commitmentOf(issuer, membership_token.address) == _take_amount
+        assert token.balanceOf(issuer) == deploy_args[2] - _take_amount
+        assert token.balanceOf(trader) == 0
+        assert exchange.commitmentOf(issuer, token.address) == _take_amount
         agreement_id = exchange.latestAgreementId(order_id)
         assert exchange.getAgreement(order_id, agreement_id)[0:5] == [
             issuer,
@@ -994,7 +994,7 @@ class TestExecuteOrder:
             False,
             False
         ]
-        assert exchange.lastPrice(membership_token.address) == 0
+        assert exchange.lastPrice(token.address) == 0
 
     #######################################
     # Error
@@ -1009,20 +1009,20 @@ class TestExecuteOrder:
 
         # issue token
         deploy_args = init_args(exchange.address)
-        membership_token = deploy(users, deploy_args)
+        token = deploy(users, deploy_args)
 
         # transfer to contract -> make order: SELL
         _make_amount = 2 ** 256 - 1
         _price = 2 ** 256 - 1
         _isBuy = False
 
-        membership_token.transfer.transact(
+        token.transfer.transact(
             exchange.address,
             _make_amount,
             {'from': issuer}
         )
         exchange.createOrder.transact(
-            membership_token.address,
+            token.address,
             _make_amount,
             _price,
             _isBuy,
@@ -1044,17 +1044,17 @@ class TestExecuteOrder:
         # assertion
         assert exchange.getOrder(order_id) == [
             issuer.address,
-            membership_token.address,
+            token.address,
             _make_amount,
             _price,
             False,
             agent.address,
             False
         ]
-        assert membership_token.balanceOf(issuer) == deploy_args[2] - _make_amount
-        assert membership_token.balanceOf(trader) == 0
-        assert exchange.commitmentOf(issuer, membership_token.address) == _make_amount
-        assert exchange.lastPrice(membership_token.address) == 0
+        assert token.balanceOf(issuer) == deploy_args[2] - _make_amount
+        assert token.balanceOf(trader) == 0
+        assert exchange.commitmentOf(issuer, token.address) == _make_amount
+        assert exchange.lastPrice(token.address) == 0
 
     # Error_2_1
     # Take order: BUY
@@ -1066,20 +1066,20 @@ class TestExecuteOrder:
 
         # issue token
         deploy_args = init_args(exchange.address)
-        membership_token = deploy(users, deploy_args)
+        token = deploy(users, deploy_args)
 
         # transfer to contract -> make order: SELL
         _make_amount = 2 ** 256 - 1
         _price = 2 ** 256 - 1
         _isBuy = False
 
-        membership_token.transfer.transact(
+        token.transfer.transact(
             exchange.address,
             _make_amount,
             {'from': issuer}
         )
         exchange.createOrder.transact(
-            membership_token.address,
+            token.address,
             _make_amount,
             _price,
             _isBuy,
@@ -1100,17 +1100,17 @@ class TestExecuteOrder:
         # assertion
         assert exchange.getOrder(order_id) == [
             issuer.address,
-            membership_token.address,
+            token.address,
             _make_amount,
             _price,
             False,
             agent.address,
             False
         ]
-        assert membership_token.balanceOf(issuer) == deploy_args[2] - _make_amount
-        assert membership_token.balanceOf(trader) == 0
-        assert exchange.commitmentOf(issuer, membership_token.address) == _make_amount
-        assert exchange.lastPrice(membership_token.address) == 0
+        assert token.balanceOf(issuer) == deploy_args[2] - _make_amount
+        assert token.balanceOf(trader) == 0
+        assert exchange.commitmentOf(issuer, token.address) == _make_amount
+        assert exchange.lastPrice(token.address) == 0
 
     # Error_2_2
     # Take order: BUY
@@ -1122,7 +1122,7 @@ class TestExecuteOrder:
 
         # issue token
         deploy_args = init_args(exchange.address)
-        membership_token = deploy(users, deploy_args)
+        token = deploy(users, deploy_args)
 
         # make BUY order by trader
         _make_amount = 2 ** 256 - 1
@@ -1130,7 +1130,7 @@ class TestExecuteOrder:
         _isBuy = True
 
         exchange.createOrder.transact(
-            membership_token.address,
+            token.address,
             _make_amount,
             _price,
             _isBuy,
@@ -1152,17 +1152,17 @@ class TestExecuteOrder:
         # assertion
         assert exchange.getOrder(order_id) == [
             issuer.address,
-            membership_token.address,
+            token.address,
             _make_amount,
             _price,
             True,
             agent.address,
             False
         ]
-        assert membership_token.balanceOf(issuer) == deploy_args[2]
-        assert membership_token.balanceOf(trader) == 0
-        assert exchange.commitmentOf(issuer, membership_token.address) == 0
-        assert exchange.lastPrice(membership_token.address) == 0
+        assert token.balanceOf(issuer) == deploy_args[2]
+        assert token.balanceOf(trader) == 0
+        assert exchange.commitmentOf(issuer, token.address) == 0
+        assert exchange.lastPrice(token.address) == 0
 
     # Error_2_3
     # Take order: BUY
@@ -1173,20 +1173,20 @@ class TestExecuteOrder:
 
         # issue token
         deploy_args = init_args(exchange.address)
-        membership_token = deploy(users, deploy_args)
+        token = deploy(users, deploy_args)
 
         # make SELL order by issuer
         _make_amount = 2 ** 256 - 1
         _price = 2 ** 256 - 1
         _isBuy = False
 
-        membership_token.transfer.transact(
+        token.transfer.transact(
             exchange.address,
             _make_amount,
             {'from': issuer}
         )
         exchange.createOrder.transact(
-            membership_token.address,
+            token.address,
             _make_amount,
             _price,
             _isBuy,
@@ -1208,16 +1208,16 @@ class TestExecuteOrder:
         # assertion
         assert exchange.getOrder(order_id) == [
             issuer.address,
-            membership_token.address,
+            token.address,
             _make_amount,
             _price,
             False,
             agent.address,
             False
         ]
-        assert membership_token.balanceOf(issuer) == deploy_args[2] - _make_amount
-        assert exchange.commitmentOf(issuer, membership_token.address) == _make_amount
-        assert exchange.lastPrice(membership_token.address) == 0
+        assert token.balanceOf(issuer) == deploy_args[2] - _make_amount
+        assert exchange.commitmentOf(issuer, token.address) == _make_amount
+        assert exchange.lastPrice(token.address) == 0
 
     # Error_2_4
     # Take order: BUY
@@ -1229,20 +1229,20 @@ class TestExecuteOrder:
 
         # issue token
         deploy_args = init_args(exchange.address)
-        membership_token = deploy(users, deploy_args)
+        token = deploy(users, deploy_args)
 
         # make SELL order by issuer
         _make_amount = 2 ** 256 - 1
         _price = 2 ** 256 - 1
         _isBuy = False
 
-        membership_token.transfer.transact(
+        token.transfer.transact(
             exchange.address,
             _make_amount,
             {'from': issuer}
         )
         exchange.createOrder.transact(
-            membership_token.address,
+            token.address,
             _make_amount,
             _price,
             _isBuy,
@@ -1268,16 +1268,16 @@ class TestExecuteOrder:
         # assertion
         assert exchange.getOrder(order_id) == [
             issuer.address,
-            membership_token.address,
+            token.address,
             _make_amount,
             _price,
             False,
             agent.address,
             True
         ]
-        assert membership_token.balanceOf(issuer) == deploy_args[2]
-        assert exchange.commitmentOf(issuer, membership_token.address) == 0
-        assert exchange.lastPrice(membership_token.address) == 0
+        assert token.balanceOf(issuer) == deploy_args[2]
+        assert exchange.commitmentOf(issuer, token.address) == 0
+        assert exchange.lastPrice(token.address) == 0
 
     # Error_2_5
     # Take order: BUY
@@ -1289,20 +1289,20 @@ class TestExecuteOrder:
 
         # issue token
         deploy_args = init_args(exchange.address)
-        membership_token = deploy(users, deploy_args)
+        token = deploy(users, deploy_args)
 
         # make SELL order by issuer
         _make_amount = 2 ** 256 - 1
         _price = 2 ** 256 - 1
         _isBuy = False
 
-        membership_token.transfer.transact(
+        token.transfer.transact(
             exchange.address,
             _make_amount,
             {'from': issuer}
         )
         exchange.createOrder.transact(
-            membership_token.address,
+            token.address,
             _make_amount,
             _price,
             _isBuy,
@@ -1311,7 +1311,7 @@ class TestExecuteOrder:
         )
 
         # change token status
-        membership_token.setStatus.transact(False, {'from': issuer})
+        token.setStatus.transact(False, {'from': issuer})
 
         # take BUY order by trader
         _take_amount = 2 ** 256 - 1
@@ -1327,16 +1327,16 @@ class TestExecuteOrder:
         # assertion
         assert exchange.getOrder(order_id) == [
             issuer.address,
-            membership_token.address,
+            token.address,
             _make_amount,
             _price,
             False,
             agent.address,
             False
         ]
-        assert membership_token.balanceOf(issuer) == deploy_args[2] - _make_amount
-        assert exchange.commitmentOf(issuer, membership_token.address) == _make_amount
-        assert exchange.lastPrice(membership_token.address) == 0
+        assert token.balanceOf(issuer) == deploy_args[2] - _make_amount
+        assert exchange.commitmentOf(issuer, token.address) == _make_amount
+        assert exchange.lastPrice(token.address) == 0
 
     # Error_2_6
     # Take order: BUY
@@ -1348,20 +1348,20 @@ class TestExecuteOrder:
 
         # issue token
         deploy_args = init_args(exchange.address)
-        membership_token = deploy(users, deploy_args)
+        token = deploy(users, deploy_args)
 
         # make SELL order by issuer
         _make_amount = 100
         _price = 2 ** 256 - 1
         _isBuy = False
 
-        membership_token.transfer.transact(
+        token.transfer.transact(
             exchange.address,
             _make_amount,
             {'from': issuer}
         )
         exchange.createOrder.transact(
-            membership_token.address,
+            token.address,
             _make_amount,
             _price,
             _isBuy,
@@ -1383,16 +1383,16 @@ class TestExecuteOrder:
         # assertion
         assert exchange.getOrder(order_id) == [
             issuer.address,
-            membership_token.address,
+            token.address,
             _make_amount,
             _price,
             False,
             agent.address,
             False
         ]
-        assert membership_token.balanceOf(issuer) == deploy_args[2] - _make_amount
-        assert exchange.commitmentOf(issuer, membership_token.address) == _make_amount
-        assert exchange.lastPrice(membership_token.address) == 0
+        assert token.balanceOf(issuer) == deploy_args[2] - _make_amount
+        assert exchange.commitmentOf(issuer, token.address) == _make_amount
+        assert exchange.lastPrice(token.address) == 0
 
     # Error_3_1
     # Take order: SELL
@@ -1404,7 +1404,7 @@ class TestExecuteOrder:
 
         # issue token
         deploy_args = init_args(exchange.address)
-        membership_token = deploy(users, deploy_args)
+        token = deploy(users, deploy_args)
 
         # make BUY order by trader
         _make_amount = 2 ** 256 - 1
@@ -1412,7 +1412,7 @@ class TestExecuteOrder:
         _isBuy = True
 
         exchange.createOrder.transact(
-            membership_token.address,
+            token.address,
             _make_amount,
             _price,
             _isBuy,
@@ -1422,7 +1422,7 @@ class TestExecuteOrder:
 
         # take SELL order by issuer
         order_id = exchange.latestOrderId()
-        membership_token.transfer.transact(
+        token.transfer.transact(
             exchange.address,
             2 ** 256 - 1,
             {'from': issuer}
@@ -1437,17 +1437,17 @@ class TestExecuteOrder:
         # assertion
         assert exchange.getOrder(order_id) == [
             trader.address,
-            membership_token.address,
+            token.address,
             _make_amount,
             _price,
             True,
             agent.address,
             False
         ]
-        assert membership_token.balanceOf(issuer) == deploy_args[2]
-        assert membership_token.balanceOf(trader) == 0
-        assert exchange.commitmentOf(issuer, membership_token.address) == 0
-        assert exchange.lastPrice(membership_token.address) == 0
+        assert token.balanceOf(issuer) == deploy_args[2]
+        assert token.balanceOf(trader) == 0
+        assert exchange.commitmentOf(issuer, token.address) == 0
+        assert exchange.lastPrice(token.address) == 0
 
     # Error_3_2
     # Take order: SELL
@@ -1459,20 +1459,20 @@ class TestExecuteOrder:
 
         # issue token
         deploy_args = init_args(exchange.address)
-        membership_token = deploy(users, deploy_args)
+        token = deploy(users, deploy_args)
 
         # transfer to contract -> make order: SELL
         _make_amount = 2 ** 256 - 1
         _price = 2 ** 256 - 1
         _isBuy = False
 
-        membership_token.transfer.transact(
+        token.transfer.transact(
             exchange.address,
             _make_amount,
             {'from': issuer}
         )
         exchange.createOrder.transact(
-            membership_token.address,
+            token.address,
             _make_amount,
             _price,
             _isBuy,
@@ -1493,17 +1493,17 @@ class TestExecuteOrder:
         # assertion
         assert exchange.getOrder(order_id) == [
             issuer.address,
-            membership_token.address,
+            token.address,
             _make_amount,
             _price,
             False,
             agent.address,
             False
         ]
-        assert membership_token.balanceOf(issuer) == deploy_args[2] - _make_amount
-        assert membership_token.balanceOf(trader) == 0
-        assert exchange.commitmentOf(issuer, membership_token.address) == _make_amount
-        assert exchange.lastPrice(membership_token.address) == 0
+        assert token.balanceOf(issuer) == deploy_args[2] - _make_amount
+        assert token.balanceOf(trader) == 0
+        assert exchange.commitmentOf(issuer, token.address) == _make_amount
+        assert exchange.lastPrice(token.address) == 0
 
     # Error_3_3
     # Take order: SELL
@@ -1515,7 +1515,7 @@ class TestExecuteOrder:
 
         # issue token
         deploy_args = init_args(exchange.address)
-        membership_token = deploy(users, deploy_args)
+        token = deploy(users, deploy_args)
 
         # make BUY order by trader
         _make_amount = 2 ** 256 - 1
@@ -1523,7 +1523,7 @@ class TestExecuteOrder:
         _isBuy = True
 
         exchange.createOrder.transact(
-            membership_token.address,
+            token.address,
             _make_amount,
             _price,
             _isBuy,
@@ -1535,7 +1535,7 @@ class TestExecuteOrder:
         _take_amount = 2 ** 256 - 1
 
         order_id = exchange.latestOrderId()
-        membership_token.transfer.transact(
+        token.transfer.transact(
             exchange.address,
             _take_amount,
             {'from': issuer}
@@ -1550,17 +1550,17 @@ class TestExecuteOrder:
         # assertion
         assert exchange.getOrder(order_id) == [
             issuer.address,
-            membership_token.address,
+            token.address,
             _make_amount,
             _price,
             True,
             agent.address,
             False
         ]
-        assert membership_token.balanceOf(issuer) == deploy_args[2]
-        assert membership_token.balanceOf(trader) == 0
-        assert exchange.commitmentOf(issuer, membership_token.address) == 0
-        assert exchange.lastPrice(membership_token.address) == 0
+        assert token.balanceOf(issuer) == deploy_args[2]
+        assert token.balanceOf(trader) == 0
+        assert exchange.commitmentOf(issuer, token.address) == 0
+        assert exchange.lastPrice(token.address) == 0
 
     # Error_3_4
     # Take order: SELL
@@ -1572,7 +1572,7 @@ class TestExecuteOrder:
 
         # issue token
         deploy_args = init_args(exchange.address)
-        membership_token = deploy(users, deploy_args)
+        token = deploy(users, deploy_args)
 
         # make BUY order by trader
         _make_amount = 2 ** 256 - 1
@@ -1580,7 +1580,7 @@ class TestExecuteOrder:
         _isBuy = True
 
         exchange.createOrder.transact(
-            membership_token.address,
+            token.address,
             _make_amount,
             _price,
             _isBuy,
@@ -1599,7 +1599,7 @@ class TestExecuteOrder:
         _take_amount = 2 ** 256 - 1
 
         order_id = exchange.latestOrderId()
-        membership_token.transfer.transact(
+        token.transfer.transact(
             exchange.address,
             _take_amount,
             {'from': issuer}
@@ -1614,17 +1614,17 @@ class TestExecuteOrder:
         # Assert: orderbook
         assert exchange.getOrder(order_id) == [
             trader.address,
-            membership_token.address,
+            token.address,
             _make_amount,
             _price,
             True,
             agent.address,
             True
         ]
-        assert membership_token.balanceOf(issuer) == deploy_args[2]
-        assert membership_token.balanceOf(trader) == 0
-        assert exchange.commitmentOf(issuer, membership_token.address) == 0
-        assert exchange.lastPrice(membership_token.address) == 0
+        assert token.balanceOf(issuer) == deploy_args[2]
+        assert token.balanceOf(trader) == 0
+        assert exchange.commitmentOf(issuer, token.address) == 0
+        assert exchange.lastPrice(token.address) == 0
 
     # Error_3_5
     # Take order: SELL
@@ -1636,7 +1636,7 @@ class TestExecuteOrder:
 
         # issue token
         deploy_args = init_args(exchange.address)
-        membership_token = deploy(users, deploy_args)
+        token = deploy(users, deploy_args)
 
         # make BUY order by trader
         _make_amount = 2 ** 256 - 1
@@ -1644,7 +1644,7 @@ class TestExecuteOrder:
         _isBuy = True
 
         exchange.createOrder.transact(
-            membership_token.address,
+            token.address,
             _make_amount,
             _price,
             _isBuy,
@@ -1653,13 +1653,13 @@ class TestExecuteOrder:
         )
 
         # change token status
-        membership_token.setStatus.transact(False, {'from': issuer})
+        token.setStatus.transact(False, {'from': issuer})
 
         # take SELL order by issuer
         _take_amount = 2 ** 256 - 1
 
         order_id = exchange.latestOrderId()
-        membership_token.transfer.transact(
+        token.transfer.transact(
             exchange.address,
             _take_amount,
             {'from': issuer}
@@ -1674,17 +1674,17 @@ class TestExecuteOrder:
         # assertion
         assert exchange.getOrder(order_id) == [
             trader.address,
-            membership_token.address,
+            token.address,
             _make_amount,
             _price,
             True,
             agent.address,
             False
         ]
-        assert membership_token.balanceOf(issuer) == deploy_args[2]
-        assert membership_token.balanceOf(trader) == 0
-        assert exchange.commitmentOf(issuer, membership_token.address) == 0
-        assert exchange.lastPrice(membership_token.address) == 0
+        assert token.balanceOf(issuer) == deploy_args[2]
+        assert token.balanceOf(trader) == 0
+        assert exchange.commitmentOf(issuer, token.address) == 0
+        assert exchange.lastPrice(token.address) == 0
 
     # Error_3_6
     # Take order: SELL
@@ -1696,7 +1696,7 @@ class TestExecuteOrder:
 
         # issue token
         deploy_args = init_args(exchange.address)
-        membership_token = deploy(users, deploy_args)
+        token = deploy(users, deploy_args)
 
         # make BUY order by trader
         _make_amount = 2 ** 256 - 1
@@ -1704,7 +1704,7 @@ class TestExecuteOrder:
         _isBuy = True
 
         exchange.createOrder.transact(
-            membership_token.address,
+            token.address,
             _make_amount,
             _price,
             _isBuy,
@@ -1716,7 +1716,7 @@ class TestExecuteOrder:
         _take_amount = 100
 
         order_id = exchange.latestOrderId()
-        membership_token.transfer.transact(
+        token.transfer.transact(
             exchange.address,
             _take_amount,
             {'from': issuer}
@@ -1731,17 +1731,17 @@ class TestExecuteOrder:
         # assertion
         assert exchange.getOrder(order_id) == [
             trader.address,
-            membership_token.address,
+            token.address,
             _make_amount,
             _price,
             True,
             agent.address,
             False
         ]
-        assert membership_token.balanceOf(issuer) == deploy_args[2]
-        assert membership_token.balanceOf(trader) == 0
-        assert exchange.commitmentOf(issuer, membership_token.address) == 0
-        assert exchange.lastPrice(membership_token.address) == 0
+        assert token.balanceOf(issuer) == deploy_args[2]
+        assert token.balanceOf(trader) == 0
+        assert exchange.commitmentOf(issuer, token.address) == 0
+        assert exchange.lastPrice(token.address) == 0
 
     # Error_3_7
     # Take order: SELL
@@ -1753,7 +1753,7 @@ class TestExecuteOrder:
 
         # issue token
         deploy_args = init_args(exchange.address)
-        membership_token = deploy(users, deploy_args)
+        token = deploy(users, deploy_args)
 
         # make BUY order by trader
         _make_amount = 100
@@ -1761,7 +1761,7 @@ class TestExecuteOrder:
         _isBuy = True
 
         exchange.createOrder.transact(
-            membership_token.address,
+            token.address,
             _make_amount,
             _price,
             _isBuy,
@@ -1773,7 +1773,7 @@ class TestExecuteOrder:
         _take_amount = 101
 
         order_id = exchange.latestOrderId()
-        membership_token.transfer.transact(
+        token.transfer.transact(
             exchange.address,
             _take_amount,
             {'from': issuer}
@@ -1788,17 +1788,17 @@ class TestExecuteOrder:
         # assertion
         assert exchange.getOrder(order_id) == [
             trader.address,
-            membership_token.address,
+            token.address,
             _make_amount,
             _price,
             True,
             agent.address,
             False
         ]
-        assert membership_token.balanceOf(issuer) == deploy_args[2]
-        assert membership_token.balanceOf(trader) == 0
-        assert exchange.commitmentOf(issuer, membership_token.address) == 0
-        assert exchange.lastPrice(membership_token.address) == 0
+        assert token.balanceOf(issuer) == deploy_args[2]
+        assert token.balanceOf(trader) == 0
+        assert exchange.commitmentOf(issuer, token.address) == 0
+        assert exchange.lastPrice(token.address) == 0
 
 
 # TEST_confirmAgreement
@@ -1817,20 +1817,20 @@ class TestConfirmAgreement:
 
         # issue token
         deploy_args = init_args(exchange.address)
-        membership_token = deploy(users, deploy_args)
+        token = deploy(users, deploy_args)
 
         # make SELL order by issuer
         _make_amount = 2 ** 256 - 1
         _price = 2 ** 256 - 1
         _isBuy = False
 
-        membership_token.transfer.transact(
+        token.transfer.transact(
             exchange.address,
             _make_amount,
             {'from': issuer}
         )
         exchange.createOrder.transact(
-            membership_token.address,
+            token.address,
             _make_amount,
             _price,
             _isBuy,
@@ -1859,16 +1859,16 @@ class TestConfirmAgreement:
         # assertion
         assert exchange.getOrder(order_id) == [
             issuer.address,
-            membership_token.address,
+            token.address,
             _make_amount - _take_amount,
             _price,
             False,
             agent.address,
             False
         ]
-        assert membership_token.balanceOf(issuer) == deploy_args[2] - _make_amount
-        assert membership_token.balanceOf(trader) == _take_amount
-        assert exchange.commitmentOf(issuer, membership_token.address) == 0
+        assert token.balanceOf(issuer) == deploy_args[2] - _make_amount
+        assert token.balanceOf(trader) == _take_amount
+        assert exchange.commitmentOf(issuer, token.address) == 0
         assert exchange.getAgreement(order_id, agreement_id)[0:5] == [
             trader,
             _take_amount,
@@ -1876,9 +1876,9 @@ class TestConfirmAgreement:
             False,
             True
         ]
-        assert exchange.lastPrice(membership_token.address) == _price
+        assert exchange.lastPrice(token.address) == _price
 
-        assert tx.events["SettlementOK"]["tokenAddress"] == membership_token.address
+        assert tx.events["SettlementOK"]["tokenAddress"] == token.address
         assert tx.events["SettlementOK"]["orderId"] == order_id
         assert tx.events["SettlementOK"]["agreementId"] == agreement_id
         assert tx.events["SettlementOK"]["buyAddress"] == trader.address
@@ -1896,7 +1896,7 @@ class TestConfirmAgreement:
 
         # issue token
         deploy_args = init_args(exchange.address)
-        membership_token = deploy(users, deploy_args)
+        token = deploy(users, deploy_args)
 
         # make BUY order by trader
         _make_amount = 2 ** 256 - 1
@@ -1904,7 +1904,7 @@ class TestConfirmAgreement:
         _isBuy = True
 
         exchange.createOrder.transact(
-            membership_token.address,
+            token.address,
             _make_amount,
             _price,
             _isBuy,
@@ -1916,7 +1916,7 @@ class TestConfirmAgreement:
         _take_amount = 2 ** 256 - 1
 
         order_id = exchange.latestOrderId()
-        membership_token.transfer.transact(
+        token.transfer.transact(
             exchange.address,
             _take_amount,
             {'from': issuer}
@@ -1939,16 +1939,16 @@ class TestConfirmAgreement:
         # assertion
         assert exchange.getOrder(order_id) == [
             trader.address,
-            membership_token.address,
+            token.address,
             _make_amount - _take_amount,
             _price,
             True,
             agent.address,
             False
         ]
-        assert membership_token.balanceOf(issuer) == deploy_args[2] - _take_amount
-        assert membership_token.balanceOf(trader) == _make_amount
-        assert exchange.commitmentOf(issuer, membership_token.address) == 0
+        assert token.balanceOf(issuer) == deploy_args[2] - _take_amount
+        assert token.balanceOf(trader) == _make_amount
+        assert exchange.commitmentOf(issuer, token.address) == 0
         assert exchange.getAgreement(order_id, agreement_id)[0:5] == [
             issuer.address,
             _take_amount,
@@ -1956,9 +1956,9 @@ class TestConfirmAgreement:
             False,
             True
         ]
-        assert exchange.lastPrice(membership_token.address) == _price
+        assert exchange.lastPrice(token.address) == _price
 
-        assert tx.events["SettlementOK"]["tokenAddress"] == membership_token.address
+        assert tx.events["SettlementOK"]["tokenAddress"] == token.address
         assert tx.events["SettlementOK"]["orderId"] == order_id
         assert tx.events["SettlementOK"]["agreementId"] == agreement_id
         assert tx.events["SettlementOK"]["buyAddress"] == trader.address
@@ -1980,20 +1980,20 @@ class TestConfirmAgreement:
 
         # issue token
         deploy_args = init_args(exchange.address)
-        membership_token = deploy(users, deploy_args)
+        token = deploy(users, deploy_args)
 
         # make SELL order by issuer
         _make_amount = 2 ** 256 - 1
         _price = 2 ** 256 - 1
         _isBuy = False
 
-        membership_token.transfer.transact(
+        token.transfer.transact(
             exchange.address,
             _make_amount,
             {'from': issuer}
         )
         exchange.createOrder.transact(
-            membership_token.address,
+            token.address,
             _make_amount,
             _price,
             _isBuy,
@@ -2023,16 +2023,16 @@ class TestConfirmAgreement:
         # assertion
         assert exchange.getOrder(order_id) == [
             issuer.address,
-            membership_token.address,
+            token.address,
             _make_amount - _take_amount,
             _price,
             False,
             agent.address,
             False
         ]
-        assert membership_token.balanceOf(issuer) == deploy_args[2] - _make_amount
-        assert membership_token.balanceOf(trader) == 0
-        assert exchange.commitmentOf(issuer, membership_token.address) == _make_amount
+        assert token.balanceOf(issuer) == deploy_args[2] - _make_amount
+        assert token.balanceOf(trader) == 0
+        assert exchange.commitmentOf(issuer, token.address) == _make_amount
         assert exchange.getAgreement(order_id, agreement_id)[0:5] == [
             trader,
             _take_amount,
@@ -2040,7 +2040,7 @@ class TestConfirmAgreement:
             False,
             False
         ]
-        assert exchange.lastPrice(membership_token.address) == 0
+        assert exchange.lastPrice(token.address) == 0
 
     # Error_2
     # Agreement ID must be less than or equal to the latest agreement ID
@@ -2051,20 +2051,20 @@ class TestConfirmAgreement:
 
         # issue token
         deploy_args = init_args(exchange.address)
-        membership_token = deploy(users, deploy_args)
+        token = deploy(users, deploy_args)
 
         # make SELL order by issuer
         _make_amount = 2 ** 256 - 1
         _price = 2 ** 256 - 1
         _isBuy = False
 
-        membership_token.transfer.transact(
+        token.transfer.transact(
             exchange.address,
             _make_amount,
             {'from': issuer}
         )
         exchange.createOrder.transact(
-            membership_token.address,
+            token.address,
             _make_amount,
             _price,
             _isBuy,
@@ -2094,16 +2094,16 @@ class TestConfirmAgreement:
         # assertion
         assert exchange.getOrder(order_id) == [
             issuer.address,
-            membership_token.address,
+            token.address,
             _make_amount - _take_amount,
             _price,
             False,
             agent.address,
             False
         ]
-        assert membership_token.balanceOf(issuer) == deploy_args[2] - _make_amount
-        assert membership_token.balanceOf(trader) == 0
-        assert exchange.commitmentOf(issuer, membership_token.address) == _make_amount
+        assert token.balanceOf(issuer) == deploy_args[2] - _make_amount
+        assert token.balanceOf(trader) == 0
+        assert exchange.commitmentOf(issuer, token.address) == _make_amount
         assert exchange.getAgreement(order_id, agreement_id)[0:5] == [
             trader,
             _take_amount,
@@ -2111,7 +2111,7 @@ class TestConfirmAgreement:
             False,
             False
         ]
-        assert exchange.lastPrice(membership_token.address) == 0
+        assert exchange.lastPrice(token.address) == 0
 
     # Error_3
     # If it has already been confirmed, it cannot be confirmed
@@ -2122,20 +2122,20 @@ class TestConfirmAgreement:
 
         # issue token
         deploy_args = init_args(exchange.address)
-        membership_token = deploy(users, deploy_args)
+        token = deploy(users, deploy_args)
 
         # make SELL order by issuer
         _make_amount = 2 ** 256 - 1
         _price = 2 ** 256 - 1
         _isBuy = False
 
-        membership_token.transfer.transact(
+        token.transfer.transact(
             exchange.address,
             _make_amount,
             {'from': issuer}
         )
         exchange.createOrder.transact(
-            membership_token.address,
+            token.address,
             _make_amount,
             _price,
             _isBuy,
@@ -2172,16 +2172,16 @@ class TestConfirmAgreement:
         # assertion
         assert exchange.getOrder(order_id) == [
             issuer.address,
-            membership_token.address,
+            token.address,
             _make_amount - _take_amount,
             _price,
             False,
             agent.address,
             False
         ]
-        assert membership_token.balanceOf(issuer) == deploy_args[2] - _make_amount
-        assert membership_token.balanceOf(trader) == _take_amount
-        assert exchange.commitmentOf(issuer, membership_token.address) == 0
+        assert token.balanceOf(issuer) == deploy_args[2] - _make_amount
+        assert token.balanceOf(trader) == _take_amount
+        assert exchange.commitmentOf(issuer, token.address) == 0
         assert exchange.getAgreement(order_id, agreement_id)[0:5] == [
             trader,
             _take_amount,
@@ -2189,7 +2189,7 @@ class TestConfirmAgreement:
             False,
             True
         ]
-        assert exchange.lastPrice(membership_token.address) == _price
+        assert exchange.lastPrice(token.address) == _price
 
     # Error_4
     # If it has already been cancelled, it cannot be confirmed
@@ -2200,20 +2200,20 @@ class TestConfirmAgreement:
 
         # issue token
         deploy_args = init_args(exchange.address)
-        membership_token = deploy(users, deploy_args)
+        token = deploy(users, deploy_args)
 
         # make SELL order by issuer
         _make_amount = 2 ** 256 - 1
         _price = 2 ** 256 - 1
         _isBuy = False
 
-        membership_token.transfer.transact(
+        token.transfer.transact(
             exchange.address,
             _make_amount,
             {'from': issuer}
         )
         exchange.createOrder.transact(
-            membership_token.address,
+            token.address,
             _make_amount,
             _price,
             _isBuy,
@@ -2250,16 +2250,16 @@ class TestConfirmAgreement:
         # assertion
         assert exchange.getOrder(order_id) == [
             issuer.address,
-            membership_token.address,
+            token.address,
             _make_amount,
             _price,
             False,
             agent.address,
             False
         ]
-        assert membership_token.balanceOf(issuer) == 0
-        assert membership_token.balanceOf(trader) == 0
-        assert exchange.commitmentOf(issuer, membership_token.address) == _make_amount
+        assert token.balanceOf(issuer) == 0
+        assert token.balanceOf(trader) == 0
+        assert exchange.commitmentOf(issuer, token.address) == _make_amount
         assert exchange.getAgreement(order_id, agreement_id)[0:5] == [
             trader,
             _take_amount,
@@ -2267,7 +2267,7 @@ class TestConfirmAgreement:
             True,
             False
         ]
-        assert exchange.lastPrice(membership_token.address) == 0
+        assert exchange.lastPrice(token.address) == 0
 
     # Error_5
     # The executor must be the agent specified in the make order
@@ -2278,20 +2278,20 @@ class TestConfirmAgreement:
 
         # issue token
         deploy_args = init_args(exchange.address)
-        membership_token = deploy(users, deploy_args)
+        token = deploy(users, deploy_args)
 
         # make SELL order by issuer
         _make_amount = 2 ** 256 - 1
         _price = 2 ** 256 - 1
         _isBuy = False
 
-        membership_token.transfer.transact(
+        token.transfer.transact(
             exchange.address,
             _make_amount,
             {'from': issuer}
         )
         exchange.createOrder.transact(
-            membership_token.address,
+            token.address,
             _make_amount,
             _price,
             _isBuy,
@@ -2321,16 +2321,16 @@ class TestConfirmAgreement:
         # assertion
         assert exchange.getOrder(order_id) == [
             issuer.address,
-            membership_token.address,
+            token.address,
             _make_amount - _take_amount,
             _price,
             False,
             agent.address,
             False
         ]
-        assert membership_token.balanceOf(issuer) == deploy_args[2] - _make_amount
-        assert membership_token.balanceOf(trader) == 0
-        assert exchange.commitmentOf(issuer, membership_token.address) == _make_amount
+        assert token.balanceOf(issuer) == deploy_args[2] - _make_amount
+        assert token.balanceOf(trader) == 0
+        assert exchange.commitmentOf(issuer, token.address) == _make_amount
         assert exchange.getAgreement(order_id, agreement_id)[0:5] == [
             trader,
             _take_amount,
@@ -2338,7 +2338,7 @@ class TestConfirmAgreement:
             False,
             False
         ]
-        assert exchange.lastPrice(membership_token.address) == 0
+        assert exchange.lastPrice(token.address) == 0
 
 
 # TEST_cancelAgreement
@@ -2357,20 +2357,20 @@ class TestCancelAgreement:
 
         # issue token
         deploy_args = init_args(exchange.address)
-        membership_token = deploy(users, deploy_args)
+        token = deploy(users, deploy_args)
 
         # make SELL order by issuer
         _make_amount = 2 ** 256 - 1
         _price = 2 ** 256 - 1
         _isBuy = False
 
-        membership_token.transfer.transact(
+        token.transfer.transact(
             exchange.address,
             _make_amount,
             {'from': issuer}
         )
         exchange.createOrder.transact(
-            membership_token.address,
+            token.address,
             _make_amount,
             _price,
             _isBuy,
@@ -2399,16 +2399,16 @@ class TestCancelAgreement:
         # assertion
         assert exchange.getOrder(order_id) == [
             issuer.address,
-            membership_token.address,
+            token.address,
             _make_amount,
             _price,
             False,
             agent.address,
             False
         ]
-        assert membership_token.balanceOf(issuer) == 0
-        assert membership_token.balanceOf(trader) == 0
-        assert exchange.commitmentOf(issuer, membership_token.address) == _make_amount
+        assert token.balanceOf(issuer) == 0
+        assert token.balanceOf(trader) == 0
+        assert exchange.commitmentOf(issuer, token.address) == _make_amount
         assert exchange.getAgreement(order_id, agreement_id)[0:5] == [
             trader,
             _take_amount,
@@ -2416,9 +2416,9 @@ class TestCancelAgreement:
             True,
             False
         ]
-        assert exchange.lastPrice(membership_token.address) == 0
+        assert exchange.lastPrice(token.address) == 0
 
-        assert tx.events["SettlementNG"]["tokenAddress"] == membership_token.address
+        assert tx.events["SettlementNG"]["tokenAddress"] == token.address
         assert tx.events["SettlementNG"]["orderId"] == order_id
         assert tx.events["SettlementNG"]["agreementId"] == agreement_id
         assert tx.events["SettlementNG"]["buyAddress"] == trader.address
@@ -2436,7 +2436,7 @@ class TestCancelAgreement:
 
         # issue token
         deploy_args = init_args(exchange.address)
-        membership_token = deploy(users, deploy_args)
+        token = deploy(users, deploy_args)
 
         # make BUY order by trader
         _make_amount = 2 ** 256 - 1
@@ -2444,7 +2444,7 @@ class TestCancelAgreement:
         _isBuy = True
 
         exchange.createOrder.transact(
-            membership_token.address,
+            token.address,
             _make_amount,
             _price,
             _isBuy,
@@ -2456,7 +2456,7 @@ class TestCancelAgreement:
         _take_amount = 2 ** 256 - 1
 
         order_id = exchange.latestOrderId()
-        membership_token.transfer.transact(
+        token.transfer.transact(
             exchange.address,
             _take_amount,
             {'from': issuer}
@@ -2479,16 +2479,16 @@ class TestCancelAgreement:
         # assertion
         assert exchange.getOrder(order_id) == [
             trader.address,
-            membership_token.address,
+            token.address,
             _make_amount - _take_amount,
             _price,
             True,
             agent.address,
             False
         ]
-        assert membership_token.balanceOf(issuer) == deploy_args[2]
-        assert membership_token.balanceOf(trader) == 0
-        assert exchange.commitmentOf(issuer, membership_token.address) == 0
+        assert token.balanceOf(issuer) == deploy_args[2]
+        assert token.balanceOf(trader) == 0
+        assert exchange.commitmentOf(issuer, token.address) == 0
         assert exchange.getAgreement(order_id, agreement_id)[0:5] == [
             issuer.address,
             _take_amount,
@@ -2496,9 +2496,9 @@ class TestCancelAgreement:
             True,
             False
         ]
-        assert exchange.lastPrice(membership_token.address) == 0
+        assert exchange.lastPrice(token.address) == 0
 
-        assert tx.events["SettlementNG"]["tokenAddress"] == membership_token.address
+        assert tx.events["SettlementNG"]["tokenAddress"] == token.address
         assert tx.events["SettlementNG"]["orderId"] == order_id
         assert tx.events["SettlementNG"]["agreementId"] == agreement_id
         assert tx.events["SettlementNG"]["buyAddress"] == trader.address
@@ -2520,20 +2520,20 @@ class TestCancelAgreement:
 
         # issue token
         deploy_args = init_args(exchange.address)
-        membership_token = deploy(users, deploy_args)
+        token = deploy(users, deploy_args)
 
         # make SELL order by issuer
         _make_amount = 2 ** 256 - 1
         _price = 2 ** 256 - 1
         _isBuy = False
 
-        membership_token.transfer.transact(
+        token.transfer.transact(
             exchange.address,
             _make_amount,
             {'from': issuer}
         )
         exchange.createOrder.transact(
-            membership_token.address,
+            token.address,
             _make_amount,
             _price,
             _isBuy,
@@ -2563,16 +2563,16 @@ class TestCancelAgreement:
         # assert
         assert exchange.getOrder(order_id) == [
             issuer.address,
-            membership_token.address,
+            token.address,
             _make_amount - _take_amount,
             _price,
             False,
             agent.address,
             False
         ]
-        assert membership_token.balanceOf(issuer) == deploy_args[2] - _make_amount
-        assert membership_token.balanceOf(trader) == 0
-        assert exchange.commitmentOf(issuer, membership_token.address) == _make_amount
+        assert token.balanceOf(issuer) == deploy_args[2] - _make_amount
+        assert token.balanceOf(trader) == 0
+        assert exchange.commitmentOf(issuer, token.address) == _make_amount
         assert exchange.getAgreement(order_id, agreement_id)[0:5] == [
             trader.address,
             _take_amount,
@@ -2580,7 +2580,7 @@ class TestCancelAgreement:
             False,
             False
         ]
-        assert exchange.lastPrice(membership_token.address) == 0
+        assert exchange.lastPrice(token.address) == 0
 
     # Error_2
     # Agreement ID must be less than or equal to the latest agreement ID
@@ -2591,20 +2591,20 @@ class TestCancelAgreement:
 
         # issue token
         deploy_args = init_args(exchange.address)
-        membership_token = deploy(users, deploy_args)
+        token = deploy(users, deploy_args)
 
         # make SELL order by issuer
         _make_amount = 2 ** 256 - 1
         _price = 2 ** 256 - 1
         _isBuy = False
 
-        membership_token.transfer.transact(
+        token.transfer.transact(
             exchange.address,
             _make_amount,
             {'from': issuer}
         )
         exchange.createOrder.transact(
-            membership_token.address,
+            token.address,
             _make_amount,
             _price,
             _isBuy,
@@ -2634,16 +2634,16 @@ class TestCancelAgreement:
         # assert
         assert exchange.getOrder(order_id) == [
             issuer.address,
-            membership_token.address,
+            token.address,
             _make_amount - _take_amount,
             _price,
             False,
             agent.address,
             False
         ]
-        assert membership_token.balanceOf(issuer) == deploy_args[2] - _make_amount
-        assert membership_token.balanceOf(trader) == 0
-        assert exchange.commitmentOf(issuer, membership_token.address) == _make_amount
+        assert token.balanceOf(issuer) == deploy_args[2] - _make_amount
+        assert token.balanceOf(trader) == 0
+        assert exchange.commitmentOf(issuer, token.address) == _make_amount
         assert exchange.getAgreement(order_id, agreement_id)[0:5] == [
             trader.address,
             _take_amount,
@@ -2651,7 +2651,7 @@ class TestCancelAgreement:
             False,
             False
         ]
-        assert exchange.lastPrice(membership_token.address) == 0
+        assert exchange.lastPrice(token.address) == 0
 
     # Error_3
     # If it has already been confirmed, it cannot be confirmed
@@ -2662,20 +2662,20 @@ class TestCancelAgreement:
 
         # issue token
         deploy_args = init_args(exchange.address)
-        membership_token = deploy(users, deploy_args)
+        token = deploy(users, deploy_args)
 
         # make SELL order by issuer
         _make_amount = 2 ** 256 - 1
         _price = 2 ** 256 - 1
         _isBuy = False
 
-        membership_token.transfer.transact(
+        token.transfer.transact(
             exchange.address,
             _make_amount,
             {'from': issuer}
         )
         exchange.createOrder.transact(
-            membership_token.address,
+            token.address,
             _make_amount,
             _price,
             _isBuy,
@@ -2712,16 +2712,16 @@ class TestCancelAgreement:
         # assertion
         assert exchange.getOrder(order_id) == [
             issuer.address,
-            membership_token.address,
+            token.address,
             _make_amount - _take_amount,
             _price,
             False,
             agent.address,
             False
         ]
-        assert membership_token.balanceOf(issuer) == deploy_args[2] - _make_amount
-        assert membership_token.balanceOf(trader) == _take_amount
-        assert exchange.commitmentOf(issuer, membership_token.address) == 0
+        assert token.balanceOf(issuer) == deploy_args[2] - _make_amount
+        assert token.balanceOf(trader) == _take_amount
+        assert exchange.commitmentOf(issuer, token.address) == 0
         assert exchange.getAgreement(order_id, agreement_id)[0:5] == [
             trader,
             _take_amount,
@@ -2729,7 +2729,7 @@ class TestCancelAgreement:
             False,
             True
         ]
-        assert exchange.lastPrice(membership_token.address) == _price
+        assert exchange.lastPrice(token.address) == _price
 
     # Error_4
     # If it has already been cancelled, it cannot be confirmed
@@ -2740,20 +2740,20 @@ class TestCancelAgreement:
 
         # issue token
         deploy_args = init_args(exchange.address)
-        membership_token = deploy(users, deploy_args)
+        token = deploy(users, deploy_args)
 
         # make SELL order by issuer
         _make_amount = 2 ** 256 - 1
         _price = 2 ** 256 - 1
         _isBuy = False
 
-        membership_token.transfer.transact(
+        token.transfer.transact(
             exchange.address,
             _make_amount,
             {'from': issuer}
         )
         exchange.createOrder.transact(
-            membership_token.address,
+            token.address,
             _make_amount,
             _price,
             _isBuy,
@@ -2790,16 +2790,16 @@ class TestCancelAgreement:
         # assertion
         assert exchange.getOrder(order_id) == [
             issuer.address,
-            membership_token.address,
+            token.address,
             _make_amount,
             _price,
             False,
             agent.address,
             False
         ]
-        assert membership_token.balanceOf(issuer) == 0
-        assert membership_token.balanceOf(trader) == 0
-        assert exchange.commitmentOf(issuer, membership_token.address) == _make_amount
+        assert token.balanceOf(issuer) == 0
+        assert token.balanceOf(trader) == 0
+        assert exchange.commitmentOf(issuer, token.address) == _make_amount
         assert exchange.getAgreement(order_id, agreement_id)[0:5] == [
             trader,
             _take_amount,
@@ -2807,7 +2807,7 @@ class TestCancelAgreement:
             True,
             False
         ]
-        assert exchange.lastPrice(membership_token.address) == 0
+        assert exchange.lastPrice(token.address) == 0
 
     # Error_5
     # The executor must be the agent specified in the make order
@@ -2818,20 +2818,20 @@ class TestCancelAgreement:
 
         # issue token
         deploy_args = init_args(exchange.address)
-        membership_token = deploy(users, deploy_args)
+        token = deploy(users, deploy_args)
 
         # make SELL order by issuer
         _make_amount = 2 ** 256 - 1
         _price = 2 ** 256 - 1
         _isBuy = False
 
-        membership_token.transfer.transact(
+        token.transfer.transact(
             exchange.address,
             _make_amount,
             {'from': issuer}
         )
         exchange.createOrder.transact(
-            membership_token.address,
+            token.address,
             _make_amount,
             _price,
             _isBuy,
@@ -2861,16 +2861,16 @@ class TestCancelAgreement:
         # assert
         assert exchange.getOrder(order_id) == [
             issuer.address,
-            membership_token.address,
+            token.address,
             _make_amount - _take_amount,
             _price,
             False,
             agent.address,
             False
         ]
-        assert membership_token.balanceOf(issuer) == deploy_args[2] - _make_amount
-        assert membership_token.balanceOf(trader) == 0
-        assert exchange.commitmentOf(issuer, membership_token.address) == _make_amount
+        assert token.balanceOf(issuer) == deploy_args[2] - _make_amount
+        assert token.balanceOf(trader) == 0
+        assert exchange.commitmentOf(issuer, token.address) == _make_amount
         assert exchange.getAgreement(order_id, agreement_id)[0:5] == [
             trader.address,
             _take_amount,
@@ -2878,7 +2878,7 @@ class TestCancelAgreement:
             False,
             False
         ]
-        assert exchange.lastPrice(membership_token.address) == 0
+        assert exchange.lastPrice(token.address) == 0
 
 
 # update exchange
@@ -2898,20 +2898,20 @@ class TestUpdateExchange:
 
         # issue token
         deploy_args = init_args(exchange.address)
-        membership_token = deploy(users, deploy_args)
+        token = deploy(users, deploy_args)
 
         # transfer to contract -> make SELL order
         _make_amount = 2 ** 256 - 1
         _price = 2 ** 256 - 1
         _isBuy = False
 
-        membership_token.transfer.transact(
+        token.transfer.transact(
             exchange.address,
             _make_amount,
             {'from': issuer}
         )
         exchange.createOrder.transact(
-            membership_token.address,
+            token.address,
             _make_amount,
             _price,
             _isBuy,
@@ -2934,13 +2934,13 @@ class TestUpdateExchange:
         order_id = exchange_new.latestOrderId()
         assert exchange_new.getOrder(order_id) == [
             issuer.address,
-            membership_token.address,
+            token.address,
             _make_amount,
             _price,
             _isBuy,
             agent.address,
             False
         ]
-        assert membership_token.balanceOf(issuer) == deploy_args[2] - _make_amount
-        assert exchange_new.balanceOf(issuer, membership_token.address) == 0
-        assert exchange_new.commitmentOf(issuer, membership_token.address) == _make_amount
+        assert token.balanceOf(issuer) == deploy_args[2] - _make_amount
+        assert exchange_new.balanceOf(issuer, token.address) == 0
+        assert exchange_new.commitmentOf(issuer, token.address) == _make_amount
