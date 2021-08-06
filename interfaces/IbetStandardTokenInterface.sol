@@ -32,6 +32,10 @@ abstract contract IbetStandardTokenInterface {
     string public privacyPolicy;  // プライバシーポリシー
     bool public status; // 取扱ステータス(True：有効、False：無効)
 
+    // 残高数量
+    // account_address => balance
+    mapping(address => uint256) public balances;
+
     /// @notice 残高の参照
     /// @param _owner 保有者のアドレス
     /// @return 残高数量

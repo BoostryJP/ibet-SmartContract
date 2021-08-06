@@ -54,10 +54,6 @@ contract IbetShare is Ownable, IbetStandardTokenInterface {
     // class => url
     mapping(uint8 => string) public referenceUrls;
 
-    // 残高数量
-    // account_address => balance
-    mapping(address => uint256) public balances;
-
     // ロック資産数量
     // locked_address => account_address => balance
     mapping(address => mapping(address => uint256)) public locked;

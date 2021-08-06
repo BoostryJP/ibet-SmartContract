@@ -50,11 +50,11 @@ class TestDeploy:
     ##########################################################
 
     # Normal_1
-    def test_normal_1(self, users, IbetMembership, membership_exchange):
+    def test_normal_1(self, users, IbetMembership, exchange):
         issuer = users['issuer']
 
         # deploy
-        deploy_args = init_args(membership_exchange.address)
+        deploy_args = init_args(exchange.address)
         membership_contract = issuer.deploy(IbetMembership, *deploy_args)
 
         # assertion
@@ -97,13 +97,13 @@ class TestTransfer:
 
     # Normal_1_1
     # Transfer to account address
-    def test_normal_1_1(self, users, IbetMembership, membership_exchange):
+    def test_normal_1_1(self, users, IbetMembership, exchange):
         issuer = users['issuer']
         trader = users['trader']
         transfer_amount = 100
 
         # issue token
-        deploy_args = init_args(membership_exchange.address)
+        deploy_args = init_args(exchange.address)
         membership_contract = issuer.deploy(IbetMembership, *deploy_args)
 
         # transfer
@@ -126,12 +126,12 @@ class TestTransfer:
     # Normal_1_2
     # Transfer to account address
     # Upper limit
-    def test_normal_1_2(self, users, IbetMembership, membership_exchange):
+    def test_normal_1_2(self, users, IbetMembership, exchange):
         issuer = users['issuer']
         trader = users['trader']
 
         # issue token
-        deploy_args = init_args(membership_exchange.address)
+        deploy_args = init_args(exchange.address)
         deploy_args[2] = 2 ** 256 - 1
         membership_contract = issuer.deploy(IbetMembership, *deploy_args)
 
@@ -153,16 +153,16 @@ class TestTransfer:
 
     # Normal_2_1
     # Transfer to contract address
-    def test_normal_2_1(self, users, IbetMembership, membership_exchange):
+    def test_normal_2_1(self, users, IbetMembership, exchange):
         issuer = users['issuer']
         transfer_amount = 100
 
         # issue token
-        deploy_args = init_args(membership_exchange.address)
+        deploy_args = init_args(exchange.address)
         membership_contract = issuer.deploy(IbetMembership, *deploy_args)
 
         # transfer to contract address
-        exchange_address = membership_exchange.address
+        exchange_address = exchange.address
         tx = membership_contract.transfer.transact(
             exchange_address,
             transfer_amount,
@@ -180,16 +180,16 @@ class TestTransfer:
     # Normal_2_2
     # Transfer to contract address
     # Upper limit
-    def test_normal_2_2(self, users, IbetMembership, membership_exchange):
+    def test_normal_2_2(self, users, IbetMembership, exchange):
         issuer = users['issuer']
 
         # issue token
-        deploy_args = init_args(membership_exchange.address)
+        deploy_args = init_args(exchange.address)
         deploy_args[2] = 2 ** 256 - 1
         membership_contract = issuer.deploy(IbetMembership, *deploy_args)
 
         # transfer
-        exchange_address = membership_exchange.address
+        exchange_address = exchange.address
         transfer_amount = 2 ** 256 - 1
         tx = membership_contract.transfer.transact(
             exchange_address,
@@ -211,12 +211,12 @@ class TestTransfer:
 
     # Error_1
     # Insufficient balance
-    def test_error_1(self, users, IbetMembership, membership_exchange):
+    def test_error_1(self, users, IbetMembership, exchange):
         issuer = users['issuer']
         trader = users['trader']
 
         # issue token
-        deploy_args = init_args(membership_exchange.address)
+        deploy_args = init_args(exchange.address)
         membership_contract = issuer.deploy(IbetMembership, *deploy_args)
 
         # transfer
@@ -233,7 +233,7 @@ class TestTransfer:
 
     # Error_2
     # Cannot access private functions
-    def test_error_2(self, users, IbetMembership, membership_exchange):
+    def test_error_2(self, users, IbetMembership, exchange):
         issuer = users['issuer']
         trader = users['trader']
 
@@ -241,7 +241,7 @@ class TestTransfer:
         data = 'test_data'
 
         # issue token
-        deploy_args = init_args(membership_exchange.address)
+        deploy_args = init_args(exchange.address)
         membership_contract = issuer.deploy(IbetMembership, *deploy_args)
 
         with pytest.raises(AttributeError):
@@ -268,12 +268,12 @@ class TestTransfer:
 
     # Error_3
     # Not transferable token
-    def test_error_3(self, users, IbetMembership, membership_exchange):
+    def test_error_3(self, users, IbetMembership, exchange):
         issuer = users['issuer']
         trader = users['trader']
 
         # issue token
-        deploy_args = init_args(membership_exchange.address)
+        deploy_args = init_args(exchange.address)
         deploy_args[8] = False
         membership_contract = issuer.deploy(IbetMembership, *deploy_args)
 
@@ -293,19 +293,19 @@ class TestTransfer:
     # Error_4
     # Transfer to contract address
     # Not tradable exchange
-    def test_error_4(self, users, IbetMembership, IbetMembershipExchange,
-                     membership_exchange, membership_exchange_storage, payment_gateway):
+    def test_error_4(self, users, IbetMembership, IbetExchange,
+                     exchange, exchange_storage, payment_gateway):
         issuer = users['issuer']
 
         # issue token
-        deploy_args = init_args(membership_exchange.address)
+        deploy_args = init_args(exchange.address)
         membership_contract = issuer.deploy(IbetMembership, *deploy_args)
 
         # deploy (not tradable exchange)
         not_tradable_exchange = users['admin'].deploy(
-            IbetMembershipExchange,
+            IbetExchange,
             payment_gateway.address,
-            membership_exchange_storage.address
+            exchange_storage.address
         )
 
         # transfer
@@ -331,12 +331,12 @@ class TestBulkTransfer:
 
     # Normal_1
     # Bulk transfer to account address (1 data)
-    def test_normal_1(self, IbetMembership, users, membership_exchange):
+    def test_normal_1(self, IbetMembership, users, exchange):
         from_address = users["issuer"]
         to_address = users["trader"]
 
         # issue membership token
-        deploy_args = init_args(membership_exchange.address)
+        deploy_args = init_args(exchange.address)
         membership_contract = from_address.deploy(IbetMembership, *deploy_args)
 
         # bulk transfer
@@ -356,12 +356,12 @@ class TestBulkTransfer:
 
     # Normal_2
     # Bulk transfer to account address (multiple data)
-    def test_normal_2(self, IbetMembership, users, membership_exchange):
+    def test_normal_2(self, IbetMembership, users, exchange):
         from_address = users["issuer"]
         to_address = users["trader"]
 
         # issue membership token
-        deploy_args = init_args(membership_exchange.address)
+        deploy_args = init_args(exchange.address)
         membership_contract = from_address.deploy(IbetMembership, *deploy_args)
 
         # bulk transfer
@@ -384,15 +384,15 @@ class TestBulkTransfer:
 
     # Normal_3
     # Bulk transfer to contract address
-    def test_normal_3(self, IbetMembership, users, membership_exchange):
+    def test_normal_3(self, IbetMembership, users, exchange):
         from_address = users["issuer"]
 
         # issue membership token
-        deploy_args = init_args(membership_exchange.address)
+        deploy_args = init_args(exchange.address)
         membership_contract = from_address.deploy(IbetMembership, *deploy_args)
 
         # bulk transfer
-        to_address_list = [membership_exchange.address]
+        to_address_list = [exchange.address]
         amount_list = [1]
         membership_contract.bulkTransfer.transact(
             to_address_list,
@@ -402,7 +402,7 @@ class TestBulkTransfer:
 
         # assertion
         from_balance = membership_contract.balanceOf(from_address)
-        to_balance = membership_contract.balanceOf(membership_exchange.address)
+        to_balance = membership_contract.balanceOf(exchange.address)
         assert from_balance == deploy_args[2] - 1
         assert to_balance == 1
 
@@ -412,12 +412,12 @@ class TestBulkTransfer:
 
     # Error_1
     # Over the limit
-    def test_error_1(self, IbetMembership, users, membership_exchange):
+    def test_error_1(self, IbetMembership, users, exchange):
         from_address = users['issuer']
         to_address = users['trader']
 
         # issue membership token
-        deploy_args = init_args(membership_exchange.address)
+        deploy_args = init_args(exchange.address)
         deploy_args[2] = 2 ** 256 - 1
         membership_contract = from_address.deploy(IbetMembership, *deploy_args)
 
@@ -436,12 +436,12 @@ class TestBulkTransfer:
 
     # Error_2
     # Insufficient balance
-    def test_error_2(self, IbetMembership, users, membership_exchange):
+    def test_error_2(self, IbetMembership, users, exchange):
         from_address = users["issuer"]
         to_address = users["trader"]
 
         # issue membership token
-        deploy_args = init_args(membership_exchange.address)
+        deploy_args = init_args(exchange.address)
         membership_contract = from_address.deploy(IbetMembership, *deploy_args)
 
         # bulk transfer
@@ -457,12 +457,12 @@ class TestBulkTransfer:
 
     # Error_3
     # Non-transferable token
-    def test_error_3(self, IbetMembership, users, membership_exchange):
+    def test_error_3(self, IbetMembership, users, exchange):
         from_address = users["issuer"]
         to_address = users["trader"]
 
         # issue membership token
-        deploy_args = init_args(membership_exchange.address)
+        deploy_args = init_args(exchange.address)
         membership_contract = from_address.deploy(IbetMembership, *deploy_args)
 
         # change to non-transferable
@@ -492,14 +492,14 @@ class TestTransferFrom:
 
     # Normal_1_1
     # Transfer to account address
-    def test_normal_1_1(self, users, IbetMembership, membership_exchange):
+    def test_normal_1_1(self, users, IbetMembership, exchange):
         issuer = users['issuer']
         from_address = users['admin']
         to_address = users['trader']
         value = 100
 
         # issue token
-        deploy_args = init_args(membership_exchange.address)
+        deploy_args = init_args(exchange.address)
         membership_contract = issuer.deploy(IbetMembership, *deploy_args)
 
         # transfer
@@ -532,14 +532,14 @@ class TestTransferFrom:
     # Normal_1_2
     # Transfer to account address
     # Upper limit
-    def test_normal_1_2(self, users, IbetMembership, membership_exchange):
+    def test_normal_1_2(self, users, IbetMembership, exchange):
         issuer = users['issuer']
         from_address = users['admin']
         to_address = users['trader']
         max_value = 2 ** 256 - 1
 
         # issue token
-        deploy_args = init_args(membership_exchange.address)
+        deploy_args = init_args(exchange.address)
         deploy_args[2] = max_value
         membership_contract = issuer.deploy(IbetMembership, *deploy_args)
 
@@ -572,15 +572,15 @@ class TestTransferFrom:
 
     # Normal_2_1
     # Transfer to contract address
-    def test_normal_2_1(self, users, IbetMembership, membership_exchange):
+    def test_normal_2_1(self, users, IbetMembership, exchange):
         issuer = users['issuer']
         from_address = users['trader']
         value = 100
 
         # issue token
-        deploy_args = init_args(membership_exchange.address)
+        deploy_args = init_args(exchange.address)
         membership_contract = issuer.deploy(IbetMembership, *deploy_args)
-        to_address = membership_exchange.address
+        to_address = exchange.address
 
         # transfer
         membership_contract.transfer.transact(
@@ -612,14 +612,14 @@ class TestTransferFrom:
     # Normal_2_2
     # Transfer to contract address
     # Upper limit
-    def test_normal_2_2(self, users, IbetMembership, membership_exchange):
+    def test_normal_2_2(self, users, IbetMembership, exchange):
         issuer = users['issuer']
         from_address = users['admin']
-        to_address = membership_exchange.address
+        to_address = exchange.address
         max_value = 2 ** 256 - 1
 
         # issue token
-        deploy_args = init_args(membership_exchange.address)
+        deploy_args = init_args(exchange.address)
         deploy_args[2] = max_value
         membership_contract = issuer.deploy(IbetMembership, *deploy_args)
 
@@ -655,12 +655,12 @@ class TestTransferFrom:
 
     # Error_1
     # Insufficient balance
-    def test_error_1(self, users, IbetMembership, membership_exchange):
+    def test_error_1(self, users, IbetMembership, exchange):
         issuer = users['issuer']
         to_address = users['trader']
 
         # issue token
-        deploy_args = init_args(membership_exchange.address)
+        deploy_args = init_args(exchange.address)
         membership_contract = issuer.deploy(IbetMembership, *deploy_args)
 
         # forced transfer
@@ -678,14 +678,14 @@ class TestTransferFrom:
         assert membership_contract.balanceOf(to_address) == 0
 
     # Unauthorized
-    def test_error_2(self, users, IbetMembership, membership_exchange):
+    def test_error_2(self, users, IbetMembership, exchange):
         issuer = users['issuer']
         admin = users['admin']
         to_address = users['trader']
         transfer_amount = 100
 
         # issue token
-        deploy_args = init_args(membership_exchange.address)
+        deploy_args = init_args(exchange.address)
         membership_contract = issuer.deploy(IbetMembership, *deploy_args)
 
         # forced transfer
@@ -710,11 +710,11 @@ class TestBalanceOf:
     ##########################################################
 
     # Normal_1
-    def test_normal_1(self, users, IbetMembership, membership_exchange):
+    def test_normal_1(self, users, IbetMembership, exchange):
         issuer = users['issuer']
 
         # issue token
-        deploy_args = init_args(membership_exchange.address)
+        deploy_args = init_args(exchange.address)
         membership_contract = issuer.deploy(IbetMembership, *deploy_args)
 
         # assertion
@@ -723,12 +723,12 @@ class TestBalanceOf:
 
     # Normal_2
     # No data
-    def test_normal_2(self, users, IbetMembership, membership_exchange):
+    def test_normal_2(self, users, IbetMembership, exchange):
         issuer = users['issuer']
         trader = users['trader']
 
         # issue token
-        deploy_args = init_args(membership_exchange.address)
+        deploy_args = init_args(exchange.address)
         membership_contract = issuer.deploy(IbetMembership, *deploy_args)
 
         # assertion
@@ -744,12 +744,12 @@ class TestSetDetails:
     ##########################################################
 
     # Normal_1
-    def test_normal_1(self, users, IbetMembership, membership_exchange):
+    def test_normal_1(self, users, IbetMembership, exchange):
         issuer = users['issuer']
         after_details = 'after_details'
 
         # issue token
-        deploy_args = init_args(membership_exchange.address)
+        deploy_args = init_args(exchange.address)
         membership_contract = issuer.deploy(IbetMembership, *deploy_args)
 
         # change token details
@@ -768,13 +768,13 @@ class TestSetDetails:
 
     # Error_1
     # Unauthorized
-    def test_error_1(self, users, IbetMembership, membership_exchange):
+    def test_error_1(self, users, IbetMembership, exchange):
         issuer = users['issuer']
         attacker = users['trader']
         after_details = 'after_details'
 
         # issue token
-        deploy_args = init_args(membership_exchange.address)
+        deploy_args = init_args(exchange.address)
         membership_contract = issuer.deploy(IbetMembership, *deploy_args)
 
         # change token details
@@ -797,12 +797,12 @@ class TestSetReturnDetails:
     ##########################################################
 
     # Normal_1
-    def test_normal_1(self, users, IbetMembership, membership_exchange):
+    def test_normal_1(self, users, IbetMembership, exchange):
         issuer = users['issuer']
         after_return_details = 'after_return_details'
 
         # issue token
-        deploy_args = init_args(membership_exchange.address)
+        deploy_args = init_args(exchange.address)
         membership_contract = issuer.deploy(IbetMembership, *deploy_args)
 
         # set return details
@@ -819,13 +819,13 @@ class TestSetReturnDetails:
 
     # Error_1
     # Unauthorized
-    def test_error_1(self, users, IbetMembership, membership_exchange):
+    def test_error_1(self, users, IbetMembership, exchange):
         issuer = users['issuer']
         attacker = users['trader']
         after_return_details = 'after_return_details'
 
         # issue token
-        deploy_args = init_args(membership_exchange.address)
+        deploy_args = init_args(exchange.address)
         membership_contract = issuer.deploy(IbetMembership, *deploy_args)
 
         # set return details
@@ -848,12 +848,12 @@ class TestSetExpirationDate:
     ##########################################################
 
     # Normal_1
-    def test_normal_1(self, users, IbetMembership, membership_exchange):
+    def test_normal_1(self, users, IbetMembership, exchange):
         issuer = users['issuer']
         after_expiration_date = 'after_expiration_date'
 
         # issue token
-        deploy_args = init_args(membership_exchange.address)
+        deploy_args = init_args(exchange.address)
         membership_contract = issuer.deploy(IbetMembership, *deploy_args)
 
         # set expiration date
@@ -872,13 +872,13 @@ class TestSetExpirationDate:
 
     # Error_1
     # Unauthorized
-    def test_error_1(self, users, IbetMembership, membership_exchange):
+    def test_error_1(self, users, IbetMembership, exchange):
         issuer = users['issuer']
         attacker = users['trader']
         after_expiration_date = 'after_expiration_date'
 
         # issue token
-        deploy_args = init_args(membership_exchange.address)
+        deploy_args = init_args(exchange.address)
         membership_contract = issuer.deploy(IbetMembership, *deploy_args)
 
         # set expiration date
@@ -901,12 +901,12 @@ class TestSetMemo:
     ##########################################################
 
     # Normal_1
-    def test_normal_1(self, users, IbetMembership, membership_exchange):
+    def test_normal_1(self, users, IbetMembership, exchange):
         issuer = users['issuer']
         after_memo = 'after_memo'
 
         # issue token
-        deploy_args = init_args(membership_exchange.address)
+        deploy_args = init_args(exchange.address)
         membership_contract = issuer.deploy(IbetMembership, *deploy_args)
 
         # set memo
@@ -922,13 +922,13 @@ class TestSetMemo:
 
     # Error_1
     # Unauthorized
-    def test_error_1(self, users, IbetMembership, membership_exchange):
+    def test_error_1(self, users, IbetMembership, exchange):
         issuer = users['issuer']
         attacker = users['trader']
         after_memo = 'after_memo'
 
         # issue token
-        deploy_args = init_args(membership_exchange.address)
+        deploy_args = init_args(exchange.address)
         membership_contract = issuer.deploy(IbetMembership, *deploy_args)
 
         # set memo
@@ -951,12 +951,12 @@ class TestSetTransferable:
     ##########################################################
 
     # Normal_1
-    def test_normal_1(self, users, IbetMembership, membership_exchange):
+    def test_normal_1(self, users, IbetMembership, exchange):
         issuer = users['issuer']
         after_transferable = False
 
         # issue token
-        deploy_args = init_args(membership_exchange.address)
+        deploy_args = init_args(exchange.address)
         membership_contract = issuer.deploy(IbetMembership, *deploy_args)
 
         # set transferable
@@ -972,13 +972,13 @@ class TestSetTransferable:
 
     # Error_1
     # Unauthorized
-    def test_error_1(self, users, IbetMembership, membership_exchange):
+    def test_error_1(self, users, IbetMembership, exchange):
         issuer = users['issuer']
         attacker = users['trader']
         after_transferable = False
 
         # issue token
-        deploy_args = init_args(membership_exchange.address)
+        deploy_args = init_args(exchange.address)
         membership_contract = issuer.deploy(IbetMembership, *deploy_args)
 
         # set transferable
@@ -1001,12 +1001,12 @@ class TestSetStatus:
     ##########################################################
 
     # Normal_1
-    def test_normal_1(self, users, IbetMembership, membership_exchange):
+    def test_normal_1(self, users, IbetMembership, exchange):
         issuer = users['issuer']
         after_status = False
 
         # issue token
-        deploy_args = init_args(membership_exchange.address)
+        deploy_args = init_args(exchange.address)
         membership_contract = issuer.deploy(IbetMembership, *deploy_args)
 
         # change status
@@ -1022,13 +1022,13 @@ class TestSetStatus:
 
     # Error_1
     # Unauthorized
-    def test_error_1(self, users, IbetMembership, membership_exchange):
+    def test_error_1(self, users, IbetMembership, exchange):
         issuer = users['issuer']
         attacker = users['trader']
         after_status = False
 
         # issue token
-        deploy_args = init_args(membership_exchange.address)
+        deploy_args = init_args(exchange.address)
         membership_contract = issuer.deploy(IbetMembership, *deploy_args)
 
         # change status
@@ -1051,12 +1051,12 @@ class TestSetImageUrl:
     ##########################################################
 
     # Normal_1
-    def test_normal_1(self, users, IbetMembership, membership_exchange):
+    def test_normal_1(self, users, IbetMembership, exchange):
         issuer = users['issuer']
         after_url = 'http://hoge.com'
 
         # issue token
-        deploy_args = init_args(membership_exchange.address)
+        deploy_args = init_args(exchange.address)
         membership_contract = issuer.deploy(IbetMembership, *deploy_args)
 
         # set image url
@@ -1072,13 +1072,13 @@ class TestSetImageUrl:
 
     # Error_1
     # Unauthorized
-    def test_error_1(self, users, IbetMembership, membership_exchange):
+    def test_error_1(self, users, IbetMembership, exchange):
         issuer = users['issuer']
         attacker = users['trader']
         after_url = 'http://hoge.com'
 
         # issue token
-        deploy_args = init_args(membership_exchange.address)
+        deploy_args = init_args(exchange.address)
         membership_contract = issuer.deploy(IbetMembership, *deploy_args)
 
         # set image url
@@ -1102,12 +1102,12 @@ class TestIssue:
     ##########################################################
 
     # Normal_1
-    def test_normal_1(self, users, IbetMembership, membership_exchange):
+    def test_normal_1(self, users, IbetMembership, exchange):
         issuer = users['issuer']
         value = 10
 
         # issue token
-        deploy_args = init_args(membership_exchange.address)
+        deploy_args = init_args(exchange.address)
         membership_contract = issuer.deploy(IbetMembership, *deploy_args)
 
         # additional issue
@@ -1121,11 +1121,11 @@ class TestIssue:
 
     # Normal_2
     # Upper limit
-    def test_normal_2(self, users, IbetMembership, membership_exchange):
+    def test_normal_2(self, users, IbetMembership, exchange):
         issuer = users['issuer']
 
         # issue token
-        deploy_args = init_args(membership_exchange.address)
+        deploy_args = init_args(exchange.address)
         deploy_args[2] = 2 ** 256 - 2
         membership_contract = issuer.deploy(IbetMembership, *deploy_args)
 
@@ -1144,11 +1144,11 @@ class TestIssue:
 
     # Error_1
     # Exceeding the upper limit
-    def test_error_1(self, users, IbetMembership, membership_exchange):
+    def test_error_1(self, users, IbetMembership, exchange):
         issuer = users['issuer']
 
         # issue token
-        deploy_args = init_args(membership_exchange.address)
+        deploy_args = init_args(exchange.address)
         deploy_args[2] = 2 ** 256 - 1
         membership_contract = issuer.deploy(IbetMembership, *deploy_args)
 
@@ -1164,12 +1164,12 @@ class TestIssue:
 
     # Error_2
     # Unauthorized
-    def test_error_2(self, users, IbetMembership, membership_exchange):
+    def test_error_2(self, users, IbetMembership, exchange):
         issuer = users['issuer']
         attacker = users['trader']
 
         # issue token
-        deploy_args = init_args(membership_exchange.address)
+        deploy_args = init_args(exchange.address)
         membership_contract = issuer.deploy(IbetMembership, *deploy_args)
 
         # additional issue
@@ -1191,11 +1191,11 @@ class TestSetTradableExchange:
     ##########################################################
 
     # Normal_1
-    def test_normal_1(self, users, IbetMembership, membership_exchange):
+    def test_normal_1(self, users, IbetMembership, exchange):
         issuer = users['issuer']
 
         # issue token
-        deploy_args = init_args(membership_exchange.address)
+        deploy_args = init_args(exchange.address)
         membership_contract = issuer.deploy(IbetMembership, *deploy_args)
 
         # change exchange contract
@@ -1213,12 +1213,12 @@ class TestSetTradableExchange:
 
     # Error_1
     # Unauthorized
-    def test_error_1(self, users, IbetMembership, membership_exchange):
+    def test_error_1(self, users, IbetMembership, exchange):
         issuer = users['issuer']
         trader = users['trader']
 
         # issue token
-        deploy_args = init_args(membership_exchange.address)
+        deploy_args = init_args(exchange.address)
         membership_contract = issuer.deploy(IbetMembership, *deploy_args)
 
         # change exchange contract
@@ -1229,7 +1229,7 @@ class TestSetTradableExchange:
             )
 
         # assertion
-        assert membership_contract.tradableExchange() == membership_exchange.address
+        assert membership_contract.tradableExchange() == exchange.address
 
 
 # TEST_setInitialOfferingStatus
@@ -1240,11 +1240,11 @@ class TestSetInitialOfferingStatus:
     ##########################################################
 
     # Normal_1
-    def test_normal_1(self, users, IbetMembership, membership_exchange):
+    def test_normal_1(self, users, IbetMembership, exchange):
         issuer = users['issuer']
 
         # issue token
-        deploy_args = init_args(membership_exchange.address)
+        deploy_args = init_args(exchange.address)
         membership_contract = issuer.deploy(IbetMembership, *deploy_args)
         assert membership_contract.initialOfferingStatus() is False
 
@@ -1263,11 +1263,11 @@ class TestSetInitialOfferingStatus:
 
     # Error_1
     # Unauthorized
-    def test_error_1(self, users, IbetMembership, membership_exchange):
+    def test_error_1(self, users, IbetMembership, exchange):
         issuer = users['issuer']
 
         # issue token
-        deploy_args = init_args(membership_exchange.address)
+        deploy_args = init_args(exchange.address)
         membership_contract = issuer.deploy(IbetMembership, *deploy_args)
 
         # change offering status
@@ -1290,12 +1290,12 @@ class TestApplyForOffering:
 
     # Normal_1
     # Default value
-    def test_normal_1(self, users, IbetMembership, membership_exchange):
+    def test_normal_1(self, users, IbetMembership, exchange):
         issuer = users['issuer']
         trader = users['trader']
 
         # issue token
-        deploy_args = init_args(membership_exchange.address)
+        deploy_args = init_args(exchange.address)
         membership_contract = issuer.deploy(IbetMembership, *deploy_args)
         membership_contract.setInitialOfferingStatus.transact(True, {'from': issuer})
 
@@ -1303,12 +1303,12 @@ class TestApplyForOffering:
         assert membership_contract.applications(trader) == ''
 
     # Normal_2
-    def test_normal_2(self, users, IbetMembership, membership_exchange):
+    def test_normal_2(self, users, IbetMembership, exchange):
         issuer = users['issuer']
         trader = users['trader']
 
         # issue token
-        deploy_args = init_args(membership_exchange.address)
+        deploy_args = init_args(exchange.address)
         membership_contract = issuer.deploy(IbetMembership, *deploy_args)
         membership_contract.setInitialOfferingStatus.transact(True, {'from': issuer})
 
@@ -1329,12 +1329,12 @@ class TestApplyForOffering:
 
     # Error_1
     # Offering status is False
-    def test_error_1(self, users, IbetMembership, membership_exchange):
+    def test_error_1(self, users, IbetMembership, exchange):
         issuer = users['issuer']
         trader = users['trader']
 
         # issue token
-        deploy_args = init_args(membership_exchange.address)
+        deploy_args = init_args(exchange.address)
         membership_contract = issuer.deploy(IbetMembership, *deploy_args)
 
         # apply for
@@ -1356,11 +1356,11 @@ class TestSetContactInformation:
     #######################################
 
     # Normal_1
-    def test_normal_1(self, users, IbetMembership, membership_exchange):
+    def test_normal_1(self, users, IbetMembership, exchange):
         issuer = users['issuer']
 
         # issue token
-        deploy_args = init_args(membership_exchange.address)
+        deploy_args = init_args(exchange.address)
         membership_contract = issuer.deploy(IbetMembership, *deploy_args)
 
         # set contact information
@@ -1378,12 +1378,12 @@ class TestSetContactInformation:
     #######################################
 
     # Error_1
-    def test_error_1(self, users, IbetMembership, membership_exchange):
+    def test_error_1(self, users, IbetMembership, exchange):
         issuer = users['issuer']
         other = users['trader']
 
         # issue token
-        deploy_args = init_args(membership_exchange.address)
+        deploy_args = init_args(exchange.address)
         membership_contract = issuer.deploy(IbetMembership, *deploy_args)
 
         # set contact information
@@ -1406,11 +1406,11 @@ class TestSetPrivacyPolicy:
     #######################################
 
     # Normal_1
-    def test_normal_1(self, users, IbetMembership, membership_exchange):
+    def test_normal_1(self, users, IbetMembership, exchange):
         issuer = users['issuer']
 
         # issue token
-        deploy_args = init_args(membership_exchange.address)
+        deploy_args = init_args(exchange.address)
         membership_contract = issuer.deploy(IbetMembership, *deploy_args)
 
         # set privacy policy
@@ -1429,12 +1429,12 @@ class TestSetPrivacyPolicy:
 
     # Error_1
     # Unauthorized
-    def test_error_1(self, users, IbetMembership, membership_exchange):
+    def test_error_1(self, users, IbetMembership, exchange):
         issuer = users['issuer']
         other = users['trader']
 
         # issue token
-        deploy_args = init_args(membership_exchange.address)
+        deploy_args = init_args(exchange.address)
         membership_contract = issuer.deploy(IbetMembership, *deploy_args)
 
         # set privacy policy

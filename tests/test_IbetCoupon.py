@@ -50,11 +50,11 @@ class TestDeploy:
     ##########################################################
 
     # Normal_1
-    def test_normal_1(self, IbetCoupon, users, coupon_exchange):
+    def test_normal_1(self, IbetCoupon, users, exchange):
         issuer = users['issuer']
 
         # deploy
-        deploy_args = init_args(coupon_exchange.address)
+        deploy_args = init_args(exchange.address)
         coupon = issuer.deploy(IbetCoupon, *deploy_args)
 
         # assertion
@@ -95,13 +95,13 @@ class TestTransfer:
 
     # Normal_1
     # Transfer to account address
-    def test_normal_1(self, IbetCoupon, users, coupon_exchange):
+    def test_normal_1(self, IbetCoupon, users, exchange):
         _from = users['issuer']
         _to = users['trader']
         _value = 100
 
         # deploy
-        deploy_args = init_args(coupon_exchange.address)
+        deploy_args = init_args(exchange.address)
         coupon = _from.deploy(IbetCoupon, *deploy_args)
 
         # transfer
@@ -119,13 +119,13 @@ class TestTransfer:
 
     # Normal_2
     # Transfer to contract address
-    def test_normal_2(self, IbetCoupon, users, coupon_exchange):
+    def test_normal_2(self, IbetCoupon, users, exchange):
         _from = users['issuer']
-        _to = coupon_exchange.address
+        _to = exchange.address
         _value = 100
 
         # deploy
-        deploy_args = init_args(coupon_exchange.address)
+        deploy_args = init_args(exchange.address)
         coupon = _from.deploy(IbetCoupon, *deploy_args)
 
         # transfer
@@ -147,12 +147,12 @@ class TestTransfer:
 
     # Error_1
     # Insufficient balance
-    def test_error_1(self, IbetCoupon, users, coupon_exchange):
+    def test_error_1(self, IbetCoupon, users, exchange):
         _from = users['issuer']
         _to = users['trader']
 
         # deploy
-        deploy_args = init_args(coupon_exchange.address)
+        deploy_args = init_args(exchange.address)
         coupon = _from.deploy(IbetCoupon, *deploy_args)
 
         # transfer
@@ -166,12 +166,12 @@ class TestTransfer:
 
     # Error_2
     # Cannot access private functions
-    def test_error_2(self, IbetCoupon, users, coupon_exchange):
+    def test_error_2(self, IbetCoupon, users, exchange):
         _from = users['issuer']
         _to = users['trader']
 
         # deploy
-        deploy_args = init_args(coupon_exchange.address)
+        deploy_args = init_args(exchange.address)
         coupon = _from.deploy(IbetCoupon, *deploy_args)
 
         with pytest.raises(AttributeError):
@@ -198,12 +198,12 @@ class TestTransfer:
 
     # Error_3
     # Not transferable token
-    def test_error_3(self, IbetCoupon, users, coupon_exchange):
+    def test_error_3(self, IbetCoupon, users, exchange):
         _from = users['issuer']
         _to = users['trader']
 
         # deploy
-        deploy_args = init_args(coupon_exchange.address)
+        deploy_args = init_args(exchange.address)
         deploy_args[8] = False  # not transferable
         coupon = _from.deploy(IbetCoupon, *deploy_args)
 
@@ -219,19 +219,19 @@ class TestTransfer:
     # Error_4
     # Transfer to contract address
     # Not tradable exchange
-    def test_error_4(self, IbetCoupon, IbetCouponExchange, users,
-                     coupon_exchange, coupon_exchange_storage, payment_gateway):
+    def test_error_4(self, IbetCoupon, IbetExchange, users,
+                     exchange, exchange_storage, payment_gateway):
         _issuer = users['issuer']
 
         # deploy
-        deploy_args = init_args(coupon_exchange.address)
+        deploy_args = init_args(exchange.address)
         coupon = _issuer.deploy(IbetCoupon, *deploy_args)
 
         # deploy (not tradable exchange)
         not_tradable_exchange = users['admin'].deploy(
-            IbetCouponExchange,
+            IbetExchange,
             payment_gateway.address,
-            coupon_exchange_storage.address
+            exchange_storage.address
         )
 
         # transfer
@@ -257,12 +257,12 @@ class TestBulkTransfer:
 
     # Normal_1
     # Bulk transfer to account address (1 data)
-    def test_normal_1(self, IbetCoupon, users, coupon_exchange):
+    def test_normal_1(self, IbetCoupon, users, exchange):
         from_address = users["issuer"]
         to_address = users["trader"]
 
         # issue coupon token
-        deploy_args = init_args(coupon_exchange.address)
+        deploy_args = init_args(exchange.address)
         coupon_contract = from_address.deploy(IbetCoupon, *deploy_args)
 
         # bulk transfer
@@ -286,12 +286,12 @@ class TestBulkTransfer:
 
     # Normal_2
     # Bulk transfer to account address (multiple data)
-    def test_normal_2(self, IbetCoupon, users, coupon_exchange):
+    def test_normal_2(self, IbetCoupon, users, exchange):
         from_address = users["issuer"]
         to_address = users["trader"]
 
         # issue coupon token
-        deploy_args = init_args(coupon_exchange.address)
+        deploy_args = init_args(exchange.address)
         coupon_contract = from_address.deploy(IbetCoupon, *deploy_args)
 
         # bulk transfer
@@ -320,15 +320,15 @@ class TestBulkTransfer:
 
     # Normal_3
     # Bulk transfer to contract address
-    def test_normal_3(self, IbetCoupon, users, coupon_exchange):
+    def test_normal_3(self, IbetCoupon, users, exchange):
         from_address = users["issuer"]
 
         # issue coupon token
-        deploy_args = init_args(coupon_exchange.address)
+        deploy_args = init_args(exchange.address)
         coupon_contract = from_address.deploy(IbetCoupon, *deploy_args)
 
         # bulk transfer
-        to_address_list = [coupon_exchange.address]
+        to_address_list = [exchange.address]
         amount_list = [1]
         tx = coupon_contract.bulkTransfer.transact(
             to_address_list,
@@ -338,12 +338,12 @@ class TestBulkTransfer:
 
         # assertion
         from_balance = coupon_contract.balanceOf(from_address)
-        to_balance = coupon_contract.balanceOf(coupon_exchange.address)
+        to_balance = coupon_contract.balanceOf(exchange.address)
         assert from_balance == deploy_args[2] - 1
         assert to_balance == 1
 
         assert tx.events["Transfer"]["from"] == from_address
-        assert tx.events["Transfer"]["to"] == coupon_exchange.address
+        assert tx.events["Transfer"]["to"] == exchange.address
         assert tx.events["Transfer"]["value"] == 1
 
     #######################################
@@ -352,12 +352,12 @@ class TestBulkTransfer:
 
     # Error_1
     # Over/Under the limit
-    def test_error_1(self, IbetCoupon, users, coupon_exchange):
+    def test_error_1(self, IbetCoupon, users, exchange):
         from_address = users['issuer']
         to_address = users['trader']
 
         # issue coupon token
-        deploy_args = init_args(coupon_exchange.address)
+        deploy_args = init_args(exchange.address)
         deploy_args[2] = 2 ** 256 - 1
         coupon_contract = from_address.deploy(IbetCoupon, *deploy_args)
 
@@ -385,12 +385,12 @@ class TestBulkTransfer:
 
     # Error_2
     # Insufficient balance
-    def test_error_2(self, IbetCoupon, users, coupon_exchange):
+    def test_error_2(self, IbetCoupon, users, exchange):
         from_address = users["issuer"]
         to_address = users["trader"]
 
         # issue coupon token
-        deploy_args = init_args(coupon_exchange.address)
+        deploy_args = init_args(exchange.address)
         coupon_contract = from_address.deploy(IbetCoupon, *deploy_args)
 
         # bulk transfer
@@ -407,12 +407,12 @@ class TestBulkTransfer:
 
     # Error_3
     # Not transferable token
-    def test_error_3(self, IbetCoupon, users, coupon_exchange):
+    def test_error_3(self, IbetCoupon, users, exchange):
         from_address = users["issuer"]
         to_address = users["trader"]
 
         # issue coupon token
-        deploy_args = init_args(coupon_exchange.address)
+        deploy_args = init_args(exchange.address)
         coupon_contract = from_address.deploy(IbetCoupon, *deploy_args)
 
         # change to not-transferable
@@ -442,14 +442,14 @@ class TestTransferFrom:
 
     # Normal_1
     # Transfer to account address
-    def test_normal_1(self, users, IbetCoupon, coupon_exchange):
+    def test_normal_1(self, users, IbetCoupon, exchange):
         issuer = users['issuer']
         from_address = users['admin']
         to_address = users['trader']
         value = 100
 
         # issue coupon token
-        deploy_args = init_args(coupon_exchange.address)
+        deploy_args = init_args(exchange.address)
         coupon_contract = issuer.deploy(IbetCoupon, *deploy_args)
 
         # transfer to account address
@@ -479,13 +479,13 @@ class TestTransferFrom:
 
     # Normal_2
     # Transfer to contract address
-    def test_normal_2(self, users, IbetCoupon, coupon_exchange):
+    def test_normal_2(self, users, IbetCoupon, exchange):
         issuer = users['issuer']
         from_address = users['trader']
         value = 100
 
         # issue coupon token
-        deploy_args = init_args(coupon_exchange.address)
+        deploy_args = init_args(exchange.address)
         coupon_contract = issuer.deploy(IbetCoupon, *deploy_args)
 
         # transfer to contract address
@@ -494,7 +494,7 @@ class TestTransferFrom:
             value,
             {'from': issuer}
         )
-        to_address = coupon_exchange.address
+        to_address = exchange.address
         tx = coupon_contract.transferFrom.transact(
             from_address,
             to_address,
@@ -516,14 +516,14 @@ class TestTransferFrom:
 
     # Normal_3_1
     # Upper limit
-    def test_normal_3_1(self, users, IbetCoupon, coupon_exchange):
+    def test_normal_3_1(self, users, IbetCoupon, exchange):
         issuer = users['issuer']
         from_address = users['admin']
         to_address = users['trader']
         max_value = 2 ** 256 - 1
 
         # issuer coupon token
-        deploy_args = init_args(coupon_exchange.address)
+        deploy_args = init_args(exchange.address)
         deploy_args[2] = max_value
         coupon_contract = issuer.deploy(IbetCoupon, *deploy_args)
 
@@ -554,14 +554,14 @@ class TestTransferFrom:
 
     # Normal_3_2
     # Lower limit
-    def test_normal_3_2(self, users, IbetCoupon, coupon_exchange):
+    def test_normal_3_2(self, users, IbetCoupon, exchange):
         issuer = users['issuer']
         from_address = users['admin']
         to_address = users['trader']
         min_value = 0
 
         # issue coupon token
-        deploy_args = init_args(coupon_exchange.address)
+        deploy_args = init_args(exchange.address)
         deploy_args[2] = min_value
         coupon_contract = issuer.deploy(IbetCoupon, *deploy_args)
 
@@ -596,12 +596,12 @@ class TestTransferFrom:
 
     # Error_1
     # Insufficient balance
-    def test_error_1(self, users, IbetCoupon, coupon_exchange):
+    def test_error_1(self, users, IbetCoupon, exchange):
         issuer = users['issuer']
         to_address = users['trader']
 
         # issue coupon token
-        deploy_args = init_args(coupon_exchange.address)
+        deploy_args = init_args(exchange.address)
         coupon_contract = issuer.deploy(IbetCoupon, *deploy_args)
 
         # transfer
@@ -620,14 +620,14 @@ class TestTransferFrom:
 
     # Error_2
     # Unauthorized
-    def test_error_2(self, users, IbetCoupon, coupon_exchange):
+    def test_error_2(self, users, IbetCoupon, exchange):
         issuer = users['issuer']
         admin = users['admin']
         to_address = users['trader']
         transfer_amount = 100
 
         # issue coupon token
-        deploy_args = init_args(coupon_exchange.address)
+        deploy_args = init_args(exchange.address)
         coupon_contract = issuer.deploy(IbetCoupon, *deploy_args)
 
         # transfer
@@ -652,12 +652,12 @@ class TestConsume:
     #######################################
 
     # Normal_1
-    def test_normal_1(self, IbetCoupon, users, coupon_exchange):
+    def test_normal_1(self, IbetCoupon, users, exchange):
         _user = users['issuer']
         _value = 1
 
         # issue token
-        deploy_args = init_args(coupon_exchange.address)
+        deploy_args = init_args(exchange.address)
         coupon = _user.deploy(IbetCoupon, *deploy_args)
 
         # consume
@@ -680,11 +680,11 @@ class TestConsume:
 
     # Error_1
     # Insufficient balance
-    def test_error_1(self, IbetCoupon, users, coupon_exchange):
+    def test_error_1(self, IbetCoupon, users, exchange):
         _issuer = users['issuer']
 
         # issue token
-        deploy_args = init_args(coupon_exchange.address)
+        deploy_args = init_args(exchange.address)
         coupon = _issuer.deploy(IbetCoupon, *deploy_args)
 
         # consume
@@ -705,12 +705,12 @@ class TestIssue:
     #######################################
 
     # Normal_1
-    def test_normal_1(self, IbetCoupon, users, coupon_exchange):
+    def test_normal_1(self, IbetCoupon, users, exchange):
         _issuer = users['issuer']
         _value = 1
 
         # issue token
-        deploy_args = init_args(coupon_exchange.address)
+        deploy_args = init_args(exchange.address)
         coupon = _issuer.deploy(IbetCoupon, *deploy_args)
 
         # additional issue
@@ -728,14 +728,14 @@ class TestIssue:
 
     # Error_1
     # Over maximum value
-    def test_error_1(self, IbetCoupon, users, coupon_exchange):
+    def test_error_1(self, IbetCoupon, users, exchange):
         _issuer = users['issuer']
         _consumer = users['trader']
         _transfer_quantity = 999999
         _value = 2 ** 256 - 1
 
         # issue token
-        deploy_args = init_args(coupon_exchange.address)
+        deploy_args = init_args(exchange.address)
         coupon = _issuer.deploy(IbetCoupon, *deploy_args)
 
         # transfer
@@ -758,13 +758,13 @@ class TestIssue:
 
     # Error_2
     # Unauthorized
-    def test_error_2(self, IbetCoupon, users, coupon_exchange):
+    def test_error_2(self, IbetCoupon, users, exchange):
         _issuer = users['issuer']
         _other = users['trader']
         _value = 1000
 
         # issue token
-        deploy_args = init_args(coupon_exchange.address)
+        deploy_args = init_args(exchange.address)
         coupon = _issuer.deploy(IbetCoupon, *deploy_args)
 
         # additional issue
@@ -786,11 +786,11 @@ class TestSetDetails:
     #######################################
 
     # Normal_1
-    def test_normal_1(self, IbetCoupon, users, coupon_exchange):
+    def test_normal_1(self, IbetCoupon, users, exchange):
         issuer = users['issuer']
 
         # issue token
-        deploy_args = init_args(coupon_exchange.address)
+        deploy_args = init_args(exchange.address)
         coupon = issuer.deploy(IbetCoupon, *deploy_args)
 
         # set details
@@ -806,12 +806,12 @@ class TestSetDetails:
 
     # Error_1
     # Unauthorized
-    def test_error_1(self, IbetCoupon, users, coupon_exchange):
+    def test_error_1(self, IbetCoupon, users, exchange):
         issuer = users['issuer']
         other = users['trader']
 
         # issue token
-        deploy_args = init_args(coupon_exchange.address)
+        deploy_args = init_args(exchange.address)
         coupon = issuer.deploy(IbetCoupon, *deploy_args)
 
         # set details
@@ -830,11 +830,11 @@ class TestSetMemo:
     #######################################
 
     # Normal_1
-    def test_normal_1(self, IbetCoupon, users, coupon_exchange):
+    def test_normal_1(self, IbetCoupon, users, exchange):
         issuer = users['issuer']
 
         # issue token
-        deploy_args = init_args(coupon_exchange.address)
+        deploy_args = init_args(exchange.address)
         coupon = issuer.deploy(IbetCoupon, *deploy_args)
 
         # set memo
@@ -850,12 +850,12 @@ class TestSetMemo:
 
     # Error_1
     # Unauthorized
-    def test_error_1(self, IbetCoupon, users, coupon_exchange):
+    def test_error_1(self, IbetCoupon, users, exchange):
         issuer = users['issuer']
         other = users['trader']
 
         # issue token
-        deploy_args = init_args(coupon_exchange.address)
+        deploy_args = init_args(exchange.address)
         coupon = issuer.deploy(IbetCoupon, *deploy_args)
 
         # set memo
@@ -875,11 +875,11 @@ class TestBalanceOf:
     #######################################
 
     # Normal_1
-    def test_normal_1(self, IbetCoupon, users, coupon_exchange):
+    def test_normal_1(self, IbetCoupon, users, exchange):
         issuer = users['issuer']
 
         # issue token
-        deploy_args = init_args(coupon_exchange.address)
+        deploy_args = init_args(exchange.address)
         coupon = issuer.deploy(IbetCoupon, *deploy_args)
 
         # get balance
@@ -897,12 +897,12 @@ class TestUsedOf:
     #######################################
 
     # Normal_1
-    def test_normal_1(self, IbetCoupon, users, coupon_exchange):
+    def test_normal_1(self, IbetCoupon, users, exchange):
         _issuer = users['issuer']
         _value = 1
 
         # issue token
-        deploy_args = init_args(coupon_exchange.address)
+        deploy_args = init_args(exchange.address)
         coupon = _issuer.deploy(IbetCoupon, *deploy_args)
 
         # consume
@@ -924,11 +924,11 @@ class TestSetImageUrl:
 
     # Normal_1
     # Set one url
-    def test_normal_1(self, IbetCoupon, users, coupon_exchange):
+    def test_normal_1(self, IbetCoupon, users, exchange):
         issuer = users['issuer']
 
         # issue token
-        deploy_args = init_args(coupon_exchange.address)
+        deploy_args = init_args(exchange.address)
         coupon = issuer.deploy(IbetCoupon, *deploy_args)
 
         # set image url
@@ -941,11 +941,11 @@ class TestSetImageUrl:
 
     # Normal_2
     # Set multiple urls
-    def test_normal_2(self, IbetCoupon, users, coupon_exchange):
+    def test_normal_2(self, IbetCoupon, users, exchange):
         issuer = users['issuer']
 
         # issue token
-        deploy_args = init_args(coupon_exchange.address)
+        deploy_args = init_args(exchange.address)
         coupon = issuer.deploy(IbetCoupon, *deploy_args)
 
         image_url = 'https://some_image_url.com/image1.png'
@@ -964,11 +964,11 @@ class TestSetImageUrl:
 
     # Normal_3
     # Overwriting
-    def test_normal_3(self, IbetCoupon, users, coupon_exchange):
+    def test_normal_3(self, IbetCoupon, users, exchange):
         issuer = users['issuer']
 
         # issue token
-        deploy_args = init_args(coupon_exchange.address)
+        deploy_args = init_args(exchange.address)
         coupon = issuer.deploy(IbetCoupon, *deploy_args)
 
         image_url = 'https://some_image_url.com/image.png'
@@ -990,12 +990,12 @@ class TestSetImageUrl:
 
     # Error_1
     # Unauthorized
-    def test_error_1(self, IbetCoupon, users, coupon_exchange):
+    def test_error_1(self, IbetCoupon, users, exchange):
         issuer = users['issuer']
         other = users['admin']
 
         # issue token
-        deploy_args = init_args(coupon_exchange.address)
+        deploy_args = init_args(exchange.address)
         coupon = issuer.deploy(IbetCoupon, *deploy_args)
 
         # set image url
@@ -1016,11 +1016,11 @@ class TestSetStatus:
     #######################################
 
     # Normal_1
-    def test_normal_1(self, IbetCoupon, users, coupon_exchange):
+    def test_normal_1(self, IbetCoupon, users, exchange):
         issuer = users['issuer']
 
         # issue token
-        deploy_args = init_args(coupon_exchange.address)
+        deploy_args = init_args(exchange.address)
         coupon = issuer.deploy(IbetCoupon, *deploy_args)
 
         # change status
@@ -1035,12 +1035,12 @@ class TestSetStatus:
 
     # Error_1
     # Unauthorized
-    def test_error_1(self, IbetCoupon, users, coupon_exchange):
+    def test_error_1(self, IbetCoupon, users, exchange):
         issuer = users['issuer']
         other = users['trader']
 
         # issue token
-        deploy_args = init_args(coupon_exchange.address)
+        deploy_args = init_args(exchange.address)
         coupon = issuer.deploy(IbetCoupon, *deploy_args)
 
         # change status
@@ -1059,11 +1059,11 @@ class TestSetTradableExchange:
     #######################################
 
     # Normal_1
-    def test_normal_1(self, IbetCoupon, users, coupon_exchange):
+    def test_normal_1(self, IbetCoupon, users, exchange):
         issuer = users['issuer']
 
         # issue token
-        deploy_args = init_args(coupon_exchange.address)
+        deploy_args = init_args(exchange.address)
         coupon = issuer.deploy(IbetCoupon, *deploy_args)
 
         # change exchange contract
@@ -1081,12 +1081,12 @@ class TestSetTradableExchange:
 
     # Error_1
     # Unauthorized
-    def test_error_1(self, IbetCoupon, users, coupon_exchange):
+    def test_error_1(self, IbetCoupon, users, exchange):
         issuer = users['issuer']
         trader = users['trader']
 
         # issue token
-        deploy_args = init_args(coupon_exchange.address)
+        deploy_args = init_args(exchange.address)
         coupon = issuer.deploy(IbetCoupon, *deploy_args)
 
         # change exchange contract
@@ -1097,7 +1097,7 @@ class TestSetTradableExchange:
             )
 
         # assertion
-        assert coupon.tradableExchange() == coupon_exchange.address
+        assert coupon.tradableExchange() == exchange.address
 
 
 # TEST_setExpirationDate
@@ -1108,12 +1108,12 @@ class TestSetExpirationDate:
     #######################################
 
     # Normal_1
-    def test_normal_1(self, IbetCoupon, users, coupon_exchange):
+    def test_normal_1(self, IbetCoupon, users, exchange):
         issuer = users['issuer']
         after_expiration_date = 'after_expiration_date'
 
         # issue token
-        deploy_args = init_args(coupon_exchange.address)
+        deploy_args = init_args(exchange.address)
         coupon = issuer.deploy(IbetCoupon, *deploy_args)
 
         # set expiration date
@@ -1129,13 +1129,13 @@ class TestSetExpirationDate:
 
     # Error_1
     # Unauthorized
-    def test_error_1(self, IbetCoupon, users, coupon_exchange):
+    def test_error_1(self, IbetCoupon, users, exchange):
         issuer = users['issuer']
         attacker = users['trader']
         after_expiration_date = 'after_expiration_date'
 
         # issue token
-        deploy_args = init_args(coupon_exchange.address)
+        deploy_args = init_args(exchange.address)
         coupon = issuer.deploy(IbetCoupon, *deploy_args)
 
         # set expiration date
@@ -1158,11 +1158,11 @@ class TestSetTransferable:
     #######################################
 
     # Normal_1
-    def test_normal_1(self, IbetCoupon, users, coupon_exchange):
+    def test_normal_1(self, IbetCoupon, users, exchange):
         issuer = users['issuer']
 
         # issue token
-        deploy_args = init_args(coupon_exchange.address)
+        deploy_args = init_args(exchange.address)
         coupon = issuer.deploy(IbetCoupon, *deploy_args)
 
         # set transferable
@@ -1178,12 +1178,12 @@ class TestSetTransferable:
 
     # Error_1
     # Unauthorized
-    def test_error_1(self, IbetCoupon, users, coupon_exchange):
+    def test_error_1(self, IbetCoupon, users, exchange):
         issuer = users['issuer']
         attacker = users['trader']
 
         # issue token
-        deploy_args = init_args(coupon_exchange.address)
+        deploy_args = init_args(exchange.address)
         coupon = issuer.deploy(IbetCoupon, *deploy_args)
 
         # set transferable
@@ -1203,11 +1203,11 @@ class TestSetInitialOfferingStatus:
     #######################################
 
     # Normal_1
-    def test_normal_1(self, IbetCoupon, users, coupon_exchange):
+    def test_normal_1(self, IbetCoupon, users, exchange):
         issuer = users['issuer']
 
         # issue token
-        deploy_args = init_args(coupon_exchange.address)
+        deploy_args = init_args(exchange.address)
         coupon = issuer.deploy(IbetCoupon, *deploy_args)
         assert coupon.initialOfferingStatus() is False
 
@@ -1221,12 +1221,12 @@ class TestSetInitialOfferingStatus:
 
     # Error_1
     # Unauthorized
-    def test_error_1(self, IbetCoupon, users, coupon_exchange):
+    def test_error_1(self, IbetCoupon, users, exchange):
         issuer = users['issuer']
         unauthorized_user = users['user1']
 
         # issue token
-        deploy_args = init_args(coupon_exchange.address)
+        deploy_args = init_args(exchange.address)
         coupon = issuer.deploy(IbetCoupon, *deploy_args)
         assert coupon.initialOfferingStatus() is False
 
@@ -1245,12 +1245,12 @@ class TestApplyForOffering:
 
     # Normal_1
     # Default value
-    def test_normal_1(self, IbetCoupon, users, coupon_exchange):
+    def test_normal_1(self, IbetCoupon, users, exchange):
         issuer = users['issuer']
         trader = users['trader']
 
         # issue token
-        deploy_args = init_args(coupon_exchange.address)
+        deploy_args = init_args(exchange.address)
         coupon = issuer.deploy(IbetCoupon, *deploy_args)
         coupon.setInitialOfferingStatus.transact(True, {'from': issuer})
 
@@ -1258,12 +1258,12 @@ class TestApplyForOffering:
         assert coupon.applications(trader) == ''
 
     # Normal_2
-    def test_normal_2(self, IbetCoupon, users, coupon_exchange):
+    def test_normal_2(self, IbetCoupon, users, exchange):
         issuer = users['issuer']
         trader = users['trader']
 
         # issue token
-        deploy_args = init_args(coupon_exchange.address)
+        deploy_args = init_args(exchange.address)
         coupon = issuer.deploy(IbetCoupon, *deploy_args)
         coupon.setInitialOfferingStatus.transact(True, {'from': issuer})
 
@@ -1281,12 +1281,12 @@ class TestApplyForOffering:
 
     # Error_1
     # Offering status is False
-    def test_error_1(self, IbetCoupon, users, coupon_exchange):
+    def test_error_1(self, IbetCoupon, users, exchange):
         issuer = users['issuer']
         trader = users['trader']
 
         # issue token
-        deploy_args = init_args(coupon_exchange.address)
+        deploy_args = init_args(exchange.address)
         coupon = issuer.deploy(IbetCoupon, *deploy_args)
 
         # apply for
@@ -1305,12 +1305,12 @@ class TestSetReturnDetails:
     #######################################
 
     # Normal_1
-    def test_normal_1(self, IbetCoupon, users, coupon_exchange):
+    def test_normal_1(self, IbetCoupon, users, exchange):
         issuer = users['issuer']
         after_return_details = 'after_return_details'
 
         # issue token
-        deploy_args = init_args(coupon_exchange.address)
+        deploy_args = init_args(exchange.address)
         coupon = issuer.deploy(IbetCoupon, *deploy_args)
 
         # set return details
@@ -1329,13 +1329,13 @@ class TestSetReturnDetails:
 
     # Error_1
     # Unauthorized
-    def test_error_1(self, IbetCoupon, users, coupon_exchange):
+    def test_error_1(self, IbetCoupon, users, exchange):
         issuer = users['issuer']
         attacker = users['trader']
         after_return_details = 'after_return_details'
 
         # issue token
-        deploy_args = init_args(coupon_exchange.address)
+        deploy_args = init_args(exchange.address)
         coupon = issuer.deploy(IbetCoupon, *deploy_args)
 
         # set return details
@@ -1358,11 +1358,11 @@ class TestSetContactInformation:
     #######################################
 
     # Normal_1
-    def test_normal_1(self, IbetCoupon, users, coupon_exchange):
+    def test_normal_1(self, IbetCoupon, users, exchange):
         issuer = users['issuer']
 
         # issue token
-        deploy_args = init_args(coupon_exchange.address)
+        deploy_args = init_args(exchange.address)
         coupon = issuer.deploy(IbetCoupon, *deploy_args)
 
         # set contact information
@@ -1381,12 +1381,12 @@ class TestSetContactInformation:
 
     # Error_1
     # Unauthorized
-    def test_error_1(self, IbetCoupon, users, coupon_exchange):
+    def test_error_1(self, IbetCoupon, users, exchange):
         issuer = users['issuer']
         other = users['trader']
 
         # issue token
-        deploy_args = init_args(coupon_exchange.address)
+        deploy_args = init_args(exchange.address)
         coupon = issuer.deploy(IbetCoupon, *deploy_args)
 
         # set contact information
@@ -1409,11 +1409,11 @@ class TestSetPrivacyPolicy:
     #######################################
 
     # Normal_1
-    def test_normal_1(self, IbetCoupon, users, coupon_exchange):
+    def test_normal_1(self, IbetCoupon, users, exchange):
         issuer = users['issuer']
 
         # issue token
-        deploy_args = init_args(coupon_exchange.address)
+        deploy_args = init_args(exchange.address)
         coupon = issuer.deploy(IbetCoupon, *deploy_args)
 
         # set privacy policy
@@ -1432,12 +1432,12 @@ class TestSetPrivacyPolicy:
 
     # Error_1
     # Unauthorized
-    def test_error_1(self, IbetCoupon, users, coupon_exchange):
+    def test_error_1(self, IbetCoupon, users, exchange):
         issuer = users['issuer']
         other = users['trader']
 
         # issue token
-        deploy_args = init_args(coupon_exchange.address)
+        deploy_args = init_args(exchange.address)
         coupon = issuer.deploy(IbetCoupon, *deploy_args)
 
         # set privacy policy
