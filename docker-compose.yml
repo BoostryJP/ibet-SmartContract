@@ -11,7 +11,7 @@ services:
       context: .
       dockerfile: ./tests/Dockerfile
     environment:
-      APP_ENV: "dev"
+      TEST_NETWORK: "test_network"
     links:
       - ganache-cli:quorum
     depends_on:
