@@ -23,7 +23,7 @@ import "./Ownable.sol";
 
 
 /// @title Token Registry
-contract TokenList is Ownable {
+contract TokenList {
 
     // トークン情報
     struct Token {
@@ -34,10 +34,10 @@ contract TokenList is Ownable {
 
     // トークン情報
     // token address => Token
-    mapping(address => Token) tokens;
+    mapping(address => Token) public tokens;
 
     // トークンリスト
-    Token[] token_list;
+    Token[] public token_list;
 
     // イベント：登録
     event Register(

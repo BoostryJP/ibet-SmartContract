@@ -72,7 +72,7 @@ contract IbetStraightBond is Ownable, IbetStandardTokenInterface {
     mapping(address => bool) public authorizedAddress;
 
     // ロックされた数量
-    // address => account_address => balance
+    // locked_address => account_address => balance
     mapping(address => mapping(address => uint256)) public locked;
 
     // イベント：認定
@@ -601,7 +601,7 @@ contract IbetStraightBond is Ownable, IbetStandardTokenInterface {
         // locked_addressを指定しない場合：アカウントアドレスの残高に対して追加発行を行う
         if (_locked_address != address(0)) {
             // ロック資産の更新
-            locked[_target_address][_locked_address] = lockedOf(_target_address, _locked_address).add(_amount);
+            locked[_locked_address][_target_address] = lockedOf(_locked_address, _target_address).add(_amount);
             // 総発行数量の更新
             totalSupply = totalSupply.add(_amount);
         } else {

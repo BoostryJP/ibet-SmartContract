@@ -16,756 +16,667 @@ limitations under the License.
 
 SPDX-License-Identifier: Apache-2.0
 """
-
-import pytest
+import brownie
 
 encrypted_message = 'encrypted_message'
 encrypted_message_after = 'encrypted_message_after'
 terms_text = 'terms_sample\nend'
 terms_text_after = 'terms_sample\nafter\nend'
 
-'''
-TEST_デプロイ
-'''
 
-
-# 正常系1: デプロイ
-def test_deploy_normal_1(PaymentGateway, users):
-    admin = users['admin']
-    trader = users['trader']
-    agent = users['agent']
-
-    # PaymentGatewayデプロイ
-    pg_contract = admin.deploy(PaymentGateway)
-
-    payment_account = pg_contract.payment_accounts(trader, agent)
-    account_approved = pg_contract.accountApproved(trader, agent)
-
-    # デフォルトの登録情報の内容が正しいことを確認
-    assert payment_account[0] == '0x0000000000000000000000000000000000000000'
-    assert payment_account[1] == '0x0000000000000000000000000000000000000000'
-    assert payment_account[2] == ''
-    assert payment_account[3] == 0
-
-    # 認可状態が未認可の状態であることを確認
-    assert account_approved is False
-
-
-'''
-TEST_支払情報を登録（register）
-'''
-
-
-# 正常系1: 新規登録
-def test_register_normal_1(PaymentGateway, users):
-    admin = users['admin']
-    trader = users['trader']
-    agent = users['agent']
-
-    # PaymentGatewayデプロイ
-    pg_contract = admin.deploy(PaymentGateway)
-
-    # PaymentGateway登録
-    pg_contract.register.transact(agent, encrypted_message, {'from': trader})
-
-    payment_account = pg_contract.payment_accounts(trader, agent)
-    account_approved = pg_contract.accountApproved(trader, agent)
-
-    # 登録情報の内容が正しいことを確認
-    assert payment_account[0] == trader
-    assert payment_account[1] == agent
-    assert payment_account[2] == encrypted_message
-    assert payment_account[3] == 1
-
-    # 認可状態が未認可の状態であることを確認
-    assert account_approved is False
-
-
-# 正常系2: 新規登録 -> 更新
-def test_register_normal_2(PaymentGateway, users):
-    admin = users['admin']
-    trader = users['trader']
-    agent = users['agent']
-
-    # PaymentGatewayデプロイ
-    pg_contract = admin.deploy(PaymentGateway)
-
-    # 登録 -> Success
-    pg_contract.register.transact(agent, encrypted_message, {'from': trader})
-
-    # 登録（２回目） -> Success
-    pg_contract.register.transact(agent, encrypted_message_after, {'from': trader})
-
-    payment_account = pg_contract.payment_accounts(trader, agent)
-    account_approved = pg_contract.accountApproved(trader, agent)
-
-    # 登録情報の内容が正しいことを確認
-    assert payment_account[0] == trader
-    assert payment_account[1] == agent
-    assert payment_account[2] == encrypted_message_after
-    assert payment_account[3] == 1
-
-    # 認可状態が未認可の状態であることを確認
-    assert account_approved is False
-
-
-# エラー系1:入力値の型誤り（agent address）
-def test_register_error_1(PaymentGateway, users):
-    admin = users['admin']
-    trader = users['trader']
-    agent = 1234
-
-    # PaymentGatewayデプロイ
-    pg_contract = admin.deploy(PaymentGateway)
-
-    # PaymentGateway登録 -> Failure
-    with pytest.raises(ValueError):
-        pg_contract.register.transact(agent, encrypted_message, {'from': trader})
-
-
-# エラー系2:入力値の型誤り（encrypted_info）
-def test_register_error_2(PaymentGateway, users):
-    admin = users['admin']
-    trader = users['trader']
-    agent = users['agent']
-
-    # PaymentGatewayデプロイ
-    pg_contract = admin.deploy(PaymentGateway)
-
-    # PaymentGateway登録 -> Failure
-    with pytest.raises(ValueError):
-        pg_contract.register.transact(agent, '0x66aB6D9362d4F35596279692F0251Db635165871', {'from': trader})
-
-
-# エラー系3: 登録 -> BAN -> 登録（２回目）
-def test_register_error_3(PaymentGateway, users):
-    admin = users['admin']
-    trader = users['trader']
-    agent = users['agent']
-
-    # PaymentGatewayデプロイ
-    pg_contract = admin.deploy(PaymentGateway)
-
-    # 新規登録 -> Success
-    pg_contract.register.transact(agent, encrypted_message, {'from': trader})
-
-    # BAN -> Success
-    pg_contract.ban.transact(trader, {'from': agent})
-
-    # 登録（２回目） -> Failure
-    pg_contract.register.transact(agent, encrypted_message_after, {'from': trader})
-
-    payment_account = pg_contract.payment_accounts(trader, agent)
-    account_approved = pg_contract.accountApproved(trader, agent)
-
-    # 登録情報の内容が正しいことを確認
-    assert payment_account[0] == trader
-    assert payment_account[1] == agent
-    assert payment_account[2] == encrypted_message
-    assert payment_account[3] == 4
-
-    # 認可状態が未認可の状態であることを確認
-    assert account_approved is False
-
-
-'''
-TEST_支払情報を承認する(approve)
-'''
-
-
-# 正常系1: 新規登録 -> 承認
-def test_approve_normal_1(PaymentGateway, users):
-    admin = users['admin']
-    trader = users['trader']
-    agent = users['agent']
-
-    # PaymentGatewayデプロイ
-    pg_contract = admin.deploy(PaymentGateway)
-
-    # 新規登録 -> Success
-    pg_contract.register.transact(agent, encrypted_message, {'from': trader})
-
-    # 承認 -> Success
-    pg_contract.approve.transact(trader, {'from': agent})
-
-    payment_account = pg_contract.payment_accounts(trader, agent)
-    account_approved = pg_contract.accountApproved(trader, agent)
-
-    # 登録情報の内容が正しいことを確認
-    assert payment_account[0] == trader
-    assert payment_account[1] == agent
-    assert payment_account[2] == encrypted_message
-    assert payment_account[3] == 2
-
-    # 認可状態が認可の状態であることを確認
-    assert account_approved is True
-
-
-# エラー系1: 入力値の型誤り
-def test_approve_error_1(PaymentGateway, users):
-    admin = users['admin']
-    trader = 1234
-    agent = users['agent']
-
-    # PaymentGatewayデプロイ
-    pg_contract = admin.deploy(PaymentGateway)
-
-    # 承認 -> Failure
-    with pytest.raises(ValueError):
-        pg_contract.approve.transact(trader, {'from': agent})
-
-
-# エラー系2: 登録なし -> 承認
-def test_approve_error_2(PaymentGateway, users):
-    admin = users['admin']
-    trader = users['trader']
-    agent = users['agent']
-
-    # PaymentGatewayデプロイ
-    pg_contract = admin.deploy(PaymentGateway)
-
-    # 承認 -> Failure
-    pg_contract.approve.transact(trader, {'from': agent})
-
-    payment_account = pg_contract.payment_accounts(trader, agent)
-    assert payment_account[0] == '0x0000000000000000000000000000000000000000'
-
-
-'''
-TEST_支払情報を警告状態にする(warn)
-'''
-
-
-# 正常系1: 新規登録 -> 警告
-def test_warn_normal_1(PaymentGateway, users):
-    admin = users['admin']
-    trader = users['trader']
-    agent = users['agent']
-
-    # PaymentGatewayデプロイ
-    pg_contract = admin.deploy(PaymentGateway)
-
-    # 新規登録 -> Success
-    pg_contract.register.transact(agent, encrypted_message, {'from': trader})
-
-    # 警告 -> Success
-    pg_contract.warn.transact(trader, {'from': agent})
-
-    payment_account = pg_contract.payment_accounts(trader, agent)
-    account_approved = pg_contract.accountApproved(trader, agent)
-
-    # 登録情報の内容が正しいことを確認
-    assert payment_account[0] == trader
-    assert payment_account[1] == agent
-    assert payment_account[2] == encrypted_message
-    assert payment_account[3] == 3
-
-    # 認可状態が未認可の状態であることを確認
-    assert account_approved is False
-
-
-# エラー系1: 入力値の型誤り
-def test_warn_error_1(PaymentGateway, users):
-    admin = users['admin']
-    trader = 1234
-    agent = users['agent']
-
-    # PaymentGatewayデプロイ
-    pg_contract = admin.deploy(PaymentGateway)
-
-    # 承認 -> Failure
-    with pytest.raises(ValueError):
-        pg_contract.warn.transact(trader, {'from': agent})
-
-
-# エラー系2: 登録なし -> 警告
-def test_warn_error_2(PaymentGateway, users):
-    admin = users['admin']
-    trader = users['trader']
-    agent = users['agent']
-
-    # PaymentGatewayデプロイ
-    pg_contract = admin.deploy(PaymentGateway)
-
-    # 警告 -> Failure
-    pg_contract.warn.transact(trader, {'from': agent})
-
-    payment_account = pg_contract.payment_accounts(trader, agent)
-    assert payment_account[0] == '0x0000000000000000000000000000000000000000'
-
-
-'''
-TEST_支払情報を非承認にする(unapprove)
-'''
-
-
-# 正常系1: 新規登録 -> 非承認
-def test_unapprove_normal_1(PaymentGateway, users):
-    admin = users['admin']
-    trader = users['trader']
-    agent = users['agent']
-
-    # PaymentGatewayデプロイ
-    pg_contract = admin.deploy(PaymentGateway)
-
-    # 新規登録 -> Success
-    pg_contract.register.transact(agent, encrypted_message, {'from': trader})
-
-    # 非承認 -> Success
-    pg_contract.unapprove.transact(trader, {'from': agent})
-
-    payment_account = pg_contract.payment_accounts(trader, agent)
-    account_approved = pg_contract.accountApproved(trader, agent)
-
-    # 登録情報の内容が正しいことを確認
-    assert payment_account[0] == trader
-    assert payment_account[1] == agent
-    assert payment_account[2] == encrypted_message
-    assert payment_account[3] == 1
-
-    # 認可状態が未認可の状態であることを確認
-    assert account_approved is False
-
-
-# 正常系2: 新規登録 -> 承認 -> 非承認
-# 認可状態が未認可の状態に戻る
-def test_unapprove_normal_2(PaymentGateway, users):
-    admin = users['admin']
-    trader = users['trader']
-    agent = users['agent']
-
-    # PaymentGatewayデプロイ
-    pg_contract = admin.deploy(PaymentGateway)
-
-    # 新規登録 -> Success
-    pg_contract.register.transact(agent, encrypted_message, {'from': trader})
-
-    # 承認 -> Success、　認可状態
-    pg_contract.approve.transact(trader, {'from': agent})
-
-    # 非承認 -> Success。　未認可状態
-    pg_contract.unapprove.transact(trader, {'from': agent})
-
-    payment_account = pg_contract.payment_accounts(trader, agent)
-    account_approved = pg_contract.accountApproved(trader, agent)
-
-    # 登録情報の内容が正しいことを確認
-    assert payment_account[0] == trader
-    assert payment_account[1] == agent
-    assert payment_account[2] == encrypted_message
-    assert payment_account[3] == 1
-
-    # 認可状態が未認可の状態であることを確認
-    assert account_approved is False
-
-
-# エラー系1: 入力値の型誤り
-def test_unapprove_error_1(PaymentGateway, users):
-    admin = users['admin']
-    trader = 1234
-    agent = users['agent']
-
-    # PaymentGatewayデプロイ
-    pg_contract = admin.deploy(PaymentGateway)
-
-    # 非承認 -> Failure
-    with pytest.raises(ValueError):
-        pg_contract.unapprove.transact(trader, {'from': agent})
-
-
-# エラー系2: 登録なし -> 非承認
-def test_unapprove_error_2(PaymentGateway, users):
-    admin = users['admin']
-    trader = users['trader']
-    agent = users['agent']
-
-    # PaymentGatewayデプロイ
-    pg_contract = admin.deploy(PaymentGateway)
-
-    # 非承認 -> Failure
-    pg_contract.unapprove.transact(trader, {'from': agent})
-
-    payment_account = pg_contract.payment_accounts(trader, agent)
-
-    assert payment_account[0] == '0x0000000000000000000000000000000000000000'
-
-
-'''
-TEST_支払情報をBAN状態にする(ban)
-'''
-
-
-# 正常系1: 新規登録 -> BAN
-def test_ban_normal_1(PaymentGateway, users):
-    admin = users['admin']
-    trader = users['trader']
-    agent = users['agent']
-
-    # PaymentGatewayデプロイ
-    pg_contract = admin.deploy(PaymentGateway)
-
-    # 新規登録 -> Success
-    pg_contract.register.transact(agent, encrypted_message, {'from': trader})
-
-    # BAN -> Success
-    pg_contract.ban.transact(trader, {'from': agent})
-
-    payment_account = pg_contract.payment_accounts(trader, agent)
-    account_approved = pg_contract.accountApproved(trader, agent)
-
-    # 登録情報の内容が正しいことを確認
-    assert payment_account[0] == trader
-    assert payment_account[1] == agent
-    assert payment_account[2] == encrypted_message
-    assert payment_account[3] == 4
-
-    # 認可状態が未認可の状態であることを確認
-    assert account_approved is False
-
-
-# エラー系1: 入力値の型誤り
-def test_ban_error_1(PaymentGateway, users):
-    admin = users['admin']
-    trader = 1234
-    agent = users['agent']
-
-    # PaymentGatewayデプロイ
-    pg_contract = admin.deploy(PaymentGateway)
-
-    # 承認 -> Failure
-    with pytest.raises(ValueError):
+# TEST_deploy
+class TestDeploy:
+
+    #######################################
+    # Normal
+    #######################################
+
+    # Normal_1
+    def test_normal_1(self, PaymentGateway, users):
+        admin = users['admin']
+        trader = users['trader']
+        agent = users['agent']
+
+        # deploy
+        pg_contract = admin.deploy(PaymentGateway)
+
+        # assertion
+        payment_account = pg_contract.payment_accounts(trader, agent)
+        assert payment_account[0] == brownie.ZERO_ADDRESS
+        assert payment_account[1] == brownie.ZERO_ADDRESS
+        assert payment_account[2] == ''
+        assert payment_account[3] == 0
+
+        account_approved = pg_contract.accountApproved(trader, agent)
+        assert account_approved is False
+
+
+# TEST_register
+class TestRegister:
+
+    #######################################
+    # Normal
+    #######################################
+
+    # Normal_1
+    def test_normal_1(self, PaymentGateway, users):
+        admin = users['admin']
+        trader = users['trader']
+        agent = users['agent']
+
+        # deploy
+        pg_contract = admin.deploy(PaymentGateway)
+
+        # register
+        tx = pg_contract.register.transact(
+            agent,
+            encrypted_message,
+            {'from': trader}
+        )
+
+        # assertion
+        payment_account = pg_contract.payment_accounts(trader, agent)
+        assert payment_account[0] == trader
+        assert payment_account[1] == agent
+        assert payment_account[2] == encrypted_message
+        assert payment_account[3] == 1
+
+        account_approved = pg_contract.accountApproved(trader, agent)
+        assert account_approved is False
+
+        assert tx.events['Register']['account_address'] == trader.address
+        assert tx.events['Register']['agent_address'] == agent.address
+
+    # Normal_2
+    # Multiple registrations
+    def test_normal_2(self, PaymentGateway, users):
+        admin = users['admin']
+        trader = users['trader']
+        agent = users['agent']
+
+        # deploy
+        pg_contract = admin.deploy(PaymentGateway)
+
+        # register (1)
+        pg_contract.register.transact(
+            agent,
+            encrypted_message,
+            {'from': trader}
+        )
+
+        # register (2)
+        pg_contract.register.transact(
+            agent,
+            encrypted_message_after,
+            {'from': trader}
+        )
+
+        # assertion
+        payment_account = pg_contract.payment_accounts(trader, agent)
+        assert payment_account[0] == trader
+        assert payment_account[1] == agent
+        assert payment_account[2] == encrypted_message_after
+        assert payment_account[3] == 1
+
+        account_approved = pg_contract.accountApproved(trader, agent)
+        assert account_approved is False
+
+    #######################################
+    # Error
+    #######################################
+
+    # Error_1
+    # If approval_status = 4 (BAN), registration is not possible.
+    def test_error_1(self, PaymentGateway, users):
+        admin = users['admin']
+        trader = users['trader']
+        agent = users['agent']
+
+        # deploy
+        pg_contract = admin.deploy(PaymentGateway)
+
+        # register (1)
+        pg_contract.register.transact(
+            agent,
+            encrypted_message,
+            {'from': trader}
+        )
+
+        # ban
         pg_contract.ban.transact(trader, {'from': agent})
 
+        # register (2)
+        with brownie.reverts():
+            pg_contract.register.transact(
+                agent,
+                encrypted_message_after,
+                {'from': trader}
+            )
 
-# エラー系2: 登録なし -> BAN
-def test_ban_error_2(PaymentGateway, users):
-    admin = users['admin']
-    trader = users['trader']
-    agent = users['agent']
+        # assertion
+        payment_account = pg_contract.payment_accounts(trader, agent)
+        assert payment_account[0] == trader
+        assert payment_account[1] == agent
+        assert payment_account[2] == encrypted_message
+        assert payment_account[3] == 4
 
-    # PaymentGatewayデプロイ
-    pg_contract = admin.deploy(PaymentGateway)
-
-    # BAN -> Failure
-    pg_contract.ban.transact(trader, {'from': agent})
-
-    payment_account = pg_contract.payment_accounts(trader, agent)
-
-    assert payment_account[0] == '0x0000000000000000000000000000000000000000'
-
-
-'''
-TEST_収納代行業者の追加（addAgent）
-'''
+        account_approved = pg_contract.accountApproved(trader, agent)
+        assert account_approved is False
 
 
-# 正常系1: 新規登録
-def test_addAgent_normal_1(PaymentGateway, users):
-    admin = users['admin']
-    agent = users['agent']
+# TEST_modify
+class TestModify:
 
-    # PaymentGatewayデプロイ
-    pg_contract = admin.deploy(PaymentGateway)
+    #######################################
+    # Normal
+    #######################################
 
-    # 収納代行業者（Agent）の追加
-    pg_contract.addAgent.transact(agent, {'from': admin})
+    # Normal_1
+    def test_normal_1(self, PaymentGateway, users):
+        admin = users['admin']
+        trader = users['trader']
+        agent = users['agent']
 
-    agent_available = pg_contract.getAgent(agent)
-    assert agent_available == True
+        # deploy
+        pg_contract = admin.deploy(PaymentGateway)
+
+        # register
+        pg_contract.register.transact(
+            agent,
+            encrypted_message,
+            {'from': trader}
+        )
+
+        # modify
+        tx = pg_contract.modify.transact(
+            trader,
+            encrypted_message_after,
+            {'from': agent}
+        )
+
+        # assertion
+        payment_account = pg_contract.payment_accounts(trader, agent)
+        assert payment_account[0] == trader
+        assert payment_account[1] == agent
+        assert payment_account[2] == encrypted_message_after
+        assert payment_account[3] == 1
+
+        assert tx.events['Modify']['account_address'] == trader.address
+        assert tx.events['Modify']['agent_address'] == agent.address
+
+    #######################################
+    # Error
+    #######################################
+
+    # Error_1
+    # Not registered
+    def test_error_1(self, PaymentGateway, users):
+        admin = users['admin']
+        trader = users['trader']
+        agent = users['agent']
+
+        # deploy
+        pg_contract = admin.deploy(PaymentGateway)
+
+        # modify
+        with brownie.reverts():
+            pg_contract.modify.transact(
+                trader,
+                encrypted_message_after,
+                {'from': agent}
+            )
+
+        # assertion
+        payment_account = pg_contract.payment_accounts(trader, agent)
+        assert payment_account[0] == brownie.ZERO_ADDRESS
+        assert payment_account[1] == brownie.ZERO_ADDRESS
+        assert payment_account[2] == ''
+        assert payment_account[3] == 0
+
+    # Error_2
+    # Unauthorized
+    def test_error_2(self, PaymentGateway, users):
+        admin = users['admin']
+        trader = users['trader']
+        agent = users['agent']
+
+        # deploy
+        pg_contract = admin.deploy(PaymentGateway)
+
+        # register
+        pg_contract.register.transact(
+            agent,
+            encrypted_message,
+            {'from': trader}
+        )
+
+        # modify
+        with brownie.reverts():
+            pg_contract.modify.transact(
+                trader,
+                encrypted_message_after,
+                {'from': trader}
+            )
+
+        # assertion
+        payment_account = pg_contract.payment_accounts(trader, agent)
+        assert payment_account[0] == trader
+        assert payment_account[1] == agent
+        assert payment_account[2] == encrypted_message
+        assert payment_account[3] == 1
 
 
-# 正常系2: 登録２回（同一アドレス）
-def test_addAgent_normal_2(PaymentGateway, users):
-    admin = users['admin']
-    agent = users['agent']
+# TEST_approve
+class TestApprove:
 
-    # PaymentGatewayデプロイ
-    pg_contract = admin.deploy(PaymentGateway)
+    #######################################
+    # Normal
+    #######################################
 
-    # 収納代行業者（Agent）の追加
-    pg_contract.addAgent.transact(agent, {'from': admin})
+    # Normal_1
+    def test_normal_1(self, PaymentGateway, users):
+        admin = users['admin']
+        trader = users['trader']
+        agent = users['agent']
 
-    # 収納代行業者（Agent）の追加（2回目）
-    pg_contract.addAgent.transact(agent, {'from': admin})
+        # deploy
+        pg_contract = admin.deploy(PaymentGateway)
 
-    agent_available = pg_contract.getAgent(agent)
-    assert agent_available == True
+        # register
+        pg_contract.register.transact(agent, encrypted_message, {'from': trader})
+
+        # approve
+        tx = pg_contract.approve.transact(trader, {'from': agent})
+
+        # assertion
+        payment_account = pg_contract.payment_accounts(trader, agent)
+        assert payment_account[0] == trader
+        assert payment_account[1] == agent
+        assert payment_account[2] == encrypted_message
+        assert payment_account[3] == 2
+
+        account_approved = pg_contract.accountApproved(trader, agent)
+        assert account_approved is True
+
+        assert tx.events['Approve']['account_address'] == trader.address
+        assert tx.events['Approve']['agent_address'] == agent.address
+
+    #######################################
+    # Error
+    #######################################
+
+    # Error_1
+    # Not registered
+    def test_error_1(self, PaymentGateway, users):
+        admin = users['admin']
+        trader = users['trader']
+        agent = users['agent']
+
+        # deploy
+        pg_contract = admin.deploy(PaymentGateway)
+
+        # approve
+        with brownie.reverts():
+            pg_contract.approve.transact(trader, {'from': agent})
+
+        # assertion
+        payment_account = pg_contract.payment_accounts(trader, agent)
+        assert payment_account[0] == brownie.ZERO_ADDRESS
 
 
-# 正常系3: 登録２回（異なるアドレス）
-def test_addAgent_normal_3(PaymentGateway, users):
-    admin = users['admin']
-    agent_1 = users['agent']
-    agent_2 = users['trader']  # NOTE:traderのアドレスで代用
+# TEST_warn
+class TestWarn:
 
-    # PaymentGatewayデプロイ
-    pg_contract = admin.deploy(PaymentGateway)
+    #######################################
+    # Normal
+    #######################################
 
-    # 収納代行業者（Agent）の追加
-    pg_contract.addAgent.transact(agent_1, {'from': admin})
+    # Normal_1
+    def test_normal_1(self, PaymentGateway, users):
+        admin = users['admin']
+        trader = users['trader']
+        agent = users['agent']
 
-    # 収納代行業者（Agent）の追加（2回目）
-    pg_contract.addAgent.transact(agent_2, {'from': admin})
+        # deploy
+        pg_contract = admin.deploy(PaymentGateway)
 
-    agent_1_available = pg_contract.getAgent(agent_1)
-    assert agent_1_available == True
+        # register
+        pg_contract.register.transact(agent, encrypted_message, {'from': trader})
 
-    agent_2_available = pg_contract.getAgent(agent_2)
-    assert agent_2_available == True
+        # warn
+        tx = pg_contract.warn.transact(trader, {'from': agent})
+
+        # assertion
+        payment_account = pg_contract.payment_accounts(trader, agent)
+        assert payment_account[0] == trader
+        assert payment_account[1] == agent
+        assert payment_account[2] == encrypted_message
+        assert payment_account[3] == 3
+
+        account_approved = pg_contract.accountApproved(trader, agent)
+        assert account_approved is False
+
+        assert tx.events['Warn']['account_address'] == trader.address
+        assert tx.events['Warn']['agent_address'] == agent.address
+
+    #######################################
+    # Error
+    #######################################
+
+    # Error_1
+    # Not registered
+    def test_error_1(self, PaymentGateway, users):
+        admin = users['admin']
+        trader = users['trader']
+        agent = users['agent']
+
+        # deploy
+        pg_contract = admin.deploy(PaymentGateway)
+
+        # warn
+        with brownie.reverts():
+            pg_contract.warn.transact(trader, {'from': agent})
+
+        # assertion
+        payment_account = pg_contract.payment_accounts(trader, agent)
+        assert payment_account[0] == brownie.ZERO_ADDRESS
 
 
-# 正常系4: 登録なしアドレスの参照
-def test_addAgent_normal_4(PaymentGateway, users):
-    admin = users['admin']
+# TEST_disapprove
+class TestDisapprove:
 
-    # PaymentGatewayデプロイ
-    pg_contract = admin.deploy(PaymentGateway)
+    #######################################
+    # Normal
+    #######################################
 
-    agent_available = pg_contract.getAgent("0xCfC4BEa6d2f573EB7E804E7a01ba1f4D1b208939")  # NOTE:任意のEOA
-    assert agent_available == False
+    # Normal_1
+    def test_normal_1(self, PaymentGateway, users):
+        admin = users['admin']
+        trader = users['trader']
+        agent = users['agent']
+
+        # deploy
+        pg_contract = admin.deploy(PaymentGateway)
+
+        # register
+        pg_contract.register.transact(agent, encrypted_message, {'from': trader})
+
+        # disapprove
+        tx = pg_contract.disapprove.transact(trader, {'from': agent})
+
+        # assertion
+        payment_account = pg_contract.payment_accounts(trader, agent)
+        assert payment_account[0] == trader
+        assert payment_account[1] == agent
+        assert payment_account[2] == encrypted_message
+        assert payment_account[3] == 1
+
+        account_approved = pg_contract.accountApproved(trader, agent)
+        assert account_approved is False
+
+        assert tx.events['Disapprove']['account_address'] == trader.address
+        assert tx.events['Disapprove']['agent_address'] == agent.address
+
+    # Normal_2
+    # register -> approve -> disapprove
+    def test_normal_2(self, PaymentGateway, users):
+        admin = users['admin']
+        trader = users['trader']
+        agent = users['agent']
+
+        # deploy
+        pg_contract = admin.deploy(PaymentGateway)
+
+        # register
+        pg_contract.register.transact(agent, encrypted_message, {'from': trader})
+
+        # approve
+        pg_contract.approve.transact(trader, {'from': agent})
+
+        # disapprove
+        pg_contract.disapprove.transact(trader, {'from': agent})
+
+        # assertion
+        payment_account = pg_contract.payment_accounts(trader, agent)
+        assert payment_account[0] == trader
+        assert payment_account[1] == agent
+        assert payment_account[2] == encrypted_message
+        assert payment_account[3] == 1
+
+        account_approved = pg_contract.accountApproved(trader, agent)
+        assert account_approved is False
+
+    #######################################
+    # Error
+    #######################################
+
+    # Error_1
+    # Not registered
+    def test_error_1(self, PaymentGateway, users):
+        admin = users['admin']
+        trader = users['trader']
+        agent = users['agent']
+
+        # deploy
+        pg_contract = admin.deploy(PaymentGateway)
+
+        # disapprove
+        with brownie.reverts():
+            pg_contract.disapprove.transact(trader, {'from': agent})
+
+        # assertion
+        payment_account = pg_contract.payment_accounts(trader, agent)
+        assert payment_account[0] == brownie.ZERO_ADDRESS
 
 
-# エラー系1: 入力値の型誤り（agent_address）
-def test_addAgent_error_1(PaymentGateway, users):
-    admin = users['admin']
-    agent = '1234'
+# TEST_ban
+class TestBan:
 
-    # PaymentGatewayデプロイ
-    pg_contract = admin.deploy(PaymentGateway)
+    #######################################
+    # Normal
+    #######################################
 
-    # 収納代行業者（Agent）の追加
-    with pytest.raises(ValueError):
+    # Normal_1
+    def test_normal_1(self, PaymentGateway, users):
+        admin = users['admin']
+        trader = users['trader']
+        agent = users['agent']
+
+        # deploy
+        pg_contract = admin.deploy(PaymentGateway)
+
+        # register
+        pg_contract.register.transact(agent, encrypted_message, {'from': trader})
+
+        # ban
+        tx = pg_contract.ban.transact(trader, {'from': agent})
+
+        # assertion
+        payment_account = pg_contract.payment_accounts(trader, agent)
+        assert payment_account[0] == trader
+        assert payment_account[1] == agent
+        assert payment_account[2] == encrypted_message
+        assert payment_account[3] == 4
+
+        account_approved = pg_contract.accountApproved(trader, agent)
+        assert account_approved is False
+
+        assert tx.events['Ban']['account_address'] == trader.address
+        assert tx.events['Ban']['agent_address'] == agent.address
+
+    #######################################
+    # Error
+    #######################################
+
+    # Error_1
+    # Not registered
+    def test_error_1(self, PaymentGateway, users):
+        admin = users['admin']
+        trader = users['trader']
+        agent = users['agent']
+
+        # deploy
+        pg_contract = admin.deploy(PaymentGateway)
+
+        # ban
+        with brownie.reverts():
+            pg_contract.ban.transact(trader, {'from': agent})
+
+        # assertion
+        payment_account = pg_contract.payment_accounts(trader, agent)
+        assert payment_account[0] == brownie.ZERO_ADDRESS
+
+
+# TEST_addAgent
+class TestAddAgent:
+
+    #######################################
+    # Normal
+    #######################################
+
+    # Normal_1
+    # Default value
+    def test_normal_1(self, PaymentGateway, users):
+        admin = users['admin']
+
+        # deploy
+        pg_contract = admin.deploy(PaymentGateway)
+
+        # assertion
+        agent_available = pg_contract.getAgent(brownie.ZERO_ADDRESS)
+        assert agent_available == False
+
+    # Normal_2
+    # Add new agent
+    def test_normal_2(self, PaymentGateway, users):
+        admin = users['admin']
+        agent = users['agent']
+
+        # deploy
+        pg_contract = admin.deploy(PaymentGateway)
+
+        # add agent
+        tx = pg_contract.addAgent.transact(agent, {'from': admin})
+
+        # assertion
+        agent_available = pg_contract.getAgent(agent)
+        assert agent_available == True
+
+        assert tx.events['AddAgent']['agent_address'] == agent.address
+
+    # Normal_3
+    # Add multiple agents
+    def test_normal_3(self, PaymentGateway, users):
+        admin = users['admin']
+        agent_1 = users['user1']
+        agent_2 = users['user2']
+
+        # deploy
+        pg_contract = admin.deploy(PaymentGateway)
+
+        # add agent 1
+        pg_contract.addAgent.transact(agent_1, {'from': admin})
+
+        # add agent 2
+        pg_contract.addAgent.transact(agent_2, {'from': admin})
+
+        # assertion
+        agent_1_available = pg_contract.getAgent(agent_1)
+        assert agent_1_available == True
+
+        agent_2_available = pg_contract.getAgent(agent_2)
+        assert agent_2_available == True
+
+    #######################################
+    # Error
+    #######################################
+
+    # Error_1
+    # Unauthorized
+    def test_error_1(self, PaymentGateway, users):
+        admin = users['admin']
+        attacker = users['trader']
+        agent = users['agent']
+
+        # deploy
+        pg_contract = admin.deploy(PaymentGateway)
+
+        # add agent
+        with brownie.reverts():
+            pg_contract.addAgent.transact(agent, {'from': attacker})
+
+        # assertion
+        agent_available = pg_contract.getAgent(agent)
+        assert agent_available == False
+
+
+# TEST_removeAgent
+class TestRemoveAgent:
+
+    #######################################
+    # Normal
+    #######################################
+
+    # Normal_1
+    # No data
+    def test_normal_1(self, PaymentGateway, users):
+        admin = users['admin']
+        agent = users['agent']
+
+        # deploy
+        pg_contract = admin.deploy(PaymentGateway)
+
+        # remove agent
+        tx = pg_contract.removeAgent.transact(agent, {'from': admin})
+
+        # assertion
+        agent_available = pg_contract.getAgent(agent)
+        assert agent_available == False
+
+        assert tx.events['RemoveAgent']['agent_address'] == agent.address
+
+
+    # Normal_2
+    def test_normal_2(self, PaymentGateway, users):
+        admin = users['admin']
+        agent = users['agent']
+
+        # deploy
+        pg_contract = admin.deploy(PaymentGateway)
+
+        # add agent
         pg_contract.addAgent.transact(agent, {'from': admin})
 
-
-# エラー系2: 権限不足
-def test_addAgent_error_2(PaymentGateway, users):
-    admin = users['admin']
-    attacker = users['trader']
-    agent = users['agent']
-
-    # PaymentGatewayデプロイ
-    pg_contract = admin.deploy(PaymentGateway)
-
-    # 権限不足で更新できない
-    pg_contract.addAgent.transact(agent, {'from': attacker})
-
-    agent_available = pg_contract.getAgent(agent)
-    assert agent_available == False
-
-
-'''
-TEST_収納代行業者の削除（removeAgent）
-'''
-
-
-# 正常系1: データなし
-def test_removeAgent_normal_1(PaymentGateway, users):
-    admin = users['admin']
-    agent = users['agent']
-
-    # PaymentGatewayデプロイ
-    pg_contract = admin.deploy(PaymentGateway)
-
-    # 収納代行業者（Agent）の削除
-    pg_contract.removeAgent.transact(agent, {'from': admin})
-
-    agent_available = pg_contract.getAgent(agent)
-    assert agent_available == False
-
-
-# 正常系2: データあり
-def test_removeAgent_normal_2(PaymentGateway, users):
-    admin = users['admin']
-    agent = users['agent']
-
-    # PaymentGatewayデプロイ
-    pg_contract = admin.deploy(PaymentGateway)
-
-    # 収納代行業者（Agent）の追加
-    pg_contract.addAgent.transact(agent, {'from': admin})
-
-    # 収納代行業者（Agent）の削除
-    pg_contract.removeAgent.transact(agent, {'from': admin})
-
-    agent_available = pg_contract.getAgent(agent)
-    assert agent_available == False
-
-
-# エラー系1: 入力値の型誤り（agent_address）
-def test_removeAgent_error_1(PaymentGateway, users):
-    admin = users['admin']
-    agent = '1234'
-
-    # PaymentGatewayデプロイ
-    pg_contract = admin.deploy(PaymentGateway)
-
-    # 収納代行業者（Agent）の追加
-    with pytest.raises(ValueError):
-        pg_contract.removeAgent.transact(agent, {'from': admin})
-
-
-# エラー系2: 権限不足
-def test_removeAgent_error_2(PaymentGateway, users):
-    admin = users['admin']
-    attacker = users['trader']
-    agent = users['agent']
-
-    # PaymentGatewayデプロイ
-    pg_contract = admin.deploy(PaymentGateway)
-
-    # 収納代行業者追加：正常
-    pg_contract.addAgent.transact(agent, {'from': admin})
-
-    # 収納代行業者削除：権限不足
-    pg_contract.removeAgent.transact(agent, {'from': attacker})
-
-    agent_available = pg_contract.getAgent(agent)
-    assert agent_available == True
-
-
-# 正常系1: 登録情報修正
-def test_modify_normal_1(PaymentGateway, users):
-    admin = users['admin']
-    trader = users['trader']
-    agent = users['agent']
-
-    # PaymentGatewayデプロイ
-    pg_contract = admin.deploy(PaymentGateway)
-
-    # PaymentGateway登録
-    pg_contract.register.transact(agent, encrypted_message, {'from': trader})
-
-    # 収納代行業者による修正
-    pg_contract.modify.transact(trader, encrypted_message_after, {'from': agent})
-
-    payment_account = pg_contract.payment_accounts(trader, agent, {'from': agent})
-
-    # 登録情報の内容が正しいことを確認
-    assert payment_account[0] == trader
-    assert payment_account[1] == agent
-    assert payment_account[2] == encrypted_message_after
-    assert payment_account[3] == 1
-
-
-# 正常系2 登録情報修正（登録情報削除）
-def test_modify_normal_2(PaymentGateway, users):
-    admin = users['admin']
-    trader = users['trader']
-    agent = users['agent']
-
-    # PaymentGatewayデプロイ
-    pg_contract = admin.deploy(PaymentGateway)
-
-    # PaymentGateway登録
-    pg_contract.register.transact(agent, encrypted_message, {'from': trader})
-    pg_contract.approve.transact(trader, {'from': agent})
-
-    # 収納代行業者による修正
-    pg_contract.modify.transact(trader, '', {'from': agent})
-
-    payment_account = pg_contract.payment_accounts(trader, agent, {'from': agent})
-
-    # 登録情報の内容が正しいことを確認
-    assert payment_account[0] == trader
-    assert payment_account[1] == agent
-    assert payment_account[2] == ''
-    assert payment_account[3] == 2
-
-
-# エラー系1: 入力値の型誤り（account_address）
-def test_modify_error_1(PaymentGateway, users):
-    admin = users['admin']
-    trader = users['trader']
-    agent = users['agent']
-
-    # PaymentGatewayデプロイ
-    pg_contract = admin.deploy(PaymentGateway)
-
-    # PaymentGateway登録
-    pg_contract.register.transact(agent, encrypted_message, {'from': trader})
-
-    # 収納代行業者による修正
-    invalid_address = '1'
-    with pytest.raises(ValueError):
-        pg_contract.modify.transact(invalid_address, encrypted_message_after, {'from': agent})
-
-    payment_account = pg_contract.payment_accounts(trader, agent, {'from': agent})
-
-    # 登録情報の内容が正しいことを確認
-    assert payment_account[0] == trader
-    assert payment_account[1] == agent
-    assert payment_account[2] == encrypted_message
-    assert payment_account[3] == 1
-
-
-# エラー系2: 入力値の型誤り（encrypted_info）
-def test_modify_error_2(PaymentGateway, users):
-    admin = users['admin']
-    trader = users['trader']
-    agent = users['agent']
-
-    # PaymentGatewayデプロイ
-    pg_contract = admin.deploy(PaymentGateway)
-
-    # PaymentGateway登録
-    pg_contract.register.transact(agent, encrypted_message, {'from': trader})
-
-    # 収納代行業者による修正
-    invalid_string = '0x66aB6D9362d4F35596279692F0251Db635165871'
-    with pytest.raises(ValueError):
-        pg_contract.modify.transact(trader, invalid_string, {'from': agent})
-
-    payment_account = pg_contract.payment_accounts(trader, agent, {'from': agent})
-
-    # 登録情報の内容が正しいことを確認
-    assert payment_account[0] == trader
-    assert payment_account[1] == agent
-    assert payment_account[2] == encrypted_message
-    assert payment_account[3] == 1
-
-
-# エラー系3: 未登録情報に対して修正
-def test_modify_error_3(PaymentGateway, users):
-    admin = users['admin']
-    trader = users['trader']
-    agent = users['agent']
-
-    # PaymentGatewayデプロイ
-    pg_contract = admin.deploy(PaymentGateway)
-
-    # 収納代行業者による修正 --> Failure
-    pg_contract.modify.transact(trader, encrypted_message_after, {'from': agent})
-
-    payment_account = pg_contract.payment_accounts(trader, agent, {'from': agent})
-
-    # 未登録状態であることを確認
-    assert payment_account[0] == '0x0000000000000000000000000000000000000000'
-    assert payment_account[1] == '0x0000000000000000000000000000000000000000'
-    assert payment_account[2] == ''
-    assert payment_account[3] == 0
-
-
-# エラー系4: 収納代行業者以外による修正
-def test_modify_error_4(PaymentGateway, users):
-    admin = users['admin']
-    trader = users['trader']
-    agent = users['agent']
-
-    # PaymentGatewayデプロイ
-    pg_contract = admin.deploy(PaymentGateway)
-
-    # PaymentGateway登録
-    pg_contract.register.transact(agent, encrypted_message, {'from': trader})
-    pg_contract.ban.transact(trader, {'from': agent})
-
-    # 口座情報登録アカウントによる修正 --> Failure
-    pg_contract.modify.transact(trader, encrypted_message_after, {'from': trader})
-
-    payment_account = pg_contract.payment_accounts(trader, agent, {'from': agent})
-
-    # 登録情報の内容が正しいことを確認
-    assert payment_account[0] == trader
-    assert payment_account[1] == agent
-    assert payment_account[2] == encrypted_message
-    assert payment_account[3] == 4
+        # remove agent
+        tx = pg_contract.removeAgent.transact(agent, {'from': admin})
+
+        # assertion
+        agent_available = pg_contract.getAgent(agent)
+        assert agent_available == False
+
+        assert tx.events['RemoveAgent']['agent_address'] == agent.address
+
+    #######################################
+    # Error
+    #######################################
+
+    # Error_1
+    # Unauthorized
+    def test_error_1(self, PaymentGateway, users):
+        admin = users['admin']
+        attacker = users['trader']
+        agent = users['agent']
+
+        # deploy
+        pg_contract = admin.deploy(PaymentGateway)
+
+        # add agent
+        pg_contract.addAgent.transact(agent, {'from': admin})
+
+        # remove agent
+        with brownie.reverts():
+            pg_contract.removeAgent.transact(agent, {'from': attacker})
+
+        # assertion
+        agent_available = pg_contract.getAgent(agent)
+        assert agent_available == True

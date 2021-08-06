@@ -59,7 +59,7 @@ contract IbetShare is Ownable, IbetStandardTokenInterface {
     mapping(address => uint256) public balances;
 
     // ロック資産数量
-    // address => account_address => balance
+    // locked_address => account_address => balance
     mapping(address => mapping(address => uint256)) public locked;
 
     // 募集申込情報
@@ -728,7 +728,7 @@ contract IbetShare is Ownable, IbetStandardTokenInterface {
         // locked_addressを指定しない場合：アカウントアドレスの残高に対して追加発行を行う
         if (_locked_address != address(0)) {
             // ロック資産の更新
-            locked[_target_address][_locked_address] = lockedOf(_target_address, _locked_address).add(_amount);
+            locked[_locked_address][_target_address] = lockedOf(_locked_address, _target_address).add(_amount);
             // 総発行数量の更新
             totalSupply = totalSupply.add(_amount);
         } else {
@@ -754,9 +754,9 @@ contract IbetShare is Ownable, IbetStandardTokenInterface {
         // locked_addressを指定しない場合：アカウントアドレスの残高から減資を行う
         if (_locked_address != address(0)) {
             // 減資数量が対象アドレスのロック数量を上回っている場合はエラー
-            if (lockedOf(_target_address, _locked_address) < _amount) revert();
+            if (lockedOf(_locked_address, _target_address) < _amount) revert();
             // ロック資産の更新
-            locked[_target_address][_locked_address] = lockedOf(_target_address, _locked_address).sub(_amount);
+            locked[_locked_address][_target_address] = lockedOf(_locked_address, _target_address).sub(_amount);
             // 総発行数量の更新
             totalSupply = totalSupply.sub(_amount);
         } else {

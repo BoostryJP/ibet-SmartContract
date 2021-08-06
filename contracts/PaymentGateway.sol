@@ -57,7 +57,7 @@ contract PaymentGateway is Ownable {
     event Warn(address indexed account_address, address indexed agent_address);
 
     // イベント：非承認
-    event Unapprove(address indexed account_address, address indexed agent_address);
+    event Disapprove(address indexed account_address, address indexed agent_address);
 
     // イベント：アカウント停止（BAN）
     event Ban(address indexed account_address, address indexed agent_address);
@@ -158,7 +158,7 @@ contract PaymentGateway is Ownable {
     /// @notice 支払用口座情報を非承認状態にする
     /// @param _account_address アカウントアドレス
     /// @return 処理結果
-    function unapprove(address _account_address)
+    function disapprove(address _account_address)
         public
         returns (bool)
     {
@@ -167,7 +167,7 @@ contract PaymentGateway is Ownable {
 
         payment_account.approval_status = 1;
 
-        emit Unapprove(_account_address, msg.sender);
+        emit Disapprove(_account_address, msg.sender);
         return true;
     }
 

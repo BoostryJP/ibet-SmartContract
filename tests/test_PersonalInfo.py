@@ -16,196 +16,193 @@ limitations under the License.
 
 SPDX-License-Identifier: Apache-2.0
 """
-
-import pytest
+import brownie
 
 encrypted_message = 'encrypted_message'
 encrypted_message_after = 'encrypted_message_after'
 
-'''
-TEST_個人情報を登録（register）
-'''
+
+# TEST_register
+class TestRegister:
+
+    #######################################
+    # Normal
+    #######################################
+
+    # Normal_1
+    def test_normal_1(self, users, personal_info):
+        account = users['trader']
+        link = users['issuer']
+
+        # register
+        tx = personal_info.register.transact(
+            link,
+            encrypted_message,
+            {'from': account}
+        )
+
+        # assertion
+        registered_personal_info = personal_info.personal_info(account, link)
+        assert registered_personal_info[0] == account
+        assert registered_personal_info[1] == link
+        assert registered_personal_info[2] == encrypted_message
+
+        is_registered = personal_info.isRegistered(account, link)
+        assert is_registered is True
+
+        assert tx.events['Register']['account_address'] == account.address
+        assert tx.events['Register']['link_address'] == link.address
+
+    # Normal_2
+    # Update
+    def test_normal_2(self, users, personal_info):
+        account = users['trader']
+        link = users['issuer']
+
+        # register 1
+        personal_info.register.transact(
+            link.address,
+            encrypted_message,
+            {'from': account}
+        )
+
+        # register 2
+        personal_info.register.transact(
+            link,
+            encrypted_message_after,
+            {'from': account}
+        )
+
+        # assertion
+        registered_personal_info = personal_info.personal_info(account, link)
+        assert registered_personal_info[0] == account
+        assert registered_personal_info[1] == link
+        assert registered_personal_info[2] == encrypted_message_after
+
+        is_registered = personal_info.isRegistered(account, link)
+        assert is_registered is True
 
 
-# 正常系1: 新規登録
-def test_register_normal_1(users, personal_info):
-    account = users['trader']
-    link = users['issuer']  # issuerのアドレスに公開する
+# TEST_isRegistered
+class TestIsRegistered:
 
-    personal_info.register.transact(link, encrypted_message, {'from': account})
+    #######################################
+    # Normal
+    #######################################
 
-    registered_personal_info = personal_info.personal_info(account, link, {'from': account})
-    is_registered = personal_info.isRegistered(account, link, {'from': account})
+    # Normal_1
+    # Default value
+    def test_normal_1(self, users, personal_info):
+        account = users['trader']
+        link = users['issuer']
 
-    # 登録情報の内容が正しいことを確認
-    assert registered_personal_info[0] == account
-    assert registered_personal_info[1] == link
-    assert registered_personal_info[2] == encrypted_message
+        # assertion
+        is_registered = personal_info.isRegistered(account, link)
+        assert is_registered is False
 
-    # 登録状態が登録済みの状態であることを確認
-    assert is_registered is True
+    # Normal_2
+    def test_normal_2(self, users, personal_info):
+        account = users['trader']
+        link = users['issuer']
 
+        # register
+        personal_info.register.transact(
+            link,
+            encrypted_message,
+            {'from': account}
+        )
 
-# 正常系2: 上書き登録
-def test_register_normal_2(users, personal_info):
-    account = users['trader']
-    link = users['issuer']  # issuerのアドレスに公開する
-
-    # 登録（1回目） -> Success
-    personal_info.register.transact(link.address, encrypted_message, {'from': account})
-
-    # 登録（2回目） -> Success
-    personal_info.register.transact(link, encrypted_message_after, {'from': account})
-
-    registered_personal_info = personal_info.personal_info(account, link, {'from': account})
-    is_registered = personal_info.isRegistered(account, link, {'from': account})
-
-    # 登録情報の内容が正しいことを確認
-    assert registered_personal_info[0] == account
-    assert registered_personal_info[1] == link
-    assert registered_personal_info[2] == encrypted_message_after
-
-    # 登録状態が登録済みの状態であることを確認
-    assert is_registered is True
+        # assertion
+        is_registered = personal_info.isRegistered(account, link)
+        assert is_registered is True
 
 
-# 正常系3: 未登録のアドレスの情報参照
-def test_register_normal_3(users, personal_info):
-    account = users['trader']
-    link = users['issuer']  # issuerのアドレスに公開する
+# TEST_modify
+class TestModify:
 
-    registered_personal_info = personal_info.personal_info(account, link, {'from': account})
-    is_registered = personal_info.isRegistered(account, link, {'from': account})
+    #######################################
+    # Normal
+    #######################################
 
-    # 登録情報の内容が正しいことを確認
-    assert registered_personal_info[0] == '0x0000000000000000000000000000000000000000'
-    assert registered_personal_info[1] == '0x0000000000000000000000000000000000000000'
-    assert registered_personal_info[2] == ''
+    # Normal_1
+    def test_normal_1(self, users, personal_info):
+        account = users['trader']
+        link = users['issuer']
 
-    # 登録状態が登録済みの状態でないことを確認
-    assert is_registered is False
+        # register
+        personal_info.register.transact(
+            link,
+            encrypted_message,
+            {'from': account}
+        )
 
+        # modify
+        tx = personal_info.modify.transact(
+            account,
+            encrypted_message_after,
+            {'from': link}
+        )
 
-# エラー系1: 入力値の型誤り（発行体アドレス）
-def test_register_error_1(users, personal_info):
-    account = users['trader']
-    link = 'aaaa'
+        # assertion
+        modified_personal_info = personal_info.personal_info(account, link)
+        assert modified_personal_info[0] == account
+        assert modified_personal_info[1] == link
+        assert modified_personal_info[2] == encrypted_message_after
 
-    # 登録 -> Failure
-    with pytest.raises(ValueError):
-        personal_info.register.transact(link, encrypted_message, {'from': account})
+        assert tx.events['Modify']['account_address'] == account.address
+        assert tx.events['Modify']['link_address'] == link.address
 
+    #######################################
+    # Error
+    #######################################
 
-# エラー系2: 入力値の型誤り（暗号化情報）
-def test_register_error_2(users, personal_info):
-    account = users['trader']
-    link = users['issuer']  # issuerのアドレスに公開する
+    # Error_1
+    # Not registered
+    def test_error_1(self, users, personal_info):
+        account = users['trader']
+        link = users['issuer']
 
-    # 登録 -> Failure
-    with pytest.raises(ValueError):
-        invalid_str = '0x66aB6D9362d4F35596279692F0251Db635165871'
-        personal_info.register.transact(link.address, invalid_str, {'from': account})
+        # modify
+        with brownie.reverts():
+            personal_info.modify.transact(
+                account,
+                encrypted_message_after,
+                {'from': link}
+            )
 
+        # assertion
+        actual_personal_info = personal_info.personal_info(account, link)
+        assert actual_personal_info[0] == brownie.ZERO_ADDRESS
+        assert actual_personal_info[1] == brownie.ZERO_ADDRESS
+        assert actual_personal_info[2] == ''
 
-# 正常系1: 登録情報修正
-def test_modify_normal_1(users, personal_info):
-    account = users['trader']
-    link = users['issuer']  # issuerのアドレスに公開する
+        is_registered = personal_info.isRegistered(account, link)
+        assert is_registered is False
 
-    # 登録
-    personal_info.register.transact(link, encrypted_message, {'from': account})
+    # Error_2
+    # Not authorized
+    def test_error_2(self, users, personal_info):
+        account = users['trader']
+        link = users['issuer']
+        modifier = users['admin']
 
-    # 修正
-    personal_info.modify.transact(account, encrypted_message_after, {'from': link})
+        # register
+        personal_info.register.transact(
+            link,
+            encrypted_message,
+            {'from': account}
+        )
 
-    # 登録情報の内容が正しいことを確認
-    modified_personal_info = personal_info.personal_info(account, link, {'from': account})
-    assert modified_personal_info[0] == account
-    assert modified_personal_info[1] == link
-    assert modified_personal_info[2] == encrypted_message_after
+        # modify
+        with brownie.reverts():
+            personal_info.modify.transact(
+                account,
+                encrypted_message_after,
+                {'from': modifier}
+            )
 
-
-# 正常系2: 登録情報修正（登録情報削除）
-def test_modify_normal_2(users, personal_info):
-    account = users['trader']
-    link = users['issuer']  # issuerのアドレスに公開する
-
-    # 登録
-    personal_info.register.transact(link, encrypted_message, {'from': account})
-
-    # 修正
-    personal_info.modify.transact(account, '', {'from': link})
-
-    # 登録情報の内容が正しいことを確認
-    modified_personal_info = personal_info.personal_info(account, link, {'from': account})
-    assert modified_personal_info[0] == account
-    assert modified_personal_info[1] == link
-    assert modified_personal_info[2] == ''
-
-
-# エラー系1: 入力値の型誤り（アカウントアドレス）
-def test_modify_error_1(users, personal_info):
-    account = users['trader']
-    link = users['issuer']  # issuerのアドレスに公開する
-
-    # 登録
-    personal_info.register.transact(link, encrypted_message, {'from': account})
-
-    # 修正
-    invalid_account = 'aaaa'
-    with pytest.raises(ValueError):
-        personal_info.modify.transact(invalid_account, encrypted_message_after, {'from': link})
-
-
-# エラー系2: 入力値の型誤り（暗号化情報）
-def test_modify_error_2(users, personal_info):
-    account = users['trader']
-    link = users['issuer']  # issuerのアドレスに公開する
-
-    # 登録
-    personal_info.register.transact(link, encrypted_message, {'from': account})
-
-    # 修正
-    invalid_str = '0x66aB6D9362d4F35596279692F0251Db635165871'
-    with pytest.raises(ValueError):
-        personal_info.modify.transact(account, invalid_str, {'from': link})
-
-
-# エラー系3: 未登録情報に対して修正
-def test_modify_error_3(users, personal_info):
-    account = users['trader']
-    link = users['issuer']  # issuerのアドレスに公開する
-
-    # 修正
-    personal_info.modify.transact(account, encrypted_message_after, {'from': link})
-
-    actual_personal_info = personal_info.personal_info(account, link, {'from': link})
-    is_registered = personal_info.isRegistered(account, link, {'from': link})
-
-    # 登録情報の内容が正しいことを確認
-    assert actual_personal_info[0] == '0x0000000000000000000000000000000000000000'
-    assert actual_personal_info[1] == '0x0000000000000000000000000000000000000000'
-    assert actual_personal_info[2] == ''
-
-    # 登録状態が未登録のままであることを確認
-    assert is_registered is False
-
-
-# エラー系4: 通知先アカウント以外からの修正
-def test_modify_error_4(users, personal_info):
-    account = users['trader']
-    link = users['issuer']  # issuerのアドレスに公開する
-    modifier = users['admin']
-
-    # accountによる登録
-    personal_info.register.transact(link, encrypted_message, {'from': account})
-
-    # 通知先アカウント以外 (modifier) による修正 -> Failure
-    personal_info.modify.transact(account, encrypted_message_after, {'from': modifier})
-
-    actual_personal_info = personal_info.personal_info(account, link, {'from': link})
-
-    # 登録情報の内容が正しいことを確認
-    assert actual_personal_info[0] == account
-    assert actual_personal_info[1] == link
-    assert actual_personal_info[2] == encrypted_message
+        # assertion
+        actual_personal_info = personal_info.personal_info(account, link)
+        assert actual_personal_info[0] == account
+        assert actual_personal_info[1] == link
+        assert actual_personal_info[2] == encrypted_message
