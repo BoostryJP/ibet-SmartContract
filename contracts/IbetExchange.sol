@@ -526,8 +526,6 @@ contract IbetExchange is Ownable, ContractReceiver {
         (order.owner, order.token, order.amount, order.price, order.isBuy, order.agent, order.canceled) =
             getOrder(_orderId);
 
-        require(order.owner != address(0));
-
         if (_isBuy == true) { // 買注文の場合
             // <CHK>
             //  1) 注文数量が0の場合
