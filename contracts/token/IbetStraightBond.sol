@@ -20,10 +20,10 @@
 pragma solidity ^0.8.0;
 
 import "OpenZeppelin/openzeppelin-contracts@4.2.0/contracts/utils/math/SafeMath.sol";
-import "./Ownable.sol";
-import "./PersonalInfo.sol";
-import "../interfaces/ContractReceiver.sol";
-import "../interfaces/IbetStandardTokenInterface.sol";
+import "../access/Ownable.sol";
+import "../ledger/PersonalInfo.sol";
+import "../../interfaces/ContractReceiver.sol";
+import "../../interfaces/IbetStandardTokenInterface.sol";
 
 
 /// @title ibet Straight Bond Token

@@ -19,7 +19,7 @@
 
 pragma solidity ^0.8.0;
 
-import "./Ownable.sol";
+import "../access/Ownable.sol";
 
 
 /// @title DvP Agent Contract
