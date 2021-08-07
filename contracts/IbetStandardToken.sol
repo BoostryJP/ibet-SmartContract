@@ -19,7 +19,7 @@
 
 pragma solidity ^0.8.0;
 
-import "./SafeMath.sol";
+import "OpenZeppelin/openzeppelin-contracts@4.2.0/contracts/utils/math/SafeMath.sol";
 import "./Ownable.sol";
 import "../interfaces/ContractReceiver.sol";
 import "../interfaces/IbetStandardTokenInterface.sol";
