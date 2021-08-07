@@ -19,7 +19,7 @@
 
 pragma solidity ^0.8.0;
 
-import "./Ownable.sol";
+import "../access/Ownable.sol";
 
 
 /// @title Exchangeコントラクトの取引情報を永続化するためのEternalStorage
