@@ -57,7 +57,7 @@ This is the case of storing and using a private key in keystore file format in [
 - `AWS_SECRETS_ID` - Secret's ARN
 - `ETH_ACCOUNT_PASSWORD` - The passphrase you have set for the keystore file.
 
-### How to Deploy Contracts
+### How to deploy contracts
 To deploy, execute the following command.
 
 ```bash
