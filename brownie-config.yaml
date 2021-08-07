@@ -7,4 +7,5 @@ networks:
             evm_version: byzantium
 compiler:
     evm_version: byzantium
-
+dependencies:
+    OpenZeppelin/openzeppelin-contracts@4.2.0
