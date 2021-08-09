@@ -16,16 +16,24 @@ limitations under the License.
 
 SPDX-License-Identifier: Apache-2.0
 """
-
 import os
 
-from brownie import accounts, project, network, web3
+from brownie import (
+    accounts,
+    project,
+    network,
+    web3
+)
 
 p = project.load('.', name="ibet_smart_contract")
 p.load_config()
-from brownie.project.ibet_smart_contract import TokenList, PersonalInfo, PaymentGateway, OTCExchangeStorage, \
-    IbetOTCExchange, ExchangeRegulatorService, ExchangeStorage, IbetMembershipExchange, IbetCouponExchange, \
-    IbetStraightBondExchange
+from brownie.project.ibet_smart_contract import (
+    TokenList,
+    PersonalInfo,
+    PaymentGateway,
+    ExchangeStorage,
+    IbetExchange,
+)
 
 APP_ENV = os.environ.get('APP_ENV') or 'local'
 ETH_ACCOUNT_PASSWORD = os.environ.get('ETH_ACCOUNT_PASSWORD') or 'password'
@@ -50,99 +58,43 @@ def main():
         # NOTE: パスワード入力待ちあり
         deployer = accounts.load('deploy_user')
 
+    ################################################
     # TokenList
+    ################################################
     token_list = deployer.deploy(TokenList)
 
+    ################################################
     # PersonalInfo
+    ################################################
     personal_info = deployer.deploy(PersonalInfo)
 
+    ################################################
     # PaymentGateway
+    ################################################
     payment_gateway = deployer.deploy(PaymentGateway)
 
-    # ------------------------------------
-    # IbetOTC
-    # ------------------------------------
-    # Storage
-    otc_exchange_storage = deployer.deploy(OTCExchangeStorage)
+    ################################################
+    # IbetExchange
+    ################################################
 
-    # IbetOTCExchange
+    # Exchange Storage
+    exchange_storage = deployer.deploy(ExchangeStorage)
+
+    # IbetExchange
     deploy_args = [
         payment_gateway.address,
-        personal_info.address,
-        otc_exchange_storage.address,
-        "0x0000000000000000000000000000000000000000"
+        exchange_storage.address
     ]
-    otc_exchange = deployer.deploy(IbetOTCExchange, *deploy_args)
+    exchange = deployer.deploy(IbetExchange, *deploy_args)
 
     # Upgrade Version
-    otc_exchange_storage.upgradeVersion.transact(otc_exchange.address, {'from': deployer})
-
-    # ------------------------------------
-    # IbetStraightBond
-    # ------------------------------------
-    # ExchangeRegulatorService
-    exchange_regulator_service = deployer.deploy(ExchangeRegulatorService)
-
-    # Storage
-    bond_exchange_storage = deployer.deploy(ExchangeStorage)
-
-    # IbetStraightBondExchange
-    deploy_args = [
-        payment_gateway.address,
-        personal_info.address,
-        bond_exchange_storage.address,
-        exchange_regulator_service.address
-    ]
-    bond_exchange = deployer.deploy(IbetStraightBondExchange, *deploy_args)
-
-    # Upgrade Version
-    bond_exchange_storage.upgradeVersion.transact(bond_exchange.address, {'from': deployer})
-
-    # ------------------------------------
-    # IbetCoupon
-    # ------------------------------------
-    # Storage
-    coupon_exchange_storage = deployer.deploy(ExchangeStorage)
-
-    # IbetCouponExchange
-    deploy_args = [
-        payment_gateway.address,
-        coupon_exchange_storage.address
-    ]
-    coupon_exchange = deployer.deploy(IbetCouponExchange, *deploy_args)
-
-    # Upgrade Version
-    coupon_exchange_storage.upgradeVersion.transact(coupon_exchange.address, {'from': deployer})
-
-    # ------------------------------------
-    # IbetMembership
-    # ------------------------------------
-    # Storage
-    membership_exchange_storage = deployer.deploy(ExchangeStorage)
-
-    # IbetMembershipExchange
-    deploy_args = [
-        payment_gateway.address,
-        membership_exchange_storage.address
-    ]
-    membership_exchange = deployer.deploy(IbetMembershipExchange, *deploy_args)
-
-    # Upgrade Version
-    membership_exchange_storage.upgradeVersion(membership_exchange.address, {'from': deployer})
+    exchange_storage.upgradeVersion.transact(exchange.address, {'from': deployer})
 
     print('TokenList : ' + token_list.address)
     print('PersonalInfo : ' + personal_info.address)
     print('PaymentGateway : ' + payment_gateway.address)
-    print('OTCExchangeStorage: ' + otc_exchange_storage.address)
-    print('IbetOTCExchange : ' + otc_exchange.address)
-    print('ExchangeStorage - Bond : ' + bond_exchange_storage.address)
-    print('ExchangeRegulatorService - Bond : ' + exchange_regulator_service.address)
-    print('IbetStraightBondExchange : ' + bond_exchange.address)
-    print('ExchangeStorage - Coupon : ' + coupon_exchange_storage.address)
-    print('IbetCouponExchange : ' + coupon_exchange.address)
-    print('ExchangeStorage - Membership : ' + membership_exchange_storage.address)
-    print('IbetMembershipExchange : ' + membership_exchange.address)
-
+    print('ExchangeStorage : ' + exchange_storage.address)
+    print('IbetExchange : ' + exchange.address)
 
 if __name__ == '__main__':
     main()

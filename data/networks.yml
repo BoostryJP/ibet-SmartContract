@@ -9,4 +9,13 @@ live:
     host: http://quorum:8545
     id: dev_network
     name: dev_network
-
+development:
+- cmd: ganache-cli
+  cmd_settings:
+    accounts: 10
+    evm_version: byzantium
+    mnemonic: brownie
+    port: 8545
+  host: http://quorum
+  id: test_network
+  name: Ganache-CLI
