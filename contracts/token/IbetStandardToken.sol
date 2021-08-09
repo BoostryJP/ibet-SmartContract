@@ -147,7 +147,7 @@ contract IbetStandardToken is Ownable, IbetStandardTokenInterface {
 
         bytes memory empty;
         bool result;
-        bool success = true;
+        success = true;
         for(uint i = 0; i < _toList.length; i++) {
             if (isContract(_toList[i])) {
                 result = transferToContract(_toList[i], _valueList[i], empty);
