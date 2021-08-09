@@ -255,7 +255,8 @@ contract IbetStraightBond is Ownable, IbetStandardTokenInterface {
         }
 
         bytes memory empty;
-        bool result = false;
+        bool result;
+        success = true;
         for(uint i = 0; i < _toList.length; i++) {
             if (isContract(_toList[i])) {
                 result = transferToContract(_toList[i], _valueList[i], empty);
