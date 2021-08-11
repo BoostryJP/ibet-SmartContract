@@ -97,6 +97,13 @@ Alternatively, you can use pytest and run it as follows.
 $ pytest tests/
 ```
 
+## Branching model
+
+<p align='center'>
+  <img alt="ibet" src="https://user-images.githubusercontent.com/963333/128963415-df122a46-b813-4832-a64e-7830a175f825.png"/>
+</p>
+
+
 ## License
 
 ibet-SmartContract is licensed under the Apache License, Version 2.0.
