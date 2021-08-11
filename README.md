@@ -7,9 +7,18 @@
   </a>
 </p>
 
+## Features
+- The ibet-SmartContract project is a project to build an open financial system on the [ibet-Network blockchain](https://github.com/BoostryJP/ibet-Network).
+- The project aims to provide token standards, decentralized exchanges, and other utility functions that can be used on the ibet-Network.
+
 ## Dependencies
-- [python3](https://www.python.org/downloads/release/python-368/) version 3.6 or greater
-- [ganache-cli](https://github.com/trufflesuite/ganache-cli) - tested with the latest version
+- [python3](https://www.python.org/downloads/release/python-368/)
+  - Version 3.6 or greater
+- [eth-brownie](https://github.com/eth-brownie/brownie)
+  - We are using the eth-brownie framework for developing and testing our contracts.
+- GoQuorum
+  - We support the official GoQuorum node of [ibet-Network](https://github.com/BoostryJP/ibet-Network).
+  - We use [ganache-cli](https://github.com/trufflesuite/ganache-cli) for local development and unit testing, and we use the latest version.
 
 ## Install
 ```bash
