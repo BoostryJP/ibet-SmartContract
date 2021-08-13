@@ -130,7 +130,7 @@ contract EscrowStorage is Ownable {
         address recipient;
         uint256 amount;
         address agent;
-        bool status;
+        bool valid;
     }
 
     // エスクロー情報
@@ -168,7 +168,7 @@ contract EscrowStorage is Ownable {
         address _recipient,
         uint256 _amount,
         address _agent,
-        bool _status
+        bool _valid
     )
         public
         onlyLatestVersion()
@@ -178,7 +178,7 @@ contract EscrowStorage is Ownable {
         escrow[_escrowId].recipient = _recipient;
         escrow[_escrowId].amount = _amount;
         escrow[_escrowId].agent = _agent;
-        escrow[_escrowId].status = _status;
+        escrow[_escrowId].valid = _valid;
     }
 
     // @notice エスクロー情報の取得
@@ -193,7 +193,7 @@ contract EscrowStorage is Ownable {
             address recipient,
             uint256 amount,
             address agent,
-            bool status
+            bool valid
         )
     {
         return (
@@ -202,7 +202,7 @@ contract EscrowStorage is Ownable {
             escrow[_escrowId].recipient,
             escrow[_escrowId].amount,
             escrow[_escrowId].agent,
-            escrow[_escrowId].status
+            escrow[_escrowId].valid
         );
     }
 

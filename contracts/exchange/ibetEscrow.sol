@@ -93,7 +93,7 @@ contract IbetEscrow is Ownable, ContractReceiver {
         address recipient;
         uint256 amount;
         address agent;
-        bool status;
+        bool valid;
     }
 
     /// @notice 残高数量の更新
@@ -208,7 +208,7 @@ contract IbetEscrow is Ownable, ContractReceiver {
             _recipient,
             _amount,
             _agent,
-            false
+            true
         );
 
         // 更新：残高
@@ -245,12 +245,12 @@ contract IbetEscrow is Ownable, ContractReceiver {
 
         Escrow memory escrow;
         (escrow.token, escrow.sender, escrow.recipient,
-            escrow.amount, escrow.agent, escrow.status) =
+            escrow.amount, escrow.agent, escrow.valid) =
                 EscrowStorage(storageAddress).getEscrow(_escrowId);
 
         // チェック：エスクローが有効であること
         require(
-            escrow.status == false,
+            escrow.valid == true,
             "Escrow must be valid."
         );
 
@@ -282,7 +282,7 @@ contract IbetEscrow is Ownable, ContractReceiver {
             escrow.recipient,
             escrow.amount,
             escrow.agent,
-            true
+            false
         );
 
         // イベント登録
@@ -312,12 +312,12 @@ contract IbetEscrow is Ownable, ContractReceiver {
 
         Escrow memory escrow;
         (escrow.token, escrow.sender, escrow.recipient,
-            escrow.amount, escrow.agent, escrow.status) =
+            escrow.amount, escrow.agent, escrow.valid) =
                 EscrowStorage(storageAddress).getEscrow(_escrowId);
 
         // チェック：エスクローが取消済みではないこと
         require(
-            escrow.status == false,
+            escrow.valid == true,
             "Escrow must be valid."
         );
 
@@ -349,7 +349,7 @@ contract IbetEscrow is Ownable, ContractReceiver {
             escrow.recipient,
             escrow.amount,
             escrow.agent,
-            true
+            false
         );
 
         // イベント登録
@@ -402,21 +402,6 @@ contract IbetEscrow is Ownable, ContractReceiver {
             msg.sender,
             balanceOf(_from, msg.sender).add(_value)
         );
-    }
-
-    /// @notice アドレスがコントラクトアドレスであるかを判定
-    /// @param _addr アドレス
-    /// @return is_contract 判定結果
-    function isContract(address _addr)
-      private
-      view
-      returns (bool is_contract)
-    {
-      uint length;
-      assembly {
-        length := extcodesize(_addr)
-      }
-      return (length>0);
     }
 
 }
