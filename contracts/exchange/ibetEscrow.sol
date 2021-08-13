@@ -318,7 +318,7 @@ contract IbetEscrow is Ownable, ContractReceiver {
         // チェック：エスクローが取消済みではないこと
         require(
             escrow.status == false,
-            "Escrow must be valie."
+            "Escrow must be valid."
         );
 
         // チェック：msg.senderがエスクローのagentであること
