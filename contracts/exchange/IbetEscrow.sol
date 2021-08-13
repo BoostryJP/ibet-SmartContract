@@ -65,7 +65,13 @@ contract IbetEscrow is Ownable, ContractReceiver {
         address agent
     );
 
-    // Event: 引き出し
+    // Event: 入庫
+    event Deposited(
+        address indexed token,
+        address indexed account
+    );
+
+    // Event: 出庫
     event Withdrawn(
         address indexed token,
         address indexed account
@@ -127,16 +133,16 @@ contract IbetEscrow is Ownable, ContractReceiver {
         );
     }
 
-    /// @notice エスクロー中数量の更新
+    /// @notice 拘束数量の更新
     /// @param _account アカウントアドレス
     /// @param _token トークンアドレス
     /// @param _value 更新後の数量
     /// @return 処理結果
-    function setDeposit(address _account, address _token, uint256 _value)
+    function setCommitment(address _account, address _token, uint256 _value)
         private
         returns (bool)
     {
-        return EscrowStorage(storageAddress).setDeposit(
+        return EscrowStorage(storageAddress).setCommitment(
             _account,
             _token,
             _value
@@ -147,12 +153,12 @@ contract IbetEscrow is Ownable, ContractReceiver {
     /// @param _account アカウントアドレス
     /// @param _token トークンアドレス
     /// @return 残高数量
-    function depositOf(address _account, address _token)
+    function commitmentOf(address _account, address _token)
         public
         view
         returns (uint256)
     {
-        return EscrowStorage(storageAddress).getDeposit(
+        return EscrowStorage(storageAddress).getCommitment(
             _account,
             _token
         );
@@ -215,7 +221,7 @@ contract IbetEscrow is Ownable, ContractReceiver {
         setBalance(msg.sender, _token, balanceOf(msg.sender, _token).sub(_amount));
 
         // 更新：エスクロー中数量
-        setDeposit(msg.sender, _token, depositOf(msg.sender, _token).add(_amount));
+        setCommitment(msg.sender, _token, commitmentOf(msg.sender, _token).add(_amount));
 
         // イベント登録
         emit EscrowCreated(
@@ -268,10 +274,10 @@ contract IbetEscrow is Ownable, ContractReceiver {
         );
 
         // 更新：エスクロー中数量
-        setDeposit(
+        setCommitment(
             msg.sender,
             escrow.token,
-            depositOf(msg.sender, escrow.token).sub(escrow.amount)
+            commitmentOf(msg.sender, escrow.token).sub(escrow.amount)
         );
 
         // 更新：エスクロー情報
@@ -335,10 +341,10 @@ contract IbetEscrow is Ownable, ContractReceiver {
         );
 
         // 更新：エスクロー中数量
-        setDeposit(
+        setCommitment(
             msg.sender,
             escrow.token,
-            depositOf(escrow.sender, escrow.token).sub(escrow.amount)
+            commitmentOf(escrow.sender, escrow.token).sub(escrow.amount)
         );
 
         // 更新：エスクロー情報
@@ -402,6 +408,9 @@ contract IbetEscrow is Ownable, ContractReceiver {
             msg.sender,
             balanceOf(_from, msg.sender).add(_value)
         );
+
+        // イベント登録
+        emit Deposited(msg.sender, _from);
     }
 
 }

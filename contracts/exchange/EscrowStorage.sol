@@ -56,7 +56,7 @@ contract EscrowStorage is Ownable {
     // -------------------------------------------------------------------
 
     // 残高情報
-    // account => token => balance
+    // account => token => amount
     mapping(address => mapping(address => uint256)) private balances;
 
     /// @notice 残高の更新
@@ -87,38 +87,38 @@ contract EscrowStorage is Ownable {
     }
 
     // -------------------------------------------------------------------
-    // エスクロー中数量：Deposit
+    // 拘束数量：Commitment
     // -------------------------------------------------------------------
 
-    // エスクロー中数量
-    // account => token => deposit
-    mapping(address => mapping(address => uint256)) private deposits;
+    // 拘束数量
+    // account => token => amount
+    mapping(address => mapping(address => uint256)) public commitments;
 
-    /// @notice エスクロー中数量の更新
+    /// @notice 拘束数量の更新
     /// @dev 最新バージョンのEscrowコントラクトのみ実行が可能
     /// @param _account アドレス
     /// @param _token トークンアドレス
     /// @param _value 更新後の数量
     /// @return 処理結果
-    function setDeposit(address _account, address _token, uint256 _value)
+    function setCommitment(address _account, address _token, uint256 _value)
         public
         onlyLatestVersion()
         returns (bool)
     {
-        deposits[_account][_token] = _value;
+        commitments[_account][_token] = _value;
         return true;
     }
 
-    /// @notice エスクロー中数量の参照
+    /// @notice 拘束数量の参照
     /// @param _account アドレス
     /// @param _token トークンアドレス
     /// @return エスクロー中数量
-    function getDeposit(address _account, address _token)
+    function getCommitment(address _account, address _token)
         public
         view
         returns (uint256)
     {
-        return deposits[_account][_token];
+        return commitments[_account][_token];
     }
 
     // -------------------------------------------------------------------
