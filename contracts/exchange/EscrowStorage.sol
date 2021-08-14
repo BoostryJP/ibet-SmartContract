@@ -112,7 +112,7 @@ contract EscrowStorage is Ownable {
     /// @notice 拘束数量の参照
     /// @param _account アドレス
     /// @param _token トークンアドレス
-    /// @return エスクロー中数量
+    /// @return 拘束数量
     function getCommitment(address _account, address _token)
         public
         view
@@ -124,13 +124,14 @@ contract EscrowStorage is Ownable {
     // -------------------------------------------------------------------
     // エスクロー情報：Escrow
     // -------------------------------------------------------------------
+
     struct Escrow {
-        address token;
-        address sender;
-        address recipient;
-        uint256 amount;
-        address agent;
-        bool valid;
+        address token;  // トークンアドレス
+        address sender;  // 送信者
+        address recipient;  // 受信者
+        uint256 amount;  // 数量
+        address agent;  // エスクローエージェント
+        bool valid;  // 有効状態
     }
 
     // エスクロー情報
@@ -161,6 +162,13 @@ contract EscrowStorage is Ownable {
     }
 
     // @notice エスクロー情報の更新
+    // @param _escrowId エスクローID
+    // @param _token トークンアドレス
+    // @param _sender 送信者
+    // @param _recipient 受信者
+    // @param _amount 数量
+    // @param _agent エスクローエージェント
+    // @param _valid 有効状態
     function setEscrow(
         uint256 _escrowId,
         address _token,
@@ -182,6 +190,13 @@ contract EscrowStorage is Ownable {
     }
 
     // @notice エスクロー情報の取得
+    // @param _escrowId エスクローID
+    // @return token トークンアドレス
+    // @return sender 送信者
+    // @return recipient 受信者
+    // @return amount 数量
+    // @return agent エスクローエージェント
+    // @return valid 有効状態
     function getEscrow(
         uint256 _escrowId
     )

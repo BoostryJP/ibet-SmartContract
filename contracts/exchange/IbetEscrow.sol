@@ -94,12 +94,12 @@ contract IbetEscrow is Ownable, ContractReceiver {
     // ---------------------------------------------------------------
 
     struct Escrow {
-        address token;
-        address sender;
-        address recipient;
-        uint256 amount;
-        address agent;
-        bool valid;
+        address token;  // トークンアドレス
+        address sender;  // 送信者
+        address recipient;  // 受信者
+        uint256 amount;  // 数量
+        address agent;  // エスクローエージェント
+        bool valid;  // 有効状態
     }
 
     /// @notice 残高数量の更新
