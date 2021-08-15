@@ -109,7 +109,7 @@ if [ "${REFER_ACCOUNT}" != "GETH" ]; then
   # NOTE: Accounts.load内で用いられているgetpassで入力待ちとなるためexpectで自動応答
   expect -c "
     set timeout 300
-    spawn python scripts/contract_deploy.py
+    spawn python scripts/deploy_shared_contract.py
     expect {
       \"Enter the password to unlock this account:\" {
         send \"${ETH_ACCOUNT_PASSWORD}\n\"
@@ -124,5 +124,5 @@ if [ "${REFER_ACCOUNT}" != "GETH" ]; then
     exit \$status
   " || exit 1
 else
-  python scripts/contract_deploy.py
+  python scripts/deploy_shared_contract.py "$@"
 fi

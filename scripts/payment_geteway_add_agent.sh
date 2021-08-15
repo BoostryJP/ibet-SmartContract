@@ -21,8 +21,5 @@ source ~/.bash_profile
 
 cd /app/ibet-SmartContract
 
-# コントラクトコードのコンパイル（キャッシュを使わずフルビルド）
-brownie compile --all
-
-# DEXアップグレード実施
-python scripts/dex_upgrade.py "$@"
+# 収納代行業者（Agent）アドレス登録
+python scripts/payment_gateway_add_agent.py $1 $2
