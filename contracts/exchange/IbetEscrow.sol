@@ -102,6 +102,39 @@ contract IbetEscrow is Ownable, ContractReceiver {
         bool valid;  // 有効状態
     }
 
+    /// @notice 直近エスクローID取得
+    /// @return 直近エスクローID
+    function latestEscrowId()
+        public
+        view
+        returns (uint256)
+    {
+        return EscrowStorage(storageAddress).getLatestEscrowId();
+    }
+
+    /// @notice エスクロー情報取得
+    /// @param _escrowId エスクローID
+    /// @return token トークンアドレス
+    /// @return sender 送信者
+    /// @return recipient 受信者
+    /// @return amount 数量
+    /// @return agent エスクローエージェント
+    /// @return valid 有効状態
+    function getEscrow(uint256 _escrowId)
+        public
+        view
+        returns (
+            address token,
+            address sender,
+            address recipient,
+            uint256 amount,
+            address agent,
+            bool valid
+        )
+    {
+        return EscrowStorage(storageAddress).getEscrow(_escrowId);
+    }
+
     /// @notice 残高数量の更新
     /// @param _account アカウントアドレス
     /// @param _token トークンアドレス
@@ -245,14 +278,14 @@ contract IbetEscrow is Ownable, ContractReceiver {
     {
         // チェック：エスクローIDが直近ID以下であること
         require(
-            _escrowId <= EscrowStorage(storageAddress).getLatestEscrowId(),
+            _escrowId <= latestEscrowId(),
             "The escrowId must be less than or equal to the latest escrow ID."
         );
 
         Escrow memory escrow;
         (escrow.token, escrow.sender, escrow.recipient,
             escrow.amount, escrow.agent, escrow.valid) =
-                EscrowStorage(storageAddress).getEscrow(_escrowId);
+                getEscrow(_escrowId);
 
         // チェック：エスクローが有効であること
         require(
@@ -266,18 +299,24 @@ contract IbetEscrow is Ownable, ContractReceiver {
             "msg.sender must be the sender or agent of the escrow."
         );
 
+        // チェック：トークンのステータスが有効であること
+        require(
+            IbetStandardTokenInterface(escrow.token).status() == true,
+            "The status of the token must be true."
+        );
+
         // 更新：残高
         setBalance(
-            msg.sender,
+            escrow.sender,
             escrow.token,
-            balanceOf(msg.sender, escrow.token).add(escrow.amount)
+            balanceOf(escrow.sender, escrow.token).add(escrow.amount)
         );
 
         // 更新：エスクロー中数量
         setCommitment(
-            msg.sender,
+            escrow.sender,
             escrow.token,
-            commitmentOf(msg.sender, escrow.token).sub(escrow.amount)
+            commitmentOf(escrow.sender, escrow.token).sub(escrow.amount)
         );
 
         // 更新：エスクロー情報
@@ -312,14 +351,14 @@ contract IbetEscrow is Ownable, ContractReceiver {
     {
         // チェック：エスクローIDが直近ID以下であること
         require(
-            _escrowId <= EscrowStorage(storageAddress).getLatestEscrowId(),
+            _escrowId <= latestEscrowId(),
             "The escrowId must be less than or equal to the latest escrow ID."
         );
 
         Escrow memory escrow;
         (escrow.token, escrow.sender, escrow.recipient,
             escrow.amount, escrow.agent, escrow.valid) =
-                EscrowStorage(storageAddress).getEscrow(_escrowId);
+                getEscrow(_escrowId);
 
         // チェック：エスクローが取消済みではないこと
         require(
@@ -333,16 +372,22 @@ contract IbetEscrow is Ownable, ContractReceiver {
             "msg.sender must be the agent of the escrow."
         );
 
+        // チェック：トークンのステータスが有効であること
+        require(
+            IbetStandardTokenInterface(escrow.token).status() == true,
+            "The status of the token must be true."
+        );
+
         // 更新：残高
         setBalance(
-            msg.sender,
+            escrow.recipient,
             escrow.token,
             balanceOf(escrow.recipient, escrow.token).add(escrow.amount)
         );
 
         // 更新：エスクロー中数量
         setCommitment(
-            msg.sender,
+            escrow.sender,
             escrow.token,
             commitmentOf(escrow.sender, escrow.token).sub(escrow.amount)
         );

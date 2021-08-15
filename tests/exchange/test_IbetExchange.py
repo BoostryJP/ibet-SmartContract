@@ -21,11 +21,11 @@ from eth_utils import to_checksum_address
 from brownie import IbetStandardToken
 
 
-def init_args(exchange_address):
+def init_args(tradable_exchange):
     name = 'test_token'
     symbol = 'MEM'
     initial_supply = 2 ** 256 - 1
-    tradable_exchange = exchange_address
+    tradable_exchange = tradable_exchange
     contact_information = 'some_contact_information'
     privacy_policy = 'some_privacy_policy'
 
@@ -91,9 +91,9 @@ class TestTokenFallback:
         )
 
         # assertion
-        balance_membership = token.balanceOf(_issuer)
+        balance_token = token.balanceOf(_issuer)
         balance_exchange = exchange.balanceOf(_issuer, token.address)
-        assert balance_membership == deploy_args[2] - _value
+        assert balance_token == deploy_args[2] - _value
         assert balance_exchange == _value
 
     # Normal_2
@@ -121,9 +121,9 @@ class TestTokenFallback:
         )
 
         # assertion
-        balance_membership = token.balanceOf(_issuer)
+        balance_token = token.balanceOf(_issuer)
         balance_exchange = exchange.balanceOf(_issuer, token.address)
-        assert balance_membership == deploy_args[2] - _value * 2
+        assert balance_token == deploy_args[2] - _value * 2
         assert balance_exchange == _value * 2
 
 
@@ -141,21 +141,21 @@ class TestWithdrawAll:
 
         # issue token
         deploy_args = init_args(exchange.address)
-        membership = deploy(users, deploy_args)
+        token = deploy(users, deploy_args)
 
         # transfer to exchange contract
-        membership.transfer.transact(exchange.address, _value, {'from': _issuer})
+        token.transfer.transact(exchange.address, _value, {'from': _issuer})
 
         # withdrawAll
-        tx = exchange.withdrawAll.transact(membership.address, {'from': _issuer})
+        tx = exchange.withdrawAll.transact(token.address, {'from': _issuer})
 
         # assertion
-        balance_membership = membership.balanceOf(_issuer)
-        balance_exchange = exchange.balanceOf(_issuer, membership.address)
-        assert balance_membership == deploy_args[2]
+        balance_token = token.balanceOf(_issuer)
+        balance_exchange = exchange.balanceOf(_issuer, token.address)
+        assert balance_token == deploy_args[2]
         assert balance_exchange == 0
 
-        assert tx.events["Withdrawal"]["tokenAddress"] == membership.address
+        assert tx.events["Withdrawal"]["tokenAddress"] == token.address
         assert tx.events["Withdrawal"]["accountAddress"] == _issuer
 
     #######################################
@@ -168,19 +168,19 @@ class TestWithdrawAll:
 
         # issue token
         deploy_args = init_args(exchange.address)
-        membership = deploy(users, deploy_args)
+        token = deploy(users, deploy_args)
 
         # withdrawAll
         with brownie.reverts():
             exchange.withdrawAll.transact(
-                membership.address,
+                token.address,
                 {'from': _issuer}
             )
 
         # assertion
-        balance_membership = membership.balanceOf(_issuer)
-        balance_exchange = exchange.balanceOf(_issuer, membership.address)
-        assert balance_membership == deploy_args[2]
+        balance_token = token.balanceOf(_issuer)
+        balance_exchange = exchange.balanceOf(_issuer, token.address)
+        assert balance_token == deploy_args[2]
         assert balance_exchange == 0
 
 
