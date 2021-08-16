@@ -18,8 +18,38 @@
 # SPDX-License-Identifier: Apache-2.0
 
 source ~/.bash_profile
-
 cd /app/ibet-SmartContract
 
-# 収納代行業者（Agent）アドレス登録
-python scripts/payment_gateway_add_agent.py $1 $2
+# 秘密鍵のインポート
+. scripts/import_account.sh
+import_account
+
+# コントラクトコードのコンパイル
+# NOTE: キャッシュを使わずフルビルドを行う
+brownie compile --all
+
+# エージェント登録
+# $1 contract_address PaymentGatewayコントラクトのアドレス
+# $2 agent_address エージェントのアドレス
+export REFER_ACCOUNT
+if [ "${REFER_ACCOUNT}" != "GETH" ]; then
+  # NOTE: Accounts.load内で用いられているgetpassで入力待ちとなるためexpectで自動応答する
+  expect -c "
+    set timeout 300
+    spawn python scripts/payment_gateway_add_agent.py $1 $2
+    expect {
+      \"Enter the password to unlock this account:\" {
+        send \"${ETH_ACCOUNT_PASSWORD}\n\"
+        exp_continue
+      }
+      timeout {
+        exit 1
+      }
+    }
+    catch wait result
+    set status [ lindex \$result 3 ]
+    exit \$status
+  " || exit 1
+else
+  python scripts/payment_gateway_add_agent.py $1 $2
+fi

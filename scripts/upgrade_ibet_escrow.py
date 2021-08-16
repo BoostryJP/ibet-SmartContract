@@ -16,26 +16,23 @@ limitations under the License.
 
 SPDX-License-Identifier: Apache-2.0
 """
-
-# 収納代行業者（Agent）アドレス登録
-# ・認可されたAgentアドレスをPaymentGatewayコントラクトに登録する。
-#
-# Parameters
-# ----------
-# contract_address : str
-#     PaymentGatewayコントラクトのアドレス。
-#     デプロイ済のものを指定する。
-# agent_address : str
-#     収納代行業者のアカウントアドレス。
-
+import argparse
 import os
-
 import sys
-from brownie import accounts, project, network, web3
+
+from brownie import (
+    accounts,
+    project,
+    network,
+    web3
+)
 
 p = project.load('.', name="ibet_smart_contract")
 p.load_config()
-from brownie.project.ibet_smart_contract import PaymentGateway
+from brownie.project.ibet_smart_contract import (
+    EscrowStorage,
+    IbetEscrow
+)
 
 
 def main():
@@ -44,18 +41,22 @@ def main():
     deployer = set_up_deployer()
 
     # Parse args
-    contract_address = sys.argv[1]
-    agent_address = sys.argv[2]
-
-    # Add agent
-    payment_gateway = PaymentGateway.at(contract_address)
-    payment_gateway.addAgent.transact(
-        agent_address,
-        {'from': deployer}
+    parser = argparse.ArgumentParser()
+    parser.add_argument(
+        "arg1",
+        help="Target Exchange contract address to be updated"
     )
+    if len(sys.argv) <= 1:
+        parser.error('No arguments')
+        return
+    args = parser.parse_args()
 
-    agent_available = payment_gateway.getAgent(agent_address)
-    print(f"Processing result: {agent_available}")
+    # Deploy & Upgrade
+    old_escrow = args.arg1
+    upgrade_escrow(
+        old_address=old_escrow,
+        deployer=deployer
+    )
 
 
 def set_up_deployer():
@@ -85,6 +86,23 @@ def set_up_deployer():
         deployer = accounts.load('deploy_user')
 
     return deployer
+
+
+def upgrade_escrow(old_address, deployer):
+    old_escrow = IbetEscrow.at(old_address)
+
+    # Storage
+    escrow_storage_address = old_escrow.storageAddress({'from': deployer})
+    escrow_storage = EscrowStorage.at(escrow_storage_address)
+
+    # Deploy new IbetEscrow
+    deploy_args = [escrow_storage_address]
+    escrow = deployer.deploy(IbetEscrow, *deploy_args)
+
+    # Upgrade Version
+    escrow_storage.upgradeVersion(escrow.address, {'from': deployer})
+
+    return escrow
 
 
 if __name__ == '__main__':
