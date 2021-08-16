@@ -71,3 +71,17 @@ def exchange(IbetExchange, users, payment_gateway, exchange_storage):
     exchange = users['admin'].deploy(IbetExchange, *deploy_args)
     exchange_storage.upgradeVersion.transact(exchange.address, {'from': users['admin']})
     return exchange
+
+
+@pytest.fixture()
+def escrow_storage(EscrowStorage, users):
+    escrow_storage = users['admin'].deploy(EscrowStorage)
+    return escrow_storage
+
+
+@pytest.fixture()
+def escrow(IbetEscrow, users, escrow_storage):
+    deploy_args = [escrow_storage.address]
+    escrow = users['admin'].deploy(IbetEscrow, *deploy_args)
+    escrow_storage.upgradeVersion.transact(escrow.address, {'from': users['admin']})
+    return escrow

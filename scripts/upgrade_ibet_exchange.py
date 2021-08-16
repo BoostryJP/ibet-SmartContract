@@ -27,7 +27,6 @@ from brownie import (
     web3
 )
 
-# brownieプロジェクトを読み込む
 p = project.load('.', name="ibet_smart_contract")
 p.load_config()
 from brownie.project.ibet_smart_contract import (
@@ -35,61 +34,68 @@ from brownie.project.ibet_smart_contract import (
     IbetExchange
 )
 
-APP_ENV = os.environ.get('APP_ENV') or 'local'
-if APP_ENV == 'local':
-    network_id = 'local_network'
-else:
-    network_id = 'dev_network'
-network.connect(network_id)
-
 
 def main():
-    parser = argparse.ArgumentParser(description='Upgrade DEX contracts')
+
+    # Settings
+    deployer = set_up_deployer()
+
+    # Parse args
+    parser = argparse.ArgumentParser()
     parser.add_argument(
-        '-ex',
-        '--exchange',
-        help="Target Exchange contract address to be updated",
-        action='append',
-        default=[]
+        "arg1",
+        help="Target Exchange contract address to be updated"
     )
-    if len(sys.argv) == 1:
+    if len(sys.argv) <= 1:
         parser.error('No arguments')
         return
-
     args = parser.parse_args()
 
-    deployer = accounts[0]
-    web3.geth.personal.unlock_account(
-        deployer.address,
-        os.environ.get('ETH_ACCOUNT_PASSWORD'),
-        1000
+    # Deploy & Upgrade
+    old_exchange = args.arg1
+    upgrade_exchange(
+        old_address=old_exchange,
+        deployer=deployer
     )
 
-    upgrade_results = []
-    try:
-        # ------------------------------------
-        # IbetExchange
-        # ------------------------------------
-        for address in args.exchange:
-            exchange = _upgrade_exchange(address, deployer)
-            upgrade_results.append({
-                'dex': 'IbetExchange',
-                'old_address': address,
-                'new_address': exchange.address
-            })
-    finally:
-        for result in upgrade_results:
-            print(f'{result["dex"]} : {result["old_address"]} --> {result["new_address"]}')
+
+def set_up_deployer():
+    """Deployerの設定"""
+
+    # 環境設定の読み込み
+    APP_ENV = os.environ.get('APP_ENV') or 'local'
+    ETH_ACCOUNT_PASSWORD = os.environ.get('ETH_ACCOUNT_PASSWORD') or 'password'
+    REFER_ACCOUNT = os.environ.get('REFER_ACCOUNT') or 'GETH'
+
+    if APP_ENV == 'local':
+        network_id = 'local_network'
+    else:
+        network_id = 'dev_network'
+    network.connect(network_id)
+
+    # アカウント設定
+    if REFER_ACCOUNT == 'GETH':
+        deployer = accounts[0]
+        web3.geth.personal.unlock_account(
+            deployer.address,
+            ETH_ACCOUNT_PASSWORD,
+            1000
+        )
+    else:
+        # NOTE: パスワード入力待ちあり
+        deployer = accounts.load('deploy_user')
+
+    return deployer
 
 
-def _upgrade_exchange(old_address, deployer):
+def upgrade_exchange(old_address, deployer):
     old_exchange = IbetExchange.at(old_address)
 
     # Storage
     exchange_storage_address = old_exchange.storageAddress({'from': deployer})
     exchange_storage = ExchangeStorage.at(exchange_storage_address)
 
-    # IbetExchange
+    # Deploy new IbetExchange
     deploy_args = [
         old_exchange.paymentGatewayAddress({'from': deployer}),
         exchange_storage_address
