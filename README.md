@@ -7,6 +7,10 @@
   </a>
 </p>
 
+<img width="33%" align="right" src="https://user-images.githubusercontent.com/963333/71672471-6383c080-2db9-11ea-85b6-8815519652ec.png"/>
+
+**Tokens and DEX contracts available in the ibet DeFi network**
+
 ## Features
 - The ibet-SmartContract project is a project to build an open financial system on the [ibet-Network blockchain](https://github.com/BoostryJP/ibet-Network).
 - The project aims to provide token standards, decentralized exchanges, and other utility functions that can be used on the ibet-Network.
@@ -26,7 +30,7 @@ $ pip install -r requirements.txt
 ```
 
 ## Compile
-Use Brownie to compile.
+Use eth-brownie to compile.
 
 ```bash
 $ brownie compile
@@ -70,7 +74,7 @@ This is the case of storing and using a private key in keystore file format in [
 To deploy, execute the following command.
 
 ```bash
-$ ./scripts/deploy.sh
+$ ./scripts/deploy_shared_contract.sh {--payment_gateway 0xabcd...}
 ```
 
 ## Developing Smart Contracts
