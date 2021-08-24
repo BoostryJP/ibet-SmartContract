@@ -22,12 +22,12 @@ pragma solidity ^0.8.0;
 import "OpenZeppelin/openzeppelin-contracts@4.2.0/contracts/utils/math/SafeMath.sol";
 import "./EscrowStorage.sol";
 import "../access/Ownable.sol";
-import "../../interfaces/ContractReceiver.sol";
+import "../../interfaces/IbetExchangeInterface.sol";
 import "../../interfaces/IbetStandardTokenInterface.sol";
 
 
 /// @title ibet Decentralized Exchange
-contract IbetEscrow is Ownable, ContractReceiver {
+contract IbetEscrow is Ownable, IbetExchangeInterface {
     using SafeMath for uint256;
 
     // ---------------------------------------------------------------
@@ -63,18 +63,6 @@ contract IbetEscrow is Ownable, ContractReceiver {
         address recipient,
         uint256 amount,
         address agent
-    );
-
-    // Event: 入庫
-    event Deposited(
-        address indexed token,
-        address indexed account
-    );
-
-    // Event: 出庫
-    event Withdrawn(
-        address indexed token,
-        address indexed account
     );
 
     // ---------------------------------------------------------------
@@ -158,6 +146,7 @@ contract IbetEscrow is Ownable, ContractReceiver {
     function balanceOf(address _account, address _token)
         public
         view
+        override
         returns (uint256)
     {
         return EscrowStorage(storageAddress).getBalance(
@@ -189,6 +178,7 @@ contract IbetEscrow is Ownable, ContractReceiver {
     function commitmentOf(address _account, address _token)
         public
         view
+        override
         returns (uint256)
     {
         return EscrowStorage(storageAddress).getCommitment(
@@ -422,6 +412,7 @@ contract IbetEscrow is Ownable, ContractReceiver {
     /// @return 処理結果
     function withdraw(address _token)
         public
+        override
         returns (bool)
     {
         uint256 balance = balanceOf(msg.sender, _token);

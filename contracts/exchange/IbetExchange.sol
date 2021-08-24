@@ -23,12 +23,12 @@ import "OpenZeppelin/openzeppelin-contracts@4.2.0/contracts/utils/math/SafeMath.
 import "./ExchangeStorage.sol";
 import "../access/Ownable.sol";
 import "../payment/PaymentGateway.sol";
-import "../../interfaces/ContractReceiver.sol";
+import "../../interfaces/IbetExchangeInterface.sol";
 import "../../interfaces/IbetStandardTokenInterface.sol";
 
 
 /// @title ibet Decentralized Exchange
-contract IbetExchange is Ownable, ContractReceiver {
+contract IbetExchange is Ownable, IbetExchangeInterface {
     using SafeMath for uint256;
 
     // 約定明細の有効期限
@@ -95,12 +95,6 @@ contract IbetExchange is Ownable, ContractReceiver {
         uint256 price,
         uint256 amount,
         address agentAddress
-    );
-
-    // Event：全引き出し
-    event Withdrawal(
-        address indexed tokenAddress,
-        address indexed accountAddress
     );
 
     // ---------------------------------------------------------------
@@ -315,6 +309,7 @@ contract IbetExchange is Ownable, ContractReceiver {
     function balanceOf(address _account, address _token)
         public
         view
+        override
         returns (uint256)
     {
         return ExchangeStorage(storageAddress).getBalance(
@@ -346,6 +341,7 @@ contract IbetExchange is Ownable, ContractReceiver {
     function commitmentOf(address _account, address _token)
         public
         view
+        override
         returns (uint256)
     {
         return ExchangeStorage(storageAddress).getCommitment(
@@ -754,8 +750,9 @@ contract IbetExchange is Ownable, ContractReceiver {
     /// @dev 未売却の預かりに対してのみ引き出しをおこなう。約定済、注文中の預かり（commitments）の引き出しはおこなわない。
     /// @param _token トークンアドレス
     /// @return 処理結果
-    function withdrawAll(address _token)
+    function withdraw(address _token)
         public
+        override
         returns (bool)
     {
         uint256 balance = balanceOf(msg.sender, _token);
@@ -769,7 +766,7 @@ contract IbetExchange is Ownable, ContractReceiver {
         setBalance(msg.sender, _token, 0);
 
         // イベント登録
-        emit Withdrawal(_token, msg.sender);
+        emit Withdrawn(_token, msg.sender);
 
         return true;
     }
@@ -786,6 +783,9 @@ contract IbetExchange is Ownable, ContractReceiver {
             msg.sender,
             balanceOf(_from, msg.sender).add(_value)
         );
+
+        // イベント登録
+        emit Deposited(msg.sender, _from);
     }
 
     /// @notice アドレスがコントラクトアドレスであるかを判定
