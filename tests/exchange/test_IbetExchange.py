@@ -146,8 +146,8 @@ class TestWithdrawAll:
         # transfer to exchange contract
         token.transfer.transact(exchange.address, _value, {'from': _issuer})
 
-        # withdrawAll
-        tx = exchange.withdrawAll.transact(token.address, {'from': _issuer})
+        # withdraw
+        tx = exchange.withdraw.transact(token.address, {'from': _issuer})
 
         # assertion
         balance_token = token.balanceOf(_issuer)
@@ -155,8 +155,8 @@ class TestWithdrawAll:
         assert balance_token == deploy_args[2]
         assert balance_exchange == 0
 
-        assert tx.events["Withdrawal"]["tokenAddress"] == token.address
-        assert tx.events["Withdrawal"]["accountAddress"] == _issuer
+        assert tx.events["Withdrawn"]["token"] == token.address
+        assert tx.events["Withdrawn"]["account"] == _issuer
 
     #######################################
     # Error
@@ -170,9 +170,9 @@ class TestWithdrawAll:
         deploy_args = init_args(exchange.address)
         token = deploy(users, deploy_args)
 
-        # withdrawAll
+        # withdraw
         with brownie.reverts():
-            exchange.withdrawAll.transact(
+            exchange.withdraw.transact(
                 token.address,
                 {'from': _issuer}
             )
