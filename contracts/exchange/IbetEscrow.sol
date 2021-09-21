@@ -403,6 +403,13 @@ contract IbetEscrow is Ownable, IbetExchangeInterface {
             escrow.agent
         );
 
+        emit HolderChanged(
+            escrow.token,
+            escrow.sender,
+            escrow.recipient,
+            escrow.amount
+        );
+
         return true;
     }
 

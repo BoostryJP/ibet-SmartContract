@@ -433,7 +433,7 @@ contract IbetExchange is Ownable, IbetExchangeInterface {
             //  2) 残高数量が発注数量に満たない場合
             //  3) 取扱ステータスがFalseの場合
             //  4) 有効な収納代行業者（Agent）を指定していない場合
-            //   -> 更新処理：全ての残高を投資家のアカウントに戻し、falseを返す
+            //   -> 更新処理：全ての残高を発注者（msg.sender）のアカウントに戻し、falseを返す
             if (_amount == 0 ||
                 balanceOf(msg.sender, _token) < _amount ||
                 IbetStandardTokenInterface(_token).status() == false ||
@@ -489,7 +489,7 @@ contract IbetExchange is Ownable, IbetExchangeInterface {
             revert();
         }
 
-        // 更新処理：売り注文の場合、注文で拘束している預かりを解放 => 残高を投資家のアカウントに戻す
+        // 更新処理：売り注文の場合、注文で拘束している預かりを解放 => 残高を発注者（msg.sender）のアカウントに戻す
         if (!order.isBuy) {
             setCommitment(msg.sender, order.token, commitmentOf(msg.sender, order.token).sub(order.amount));
             IbetStandardTokenInterface(order.token).transfer(msg.sender,order.amount);
@@ -553,7 +553,7 @@ contract IbetExchange is Ownable, IbetExchangeInterface {
             //  5) 取扱ステータスがFalseの場合
             //  6) 発注者の残高が発注数量を下回っている場合
             //  7) 数量が元注文の残数量を超過している場合
-            //   -> 更新処理：残高を投資家のアカウントに全て戻し、falseを返す
+            //   -> 更新処理：残高を発注者（msg.sender）のアカウントに全て戻し、falseを返す
             if (_amount == 0 ||
                 order.isBuy == _isBuy ||
                 msg.sender == order.owner ||
@@ -638,23 +638,61 @@ contract IbetExchange is Ownable, IbetExchangeInterface {
         if (order.isBuy) {
             // 更新処理：買注文の場合、突合相手（売り手）から注文者（買い手）へと資産移転を行う
             setCommitment(
-                agreement.counterpart, order.token,
-                    commitmentOf(agreement.counterpart, order.token).sub(agreement.amount));
-            IbetStandardTokenInterface(order.token).transfer(order.owner,agreement.amount);
-            // イベント登録：決済OK
-            emit SettlementOK(order.token, _orderId, _agreementId,
-                order.owner, agreement.counterpart, order.price,
-                agreement.amount, order.agent);
+                agreement.counterpart,
+                order.token,
+                commitmentOf(agreement.counterpart, order.token).sub(agreement.amount)
+            );
+            IbetStandardTokenInterface(order.token).transfer(
+                order.owner,
+                agreement.amount
+            );
+
+            // イベント登録
+            emit SettlementOK(
+                order.token,
+                _orderId,
+                _agreementId,
+                order.owner,
+                agreement.counterpart,
+                order.price,
+                agreement.amount,
+                order.agent
+            );
+            emit HolderChanged(
+                order.token,
+                agreement.counterpart,
+                order.owner,
+                agreement.amount
+            );
         } else {
             // 更新処理：売注文の場合、注文者（売り手）から突合相手（買い手）へと資産移転を行う
             setCommitment(
-                order.owner, order.token,
-                    commitmentOf(order.owner, order.token).sub(agreement.amount));
-            IbetStandardTokenInterface(order.token).transfer(agreement.counterpart, agreement.amount);
-            // イベント登録：決済OK
-            emit SettlementOK(order.token, _orderId, _agreementId,
-                agreement.counterpart, order.owner, order.price,
-                agreement.amount, order.agent);
+                order.owner,
+                order.token,
+                commitmentOf(order.owner, order.token).sub(agreement.amount)
+            );
+            IbetStandardTokenInterface(order.token).transfer(
+                agreement.counterpart,
+                agreement.amount
+            );
+
+            // イベント登録
+            emit SettlementOK(
+                order.token,
+                _orderId,
+                _agreementId,
+                agreement.counterpart,
+                order.owner,
+                order.price,
+                agreement.amount,
+                order.agent
+            );
+            emit HolderChanged(
+                order.token,
+                order.owner,
+                agreement.counterpart,
+                agreement.amount
+            );
         }
 
         // 更新処理：現在値を更新する
