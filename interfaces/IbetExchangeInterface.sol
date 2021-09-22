@@ -37,6 +37,14 @@ abstract contract IbetExchangeInterface is ContractReceiver {
         address indexed account
     );
 
+    // Event: 保有者変更
+    event HolderChanged(
+        address indexed token,
+        address indexed from,
+        address indexed to,
+        uint256 value
+    );
+
     /// @notice 残高数量の参照
     /// @param _account アカウントアドレス
     /// @param _token トークンアドレス
