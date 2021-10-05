@@ -424,9 +424,13 @@ contract IbetShare is Ownable, IbetStandardTokenInterface {
     {
         // 個人情報登録有無のチェック
         // 取引コントラクトからのtransferと、発行体へのtransferの場合はチェックを行わない。
-        if (msg.sender != tradableExchange && _to != owner) {
-            require(PersonalInfo(personalInfoAddress).isRegistered(_to, owner) == true);
+        if (_to != owner) {
+            require(
+                PersonalInfo(personalInfoAddress).isRegistered(_to, owner) == true,
+                "The transfer is only possible if personal information is registered."
+            );
         }
+
         balances[msg.sender] = balanceOf(msg.sender).sub(_value);
         balances[_to] = balanceOf(_to).add(_value);
 
@@ -444,7 +448,12 @@ contract IbetShare is Ownable, IbetStandardTokenInterface {
         private
         returns (bool success)
     {
-        require(_to == tradableExchange);
+        // 宛先はtradableExchangeのみ可能
+        require(
+            _to == tradableExchange,
+            "Transfers to contract addresses are only possible to tradableExchange."
+        );
+
         balances[msg.sender] = balanceOf(msg.sender).sub(_value);
         balances[_to] = balanceOf(_to).add(_value);
 
@@ -465,21 +474,19 @@ contract IbetShare is Ownable, IbetStandardTokenInterface {
         override
         returns (bool success)
     {
-        // <CHK>
-        //  1) 移転時の発行体承諾が必要な場合
-        //  2) 数量が残高を超えている場合
-        //  -> REVERT
-        if (transferApprovalRequired == true ||
-            balanceOf(msg.sender) < _value)
-        {
-            revert();
+        if (transferApprovalRequired == true) {
+            revert("Direct transfer is not possible for tokens that require approval for transfer.");
         }
 
-        // 実行者がtradableExchangeではない場合、譲渡可否のチェックを実施する
-        if (msg.sender != tradableExchange) {
-            // 譲渡可能ではない場合、エラーを返す
-            require(transferable == true);
-        }
+        require(
+            balanceOf(msg.sender) >= _value,
+            "Sufficient balance is required."
+        );
+
+        require(
+            transferable == true,
+            "Must be transferable."
+        );
 
         bytes memory empty;
         if (isContract(_to)) {

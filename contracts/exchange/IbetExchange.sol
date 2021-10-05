@@ -439,7 +439,10 @@ contract IbetExchange is Ownable, IbetExchangeInterface {
                 IbetStandardTokenInterface(_token).status() == false ||
                 validateAgent(_agent) == false)
             {
-                IbetStandardTokenInterface(_token).transfer(msg.sender, balanceOf(msg.sender, _token));
+                IbetStandardTokenInterface(_token).transfer(
+                    msg.sender,
+                    balanceOf(msg.sender, _token)
+                );
                 setBalance(msg.sender, _token, 0);
                 return false;
             }
@@ -491,16 +494,39 @@ contract IbetExchange is Ownable, IbetExchangeInterface {
 
         // 更新処理：売り注文の場合、注文で拘束している預かりを解放 => 残高を投資家のアカウントに戻す
         if (!order.isBuy) {
-            setCommitment(msg.sender, order.token, commitmentOf(msg.sender, order.token).sub(order.amount));
-            IbetStandardTokenInterface(order.token).transfer(msg.sender,order.amount);
+            IbetStandardTokenInterface(order.token).transfer(
+                msg.sender,
+                order.amount
+            );
+            setCommitment(
+                msg.sender,
+                order.token,
+                commitmentOf(msg.sender, order.token).sub(order.amount)
+            );
         }
 
         // 更新処理：キャンセル済みフラグをキャンセル済み（True）に更新
-        setOrder(_orderId, order.owner, order.token, order.amount, order.price, order.isBuy, order.agent, true);
+        setOrder(
+            _orderId,
+            order.owner,
+            order.token,
+            order.amount,
+            order.price,
+            order.isBuy,
+            order.agent,
+            true
+        );
 
         // イベント登録：注文キャンセル
-        emit CancelOrder(order.token, _orderId, msg.sender,
-                        order.isBuy, order.price, order.amount, order.agent);
+        emit CancelOrder(
+            order.token,
+            _orderId,
+            msg.sender,
+            order.isBuy,
+            order.price,
+            order.amount,
+            order.agent
+        );
 
         return true;
     }
@@ -562,8 +588,15 @@ contract IbetExchange is Ownable, IbetExchangeInterface {
                 balanceOf(msg.sender, order.token) < _amount ||
                 order.amount < _amount )
             {
-                IbetStandardTokenInterface(order.token).transfer(msg.sender, balanceOf(msg.sender, order.token));
-                setBalance(msg.sender, order.token, 0);
+                IbetStandardTokenInterface(order.token).transfer(
+                    msg.sender,
+                    balanceOf(msg.sender, order.token)
+                );
+                setBalance(
+                    msg.sender,
+                    order.token,
+                    0
+                );
                 return false;
             }
         }
@@ -631,34 +664,70 @@ contract IbetExchange is Ownable, IbetExchangeInterface {
             revert();
         }
 
-        // 更新処理：支払い済みフラグを支払い済み（True）に更新する
-        setAgreement(_orderId, _agreementId, agreement.counterpart, agreement.amount, agreement.price,
-            agreement.canceled, true, agreement.expiry);
-
+        // 更新処理：資産移転
         if (order.isBuy) {
-            // 更新処理：買注文の場合、突合相手（売り手）から注文者（買い手）へと資産移転を行う
+            // 買注文の場合、突合相手（売り手）から注文者（買い手）へと資産移転を行う
+            IbetStandardTokenInterface(order.token).transfer(
+                order.owner,
+                agreement.amount
+            );
             setCommitment(
-                agreement.counterpart, order.token,
-                    commitmentOf(agreement.counterpart, order.token).sub(agreement.amount));
-            IbetStandardTokenInterface(order.token).transfer(order.owner,agreement.amount);
+                agreement.counterpart,
+                order.token,
+                commitmentOf(agreement.counterpart, order.token).sub(agreement.amount)
+            );
             // イベント登録：決済OK
-            emit SettlementOK(order.token, _orderId, _agreementId,
-                order.owner, agreement.counterpart, order.price,
-                agreement.amount, order.agent);
+            emit SettlementOK(
+                order.token,
+                _orderId,
+                _agreementId,
+                order.owner,
+                agreement.counterpart,
+                order.price,
+                agreement.amount,
+                order.agent
+            );
         } else {
-            // 更新処理：売注文の場合、注文者（売り手）から突合相手（買い手）へと資産移転を行う
+            // 売注文の場合、注文者（売り手）から突合相手（買い手）へと資産移転を行う
+            IbetStandardTokenInterface(order.token).transfer(
+                agreement.counterpart,
+                agreement.amount
+            );
             setCommitment(
-                order.owner, order.token,
-                    commitmentOf(order.owner, order.token).sub(agreement.amount));
-            IbetStandardTokenInterface(order.token).transfer(agreement.counterpart, agreement.amount);
+                order.owner,
+                order.token,
+                commitmentOf(order.owner, order.token).sub(agreement.amount)
+            );
             // イベント登録：決済OK
-            emit SettlementOK(order.token, _orderId, _agreementId,
-                agreement.counterpart, order.owner, order.price,
-                agreement.amount, order.agent);
+            emit SettlementOK(
+                order.token,
+                _orderId,
+                _agreementId,
+                agreement.counterpart,
+                order.owner,
+                order.price,
+                agreement.amount,
+                order.agent
+            );
         }
 
+        // 更新処理：支払い済みフラグを支払い済み（True）に更新する
+        setAgreement(
+            _orderId,
+            _agreementId,
+            agreement.counterpart,
+            agreement.amount,
+            agreement.price,
+            agreement.canceled,
+            true,
+            agreement.expiry
+        );
+
         // 更新処理：現在値を更新する
-        setLastPrice(order.token, order.price);
+        setLastPrice(
+            order.token,
+            order.price
+        );
 
         return true;
     }
@@ -690,58 +759,95 @@ contract IbetExchange is Ownable, IbetExchangeInterface {
                 getAgreement(_orderId, _agreementId);
 
         if (agreement.expiry <= block.timestamp) { // 約定明細の有効期限を超過している場合
-          // <CHK>
-          //  1) すでに決済承認済み（支払い済み）の場合
-          //  2) すでに決済非承認済み（キャンセル済み）の場合
-          //  3) msg.senderが、 決済代行（agent）、発注者（owner）、約定相手（counterpart）以外の場合
-          //   -> REVERT
-          if (agreement.paid ||
-              agreement.canceled ||
-              (
-                msg.sender != order.agent &&
-                msg.sender != order.owner &&
-                msg.sender != agreement.counterpart
-              )
-          ) {
-              revert();
-          }
+            // <CHK>
+            //  1) すでに決済承認済み（支払い済み）の場合
+            //  2) すでに決済非承認済み（キャンセル済み）の場合
+            //  3) msg.senderが、 決済代行（agent）、発注者（owner）、約定相手（counterpart）以外の場合
+            //   -> REVERT
+            if (
+                agreement.paid ||
+                agreement.canceled ||
+                (
+                    msg.sender != order.agent &&
+                    msg.sender != order.owner &&
+                    msg.sender != agreement.counterpart
+                )
+            ) {
+                revert();
+            }
         } else { // 約定明細の有効期限を超過していない場合
-          // <CHK>
-          //  1) すでに支払い済みの場合
-          //  2) すでに決済非承認済み（キャンセル済み）の場合
-          //  3) msg.senderが、決済代行（agent）以外の場合
-          //   -> REVERT
-          if (agreement.paid ||
-              agreement.canceled ||
-              msg.sender != order.agent
-          ) {
-              revert();
-          }
+            // <CHK>
+            //  1) すでに支払い済みの場合
+            //  2) すでに決済非承認済み（キャンセル済み）の場合
+            //  3) msg.senderが、決済代行（agent）以外の場合
+            //   -> REVERT
+            if (
+                agreement.paid ||
+                agreement.canceled ||
+                msg.sender != order.agent
+            ) {
+                revert();
+            }
         }
-
-        // 更新処理：キャンセル済みフラグをキャンセル（True）に更新する
-        setAgreement(_orderId, _agreementId, agreement.counterpart, agreement.amount, agreement.price,
-            true, agreement.paid, agreement.expiry);
 
         if (order.isBuy) {
             // 更新処理：買い注文の場合、突合相手（売り手）の預かりを解放 -> 預かりの引き出し
             // 取り消した注文は無効化する（注文中状態に戻さない）
-            setCommitment(agreement.counterpart, order.token,
-                commitmentOf(agreement.counterpart, order.token).sub(agreement.amount));
-            IbetStandardTokenInterface(order.token).transfer(agreement.counterpart, agreement.amount);
+            IbetStandardTokenInterface(order.token).transfer(
+                agreement.counterpart,
+                agreement.amount
+            );
+            setCommitment(
+                agreement.counterpart,
+                order.token,
+                commitmentOf(agreement.counterpart, order.token).sub(agreement.amount)
+            );
             // イベント登録：決済NG
-            emit SettlementNG(order.token, _orderId, _agreementId,
-                order.owner, agreement.counterpart, order.price,
-                agreement.amount, order.agent);
+            emit SettlementNG(
+                order.token,
+                _orderId,
+                _agreementId,
+                order.owner,
+                agreement.counterpart,
+                order.price,
+                agreement.amount,
+                order.agent
+            );
         } else {
             // 更新処理：元注文の数量を戻す
-            setOrder(_orderId, order.owner, order.token, order.amount.add(agreement.amount),
-                order.price, order.isBuy, order.agent, order.canceled);
+            setOrder(
+                _orderId,
+                order.owner,
+                order.token,
+                order.amount.add(agreement.amount),
+                order.price,
+                order.isBuy,
+                order.agent,
+                order.canceled
+            );
             // イベント登録：決済NG
-            emit SettlementNG(order.token, _orderId, _agreementId,
-                agreement.counterpart, order.owner, order.price,
-                agreement.amount, order.agent);
+            emit SettlementNG(
+                order.token,
+                _orderId,
+                _agreementId,
+                agreement.counterpart,
+                order.owner,
+                order.price,
+                agreement.amount,
+                order.agent
+            );
         }
+
+        // 更新処理：キャンセル済みフラグをキャンセル（True）に更新する
+        setAgreement(
+            _orderId,
+            _agreementId,
+            agreement.counterpart,
+            agreement.amount, agreement.price,
+            true,
+            agreement.paid,
+            agreement.expiry
+        );
 
         return true;
     }
@@ -757,13 +863,21 @@ contract IbetExchange is Ownable, IbetExchangeInterface {
     {
         uint256 balance = balanceOf(msg.sender, _token);
 
-        // <CHK>
-        //  残高がゼロの場合、REVERT
-        if (balance == 0 ) { revert(); }
+        require(
+            balance > 0,
+            "The balance must be greater than zero."
+        );
 
         // 更新処理：トークン引き出し（送信）
-        IbetStandardTokenInterface(_token).transfer(msg.sender, balance);
-        setBalance(msg.sender, _token, 0);
+        IbetStandardTokenInterface(_token).transfer(
+            msg.sender,
+            balance
+        );
+        setBalance(
+            msg.sender,
+            _token,
+            0
+        );
 
         // イベント登録
         emit Withdrawn(_token, msg.sender);

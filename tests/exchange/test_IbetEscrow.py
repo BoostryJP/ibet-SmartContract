@@ -47,6 +47,15 @@ def deploy(users, deploy_args):
     return token
 
 
+def deploy_share(users, deploy_args):
+    from brownie import IbetShare
+    token = users["issuer"].deploy(
+        IbetShare,
+        *deploy_args
+    )
+    return token
+
+
 # TEST_deploy
 class TestDeploy:
 
@@ -423,6 +432,63 @@ class TestWithdraw:
         # assertion
         assert token.balanceOf(_issuer) == deploy_args[2] - _value
         assert escrow.balanceOf(_issuer, token.address) == _value
+
+    # Error_3
+    # Must be transferable.
+    def test_error_3(self, users, escrow):
+        _issuer = users['issuer']
+        _value = 2 ** 256 - 1
+
+        # issue token
+        deploy_args = [
+            'test_share',
+            'test_symbol',
+            2 ** 256 - 1,
+            2 ** 256 - 1,
+            2 ** 256 - 1,
+            '20200829',
+            '20200831',
+            '20191231',
+            2 ** 256 - 1
+        ]
+        token = deploy_share(users, deploy_args)
+
+        # set to transferable
+        token.setTransferable(
+            True,
+            {'from': _issuer}
+        )
+
+        # set to tradable contract
+        token.setTradableExchange(
+            escrow.address,
+            {'from': _issuer}
+        )
+
+        # transfer to escrow contract
+        token.transfer(
+            escrow.address,
+            _value,
+            {'from': _issuer}
+        )
+
+        # set to not transferable
+        token.setTransferable(
+            False,
+            {'from': _issuer}
+        )
+
+        # withdraw
+        with brownie.reverts(revert_msg="Must be transferable."):
+            escrow.withdraw(
+                token.address,
+                {'from': _issuer}
+            )
+
+        # assertion
+        assert token.balanceOf(_issuer) == 0
+        assert token.balanceOf(escrow.address) == deploy_args[3]
+        assert escrow.balanceOf(_issuer, token.address) == deploy_args[3]
 
 
 # TEST_createEscrow

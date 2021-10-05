@@ -1168,7 +1168,7 @@ class TestTransfer:
         share_token = issuer.deploy(IbetShare, *deploy_args)
 
         # transfer
-        with brownie.reverts():
+        with brownie.reverts(revert_msg="Must be transferable."):
             share_token.transfer.transact(
                 to_address,
                 transfer_amount,
@@ -1187,16 +1187,20 @@ class TestTransfer:
         issuer = users['issuer']
         transfer_amount = 100
 
-        # issue token
+        # issue transferable token
         deploy_args = init_args()
         share_token = issuer.deploy(IbetShare, *deploy_args)
+        share_token.setTransferable(
+            True,
+            {"from": issuer}
+        )
 
         # transfer
-        with brownie.reverts():
+        with brownie.reverts(revert_msg="Transfers to contract addresses are only possible to tradableExchange."):
             share_token.transfer.transact(
                 exchange,
                 transfer_amount,
-                {"from": users["admin"]}
+                {"from": issuer}
             )
 
         assert share_token.balanceOf(issuer) == deploy_args[3]
@@ -1217,7 +1221,7 @@ class TestTransfer:
         )
 
         # transfer
-        with brownie.reverts():
+        with brownie.reverts(revert_msg="The transfer is only possible if personal information is registered."):
             share_token.transfer.transact(
                 to_address.address,
                 transfer_amount,
@@ -1247,7 +1251,7 @@ class TestTransfer:
         )
 
         # transfer
-        with brownie.reverts():
+        with brownie.reverts(revert_msg="Direct transfer is not possible for tokens that require approval for transfer."):
             share_token.transfer.transact(
                 to_address,
                 transfer_amount,
