@@ -168,9 +168,15 @@ contract IbetStraightBond is Ownable, IbetStandardTokenInterface {
         private
         returns (bool success)
     {
-        if (msg.sender != tradableExchange) {
-            require(PersonalInfo(personalInfoAddress).isRegistered(_to, owner) == true);
+        // 個人情報登録有無のチェック
+        // 取引コントラクトからのtransferと、発行体へのtransferの場合はチェックを行わない。
+        if (_to != owner) {
+            require(
+                PersonalInfo(personalInfoAddress).isRegistered(_to, owner) == true,
+                "The transfer is only possible if personal information is registered."
+            );
         }
+
         balances[msg.sender] = balanceOf(msg.sender).sub(_value);
         balances[_to] = balanceOf(_to).add(_value);
 
@@ -189,7 +195,12 @@ contract IbetStraightBond is Ownable, IbetStandardTokenInterface {
         private
         returns (bool success)
     {
-        require(_to == tradableExchange);
+        // 宛先はtradableExchangeのみ可能
+        require(
+            _to == tradableExchange,
+            "Transfers to contract addresses are only possible to tradableExchange."
+        );
+
         balances[msg.sender] = balanceOf(msg.sender).sub(_value);
         balances[_to] = balanceOf(_to).add(_value);
 
@@ -211,13 +222,15 @@ contract IbetStraightBond is Ownable, IbetStandardTokenInterface {
         override
         returns (bool success)
     {
-        // <CHK>
-        //  数量が残高を超えている場合、エラーを返す
-        if (balanceOf(msg.sender) < _value) revert();
-        if (msg.sender != tradableExchange) {
-            // 譲渡可能ではない場合、エラーを返す
-            require(transferable == true);
-        }
+        require(
+            balanceOf(msg.sender) >= _value,
+            "Sufficient balance is required."
+        );
+
+        require(
+            transferable == true,
+            "Must be transferable."
+        );
 
         bytes memory empty;
         if (isContract(_to)) {

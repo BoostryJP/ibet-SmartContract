@@ -48,6 +48,15 @@ def deploy(users, deploy_args):
     return token
 
 
+def deploy_share(users, deploy_args):
+    from brownie import IbetShare
+    token = users["issuer"].deploy(
+        IbetShare,
+        *deploy_args
+    )
+    return token
+
+
 # TEST_deploy
 class TestDeploy:
 
@@ -127,8 +136,8 @@ class TestTokenFallback:
         assert balance_exchange == _value * 2
 
 
-# TEST_withdrawAll
-class TestWithdrawAll:
+# TEST_withdraw
+class TestWithdraw:
 
     #######################################
     # Normal
@@ -163,6 +172,7 @@ class TestWithdrawAll:
     #######################################
 
     # Error_1
+    # The balance must be greater than zero.
     def test_error_1(self, users, exchange):
         _issuer = users['issuer']
 
@@ -171,7 +181,7 @@ class TestWithdrawAll:
         token = deploy(users, deploy_args)
 
         # withdraw
-        with brownie.reverts():
+        with brownie.reverts(revert_msg="The balance must be greater than zero."):
             exchange.withdraw.transact(
                 token.address,
                 {'from': _issuer}
@@ -182,6 +192,63 @@ class TestWithdrawAll:
         balance_exchange = exchange.balanceOf(_issuer, token.address)
         assert balance_token == deploy_args[2]
         assert balance_exchange == 0
+
+    # Error_2
+    # Must be transferable.
+    def test_error_2(self, users, exchange):
+        _issuer = users['issuer']
+        _value = 2 ** 256 - 1
+
+        # issue token
+        deploy_args = [
+            'test_share',
+            'test_symbol',
+            2 ** 256 - 1,
+            2 ** 256 - 1,
+            2 ** 256 - 1,
+            '20200829',
+            '20200831',
+            '20191231',
+            2 ** 256 - 1
+        ]
+        token = deploy_share(users, deploy_args)
+
+        # set to transferable
+        token.setTransferable(
+            True,
+            {'from': _issuer}
+        )
+
+        # set to tradable contract
+        token.setTradableExchange(
+            exchange.address,
+            {'from': _issuer}
+        )
+
+        # transfer to exchange contract
+        token.transfer(
+            exchange.address,
+            _value,
+            {'from': _issuer}
+        )
+
+        # set to not transferable
+        token.setTransferable(
+            False,
+            {'from': _issuer}
+        )
+
+        # withdraw
+        with brownie.reverts(revert_msg="Must be transferable."):
+            exchange.withdraw(
+                token.address,
+                {'from': _issuer}
+            )
+
+        # assertion
+        assert token.balanceOf(_issuer) == 0
+        assert token.balanceOf(exchange.address) == deploy_args[3]
+        assert exchange.balanceOf(_issuer, token.address) == deploy_args[3]
 
 
 # TEST_createOrder
@@ -535,6 +602,68 @@ class TestCreateOrder:
         assert exchange.commitmentOf(issuer, token.address) == 0
         assert token.balanceOf(issuer) == deploy_args[2]
 
+    # Error_2_5
+    # Make order: SELL
+    # REVERT: Must be transferable.
+    def test_error_2_5(self, users, exchange):
+        issuer = users['issuer']
+
+        # issue token
+        deploy_args = [
+            'test_share',
+            'test_symbol',
+            2 ** 256 - 1,
+            2 ** 256 - 1,
+            2 ** 256 - 1,
+            '20200829',
+            '20200831',
+            '20191231',
+            2 ** 256 - 1
+        ]
+        token = deploy_share(users, deploy_args)
+
+        token.setTransferable(
+            True,
+            {'from': issuer}
+        )
+        token.setTradableExchange(
+            exchange.address,
+            {'from': issuer}
+        )
+
+        # transfer to exchange contract
+        _amount = 2 ** 256 - 1
+        token.transfer(
+            exchange.address,
+            _amount,
+            {'from': issuer}
+        )
+
+        # set to not transferable
+        token.setTransferable(
+            False,
+            {'from': issuer}
+        )
+
+        # make sell order
+        _price = 123
+        _isBuy = False
+        with brownie.reverts(revert_msg="Must be transferable."):
+            exchange.createOrder(
+                token.address,
+                _amount,
+                _price,
+                _isBuy,
+                users['user1'],  # invalid agent
+                {'from': issuer}
+            )
+
+        # assertion
+        assert token.balanceOf(issuer) == deploy_args[3] - _amount
+        assert token.balanceOf(exchange.address) == _amount
+        assert exchange.balanceOf(issuer, token.address) == _amount
+        assert exchange.commitmentOf(issuer, token.address) == 0
+
 
 # TEST_cancelOrder
 class TestCancelOrder:
@@ -860,6 +989,75 @@ class TestCancelOrder:
         ]
         assert token.balanceOf(issuer) == deploy_args[2]
         assert token.balanceOf(trader) == 0
+
+    # Error_5
+    # Cancel order: SELL
+    # REVERT: Must be transferable.
+    def test_error_5(self, users, exchange):
+        issuer = users['issuer']
+        agent = users['agent']
+
+        # issue token
+        deploy_args = [
+            'test_share',
+            'test_symbol',
+            2 ** 256 - 1,
+            2 ** 256 - 1,
+            2 ** 256 - 1,
+            '20200829',
+            '20200831',
+            '20191231',
+            2 ** 256 - 1
+        ]
+        token = deploy_share(users, deploy_args)
+        token.setTransferable(
+            True,
+            {'from': issuer}
+        )
+        token.setTradableExchange(
+            exchange.address,
+            {'from': issuer}
+        )
+
+        # transfer to exchange contract
+        _amount = 2 ** 256 - 1
+        token.transfer(
+            exchange.address,
+            _amount,
+            {'from': issuer}
+        )
+
+        # make SELL order
+        _amount = 2 ** 256 - 1
+        _price = 2 ** 256 - 1
+        exchange.createOrder(
+            token.address,
+            _amount,
+            _price,
+            False,
+            agent,
+            {'from': issuer}
+        )
+
+        # set to not transferable
+        token.setTransferable(
+            False,
+            {'from': issuer}
+        )
+
+        # cancel order
+        order_id = exchange.latestOrderId()
+        with brownie.reverts(revert_msg="Must be transferable."):
+            exchange.cancelOrder(
+                order_id,
+                {'from': issuer}
+            )
+
+        # assertion
+        assert token.balanceOf(issuer) == 0
+        assert token.balanceOf(exchange.address) == _amount
+        assert exchange.balanceOf(issuer, token.address) == 0
+        assert exchange.commitmentOf(issuer, token.address) == _amount
 
 
 # TEST_executeOrder
@@ -1800,6 +1998,84 @@ class TestExecuteOrder:
         assert exchange.commitmentOf(issuer, token.address) == 0
         assert exchange.lastPrice(token.address) == 0
 
+    # Error_3_8
+    # Take order: SELL
+    # REVERT: Must be transferable.
+    def test_error_3_8(self, users, exchange):
+        issuer = users['issuer']
+        trader = users['trader']
+        agent = users['agent']
+
+        # issue token
+        deploy_args = [
+            'test_share',
+            'test_symbol',
+            2 ** 256 - 1,
+            2 ** 256 - 1,
+            2 ** 256 - 1,
+            '20200829',
+            '20200831',
+            '20191231',
+            2 ** 256 - 1
+        ]
+        token = deploy_share(users, deploy_args)
+
+        token.setTransferable(
+            True,
+            {'from': issuer}
+        )
+        token.setTradableExchange(
+            exchange.address,
+            {'from': issuer}
+        )
+
+        # make BUY order by trader
+        _make_amount = 2 ** 256 - 1
+        _price = 2 ** 256 - 1
+        _isBuy = True
+
+        exchange.createOrder.transact(
+            token.address,
+            _make_amount,
+            _price,
+            _isBuy,
+            agent,
+            {'from': trader}
+        )
+
+        # transfer to exchange contract
+        _take_amount = 2 ** 256 - 1
+        order_id = exchange.latestOrderId()
+        token.transfer(
+            exchange.address,
+            _take_amount,
+            {'from': issuer}
+        )
+
+        # set to not transferable
+        token.setTransferable(
+            False,
+            {'from': issuer}
+        )
+
+        # take SELL
+        with brownie.reverts(revert_msg="Must be transferable."):
+            exchange.executeOrder.transact(
+                order_id,
+                _take_amount,
+                False,
+                {'from': trader}  # invalid msg.sender
+            )
+
+        # assertion
+        assert token.balanceOf(issuer) == deploy_args[2] - _take_amount
+        assert token.balanceOf(trader) == 0
+        assert token.balanceOf(exchange.address) == _take_amount
+        assert exchange.balanceOf(issuer, token.address) == _take_amount
+        assert exchange.commitmentOf(issuer, token.address) == 0
+        assert exchange.balanceOf(trader, token.address) == 0
+        assert exchange.commitmentOf(trader, token.address) == 0
+
 
 # TEST_confirmAgreement
 class TestConfirmAgreement:
@@ -2350,6 +2626,91 @@ class TestConfirmAgreement:
         ]
         assert exchange.lastPrice(token.address) == 0
 
+    # Error_6
+    # Take order: SELL
+    # REVERT: Must be transferable.
+    def test_error_6(self, users, exchange):
+        issuer = users['issuer']
+        trader = users['trader']
+        agent = users['agent']
+
+        # issue token
+        deploy_args = [
+            'test_share',
+            'test_symbol',
+            2 ** 256 - 1,
+            2 ** 256 - 1,
+            2 ** 256 - 1,
+            '20200829',
+            '20200831',
+            '20191231',
+            2 ** 256 - 1
+        ]
+        token = deploy_share(users, deploy_args)
+
+        token.setTransferable(
+            True,
+            {'from': issuer}
+        )
+        token.setTradableExchange(
+            exchange.address,
+            {'from': issuer}
+        )
+
+        # make BUY order by trader
+        _make_amount = 2 ** 256 - 1
+        _price = 2 ** 256 - 1
+        _isBuy = True
+
+        exchange.createOrder(
+            token.address,
+            _make_amount,
+            _price,
+            _isBuy,
+            agent,
+            {'from': trader}
+        )
+
+        # take SELL order by issuer
+        _take_amount = 2 ** 256 - 1
+
+        order_id = exchange.latestOrderId()
+        token.transfer.transact(
+            exchange.address,
+            _take_amount,
+            {'from': issuer}
+        )
+        exchange.executeOrder.transact(
+            order_id,
+            _take_amount,
+            False,
+            {'from': issuer}
+        )
+
+        # set to not transferable
+        token.setTransferable(
+            False,
+            {'from': issuer}
+        )
+
+        # confirm agreement
+        agreement_id = exchange.latestAgreementId(order_id)
+        with brownie.reverts(revert_msg="Must be transferable."):
+            exchange.confirmAgreement.transact(
+                order_id,
+                agreement_id,
+                {'from': agent}
+            )
+
+        # assertion
+        assert token.balanceOf(issuer) == deploy_args[3] - _take_amount
+        assert token.balanceOf(trader) == 0
+        assert token.balanceOf(exchange.address) == _take_amount
+        assert exchange.balanceOf(issuer, token.address) == 0
+        assert exchange.balanceOf(trader, token.address) == 0
+        assert exchange.commitmentOf(issuer, token.address) == _take_amount
+        assert exchange.commitmentOf(trader, token.address) == 0
+
 
 # TEST_cancelAgreement
 class TestCancelAgreement:
@@ -2359,7 +2720,7 @@ class TestCancelAgreement:
     #######################################
 
     # Normal_1
-    # Take order: BUY
+    # Make SELL & Take BUY
     def test_normal_1(self, users, exchange):
         issuer = users['issuer']
         trader = users['trader']
@@ -2438,7 +2799,7 @@ class TestCancelAgreement:
         assert tx.events["SettlementNG"]["agentAddress"] == agent.address
 
     # Normal_2
-    # Take order: SELL
+    # Make BUY & Take SELL
     def test_normal_2(self, users, exchange):
         issuer = users['issuer']
         trader = users['trader']
@@ -2889,6 +3250,91 @@ class TestCancelAgreement:
             False
         ]
         assert exchange.lastPrice(token.address) == 0
+
+    # Error_6
+    # Make BUY & Take SELL
+    # REVERT: Must be transferable.
+    def test_error_6(self, users, exchange):
+        issuer = users['issuer']
+        trader = users['trader']
+        agent = users['agent']
+
+        # issue token
+        deploy_args = [
+            'test_share',
+            'test_symbol',
+            2 ** 256 - 1,
+            2 ** 256 - 1,
+            2 ** 256 - 1,
+            '20200829',
+            '20200831',
+            '20191231',
+            2 ** 256 - 1
+        ]
+        token = deploy_share(users, deploy_args)
+
+        token.setTransferable(
+            True,
+            {'from': issuer}
+        )
+        token.setTradableExchange(
+            exchange.address,
+            {'from': issuer}
+        )
+
+        # make BUY order by trader
+        _make_amount = 2 ** 256 - 1
+        _price = 2 ** 256 - 1
+        _isBuy = True
+
+        exchange.createOrder(
+            token.address,
+            _make_amount,
+            _price,
+            _isBuy,
+            agent,
+            {'from': trader}
+        )
+
+        # take SELL order by issuer
+        _take_amount = 2 ** 256 - 1
+
+        order_id = exchange.latestOrderId()
+        token.transfer(
+            exchange.address,
+            _take_amount,
+            {'from': issuer}
+        )
+        exchange.executeOrder(
+            order_id,
+            _take_amount,
+            False,
+            {'from': issuer}
+        )
+
+        # set to not transferable
+        token.setTransferable(
+            False,
+            {'from': issuer}
+        )
+
+        # cancel agreement
+        agreement_id = exchange.latestAgreementId(order_id)
+        with brownie.reverts(revert_msg="Must be transferable."):
+            exchange.cancelAgreement(
+                order_id,
+                agreement_id,
+                {'from': agent}
+            )
+
+        # assertion
+        assert token.balanceOf(issuer) == deploy_args[3] - _take_amount
+        assert token.balanceOf(trader) == 0
+        assert token.balanceOf(exchange.address) == _take_amount
+        assert exchange.balanceOf(issuer, token.address) == 0
+        assert exchange.balanceOf(trader, token.address) == 0
+        assert exchange.commitmentOf(issuer, token.address) == _take_amount
+        assert exchange.commitmentOf(trader, token.address) == 0
 
 
 # update exchange

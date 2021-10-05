@@ -224,7 +224,7 @@ class TestTransfer:
 
         # transfer
         transfer_amount = deploy_args[3] + 1
-        with brownie.reverts():
+        with brownie.reverts(revert_msg="Sufficient balance is required."):
             bond_token.transfer.transact(
                 to_address.address,
                 transfer_amount,
@@ -280,8 +280,14 @@ class TestTransfer:
         deploy_args = init_args()
         bond_token = brownie_utils.force_deploy(issuer, IbetStraightBond, *deploy_args)
 
+        # set to not transferable
+        bond_token.setTransferable(
+            False,
+            {"from": issuer}
+        )
+
         # transfer
-        with brownie.reverts():
+        with brownie.reverts(revert_msg="Must be transferable."):
             bond_token.transfer.transact(
                 to_address,
                 transfer_amount,
@@ -308,11 +314,11 @@ class TestTransfer:
         )
 
         # transfer
-        with brownie.reverts():
+        with brownie.reverts(revert_msg="Transfers to contract addresses are only possible to tradableExchange."):
             bond_token.transfer.transact(
                 exchange,
                 transfer_amount,
-                {"from": users["admin"]}
+                {"from": issuer}
             )
 
         assert bond_token.balanceOf(issuer) == deploy_args[3]
@@ -333,7 +339,7 @@ class TestTransfer:
         )
 
         # transfer
-        with brownie.reverts():
+        with brownie.reverts(revert_msg="The transfer is only possible if personal information is registered."):
             bond_token.transfer.transact(
                 to_address.address,
                 transfer_amount,
