@@ -2163,6 +2163,11 @@ class TestConfirmAgreement:
         assert tx.events["SettlementOK"]["amount"] == _take_amount
         assert tx.events["SettlementOK"]["agentAddress"] == agent.address
 
+        assert tx.events["HolderChanged"]["token"] == token.address
+        assert tx.events["HolderChanged"]["from"] == issuer.address
+        assert tx.events["HolderChanged"]["to"] == trader.address
+        assert tx.events["HolderChanged"]["value"] == _take_amount
+
     # Normal_2
     # Take order: SELL
     def test_normal_2(self, users, exchange):
@@ -2242,6 +2247,11 @@ class TestConfirmAgreement:
         assert tx.events["SettlementOK"]["price"] == _price
         assert tx.events["SettlementOK"]["amount"] == _take_amount
         assert tx.events["SettlementOK"]["agentAddress"] == agent.address
+
+        assert tx.events["HolderChanged"]["token"] == token.address
+        assert tx.events["HolderChanged"]["from"] == issuer.address
+        assert tx.events["HolderChanged"]["to"] == trader.address
+        assert tx.events["HolderChanged"]["value"] == _take_amount
 
     #######################################
     # Error

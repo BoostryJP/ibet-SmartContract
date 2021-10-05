@@ -21,14 +21,42 @@
 - [GoQuorum](https://github.com/ConsenSys/quorum)
   - We support the official GoQuorum node of [ibet-Network](https://github.com/BoostryJP/ibet-Network).
   - We use [ganache-cli](https://github.com/trufflesuite/ganache-cli) for local development and unit testing, and we use the latest version.
+- [OpenZeppelin](https://openzeppelin.com/contracts/)
+  - Our project is partly dependent on OpenZeppelin.
+  - We use openzeppelin-contracts v4.2.
+  
+## Overview
+
+### Interface: `/interfaces`
+
+- `IbetStandardTokenInterface`: Standard token interface for ibet-SmartContract
+- `IbetExchangeInterface`: Standard interface for exchange contracts in ibet-SmartContract.
+
+### Contract: `/contracts`
+
+- `access`: Determines which users can perform each action in the system.
+- `exchange`: Implementations of the various exchanges.
+- `ledger`: A data storage system that manages the data required as additional information in the ledger.
+- `payment`: A set of functions required to build an off-chain payment system.
+- `token`: Implementation of the various token formats: Bonds, Shares, etc.
+- `utils`: A set of other utility functions.
 
 ## Install
+
+Install eth-brownie as a python package.
+
 ```bash
 $ pip install -r requirements.txt
 ```
 
-## Compile
-Use eth-brownie to compile.
+Install openzeppelin-contracts.
+
+```bash
+$ brownie pm install OpenZeppelin/openzeppelin-contracts@4.2.0
+```
+
+## Compile Contracts
+Use eth-brownie to compile contracts.
 
 ```bash
 $ brownie compile

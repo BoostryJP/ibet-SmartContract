@@ -433,7 +433,7 @@ contract IbetExchange is Ownable, IbetExchangeInterface {
             //  2) 残高数量が発注数量に満たない場合
             //  3) 取扱ステータスがFalseの場合
             //  4) 有効な収納代行業者（Agent）を指定していない場合
-            //   -> 更新処理：全ての残高を投資家のアカウントに戻し、falseを返す
+            //   -> 更新処理：全ての残高を発注者（msg.sender）のアカウントに戻し、falseを返す
             if (_amount == 0 ||
                 balanceOf(msg.sender, _token) < _amount ||
                 IbetStandardTokenInterface(_token).status() == false ||
@@ -492,7 +492,7 @@ contract IbetExchange is Ownable, IbetExchangeInterface {
             revert();
         }
 
-        // 更新処理：売り注文の場合、注文で拘束している預かりを解放 => 残高を投資家のアカウントに戻す
+        // 更新処理：売り注文の場合、注文で拘束している預かりを解放 => 残高を発注者（msg.sender）のアカウントに戻す
         if (!order.isBuy) {
             IbetStandardTokenInterface(order.token).transfer(
                 msg.sender,
@@ -579,7 +579,7 @@ contract IbetExchange is Ownable, IbetExchangeInterface {
             //  5) 取扱ステータスがFalseの場合
             //  6) 発注者の残高が発注数量を下回っている場合
             //  7) 数量が元注文の残数量を超過している場合
-            //   -> 更新処理：残高を投資家のアカウントに全て戻し、falseを返す
+            //   -> 更新処理：残高を発注者（msg.sender）のアカウントに全て戻し、falseを返す
             if (_amount == 0 ||
                 order.isBuy == _isBuy ||
                 msg.sender == order.owner ||
@@ -676,7 +676,7 @@ contract IbetExchange is Ownable, IbetExchangeInterface {
                 order.token,
                 commitmentOf(agreement.counterpart, order.token).sub(agreement.amount)
             );
-            // イベント登録：決済OK
+            // イベント登録
             emit SettlementOK(
                 order.token,
                 _orderId,
@@ -686,6 +686,12 @@ contract IbetExchange is Ownable, IbetExchangeInterface {
                 order.price,
                 agreement.amount,
                 order.agent
+            );
+            emit HolderChanged(
+                order.token,
+                agreement.counterpart,
+                order.owner,
+                agreement.amount
             );
         } else {
             // 売注文の場合、注文者（売り手）から突合相手（買い手）へと資産移転を行う
@@ -698,7 +704,7 @@ contract IbetExchange is Ownable, IbetExchangeInterface {
                 order.token,
                 commitmentOf(order.owner, order.token).sub(agreement.amount)
             );
-            // イベント登録：決済OK
+            // イベント登録
             emit SettlementOK(
                 order.token,
                 _orderId,
@@ -708,6 +714,12 @@ contract IbetExchange is Ownable, IbetExchangeInterface {
                 order.price,
                 agreement.amount,
                 order.agent
+            );
+            emit HolderChanged(
+                order.token,
+                order.owner,
+                agreement.counterpart,
+                agreement.amount
             );
         }
 

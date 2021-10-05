@@ -1189,6 +1189,11 @@ class TestFinishEscrow:
         assert tx.events["EscrowFinished"]["amount"] == _escrow_amount
         assert tx.events["EscrowFinished"]["agent"] == _agent
 
+        assert tx.events["HolderChanged"]["token"] == token.address
+        assert tx.events["HolderChanged"]["from"] == _issuer
+        assert tx.events["HolderChanged"]["to"] == _recipient
+        assert tx.events["HolderChanged"]["value"] == _escrow_amount
+
     #######################################
     # Error
     #######################################

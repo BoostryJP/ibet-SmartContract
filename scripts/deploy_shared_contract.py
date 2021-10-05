@@ -32,6 +32,7 @@ p = project.load('.', name="ibet_smart_contract")
 p.load_config()
 
 from brownie.project.ibet_smart_contract import (
+    E2EMessaging,
     TokenList,
     PersonalInfo,
     PaymentGateway,
@@ -52,7 +53,9 @@ def main():
     contract_type = args.get("contract_type")
 
     # Deploy
-    if contract_type == "TokenList":
+    if contract_type == "E2EMessaging":
+        deployer.deploy(E2EMessaging)
+    elif contract_type == "TokenList":
         deployer.deploy(TokenList)
     elif contract_type == "PersonalInfo":
         deployer.deploy(PersonalInfo)
@@ -142,6 +145,7 @@ def parse_args():
     _args = parser.parse_args()
 
     deployable_contracts = [
+        "E2EMessaging",
         "TokenList",
         "PersonalInfo",
         "PaymentGateway",
