@@ -1,62 +1,111 @@
-<p align='center'>
-  <img alt="ibet" src="https://user-images.githubusercontent.com/963333/71672471-6383c080-2db9-11ea-85b6-8815519652ec.png" width="300"/>
-</p>
-
 # ibet Smart Contract
 
 <p>
-  <img alt="Version" src="https://img.shields.io/badge/version-21.6-blue.svg?cacheSeconds=2592000" />
-  <a href="#" target="_blank">
-    <img alt="License: Apache--2.0" src="https://img.shields.io/badge/License-Apache--2.0-yellow.svg" />
-  </a>
+  <img alt="Version" src="https://img.shields.io/badge/version-21.9-blue.svg?cacheSeconds=2592000" />
+  <img alt="License: Apache--2.0" src="https://img.shields.io/badge/License-Apache--2.0-yellow.svg" />
 </p>
 
+<img width="33%" align="right" src="https://user-images.githubusercontent.com/963333/71672471-6383c080-2db9-11ea-85b6-8815519652ec.png"/>
+
+**Tokens and DEX contracts available in the ibet DeFi network**
+
+## Features
+- The ibet-SmartContract project is a project to build an open financial system on the [ibet-Network blockchain](https://github.com/BoostryJP/ibet-Network).
+- The project aims to provide token standards, decentralized exchanges, and other utility functions that can be used on the ibet-Network.
+
+## Dependencies
+- [python3](https://www.python.org/downloads/release/python-368/)
+  - Version 3.6 or greater
+- [eth-brownie](https://github.com/eth-brownie/brownie)
+  - We are using the eth-brownie framework for developing and testing our contracts.
+- [GoQuorum](https://github.com/ConsenSys/quorum)
+  - We support the official GoQuorum node of [ibet-Network](https://github.com/BoostryJP/ibet-Network).
+  - We use [ganache-cli](https://github.com/trufflesuite/ganache-cli) for local development and unit testing, and we use the latest version.
+- [OpenZeppelin](https://openzeppelin.com/contracts/)
+  - Our project is partly dependent on OpenZeppelin.
+  - We use openzeppelin-contracts v4.2.
+  
+## Overview
+
+### Interface: `/interfaces`
+
+- `IbetStandardTokenInterface`: Standard token interface for ibet-SmartContract
+- `IbetExchangeInterface`: Standard interface for exchange contracts in ibet-SmartContract.
+
+### Contract: `/contracts`
+
+- `access`: Determines which users can perform each action in the system.
+- `exchange`: Implementations of the various exchanges.
+- `ledger`: A data storage system that manages the data required as additional information in the ledger.
+- `payment`: A set of functions required to build an off-chain payment system.
+- `token`: Implementation of the various token formats: Bonds, Shares, etc.
+- `utils`: A set of other utility functions.
 
 ## Install
+
+Install eth-brownie as a python package.
+
 ```bash
 $ pip install -r requirements.txt
 ```
 
-## Compile
-Use Brownie to compile.
+Install openzeppelin-contracts.
+
+```bash
+$ brownie pm install OpenZeppelin/openzeppelin-contracts@4.2.0
+```
+
+## Compile Contracts
+Use eth-brownie to compile contracts.
 
 ```bash
 $ brownie compile
 ```
 
-## Deploy
+## Deploy Contracts
+
+### Setting environment variables
 
 You can switch the EOA used for deploying the contract by setting an environment variable.
 
-1. GETH
-    * `ETH_ACCOUNT_PASSWORD` - EOA passphrase
+#### 1. GoQuorum (Geth)
 
-2. Ethereum Keystore FILE
-    * `ETH_KEYSTORE_PATH` - Path of the directory where the keystore is stored.
-    * `ETH_ACCOUNT_PASSWORD` - EOA passphrase
+This is the case when you store and use your private key in Geth.
 
-3. Ethereum Raw Private Key
-    * `ETH_PRIVATE_KEY` - 64 random hex characters
-    * `ETH_ACCOUNT_PASSWORD` - Passphrase to be set for the EOA generated from the private key.
+- `ETH_ACCOUNT_PASSWORD` - The passphrase you have set for the Geth keystore file.
 
-4. AWS Secrets Manager
-    * `AWS_REGION_NAME` - AWS Region (default: ap-northeast-1)
-    * `AWS_SECRETS_ID` - Secret's ARN
-    * `ETH_ACCOUNT_PASSWORD` - EOA passphrase
+#### 2. Local keystore file
 
+This is the case when you use a local keystore file.
+
+- `ETH_KEYSTORE_PATH` - Path of the directory where the keystore is stored.
+- `ETH_ACCOUNT_PASSWORD` - The passphrase you have set for the keystore file.
+
+#### 3. Raw private key
+
+This is the case when you use a raw private key.
+
+- `ETH_PRIVATE_KEY` - Raw private key
+- `ETH_ACCOUNT_PASSWORD` - Passphrase for encrypting the private key.
+
+#### 4. AWS Secrets Manager
+
+This is the case of storing and using a private key in keystore file format in [AWS Secrets Manager](https://docs.aws.amazon.com/secretsmanager/latest/userguide/intro.html).
+
+- `AWS_REGION_NAME` - AWS Region (default: ap-northeast-1)
+- `AWS_SECRETS_ID` - Secret's ARN
+- `ETH_ACCOUNT_PASSWORD` - The passphrase you have set for the keystore file.
+
+### How to deploy contracts
 To deploy, execute the following command.
 
 ```bash
-$ ./scripts/deploy.sh
+$ ./scripts/deploy_shared_contract.sh {--payment_gateway 0xabcd...}
 ```
 
 ## Developing Smart Contracts
 
-### Requirements
-* Python(3.6)
-* Ganache
-
-### Setting up Ganache
+### Ganache settings
 
 #### Server
 * hostname : 127.0.0.1 - lo0
@@ -67,7 +116,9 @@ $ ./scripts/deploy.sh
 * gas price : 0
 * hard fork : Petersburg
 
-#### Importing network settings to Brownie
+### Brownie settings
+
+Importing network settings to Brownie.
 
 ```bash
 $ brownie networks import data/networks.yml
@@ -84,6 +135,13 @@ Alternatively, you can use pytest and run it as follows.
 ```bash
 $ pytest tests/
 ```
+
+## Branching model
+
+<p align='center'>
+  <img alt="ibet" src="https://user-images.githubusercontent.com/963333/128963415-df122a46-b813-4832-a64e-7830a175f825.png"/>
+</p>
+
 
 ## License
 

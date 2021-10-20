@@ -23,16 +23,18 @@ import os
 
 def main():
     # Contract
-    file_list = os.listdir("build/contracts")
+    _path = "build/contracts"
+    file_list = os.listdir(_path)
     for file in file_list:
-        contract_json = json.load(open(f"build/contracts/{file}", "r"))
-        output = {
-            "abi": contract_json["abi"],
-            "bytecode": contract_json["bytecode"],
-            "deployedBytecode": contract_json["deployedBytecode"]
-        }
-        with open(f"output/{file}", "w") as f:
-            json.dump(output, f, indent=2)
+        if os.path.isfile(os.path.join(_path, file)):
+            contract_json = json.load(open(f"build/contracts/{file}", "r"))
+            output = {
+                "abi": contract_json["abi"],
+                "bytecode": contract_json["bytecode"],
+                "deployedBytecode": contract_json["deployedBytecode"]
+            }
+            with open(f"output/{file}", "w") as f:
+                json.dump(output, f, indent=2)
 
     # Interface
     file_list = os.listdir("build/interfaces")
