@@ -89,7 +89,7 @@ typing-extensions==3.7.4.2
 urllib3==1.26.5
 varint==1.0.2
 vvm==0.1.0
-vyper==0.2.12
+vyper==0.3.0
 watchdog==0.8.3
 wcwidth==0.1.9
 web3==5.11.1
