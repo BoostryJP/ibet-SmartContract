@@ -47,10 +47,9 @@ RUN addgroup -g 1000 apl \
 
 # Python requirements
 USER apl
-COPY requirements.txt /app/requirements.txt
+COPY --chown=apl:apl requirements.txt /app/ibet-SmartContract/requirements.txt
 RUN pip install --upgrade pip setuptools \
- && pip install -r /app/requirements.txt \
- && rm -f /app/requirements.txt
+ && pip install -r /app/ibet-SmartContract/requirements.txt
 
 # app deploy
 COPY --chown=apl:apl LICENSE /app/ibet-SmartContract/
@@ -64,6 +63,8 @@ RUN source ~apl/.bash_profile \
  && brownie networks import data/networks.yml
 RUN mkdir -p /app/ibet-SmartContract/scripts/
 COPY --chown=apl:apl scripts/ /app/ibet-SmartContract/scripts/
+RUN mkdir -p /app/ibet-SmartContract/e2e_tests/
+COPY --chown=apl:apl e2e_tests/ /app/ibet-SmartContract/e2e_tests/
 RUN mkdir -p /app/ibet-SmartContract/interfaces/
 COPY --chown=apl:apl interfaces/ /app/ibet-SmartContract/interfaces/
 RUN mkdir -p /app/ibet-SmartContract/contracts/

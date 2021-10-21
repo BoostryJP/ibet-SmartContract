@@ -28,7 +28,7 @@ TEST_LOG=$(mktemp)
 TEST_NETWORK=${TEST_NETWORK:-development}
 
 # test実施
-brownie test --disable-warnings -v --network "${TEST_NETWORK}" | tee "${TEST_LOG}"
+brownie test tests/ --disable-warnings -v --network "${TEST_NETWORK}" | tee "${TEST_LOG}"
 
 # `brownie test`のリターンコードはテスト結果に関わらず常に正常となるので、
 # コンソール出力内容からテスト結果を判定する

@@ -3,8 +3,6 @@ version: "3"
 services:
   ganache-cli:
     image: "trufflesuite/ganache-cli:latest"
-    ports:
-      - "8545:8545"
     command: ganache-cli --gasPrice 0 --gasLimit 800000000
   ibet-smartcontract:
     build:
