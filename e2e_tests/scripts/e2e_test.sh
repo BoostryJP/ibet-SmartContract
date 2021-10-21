@@ -104,7 +104,7 @@ trap 'pip install -r ../requirements.txt > /dev/null 2>&1' 0 1 2 3 15
 # Run test
 pytest -vv || exit 1
 
-# Deploy contract this version
+# Deploy contract for other test
 CONTRACT_ADDRESS=$(python scripts/deploy.py) || exit 1
 cat << EOS
 
