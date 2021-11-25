@@ -895,6 +895,29 @@ contract IbetExchange is Ownable, IbetExchangeInterface {
             }
         }
 
+        // 更新処理：注文明細の数量を戻す
+        setOrder(
+            _orderId,
+            order.owner,
+            order.token,
+            order.amount.add(agreement.amount),
+            order.price,
+            order.isBuy,
+            order.agent,
+            order.canceled
+        );
+
+        // 更新処理：約定明細をキャンセル（True）に更新する
+        setAgreement(
+            _orderId,
+            _agreementId,
+            agreement.counterpart,
+            agreement.amount, agreement.price,
+            true,
+            agreement.paid,
+            agreement.expiry
+        );
+
         if (order.isBuy) {
             // 更新処理：買い注文の場合、突合相手（売り手）の預かりを解放 -> 預かりの引き出し
             // 取り消した注文は無効化する（注文中状態に戻さない）
@@ -919,17 +942,6 @@ contract IbetExchange is Ownable, IbetExchangeInterface {
                 order.agent
             );
         } else {
-            // 更新処理：元注文の数量を戻す
-            setOrder(
-                _orderId,
-                order.owner,
-                order.token,
-                order.amount.add(agreement.amount),
-                order.price,
-                order.isBuy,
-                order.agent,
-                order.canceled
-            );
             // イベント登録：決済NG
             emit SettlementNG(
                 order.token,
@@ -942,17 +954,6 @@ contract IbetExchange is Ownable, IbetExchangeInterface {
                 order.agent
             );
         }
-
-        // 更新処理：キャンセル済みフラグをキャンセル（True）に更新する
-        setAgreement(
-            _orderId,
-            _agreementId,
-            agreement.counterpart,
-            agreement.amount, agreement.price,
-            true,
-            agreement.paid,
-            agreement.expiry
-        );
 
         return true;
     }

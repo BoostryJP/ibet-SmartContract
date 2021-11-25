@@ -3249,7 +3249,7 @@ class TestCancelAgreement:
         assert exchange.getOrder(order_id) == [
             trader.address,
             token.address,
-            _make_amount - _take_amount,
+            _make_amount,
             _price,
             True,
             agent.address,
