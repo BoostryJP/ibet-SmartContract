@@ -912,7 +912,8 @@ contract IbetExchange is Ownable, IbetExchangeInterface {
             _orderId,
             _agreementId,
             agreement.counterpart,
-            agreement.amount, agreement.price,
+            agreement.amount,
+            agreement.price,
             true,
             agreement.paid,
             agreement.expiry
@@ -920,7 +921,6 @@ contract IbetExchange is Ownable, IbetExchangeInterface {
 
         if (order.isBuy) {
             // 更新処理：買い注文の場合、突合相手（売り手）の預かりを解放 -> 預かりの引き出し
-            // 取り消した注文は無効化する（注文中状態に戻さない）
             IbetStandardTokenInterface(order.token).transfer(
                 agreement.counterpart,
                 agreement.amount
