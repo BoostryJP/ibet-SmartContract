@@ -23,9 +23,9 @@ import "./IbetStandardTokenInterface.sol";
 /// @title ibet Security Token Interface
 abstract contract IbetSecurityTokenInterface is IbetStandardTokenInterface {
 
-    /**
-     * 投資家名簿関連機能
-     */
+    // -------------------------------------------------------------------
+    // 投資家名簿関連機能
+    // -------------------------------------------------------------------
 
     /// 個人情報コントラクト
     address public personalInfoAddress;
@@ -37,9 +37,9 @@ abstract contract IbetSecurityTokenInterface is IbetStandardTokenInterface {
     ) public virtual;
 
 
-    /**
-     * 譲渡制限関連機能
-     */
+    // -------------------------------------------------------------------
+    // 譲渡制限関連機能
+    // -------------------------------------------------------------------
 
     /// 譲渡可否
     bool public transferable;
@@ -51,9 +51,9 @@ abstract contract IbetSecurityTokenInterface is IbetStandardTokenInterface {
     ) public virtual;
 
 
-    /**
-     * 募集関連機能
-     */
+    // -------------------------------------------------------------------
+    // 募集関連機能
+    // -------------------------------------------------------------------
 
     /// 募集ステータス
     bool public isOffering;
@@ -107,9 +107,9 @@ abstract contract IbetSecurityTokenInterface is IbetStandardTokenInterface {
     );
 
 
-    /**
-     * 移転承諾関連機能
-     */
+    // -------------------------------------------------------------------
+    // 移転承諾関連機能
+    // -------------------------------------------------------------------
 
     /// 移転承諾要否フラグ
     bool public transferApprovalRequired;
@@ -190,9 +190,9 @@ abstract contract IbetSecurityTokenInterface is IbetStandardTokenInterface {
     );
 
 
-    /**
-     * 資産ロック関連機能
-     */
+    // -------------------------------------------------------------------
+    // 資産ロック関連機能
+    // -------------------------------------------------------------------
 
     /// 認可済みのロック先アドレス
     mapping(address => bool) public authorizedLockAddress;
@@ -257,9 +257,9 @@ abstract contract IbetSecurityTokenInterface is IbetStandardTokenInterface {
     );
 
 
-    /**
-     * 追加発行・償却
-     */
+    // -------------------------------------------------------------------
+    // 追加発行・償却
+    // -------------------------------------------------------------------
 
     /// @notice 追加発行
     /// @param _targetAddress 追加発行対象の残高を保有するアドレス
