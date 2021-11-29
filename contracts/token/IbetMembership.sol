@@ -219,6 +219,7 @@ contract IbetMembership is Ownable, IbetStandardTokenInterface {
     /// @return 処理結果
     function transferFrom(address _from, address _to, uint _value)
         public
+        override
         onlyOwner()
         returns (bool)
     {
