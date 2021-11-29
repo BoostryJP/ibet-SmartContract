@@ -36,7 +36,6 @@ abstract contract IbetSecurityTokenInterface is IbetStandardTokenInterface {
         address _address
     ) public virtual;
 
-
     // -------------------------------------------------------------------
     // 譲渡制限関連機能
     // -------------------------------------------------------------------
@@ -49,7 +48,6 @@ abstract contract IbetSecurityTokenInterface is IbetStandardTokenInterface {
     function setTransferable(
         bool _transferable
     ) public virtual;
-
 
     // -------------------------------------------------------------------
     // 募集関連機能
@@ -105,7 +103,6 @@ abstract contract IbetSecurityTokenInterface is IbetStandardTokenInterface {
         address accountAddress,
         uint256 amount
     );
-
 
     // -------------------------------------------------------------------
     // 移転承諾関連機能
@@ -189,7 +186,6 @@ abstract contract IbetSecurityTokenInterface is IbetStandardTokenInterface {
         string data
     );
 
-
     // -------------------------------------------------------------------
     // 資産ロック関連機能
     // -------------------------------------------------------------------
@@ -255,7 +251,6 @@ abstract contract IbetSecurityTokenInterface is IbetStandardTokenInterface {
         address recipientAddress,
         uint256 value
     );
-
 
     // -------------------------------------------------------------------
     // 追加発行・償却
