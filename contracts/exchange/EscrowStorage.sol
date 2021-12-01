@@ -32,7 +32,7 @@ contract EscrowStorage is Ownable {
     // 最新バージョンのEscrowコントラクトアドレス：LatestVersion
     // -------------------------------------------------------------------
 
-    // 最新バージョンのEscrowコントラクトアドレス
+    /// 最新バージョンのEscrowコントラクトアドレス
     address public latestVersion;
 
     /// @notice Escrowコントラクトのバージョン更新
@@ -55,8 +55,8 @@ contract EscrowStorage is Ownable {
     // 残高：Balance
     // -------------------------------------------------------------------
 
-    // 残高情報
-    // account => token => amount
+    /// 残高情報
+    /// account => token => amount
     mapping(address => mapping(address => uint256)) private balances;
 
     /// @notice 残高の更新
@@ -90,8 +90,8 @@ contract EscrowStorage is Ownable {
     // 拘束数量：Commitment
     // -------------------------------------------------------------------
 
-    // 拘束数量
-    // account => token => amount
+    /// 拘束数量
+    /// account => token => amount
     mapping(address => mapping(address => uint256)) public commitments;
 
     /// @notice 拘束数量の更新
@@ -134,12 +134,12 @@ contract EscrowStorage is Ownable {
         bool valid;  // 有効状態
     }
 
-    // エスクロー情報
-    // escrowId => Escrow
+    /// エスクロー情報
+    /// escrowId => Escrow
     mapping(uint256 => Escrow) private escrow;
 
-    // 直近エスクローID
-    uint256 public latestEscrowId = 0;
+    /// 直近エスクローID
+    uint256 private latestEscrowId = 0;
 
     /// @notice 直近エスクローIDの更新
     /// @dev 最新バージョンのExchangeコントラクトのみ実行が可能
@@ -161,14 +161,14 @@ contract EscrowStorage is Ownable {
         return latestEscrowId;
     }
 
-    // @notice エスクロー情報の更新
-    // @param _escrowId エスクローID
-    // @param _token トークンアドレス
-    // @param _sender 送信者
-    // @param _recipient 受信者
-    // @param _amount 数量
-    // @param _agent エスクローエージェント
-    // @param _valid 有効状態
+    /// @notice エスクロー情報の更新
+    /// @param _escrowId エスクローID
+    /// @param _token トークンアドレス
+    /// @param _sender 送信者
+    /// @param _recipient 受信者
+    /// @param _amount 数量
+    /// @param _agent エスクローエージェント
+    /// @param _valid 有効状態
     function setEscrow(
         uint256 _escrowId,
         address _token,
@@ -189,14 +189,14 @@ contract EscrowStorage is Ownable {
         escrow[_escrowId].valid = _valid;
     }
 
-    // @notice エスクロー情報の取得
-    // @param _escrowId エスクローID
-    // @return token トークンアドレス
-    // @return sender 送信者
-    // @return recipient 受信者
-    // @return amount 数量
-    // @return agent エスクローエージェント
-    // @return valid 有効状態
+    /// @notice エスクロー情報の取得
+    /// @param _escrowId エスクローID
+    /// @return token トークンアドレス
+    /// @return sender 送信者
+    /// @return recipient 受信者
+    /// @return amount 数量
+    /// @return agent エスクローエージェント
+    /// @return valid 有効状態
     function getEscrow(
         uint256 _escrowId
     )
@@ -218,6 +218,74 @@ contract EscrowStorage is Ownable {
             escrow[_escrowId].amount,
             escrow[_escrowId].agent,
             escrow[_escrowId].valid
+        );
+    }
+
+    // -------------------------------------------------------------------
+    // 移転承諾関連機能
+    // -------------------------------------------------------------------
+
+    /// 移転申請
+    struct ApplicationForTransfer {
+        address token; // トークンアドレス
+        string applicationData; // 移転申請データ
+        string approvalData; // 移転承認データ
+        bool valid; // 申請有効状態
+        bool approved; // 移転承認状態
+    }
+    mapping(uint256 => ApplicationForTransfer) private applicationsForTransfer;
+
+    /// @notice 移転申請情報更新
+    /// @param _escrowId エスクローID
+    /// @param _token トークンアドレス
+    /// @param _applicationData 移転申請データ
+    /// @param _approvalData 移転承認データ
+    /// @param _valid 申請有効状態
+    /// @param _approved 移転承認状態
+    function setApplicationForTransfer(
+        uint256 _escrowId,
+        address _token,
+        string memory _applicationData,
+        string memory _approvalData,
+        bool _valid,
+        bool _approved
+    )
+        public
+        onlyLatestVersion()
+    {
+        applicationsForTransfer[_escrowId].token = _token;
+        applicationsForTransfer[_escrowId].applicationData = _applicationData;
+        applicationsForTransfer[_escrowId].approvalData = _approvalData;
+        applicationsForTransfer[_escrowId].valid = _valid;
+        applicationsForTransfer[_escrowId].approved = _approved;
+    }
+
+    /// @notice 移転申請情報参照
+    /// @param _escrowId エスクローID
+    /// @return token トークンアドレス
+    /// @return applicationData 移転申請データ
+    /// @return approvalData 移転承認データ
+    /// @return valid 申請有効状態
+    /// @return approved 移転承認状態
+    function getApplicationForTransfer(
+        uint256 _escrowId
+    )
+        public
+        view
+        returns(
+            address token,
+            string memory applicationData,
+            string memory approvalData,
+            bool valid,
+            bool approved
+        )
+    {
+        return (
+            applicationsForTransfer[_escrowId].token,
+            applicationsForTransfer[_escrowId].applicationData,
+            applicationsForTransfer[_escrowId].approvalData,
+            applicationsForTransfer[_escrowId].valid,
+            applicationsForTransfer[_escrowId].approved
         );
     }
 

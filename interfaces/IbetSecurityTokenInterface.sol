@@ -122,12 +122,12 @@ abstract contract IbetSecurityTokenInterface is IbetStandardTokenInterface {
         address from; // 移転元アドレス
         address to; // 移転先アドレス
         uint256 amount; // 移転数量
-        bool valid; // 有効・無効
+        bool valid; // 申請有効状態
     }
     ApplicationForTransfer[] public applicationsForTransfer;
 
     // 移転待ち数量
-    // address => balance
+    // address => amount
     mapping(address => uint256) public pendingTransfer;
 
     /// @notice 移転申請

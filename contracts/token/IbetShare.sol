@@ -367,8 +367,10 @@ contract IbetShare is Ownable, IbetSecurityTokenInterface {
         private
         returns (bool success)
     {
-        // 個人情報登録有無のチェック
-        // 取引コントラクトからのtransferと、発行体へのtransferの場合はチェックを行わない。
+        if (msg.sender != tradableExchange && transferApprovalRequired == true) {
+            revert("Direct transfer is not possible for tokens that require approval for transfer.");
+        }
+
         if (_to != owner) {
             require(
                 PersonalInfo(personalInfoAddress).isRegistered(_to, owner) == true,
@@ -419,10 +421,6 @@ contract IbetShare is Ownable, IbetSecurityTokenInterface {
         override
         returns (bool)
     {
-        if (transferApprovalRequired == true) {
-            revert("Direct transfer is not possible for tokens that require approval for transfer.");
-        }
-
         require(
             balanceOf(msg.sender) >= _value,
             "Sufficient balance is required."
