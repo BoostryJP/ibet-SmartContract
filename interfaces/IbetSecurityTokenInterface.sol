@@ -23,9 +23,9 @@ import "./IbetStandardTokenInterface.sol";
 /// @title ibet Security Token Interface
 abstract contract IbetSecurityTokenInterface is IbetStandardTokenInterface {
 
-    /**
-     * 投資家名簿関連機能
-     */
+    // -------------------------------------------------------------------
+    // 投資家名簿関連機能
+    // -------------------------------------------------------------------
 
     /// 個人情報コントラクト
     address public personalInfoAddress;
@@ -36,10 +36,9 @@ abstract contract IbetSecurityTokenInterface is IbetStandardTokenInterface {
         address _address
     ) public virtual;
 
-
-    /**
-     * 譲渡制限関連機能
-     */
+    // -------------------------------------------------------------------
+    // 譲渡制限関連機能
+    // -------------------------------------------------------------------
 
     /// 譲渡可否
     bool public transferable;
@@ -50,10 +49,9 @@ abstract contract IbetSecurityTokenInterface is IbetStandardTokenInterface {
         bool _transferable
     ) public virtual;
 
-
-    /**
-     * 募集関連機能
-     */
+    // -------------------------------------------------------------------
+    // 募集関連機能
+    // -------------------------------------------------------------------
 
     /// 募集ステータス
     bool public isOffering;
@@ -106,10 +104,9 @@ abstract contract IbetSecurityTokenInterface is IbetStandardTokenInterface {
         uint256 amount
     );
 
-
-    /**
-     * 移転承諾関連機能
-     */
+    // -------------------------------------------------------------------
+    // 移転承諾関連機能
+    // -------------------------------------------------------------------
 
     /// 移転承諾要否フラグ
     bool public transferApprovalRequired;
@@ -125,12 +122,12 @@ abstract contract IbetSecurityTokenInterface is IbetStandardTokenInterface {
         address from; // 移転元アドレス
         address to; // 移転先アドレス
         uint256 amount; // 移転数量
-        bool valid; // 有効・無効
+        bool valid; // 申請有効状態
     }
     ApplicationForTransfer[] public applicationsForTransfer;
 
     // 移転待ち数量
-    // address => balance
+    // address => amount
     mapping(address => uint256) public pendingTransfer;
 
     /// @notice 移転申請
@@ -189,10 +186,9 @@ abstract contract IbetSecurityTokenInterface is IbetStandardTokenInterface {
         string data
     );
 
-
-    /**
-     * 資産ロック関連機能
-     */
+    // -------------------------------------------------------------------
+    // 資産ロック関連機能
+    // -------------------------------------------------------------------
 
     /// 認可済みのロック先アドレス
     mapping(address => bool) public authorizedLockAddress;
@@ -256,10 +252,9 @@ abstract contract IbetSecurityTokenInterface is IbetStandardTokenInterface {
         uint256 value
     );
 
-
-    /**
-     * 追加発行・償却
-     */
+    // -------------------------------------------------------------------
+    // 追加発行・償却
+    // -------------------------------------------------------------------
 
     /// @notice 追加発行
     /// @param _targetAddress 追加発行対象の残高を保有するアドレス
