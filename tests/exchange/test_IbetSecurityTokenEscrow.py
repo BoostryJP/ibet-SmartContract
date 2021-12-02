@@ -843,9 +843,9 @@ class TestCancelEscrow:
         assert tx.events["EscrowCanceled"]["amount"] == _escrow_amount
         assert tx.events["EscrowCanceled"]["agent"] == _agent
 
-    # Normal_3
+    # Normal_3_1
     # transfer approval required
-    def test_normal_3(self, users, st_escrow):
+    def test_normal_3_1(self, users, st_escrow):
         _issuer = users['issuer']
         _recipient = users['user1']
         _agent = users['agent']
@@ -911,6 +911,75 @@ class TestCancelEscrow:
         assert tx.events["CancelTransfer"]["token"] == token.address
         assert tx.events["CancelTransfer"]["from"] == _issuer
         assert tx.events["CancelTransfer"]["to"] == _recipient
+
+        assert tx.events["EscrowCanceled"]["escrowId"] == latest_escrow_id
+        assert tx.events["EscrowCanceled"]["token"] == token.address
+        assert tx.events["EscrowCanceled"]["sender"] == _issuer
+        assert tx.events["EscrowCanceled"]["recipient"] == _recipient
+        assert tx.events["EscrowCanceled"]["amount"] == _escrow_amount
+        assert tx.events["EscrowCanceled"]["agent"] == _agent
+
+    # Normal_3_2
+    # transfer approval required (application does not exist)
+    def test_normal_3_2(self, users, st_escrow):
+        _issuer = users['issuer']
+        _recipient = users['user1']
+        _agent = users['agent']
+        _transfer_application_data = 'transfer_application_data'
+        _data = 'test_data'
+        _deposit_amount = 1000
+        _escrow_amount = 100
+
+        # issue token (transfer approval not required)
+        deploy_args = init_args()
+        token = deploy(
+            users,
+            deploy_args=deploy_args,
+            tradable_exchange=st_escrow.address
+        )
+
+        # transfer to escrow contract
+        token.transfer(
+            st_escrow.address,
+            _deposit_amount,
+            {'from': _issuer}
+        )
+
+        # create escrow
+        st_escrow.createEscrow(
+            token.address,
+            _recipient,
+            _escrow_amount,
+            _agent,
+            _transfer_application_data,
+            _data,
+            {'from': _issuer}
+        )
+
+        # change to transfer approval required
+        token.setTransferApprovalRequired(
+            True,
+            {'from': _issuer}
+        )
+
+        # cancel escrow
+        latest_escrow_id = st_escrow.latestEscrowId()
+        tx = st_escrow.cancelEscrow(
+            latest_escrow_id,
+            {'from': _issuer}
+        )
+
+        # assertion
+        assert st_escrow.balanceOf(_issuer, token.address) == _deposit_amount
+        assert st_escrow.commitmentOf(_issuer, token.address) == 0
+        assert st_escrow.getEscrow(latest_escrow_id) == (
+            token.address,
+            _issuer,
+            _recipient,
+            _escrow_amount,
+            _agent,
+            False
+        )
 
         assert tx.events["EscrowCanceled"]["escrowId"] == latest_escrow_id
         assert tx.events["EscrowCanceled"]["token"] == token.address
