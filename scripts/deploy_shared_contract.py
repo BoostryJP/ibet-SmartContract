@@ -39,7 +39,8 @@ from brownie.project.ibet_smart_contract import (
     ExchangeStorage,
     IbetExchange,
     EscrowStorage,
-    IbetEscrow
+    IbetEscrow,
+    IbetSecurityTokenEscrow
 )
 
 
@@ -86,6 +87,20 @@ def main():
         deploy_args = [escrow_storage.address]
         escrow = deployer.deploy(
             IbetEscrow,
+            *deploy_args
+        )
+        # Upgrade Version
+        escrow_storage.upgradeVersion(
+            escrow.address,
+            {'from': deployer}
+        )
+    elif contract_type == "IbetSecurityTokenEscrow":
+        # Escrow Storage
+        escrow_storage = deployer.deploy(EscrowStorage)
+        # IbetSecurityTokenEscrow
+        deploy_args = [escrow_storage.address]
+        escrow = deployer.deploy(
+            IbetSecurityTokenEscrow,
             *deploy_args
         )
         # Upgrade Version
@@ -150,7 +165,8 @@ def parse_args():
         "PersonalInfo",
         "PaymentGateway",
         "IbetExchange",
-        "IbetEscrow"
+        "IbetEscrow",
+        "IbetSecurityTokenEscrow"
     ]
     if _args.arg1 not in deployable_contracts:
         parser.error(f"This is a contract that cannot be deployed. : {_args.arg1}")
