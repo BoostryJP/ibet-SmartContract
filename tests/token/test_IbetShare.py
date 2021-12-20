@@ -116,6 +116,10 @@ class TestDeploy:
         assert status == True
         assert balance == total_supply
 
+        # backward compatible calls
+        assert share_contract.offeringStatus() == False
+        assert share_contract.referenceUrls(0) == ""
+
 
 # TEST_setPrincipalValue
 class TestSetPrincipalValue:

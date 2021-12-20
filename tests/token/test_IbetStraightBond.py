@@ -122,6 +122,10 @@ class TestDeploy:
         assert is_redeemed == False
         assert status == True
 
+        # backward compatible calls
+        assert bond_contract.initialOfferingStatus() == False
+        assert bond_contract.getImageURL(0) == ""
+
 
 # TEST_transfer
 class TestTransfer:
