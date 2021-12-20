@@ -763,4 +763,16 @@ contract IbetShare is Ownable, IbetSecurityTokenInterface {
         // イベント登録
         emit ChangeToCanceled();
     }
+
+
+    /// ---------------------------------------------------------------
+    /// 後方互換対応
+    ///  - 旧トークンフォーマットでのCallを一時的にサポート
+    ///  - 次回バージョン以降で削除予定
+    /// ---------------------------------------------------------------
+
+    bool public offeringStatus;
+
+    mapping(uint8 => string) public referenceUrls;
+
 }

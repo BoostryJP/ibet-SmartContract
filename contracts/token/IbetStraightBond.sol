@@ -769,4 +769,21 @@ contract IbetStraightBond is Ownable, IbetSecurityTokenInterface {
         emit ChangeToRedeemed();
     }
 
+
+    /// ---------------------------------------------------------------
+    /// 後方互換対応
+    ///  - 旧トークンフォーマットでのCallを一時的にサポート
+    ///  - 次回バージョン以降で削除予定
+    /// ---------------------------------------------------------------
+
+    bool public initialOfferingStatus;
+
+    function getImageURL(uint8 _class)
+        public
+        view
+        returns (string memory)
+    {
+        return "";
+    }
+
 }
