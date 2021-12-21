@@ -1312,7 +1312,7 @@ class TestApproveTransfer:
 
         # approve transfer
         latest_escrow_id = st_escrow.latestEscrowId()
-        st_escrow.approveTransfer(
+        tx = st_escrow.approveTransfer(
             latest_escrow_id,
             _transfer_approval_data,
             {'from': _issuer}
@@ -1326,6 +1326,9 @@ class TestApproveTransfer:
             True,
             True
         )
+
+        assert tx.events["ApproveTransfer"]["escrowId"] == latest_escrow_id
+        assert tx.events["ApproveTransfer"]["token"] == token.address
 
     #######################################
     # Error
@@ -1620,11 +1623,11 @@ class TestFinishEscrow:
             True
         )
 
-        assert tx.events["ApproveTransfer"]["escrowId"] == latest_escrow_id
-        assert tx.events["ApproveTransfer"]["token"] == token.address
-        assert tx.events["ApproveTransfer"]["from"] == _issuer
-        assert tx.events["ApproveTransfer"]["to"] == _recipient
-        assert tx.events["ApproveTransfer"]["data"] == _transfer_approval_data
+        assert tx.events["FinishTransfer"]["escrowId"] == latest_escrow_id
+        assert tx.events["FinishTransfer"]["token"] == token.address
+        assert tx.events["FinishTransfer"]["from"] == _issuer
+        assert tx.events["FinishTransfer"]["to"] == _recipient
+        assert tx.events["FinishTransfer"]["data"] == _transfer_approval_data
 
         assert tx.events["EscrowFinished"]["escrowId"] == latest_escrow_id
         assert tx.events["EscrowFinished"]["token"] == token.address

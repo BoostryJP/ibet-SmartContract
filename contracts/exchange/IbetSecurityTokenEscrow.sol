@@ -85,6 +85,12 @@ contract IbetSecurityTokenEscrow is Ownable, IbetExchangeInterface {
     /// Event: 移転承認
     event ApproveTransfer(
         uint256 indexed escrowId,
+        address indexed token
+    );
+
+    /// Event: 移転完了
+    event FinishTransfer(
+        uint256 indexed escrowId,
         address indexed token,
         address from,
         address to,
@@ -472,6 +478,12 @@ contract IbetSecurityTokenEscrow is Ownable, IbetExchangeInterface {
             true
         );
 
+        // イベント登録
+        emit ApproveTransfer(
+            _escrowId,
+            application.token
+        );
+
         return true;
     }
 
@@ -533,7 +545,7 @@ contract IbetSecurityTokenEscrow is Ownable, IbetExchangeInterface {
                 );
 
                 // イベント登録
-                emit ApproveTransfer(
+                emit FinishTransfer(
                     _escrowId,
                     escrow.token,
                     escrow.sender,
