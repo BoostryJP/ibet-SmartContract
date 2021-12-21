@@ -1329,6 +1329,7 @@ class TestApproveTransfer:
 
         assert tx.events["ApproveTransfer"]["escrowId"] == latest_escrow_id
         assert tx.events["ApproveTransfer"]["token"] == token.address
+        assert tx.events["ApproveTransfer"]["data"] == _transfer_approval_data
 
     #######################################
     # Error
