@@ -16,33 +16,27 @@
 *
 * SPDX-License-Identifier: Apache-2.0
 */
-
 pragma solidity ^0.8.0;
 
 import "OpenZeppelin/openzeppelin-contracts@4.2.0/contracts/utils/math/SafeMath.sol";
 import "../access/Ownable.sol";
 import "../ledger/PersonalInfo.sol";
 import "../../interfaces/ContractReceiver.sol";
-import "../../interfaces/IbetStandardTokenInterface.sol";
+import "../../interfaces/IbetSecurityTokenInterface.sol";
 
 
 // @title ibet Share Token
-contract IbetShare is Ownable, IbetStandardTokenInterface {
-    using SafeMath for uint256;
+contract IbetShare is Ownable, IbetSecurityTokenInterface {
 
-    address public personalInfoAddress; // 個人情報記帳コントラクト
-    mapping(address => bool) public authorizedAddress; // 認可済みコントラクト
+    using SafeMath for uint256;
 
     uint256 public issuePrice; // 発行価格
     string public cancellationDate; // 消却日
     string public memo; // 補足情報
-    bool public transferable; // 譲渡可否
-    bool public offeringStatus; // 募集ステータス（True：募集中、False：停止中）
-    bool public transferApprovalRequired; // 移転承認要否
     uint256 public principalValue; // 一口あたりの元本額
     bool public isCanceled; // 消却状況
 
-    // 配当情報
+    /// 配当情報
     struct DividendInformation {
         uint256 dividends; // 1口あたりの配当金/分配金
         string dividendRecordDate; // 権利確定日
@@ -50,86 +44,15 @@ contract IbetShare is Ownable, IbetStandardTokenInterface {
     }
     DividendInformation public dividendInformation;
 
-    // 関連URL
-    // class => url
-    mapping(uint8 => string) public referenceUrls;
-
-    // ロック資産数量
-    // locked_address => account_address => balance
-    mapping(address => mapping(address => uint256)) public locked;
-
-    // 募集申込情報
-    struct Application {
-        uint256 requestedAmount; // 申込数量
-        uint256 allottedAmount; // 割当数量
-        string data; // その他データ
-    }
-
-    // 募集申込
-    // account_address => data
-    mapping(address => Application) public applications;
-
-    // 移転申請情報
-    struct ApplicationForTransfer {
-        address from; // 移転元アドレス
-        address to; // 移転先アドレス
-        uint256 amount; // 移転数量
-        bool valid; // 有効・無効
-    }
-
-    // 移転申請
-    // id => data
-    ApplicationForTransfer[] public applicationsForTransfer;
-
-    // 移転待ち数量
-    // address => balance
-    mapping(address => uint256) public pendingTransfer;
-
-    // イベント：認可
-    event Authorize(address indexed to, bool auth);
-
-    // イベント：資産ロック
-    event Lock(address indexed from, address indexed target_address, uint256 value);
-
-    // イベント：資産アンロック
-    event Unlock(address indexed from, address indexed to, uint256 value);
-
-    // イベント：配当情報の変更
+    /// Event: 配当情報の変更
     event ChangeDividendInformation(
         uint256 dividends,
         string dividendRecordDate,
         string dividendPaymentDate
     );
 
-    // イベント：募集ステータス変更
-    event ChangeOfferingStatus(bool indexed status);
-
-    // イベント：募集申込
-    event ApplyFor(address indexed accountAddress, uint256 amount);
-
-    // イベント：割当
-    event Allot(address indexed accountAddress, uint256 amount);
-
-    // イベント：増資
-    event Issue(address indexed from, address indexed target_address, address indexed locked_address, uint256 amount);
-
-    // イベント：減資
-    event Redeem(address indexed from, address indexed target_address, address indexed locked_address, uint256 amount);
-
-    // イベント：消却
-    event Cancel();
-
-    // イベント：移転承諾要否変更
-    event ChangeTransferApprovalRequired(bool required);
-
-    // イベント：移転申請
-    event ApplyForTransfer(uint256 indexed index, address from, address to, uint256 value, string data);
-
-    // イベント：移転申請取消
-    event CancelTransfer(uint256 indexed index, address from, address to, string data);
-
-    // イベント：移転承認
-    event ApproveTransfer(uint256 indexed index, address from, address to, string data);
+    // Event: 消却状態に変更
+    event ChangeToCanceled();
 
     // [CONSTRUCTOR]
     /// @param _name 名称
@@ -194,6 +117,7 @@ contract IbetShare is Ownable, IbetStandardTokenInterface {
     /// @param _address 個人情報記帳コントラクトアドレス
     function setPersonalInfoAddress(address _address)
         public
+        override
         onlyOwner()
     {
         personalInfoAddress = _address;
@@ -215,6 +139,8 @@ contract IbetShare is Ownable, IbetStandardTokenInterface {
         dividendInformation.dividends = _dividends;
         dividendInformation.dividendRecordDate = _dividendRecordDate;
         dividendInformation.dividendPaymentDate = _dividendPaymentDate;
+
+        // イベント登録
         emit ChangeDividendInformation(
             dividendInformation.dividends,
             dividendInformation.dividendRecordDate,
@@ -230,17 +156,6 @@ contract IbetShare is Ownable, IbetStandardTokenInterface {
         onlyOwner()
     {
         cancellationDate = _cancellationDate;
-    }
-
-    /// @notice トークンの関連URLを設定する
-    /// @dev 発行体のみ実行可能
-    /// @param _class 関連URL番号
-    /// @param _referenceUrl 関連URL
-    function setReferenceUrls(uint8 _class, string memory _referenceUrl)
-        public
-        onlyOwner()
-    {
-        referenceUrls[_class] = _referenceUrl;
     }
 
     /// @notice 問い合わせ先情報更新
@@ -284,6 +199,8 @@ contract IbetShare is Ownable, IbetStandardTokenInterface {
         override
     {
         status = _status;
+
+        // イベント登録
         emit ChangeStatus(status);
     }
 
@@ -292,20 +209,24 @@ contract IbetShare is Ownable, IbetStandardTokenInterface {
     /// @param _transferable 譲渡可否
     function setTransferable(bool _transferable)
         public
+        override
         onlyOwner()
     {
         transferable = _transferable;
     }
 
-    /// @notice 募集ステータス更新
-    /// @dev 発行体のみ実行可能
-    /// @param _status 募集ステータス
-    function setOfferingStatus(bool _status)
+    /// @notice 新規募集ステータスの更新
+    /// @dev オーナーのみ実行可能
+    /// @param _isOffering 募集状態
+    function changeOfferingStatus(bool _isOffering)
         public
+        override
         onlyOwner()
     {
-        offeringStatus = _status;
-        emit ChangeOfferingStatus(_status);
+        isOffering = _isOffering;
+
+        // イベント登録
+        emit ChangeOfferingStatus(_isOffering);
     }
 
     /// @notice 移転承諾要否の更新
@@ -313,9 +234,12 @@ contract IbetShare is Ownable, IbetStandardTokenInterface {
     /// @param _required 移転承諾要否
     function setTransferApprovalRequired(bool _required)
         public
+        override
         onlyOwner()
     {
         transferApprovalRequired = _required;
+
+        // イベント登録
         emit ChangeTransferApprovalRequired(_required);
     }
 
@@ -331,40 +255,48 @@ contract IbetShare is Ownable, IbetStandardTokenInterface {
         return balances[_address];
     }
 
-    /// @notice 資産ロック先アドレスの認可
-    /// @dev 発行体のみ実行可能
-    /// @param _address 認可対象のアドレス
+    /// @notice 資産ロックアドレスの認可
+    /// @dev オーナーのみ実行可能
+    /// @param _lockAddress 認可対象のアドレス
     /// @param _auth 認可状態（true:認可、false:未認可）
-    function authorize(address _address, bool _auth)
+    function authorizeLockAddress(address _lockAddress, bool _auth)
         public
+        override
         onlyOwner()
     {
-        authorizedAddress[_address] = _auth;
-        emit Authorize(_address, _auth);
+        authorizedLockAddress[_lockAddress] = _auth;
+
+        // イベント登録
+        emit AuthorizeLockAddress(
+            _lockAddress,
+            _auth
+        );
     }
 
-    /// @notice ロック済み資産の参照
-    /// @param _authorized_address 資産ロック先アドレス（認可済）
-    /// @param _account_address 資産ロック対象アカウント
-    /// @return ロック済み数量
-    function lockedOf(address _authorized_address, address _account_address)
+    /// @notice ロック中資産の参照
+    /// @param _lockAddress ロック先アドレス
+    /// @param _accountAddress ロック対象アカウント
+    /// @return ロック中の数量
+    function lockedOf(address _lockAddress, address _accountAddress)
         public
         view
+        override
         returns (uint256)
     {
-        return locked[_authorized_address][_account_address];
+        return locked[_lockAddress][_accountAddress];
     }
 
     /// @notice 資産をロックする
-    /// @param _target_address 資産をロックする先のアドレス
+    /// @param _lockAddress 資産ロック先アドレス
     /// @param _value ロックする数量
-    function lock(address _target_address, uint256 _value)
+    function lock(address _lockAddress, uint256 _value)
         public
+        override
     {
         // ロック対象が認可済みアドレス、または発行者アドレスであることをチェック
         require(
-            authorizedAddress[_target_address] == true ||
-            _target_address == owner
+            authorizedLockAddress[_lockAddress] == true ||
+            _lockAddress == owner
         );
 
         // ロック数量が保有数量を上回っている場合、エラーを返す
@@ -372,31 +304,44 @@ contract IbetShare is Ownable, IbetStandardTokenInterface {
 
         // データ更新
         balances[msg.sender] = balanceOf(msg.sender).sub(_value);
-        locked[_target_address][msg.sender] = lockedOf(_target_address, msg.sender).add(_value);
+        locked[_lockAddress][msg.sender] = lockedOf(_lockAddress, msg.sender).add(_value);
 
-        emit Lock(msg.sender, _target_address, _value);
+        // イベント登録
+        emit Lock(
+            msg.sender,
+            _lockAddress,
+            _value
+        );
     }
 
     /// @notice 資産をアンロックする
     /// @dev 認可済みアドレスあるいは発行体のみ実行可能
-    /// @param _account_address アンロック対象のアドレス
-    /// @param _receive_address 受取アドレス
-    function unlock(address _account_address, address _receive_address, uint256 _value)
+    /// @param _accountAddress アンロック対象のアドレス
+    /// @param _recipientAddress 受取アドレス
+    function unlock(address _accountAddress, address _recipientAddress, uint256 _value)
         public
+        override
     {
         // msg.senderが認可済みアドレス、または発行者アドレスであることをチェック
         require(
-            authorizedAddress[msg.sender] == true ||
+            authorizedLockAddress[msg.sender] == true ||
             msg.sender == owner
         );
 
         // アンロック数量がロック数量を上回ってる場合、エラーを返す
-        if (lockedOf(msg.sender, _account_address) < _value) revert();
+        if (lockedOf(msg.sender, _accountAddress) < _value) revert();
 
         // データ更新
-        locked[msg.sender][_account_address] = lockedOf(msg.sender, _account_address).sub(_value);
-        balances[_receive_address] = balanceOf(_receive_address).add(_value);
-        emit Unlock(_account_address, _receive_address, _value);
+        locked[msg.sender][_accountAddress] = lockedOf(msg.sender, _accountAddress).sub(_value);
+        balances[_recipientAddress] = balanceOf(_recipientAddress).add(_value);
+
+        // イベント登録
+        emit Unlock(
+            _accountAddress,
+            msg.sender,
+            _recipientAddress,
+            _value
+        );
     }
 
     /// @notice コントラクトアドレス判定
@@ -422,8 +367,10 @@ contract IbetShare is Ownable, IbetStandardTokenInterface {
         private
         returns (bool success)
     {
-        // 個人情報登録有無のチェック
-        // 取引コントラクトからのtransferと、発行体へのtransferの場合はチェックを行わない。
+        if (msg.sender != tradableExchange && transferApprovalRequired == true) {
+            revert("Direct transfer is not possible for tokens that require approval for transfer.");
+        }
+
         if (_to != owner) {
             require(
                 PersonalInfo(personalInfoAddress).isRegistered(_to, owner) == true,
@@ -468,16 +415,12 @@ contract IbetShare is Ownable, IbetStandardTokenInterface {
     /// @notice トークンの移転
     /// @param _to 宛先アドレス
     /// @param _value 移転数量
-    /// @return success 処理結果
+    /// @return 処理結果
     function transfer(address _to, uint256 _value)
         public
         override
-        returns (bool success)
+        returns (bool)
     {
-        if (transferApprovalRequired == true) {
-            revert("Direct transfer is not possible for tokens that require approval for transfer.");
-        }
-
         require(
             balanceOf(msg.sender) >= _value,
             "Sufficient balance is required."
@@ -551,6 +494,7 @@ contract IbetShare is Ownable, IbetStandardTokenInterface {
     /// @return success 処理結果
     function transferFrom(address _from, address _to, uint256 _value)
         public
+        override
         onlyOwner()
         returns (bool success)
     {
@@ -570,6 +514,7 @@ contract IbetShare is Ownable, IbetStandardTokenInterface {
             balances[_to] = balanceOf(_to).add(_value);
         }
 
+        // イベント登録
         emit Transfer(_from, _to, _value);
         return true;
     }
@@ -580,6 +525,7 @@ contract IbetShare is Ownable, IbetStandardTokenInterface {
     /// @param _data イベント出力用の任意のデータ
     function applyForTransfer(address _to, uint256 _value, string memory _data)
         public
+        override
     {
         // <CHK>
         //  1) 移転時の発行体承諾が不要な場合
@@ -611,6 +557,7 @@ contract IbetShare is Ownable, IbetStandardTokenInterface {
             valid: true
         }));
 
+        // イベント登録
         emit ApplyForTransfer(
             index,
             msg.sender,
@@ -626,6 +573,7 @@ contract IbetShare is Ownable, IbetStandardTokenInterface {
     /// @param _data イベント出力用の任意のデータ
     function cancelTransfer(uint256 _index, string memory _data)
         public
+        override
     {
         // <CHK>
         // 実行者自身の移転申請ではない場合 かつ
@@ -647,6 +595,7 @@ contract IbetShare is Ownable, IbetStandardTokenInterface {
 
         applicationsForTransfer[_index].valid = false;
 
+        // イベント登録
         emit CancelTransfer(
             _index,
             applicationsForTransfer[_index].from,
@@ -661,6 +610,7 @@ contract IbetShare is Ownable, IbetStandardTokenInterface {
     /// @param _data イベント出力用の任意のデータ
     function approveTransfer(uint256 _index, string memory _data)
         public
+        override
         onlyOwner()
     {
         // <CHK>
@@ -678,6 +628,7 @@ contract IbetShare is Ownable, IbetStandardTokenInterface {
 
         applicationsForTransfer[_index].valid = false;
 
+        // イベント登録
         emit ApproveTransfer(
             _index,
             applicationsForTransfer[_index].from,
@@ -694,28 +645,49 @@ contract IbetShare is Ownable, IbetStandardTokenInterface {
     /// @notice 募集申込
     /// @param _amount 申込数量
     /// @param _data 任意のデータ
-    function applyForOffering(uint256 _amount, string memory _data) public {
+    function applyForOffering(uint256 _amount, string memory _data)
+        public
+        override
+    {
         // 申込ステータスが停止中の場合、エラーを返す
-        require(offeringStatus == true);
-        // 個人情報未登録の場合、エラーを返す
-        require(PersonalInfo(personalInfoAddress).isRegistered(msg.sender, owner) == true);
-        // 募集申込情報を更新
-        applications[msg.sender].requestedAmount = _amount;
-        applications[msg.sender].data = _data;
+        require(
+            isOffering == true,
+            "Must be in offering."
+        );
 
-        emit ApplyFor(msg.sender, _amount);
+        // 個人情報未登録の場合、エラーを返す
+        require(
+            PersonalInfo(personalInfoAddress).isRegistered(msg.sender, owner) == true,
+            "Personal info must be registered."
+        );
+
+        applicationsForOffering[msg.sender].applicationAmount = _amount;
+        applicationsForOffering[msg.sender].data = _data;
+
+        // イベント登録
+        emit ApplyForOffering(
+            msg.sender,
+            _amount,
+            _data
+        );
     }
 
     /// @notice 募集割当
-    /// @dev 発行体のみ実行可能
-    /// @param _address 割当先アドレス
+    /// @dev オーナーのみ実行可能
+    /// @param _accountAddress 割当先アカウント
     /// @param _amount 割当数量
-    function allot(address _address, uint256 _amount)
+    function allot(address _accountAddress, uint256 _amount)
         public
+        override
         onlyOwner()
     {
-        applications[_address].allottedAmount = _amount;
-        emit Allot(_address, _amount);
+        applicationsForOffering[_accountAddress].allotmentAmount = _amount;
+
+        // イベント登録
+        emit Allot(
+            _accountAddress,
+            _amount
+        );
     }
 
     /// @notice 追加発行
@@ -726,6 +698,7 @@ contract IbetShare is Ownable, IbetStandardTokenInterface {
     /// @param _amount 追加発行数量
     function issueFrom(address _target_address, address _locked_address, uint256 _amount)
         public
+        override
         onlyOwner()
     {
         // locked_addressを指定した場合：ロック資産に対して追加発行を行う
@@ -741,10 +714,12 @@ contract IbetShare is Ownable, IbetStandardTokenInterface {
             // 総発行数量の更新
             totalSupply = totalSupply.add(_amount);
         }
+
+        // イベント登録
         emit Issue(msg.sender, _target_address, _locked_address, _amount);
     }
 
-    /// @dev 減資
+    /// @notice 償却
     /// @dev 特定のアドレスの残高に対して、発行数量の削減を行う
     /// @dev 発行体のみ実行可能
     /// @param _target_address 減資対象の残高を保有するアドレス
@@ -752,6 +727,7 @@ contract IbetShare is Ownable, IbetStandardTokenInterface {
     /// @param _amount 削減数量
     function redeemFrom(address _target_address, address _locked_address, uint256 _amount)
         public
+        override
         onlyOwner()
     {
         // locked_addressを指定した場合：ロック資産から減資を行う
@@ -771,16 +747,32 @@ contract IbetShare is Ownable, IbetStandardTokenInterface {
             // 総発行数量の更新
             totalSupply = totalSupply.sub(_amount);
         }
+
+        // イベント登録
         emit Redeem(msg.sender, _target_address, _locked_address, _amount);
     }
 
-    /// @notice 消却する
+    /// @notice 消却状態に変更
     /// @dev オーナーのみ実行可能
-    function cancel()
+    function changeToCanceled()
         public
         onlyOwner()
     {
         isCanceled = true;
-        emit Cancel();
+
+        // イベント登録
+        emit ChangeToCanceled();
     }
+
+
+    /// ---------------------------------------------------------------
+    /// 後方互換対応
+    ///  - 旧トークンフォーマットでのCallを一時的にサポート
+    ///  - 次回バージョン以降で削除予定
+    /// ---------------------------------------------------------------
+
+    bool public offeringStatus;
+
+    mapping(uint8 => string) public referenceUrls;
+
 }

@@ -61,6 +61,17 @@ contract IbetExchange is Ownable, IbetExchangeInterface {
         address agentAddress
     );
 
+    // Event：強制注文取消
+    event ForceCancelOrder(
+        address indexed tokenAddress,
+        uint256 orderId,
+        address indexed accountAddress,
+        bool indexed isBuy,
+        uint256 price,
+        uint256 amount,
+        address agentAddress
+    );
+
     // Event：約定
     event Agree(
         address indexed tokenAddress,
@@ -472,36 +483,44 @@ contract IbetExchange is Ownable, IbetExchangeInterface {
         public
         returns (bool)
     {
-        // <CHK>
-        //  指定した注文番号が、直近の注文ID以上の場合
-        //   -> REVERT
-        require(_orderId <= latestOrderId());
+        // チェック：指定した注文番号は直近の注文ID以下であること
+        require(
+            _orderId <= latestOrderId(),
+            "The orderId must be less than or equal to the latest order ID."
+        );
 
         Order memory order;
         (order.owner, order.token, order.amount, order.price, order.isBuy, order.agent, order.canceled) =
             getOrder(_orderId);
 
-        // <CHK>
-        //  1) 元注文の残注文数量が0の場合
-        //  2) 注文がキャンセル済みの場合
-        //  3) 元注文の発注者と、注文キャンセルの実施者が異なる場合
-        //   -> REVERT
-        if (order.amount == 0 ||
-            order.canceled == true ||
-            order.owner != msg.sender) {
-            revert();
-        }
+        // チェック：元注文の残注文が存在すること
+        require(
+            order.amount > 0,
+            "The remaining amount of the original order must be greater than zero."
+        );
 
-        // 更新処理：売り注文の場合、注文で拘束している預かりを解放 => 残高を発注者（msg.sender）のアカウントに戻す
+        // チェック：キャンセル対象の注文が未キャンセルであること
+        require(
+            order.canceled == false,
+            "The order to be cancelled must not have been cancelled."
+        );
+
+        // チェック：msg.senderが発注者（owner）であること
+        require(
+            msg.sender == order.owner,
+            "msg.sender must be an orderer."
+        );
+
+        // 更新処理：売り注文の場合、注文で拘束している預かりを解放 => 残高を発注者のアカウントに戻す
         if (!order.isBuy) {
             IbetStandardTokenInterface(order.token).transfer(
-                msg.sender,
+                order.owner,
                 order.amount
             );
             setCommitment(
-                msg.sender,
+                order.owner,
                 order.token,
-                commitmentOf(msg.sender, order.token).sub(order.amount)
+                commitmentOf(order.owner, order.token).sub(order.amount)
             );
         }
 
@@ -521,7 +540,81 @@ contract IbetExchange is Ownable, IbetExchangeInterface {
         emit CancelOrder(
             order.token,
             _orderId,
-            msg.sender,
+            order.owner,
+            order.isBuy,
+            order.price,
+            order.amount,
+            order.agent
+        );
+
+        return true;
+    }
+
+    /// @notice 強制注文キャンセル
+    /// @param _orderId 注文ID
+    /// @return 処理結果
+    function forceCancelOrder(uint256 _orderId)
+        public
+        returns (bool)
+    {
+        // チェック：指定した注文番号は直近の注文ID以下であること
+        require(
+            _orderId <= latestOrderId(),
+            "The orderId must be less than or equal to the latest order ID."
+        );
+
+        Order memory order;
+        (order.owner, order.token, order.amount, order.price, order.isBuy, order.agent, order.canceled) =
+            getOrder(_orderId);
+
+        // チェック：元注文の残注文が存在すること
+        require(
+            order.amount > 0,
+            "The remaining amount of the original order must be greater than zero."
+        );
+
+        // チェック：キャンセル対象の注文が未キャンセルであること
+        require(
+            order.canceled == false,
+            "The order to be cancelled must not have been cancelled."
+        );
+
+        // チェック：msg.senderが決済代行（agent）
+        require(
+            msg.sender == order.agent,
+            "msg.sender must be an agent."
+        );
+
+        // 更新処理：売り注文の場合、注文で拘束している預かりを解放 => 残高を発注者（msg.sender）のアカウントに戻す
+        if (!order.isBuy) {
+            IbetStandardTokenInterface(order.token).transfer(
+                order.owner,
+                order.amount
+            );
+            setCommitment(
+                order.owner,
+                order.token,
+                commitmentOf(order.owner, order.token).sub(order.amount)
+            );
+        }
+
+        // 更新処理：キャンセル済みフラグをキャンセル済み（True）に更新
+        setOrder(
+            _orderId,
+            order.owner,
+            order.token,
+            order.amount,
+            order.price,
+            order.isBuy,
+            order.agent,
+            true
+        );
+
+        // イベント登録：注文キャンセル
+        emit ForceCancelOrder(
+            order.token,
+            _orderId,
+            order.owner,
             order.isBuy,
             order.price,
             order.amount,
@@ -802,9 +895,32 @@ contract IbetExchange is Ownable, IbetExchangeInterface {
             }
         }
 
+        // 更新処理：注文明細の数量を戻す
+        setOrder(
+            _orderId,
+            order.owner,
+            order.token,
+            order.amount.add(agreement.amount),
+            order.price,
+            order.isBuy,
+            order.agent,
+            order.canceled
+        );
+
+        // 更新処理：約定明細をキャンセル（True）に更新する
+        setAgreement(
+            _orderId,
+            _agreementId,
+            agreement.counterpart,
+            agreement.amount,
+            agreement.price,
+            true,
+            agreement.paid,
+            agreement.expiry
+        );
+
         if (order.isBuy) {
             // 更新処理：買い注文の場合、突合相手（売り手）の預かりを解放 -> 預かりの引き出し
-            // 取り消した注文は無効化する（注文中状態に戻さない）
             IbetStandardTokenInterface(order.token).transfer(
                 agreement.counterpart,
                 agreement.amount
@@ -826,17 +942,6 @@ contract IbetExchange is Ownable, IbetExchangeInterface {
                 order.agent
             );
         } else {
-            // 更新処理：元注文の数量を戻す
-            setOrder(
-                _orderId,
-                order.owner,
-                order.token,
-                order.amount.add(agreement.amount),
-                order.price,
-                order.isBuy,
-                order.agent,
-                order.canceled
-            );
             // イベント登録：決済NG
             emit SettlementNG(
                 order.token,
@@ -849,17 +954,6 @@ contract IbetExchange is Ownable, IbetExchangeInterface {
                 order.agent
             );
         }
-
-        // 更新処理：キャンセル済みフラグをキャンセル（True）に更新する
-        setAgreement(
-            _orderId,
-            _agreementId,
-            agreement.counterpart,
-            agreement.amount, agreement.price,
-            true,
-            agreement.paid,
-            agreement.expiry
-        );
 
         return true;
     }

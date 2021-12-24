@@ -1,7 +1,7 @@
 # ibet Smart Contract
 
 <p>
-  <img alt="Version" src="https://img.shields.io/badge/version-21.9-blue.svg?cacheSeconds=2592000" />
+  <img alt="Version" src="https://img.shields.io/badge/version-21.12-blue.svg?cacheSeconds=2592000" />
   <img alt="License: Apache--2.0" src="https://img.shields.io/badge/License-Apache--2.0-yellow.svg" />
 </p>
 
@@ -100,8 +100,21 @@ This is the case of storing and using a private key in keystore file format in [
 To deploy, execute the following command.
 
 ```bash
-$ ./scripts/deploy_shared_contract.sh {--payment_gateway 0xabcd...}
+$ ./scripts/deploy_shared_contract.sh {--payment_gateway 0xabcd...} {contract_name}
 ```
+
+You can deploy the following contract as `contract_name`.
+
+- E2EMessaging 
+- TokenList
+- PersonalInfo
+- PaymentGateway
+- IbetExchange (* need --payment_gateway option)
+- IbetEscrow
+- IbetSecurityTokenEscrow
+
+All other contracts are not supported for deployment by script. You will need to deploy them in a different way.
+
 
 ## Developing Smart Contracts
 

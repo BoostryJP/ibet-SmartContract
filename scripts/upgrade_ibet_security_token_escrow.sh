@@ -18,7 +18,6 @@
 # SPDX-License-Identifier: Apache-2.0
 
 source ~/.bash_profile
-
 cd /app/ibet-SmartContract
 
 # 秘密鍵のインポート
@@ -29,13 +28,13 @@ import_account
 # NOTE: キャッシュを使わずフルビルドを行う
 brownie compile --all
 
-# コントラクトデプロイ
+# IbetExchange アップグレード
 export REFER_ACCOUNT
 if [ "${REFER_ACCOUNT}" != "GETH" ]; then
   # NOTE: Accounts.load内で用いられているgetpassで入力待ちとなるためexpectで自動応答する
   expect -c "
     set timeout 300
-    spawn python scripts/deploy_shared_contract.py $*
+    spawn python scripts/upgrade_ibet_security_token_escrow.py $@
     expect {
       \"Enter the password to unlock this account:\" {
         send \"${ETH_ACCOUNT_PASSWORD}\n\"
@@ -50,5 +49,5 @@ if [ "${REFER_ACCOUNT}" != "GETH" ]; then
     exit \$status
   " || exit 1
 else
-  python scripts/deploy_shared_contract.py "$@"
+  python scripts/upgrade_ibet_security_token_escrow.py "$@"
 fi

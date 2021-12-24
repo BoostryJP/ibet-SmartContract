@@ -787,7 +787,7 @@ class TestCancelOrder:
     #######################################
 
     # Error_1
-    # Order ID must be less than or equal to the latest order ID
+    # REVERT: The orderId must be less than or equal to the latest order ID.
     def test_error_1(self, users, exchange):
         issuer = users['issuer']
         agent = users['agent']
@@ -817,7 +817,7 @@ class TestCancelOrder:
 
         # cancel order
         latest_order_id = exchange.latestOrderId()
-        with brownie.reverts():
+        with brownie.reverts(revert_msg="The orderId must be less than or equal to the latest order ID."):
             exchange.cancelOrder.transact(
                 latest_order_id + 1,
                 {'from': issuer}
@@ -837,7 +837,7 @@ class TestCancelOrder:
         assert exchange.commitmentOf(issuer, token.address) == _amount
 
     # Error_2
-    # The remaining amount of the original order must be greater than zero
+    # REVERT: The remaining amount of the original order must be greater than zero.
     def test_error_2(self, users, exchange):
         issuer = users['issuer']
         trader = users['trader']
@@ -883,7 +883,7 @@ class TestCancelOrder:
         assert exchange.getOrder(order_id)[2] == 0
 
         # cancel order
-        with brownie.reverts():
+        with brownie.reverts(revert_msg="The remaining amount of the original order must be greater than zero."):
             exchange.cancelOrder.transact(
                 order_id,
                 {'from': issuer}
@@ -903,7 +903,7 @@ class TestCancelOrder:
         assert token.balanceOf(trader) == _amount
 
     # Error_3
-    # Order must not have been cancelled
+    # REVERT: The order to be cancelled must not have been cancelled.
     def test_error_3(self, users, exchange):
         issuer = users['issuer']
         trader = users['trader']
@@ -930,7 +930,7 @@ class TestCancelOrder:
         exchange.cancelOrder.transact(order_id, {'from': trader})
 
         # cancel order (2)
-        with brownie.reverts():
+        with brownie.reverts(revert_msg="The order to be cancelled must not have been cancelled."):
             exchange.cancelOrder.transact(order_id, {'from': trader})
 
         # assertion
@@ -947,7 +947,7 @@ class TestCancelOrder:
         assert token.balanceOf(trader) == 0
 
     # Error_4
-    # The Orderer and the Order Cancellation Executor must be the same
+    # REVERT: msg.sender must be an orderer.
     def test_error_4(self, users, exchange):
         issuer = users['issuer']
         trader = users['trader']
@@ -971,7 +971,7 @@ class TestCancelOrder:
 
         # cancel order
         order_id = exchange.latestOrderId()
-        with brownie.reverts():
+        with brownie.reverts(revert_msg="msg.sender must be an orderer."):
             exchange.cancelOrder.transact(
                 order_id,
                 {'from': users['user1']}
@@ -1051,6 +1051,404 @@ class TestCancelOrder:
             exchange.cancelOrder(
                 order_id,
                 {'from': issuer}
+            )
+
+        # assertion
+        assert token.balanceOf(issuer) == 0
+        assert token.balanceOf(exchange.address) == _amount
+        assert exchange.balanceOf(issuer, token.address) == 0
+        assert exchange.commitmentOf(issuer, token.address) == _amount
+
+
+# TEST_forceCancelOrder
+class TestForceCancelOrder:
+
+    #######################################
+    # Normal
+    #######################################
+
+    # Normal_1
+    # Force cancel order: BUY
+    def test_normal_1(self, users, exchange):
+        issuer = users['issuer']
+        trader = users['trader']
+        agent = users['agent']
+
+        # issue token
+        deploy_args = init_args(exchange.address)
+        token = deploy(users, deploy_args)
+
+        # make order: BUY
+        _amount = 2 ** 256 - 1
+        _price = 2 ** 256 - 1
+        _isBuy = True
+
+        exchange.createOrder(
+            token.address,
+            _amount,
+            _price,
+            _isBuy,
+            agent,
+            {'from': trader}
+        )
+
+        # force cancel order
+        order_id = exchange.latestOrderId()
+        tx = exchange.forceCancelOrder(
+            order_id,
+            {'from': agent}
+        )
+
+        # assertion
+        assert exchange.getOrder(order_id) == [
+            trader.address,
+            token.address,
+            _amount,
+            _price,
+            _isBuy,
+            agent.address,
+            True
+        ]
+        assert token.balanceOf(issuer) == deploy_args[2]
+        assert token.balanceOf(trader) == 0
+
+        assert tx.events["ForceCancelOrder"]["tokenAddress"] == token.address
+        assert tx.events["ForceCancelOrder"]["orderId"] == order_id
+        assert tx.events["ForceCancelOrder"]["accountAddress"] == trader
+        assert tx.events["ForceCancelOrder"]["isBuy"] is True
+        assert tx.events["ForceCancelOrder"]["price"] == _price
+        assert tx.events["ForceCancelOrder"]["amount"] == _amount
+        assert tx.events["ForceCancelOrder"]["agentAddress"] == agent
+
+    # Normal_2
+    # Force cancel order: SELL
+    def test_normal_2(self, users, exchange):
+        issuer = users['issuer']
+        agent = users['agent']
+
+        # issue token
+        deploy_args = init_args(exchange.address)
+        token = deploy(users, deploy_args)
+
+        # transfer to contract -> make order: SELL
+        _amount = 2 ** 256 - 1
+        _price = 2 ** 256 - 1
+        _isBuy = False
+
+        token.transfer(
+            exchange.address,
+            _amount,
+            {'from': issuer}
+        )
+        exchange.createOrder(
+            token.address,
+            _amount,
+            _price,
+            _isBuy,
+            agent,
+            {'from': issuer}
+        )
+
+        # force cancel order
+        order_id = exchange.latestOrderId()
+        tx = exchange.forceCancelOrder(
+            order_id,
+            {'from': agent}
+        )
+
+        # assertion
+        assert exchange.getOrder(order_id) == [
+            issuer.address,
+            token.address,
+            _amount,
+            _price,
+            _isBuy,
+            agent.address,
+            True
+        ]
+        assert token.balanceOf(issuer) == deploy_args[2]
+        assert exchange.commitmentOf(issuer, token.address) == 0
+
+        assert tx.events["ForceCancelOrder"]["tokenAddress"] == token.address
+        assert tx.events["ForceCancelOrder"]["orderId"] == order_id
+        assert tx.events["ForceCancelOrder"]["accountAddress"] == issuer
+        assert tx.events["ForceCancelOrder"]["isBuy"] is False
+        assert tx.events["ForceCancelOrder"]["price"] == _price
+        assert tx.events["ForceCancelOrder"]["amount"] == _amount
+        assert tx.events["ForceCancelOrder"]["agentAddress"] == agent
+
+    #######################################
+    # Error
+    #######################################
+
+    # Error_1
+    # REVERT: The orderId must be less than or equal to the latest order ID.
+    def test_error_1(self, users, exchange):
+        issuer = users['issuer']
+        agent = users['agent']
+
+        # issue token
+        deploy_args = init_args(exchange.address)
+        token = deploy(users, deploy_args)
+
+        # transfer to contract -> make order: SELL
+        _amount = 2 ** 256 - 1
+        _price = 2 ** 256 - 1
+        _isBuy = False
+
+        token.transfer(
+            exchange.address,
+            _amount,
+            {'from': issuer}
+        )
+        exchange.createOrder(
+            token.address,
+            _amount,
+            _price,
+            _isBuy,
+            agent,
+            {'from': issuer}
+        )
+
+        # cancel order
+        latest_order_id = exchange.latestOrderId()
+        with brownie.reverts(revert_msg="The orderId must be less than or equal to the latest order ID."):
+            exchange.forceCancelOrder(
+                latest_order_id + 1,
+                {'from': agent}
+            )
+
+        # assertion
+        assert exchange.getOrder(latest_order_id) == [
+            issuer.address,
+            token.address,
+            _amount,
+            _price,
+            _isBuy,
+            agent.address,
+            False
+        ]
+        assert token.balanceOf(issuer) == deploy_args[2] - _amount
+        assert exchange.commitmentOf(issuer, token.address) == _amount
+
+    # Error_2
+    # REVERT: The remaining amount of the original order must be greater than zero.
+    def test_error_2(self, users, exchange):
+        issuer = users['issuer']
+        trader = users['trader']
+        agent = users['agent']
+
+        # issue token
+        deploy_args = init_args(exchange.address)
+        token = deploy(users, deploy_args)
+
+        # make BUY order by trader
+        _amount = 2 ** 256 - 1
+        _price = 2 ** 256 - 1
+        exchange.createOrder(
+            token.address,
+            _amount,
+            _price,
+            True,
+            agent,
+            {'from': trader}
+        )
+
+        # take SELL order by issuer
+        order_id = exchange.latestOrderId()
+        token.transfer(
+            exchange.address,
+            _amount,
+            {'from': issuer}
+        )
+        exchange.executeOrder(
+            order_id,
+            _amount,
+            False,
+            {'from': issuer}
+        )
+
+        # confirm agreement by agent
+        agreement_id = exchange.latestAgreementId(order_id)
+        exchange.confirmAgreement(
+            order_id,
+            agreement_id,
+            {'from': agent}
+        )
+        assert exchange.getOrder(order_id)[2] == 0
+
+        # cancel order
+        with brownie.reverts(revert_msg="The remaining amount of the original order must be greater than zero."):
+            exchange.forceCancelOrder(
+                order_id,
+                {'from': agent}
+            )
+
+        # assertion
+        assert exchange.getOrder(order_id) == [
+            trader.address,
+            token.address,
+            0,
+            _price,
+            True,
+            agent.address,
+            False
+        ]
+        assert token.balanceOf(issuer) == deploy_args[2] - _amount
+        assert token.balanceOf(trader) == _amount
+
+    # Error_3
+    # REVERT: The order to be cancelled must not have been cancelled.
+    def test_error_3(self, users, exchange):
+        issuer = users['issuer']
+        trader = users['trader']
+        agent = users['agent']
+
+        # issue token
+        deploy_args = init_args(exchange.address)
+        token = deploy(users, deploy_args)
+
+        # make BUY order
+        _amount = 2 ** 256 - 1
+        _price = 2 ** 256 - 1
+        exchange.createOrder(
+            token.address,
+            _amount,
+            _price,
+            True,
+            agent,
+            {'from': trader}
+        )
+
+        # cancel order (1)
+        order_id = exchange.latestOrderId()
+        exchange.cancelOrder(order_id, {'from': trader})
+
+        # cancel order (2)
+        with brownie.reverts(revert_msg="The order to be cancelled must not have been cancelled."):
+            exchange.forceCancelOrder(
+                order_id,
+                {'from': agent}
+            )
+
+        # assertion
+        assert exchange.getOrder(order_id) == [
+            trader.address,
+            token.address,
+            _amount,
+            _price,
+            True,
+            agent.address,
+            True
+        ]
+        assert token.balanceOf(issuer) == deploy_args[2]
+        assert token.balanceOf(trader) == 0
+
+    # Error_4
+    # REVERT: msg.sender must be an agent.
+    def test_error_4(self, users, exchange):
+        issuer = users['issuer']
+        trader = users['trader']
+        agent = users['agent']
+
+        # issue token
+        deploy_args = init_args(exchange.address)
+        token = deploy(users, deploy_args)
+
+        # make BUY order by trader
+        _amount = 2 ** 256 - 1
+        _price = 2 ** 256 - 1
+        exchange.createOrder(
+            token.address,
+            _amount,
+            _price,
+            True,
+            agent,
+            {'from': trader}
+        )
+
+        # cancel order
+        order_id = exchange.latestOrderId()
+        with brownie.reverts(revert_msg="msg.sender must be an agent."):
+            exchange.forceCancelOrder(
+                order_id,
+                {'from': trader}
+            )
+
+        # assertion
+        assert exchange.getOrder(order_id) == [
+            trader.address,
+            token.address,
+            _amount,
+            _price,
+            True,
+            agent.address,
+            False
+        ]
+        assert token.balanceOf(issuer) == deploy_args[2]
+        assert token.balanceOf(trader) == 0
+
+    # Error_5
+    # Cancel order: SELL
+    # REVERT: Must be transferable.
+    def test_error_5(self, users, exchange):
+        issuer = users['issuer']
+        agent = users['agent']
+
+        # issue token
+        deploy_args = [
+            'test_share',
+            'test_symbol',
+            2 ** 256 - 1,
+            2 ** 256 - 1,
+            2 ** 256 - 1,
+            '20200829',
+            '20200831',
+            '20191231',
+            2 ** 256 - 1
+        ]
+        token = deploy_share(users, deploy_args)
+        token.setTransferable(
+            True,
+            {'from': issuer}
+        )
+        token.setTradableExchange(
+            exchange.address,
+            {'from': issuer}
+        )
+
+        # transfer to exchange contract
+        _amount = 2 ** 256 - 1
+        token.transfer(
+            exchange.address,
+            _amount,
+            {'from': issuer}
+        )
+
+        # make SELL order
+        _amount = 2 ** 256 - 1
+        _price = 2 ** 256 - 1
+        exchange.createOrder(
+            token.address,
+            _amount,
+            _price,
+            False,
+            agent,
+            {'from': issuer}
+        )
+
+        # set to not transferable
+        token.setTransferable(
+            False,
+            {'from': issuer}
+        )
+
+        # cancel order
+        order_id = exchange.latestOrderId()
+        with brownie.reverts(revert_msg="Must be transferable."):
+            exchange.forceCancelOrder(
+                order_id,
+                {'from': agent}
             )
 
         # assertion
@@ -2851,7 +3249,7 @@ class TestCancelAgreement:
         assert exchange.getOrder(order_id) == [
             trader.address,
             token.address,
-            _make_amount - _take_amount,
+            _make_amount,
             _price,
             True,
             agent.address,

@@ -22,11 +22,11 @@ import "OpenZeppelin/openzeppelin-contracts@4.2.0/contracts/utils/math/SafeMath.
 import "./EscrowStorage.sol";
 import "../access/Ownable.sol";
 import "../../interfaces/IbetExchangeInterface.sol";
-import "../../interfaces/IbetStandardTokenInterface.sol";
+import "../../interfaces/IbetSecurityTokenInterface.sol";
 
 
-/// @title ibet Escrow
-contract IbetEscrow is Ownable, IbetExchangeInterface {
+/// @title ibet Security Token Escrow
+contract IbetSecurityTokenEscrow is Ownable, IbetExchangeInterface {
     using SafeMath for uint256;
 
     // ---------------------------------------------------------------
@@ -64,6 +64,40 @@ contract IbetEscrow is Ownable, IbetExchangeInterface {
         address agent
     );
 
+    /// Event: 移転申請
+    event ApplyForTransfer(
+        uint256 indexed escrowId,
+        address indexed token,
+        address from,
+        address to,
+        uint256 value,
+        string data
+    );
+
+    /// Event: 移転申請取消
+    event CancelTransfer(
+        uint256 indexed escrowId,
+        address indexed token,
+        address from,
+        address to
+    );
+
+    /// Event: 移転承認
+    event ApproveTransfer(
+        uint256 indexed escrowId,
+        address indexed token,
+        string data
+    );
+
+    /// Event: 移転完了
+    event FinishTransfer(
+        uint256 indexed escrowId,
+        address indexed token,
+        address from,
+        address to,
+        string data
+    );
+
     // ---------------------------------------------------------------
     // Constructor
     // ---------------------------------------------------------------
@@ -81,12 +115,20 @@ contract IbetEscrow is Ownable, IbetExchangeInterface {
     // ---------------------------------------------------------------
 
     struct Escrow {
-        address token;  // トークンアドレス
-        address sender;  // 送信者
-        address recipient;  // 受信者
-        uint256 amount;  // 数量
-        address agent;  // エスクローエージェント
-        bool valid;  // 有効状態
+        address token; // トークンアドレス
+        address sender; // 送信者
+        address recipient; // 受信者
+        uint256 amount; // 数量
+        address agent; // エスクローエージェント
+        bool valid; // 有効状態
+    }
+
+    struct ApplicationForTransfer {
+        address token; // トークンアドレス
+        string applicationData; // 移転申請データ
+        string approvalData; // 移転承認データ
+        bool valid; // 申請有効状態
+        bool approved; // 移転承認状態
     }
 
     /// @notice 直近エスクローID取得
@@ -120,6 +162,29 @@ contract IbetEscrow is Ownable, IbetExchangeInterface {
         )
     {
         return EscrowStorage(storageAddress).getEscrow(_escrowId);
+    }
+
+    /// @notice 移転申請情報参照
+    /// @param _escrowId エスクローID
+    /// @return token トークンアドレス
+    /// @return applicationData 移転申請データ
+    /// @return approvalData 移転承認データ
+    /// @return valid 申請有効状態
+    /// @return approved 移転承認状態
+    function getApplicationForTransfer(
+        uint256 _escrowId
+    )
+        public
+        view
+        returns(
+            address token,
+            string memory applicationData,
+            string memory approvalData,
+            bool valid,
+            bool approved
+        )
+    {
+        return EscrowStorage(storageAddress).getApplicationForTransfer(_escrowId);
     }
 
     /// @notice 残高数量の参照
@@ -163,12 +228,14 @@ contract IbetEscrow is Ownable, IbetExchangeInterface {
     /// @param _recipient トークン受領者
     /// @param _amount 数量
     /// @param _agent エスクローエージェント
-    /// @param _data イベント出力用の任意のデータ
+    /// @param _transferApplicationData 移転申請データ
+    /// @param _data イベント出力用の任意データ
     function createEscrow(
         address _token,
         address _recipient,
         uint256 _amount,
         address _agent,
+        string memory _transferApplicationData,
         string memory _data
     )
         public
@@ -182,13 +249,13 @@ contract IbetEscrow is Ownable, IbetExchangeInterface {
 
         // チェック：数量が残高以下であること
         require(
-            balanceOf(msg.sender, _token) >= _amount,
+            EscrowStorage(storageAddress).getBalance(msg.sender, _token) >= _amount,
             "The amount must be less than or equal to the balance."
         );
 
         // チェック：トークンのステータスが有効であること
         require(
-            IbetStandardTokenInterface(_token).status() == true,
+            IbetSecurityTokenInterface(_token).status() == true,
             "The status of the token must be true."
         );
 
@@ -220,6 +287,27 @@ contract IbetEscrow is Ownable, IbetExchangeInterface {
             _token,
             commitmentOf(msg.sender, _token).add(_amount)
         );
+
+        // 更新：移転申請（移転承諾要トークン）
+        if (IbetSecurityTokenInterface(_token).transferApprovalRequired() == true) {
+            EscrowStorage(storageAddress).setApplicationForTransfer(
+                _escrowId,
+                _token,
+                _transferApplicationData,
+                "",
+                true,
+                false
+            );
+            // イベント登録
+            emit ApplyForTransfer(
+                _escrowId,
+                _token,
+                msg.sender,
+                _recipient,
+                _amount,
+                _transferApplicationData
+            );
+        }
 
         // イベント登録
         emit EscrowCreated(
@@ -271,7 +359,7 @@ contract IbetEscrow is Ownable, IbetExchangeInterface {
 
         // チェック：トークンのステータスが有効であること
         require(
-            IbetStandardTokenInterface(escrow.token).status() == true,
+            IbetSecurityTokenInterface(escrow.token).status() == true,
             "The status of the token must be true."
         );
 
@@ -300,6 +388,36 @@ contract IbetEscrow is Ownable, IbetExchangeInterface {
             false
         );
 
+        // 更新：移転申請（移転承諾要トークン）
+        if (IbetSecurityTokenInterface(escrow.token).transferApprovalRequired() == true) {
+            ApplicationForTransfer memory application;
+            (
+                application.token,
+                application.applicationData,
+                application.approvalData,
+                application.valid,
+                application.approved
+            ) = EscrowStorage(storageAddress).getApplicationForTransfer(_escrowId);
+
+            if (application.token != address(0)){
+                EscrowStorage(storageAddress).setApplicationForTransfer(
+                    _escrowId,
+                    application.token,
+                    application.applicationData,
+                    application.approvalData,
+                    false,
+                    application.approved
+                );
+                // イベント登録
+                emit CancelTransfer(
+                    _escrowId,
+                    escrow.token,
+                    escrow.sender,
+                    escrow.recipient
+                );
+            }
+        }
+
         // イベント登録
         emit EscrowCanceled(
             _escrowId,
@@ -308,6 +426,64 @@ contract IbetEscrow is Ownable, IbetExchangeInterface {
             escrow.recipient,
             escrow.amount,
             escrow.agent
+        );
+
+        return true;
+    }
+
+    /// @notice 移転承認
+    /// @dev 移転対象のトークンのオーナーのみ実行可能
+    /// @param _escrowId エスクローID
+    /// @param _transferApprovalData 移転承認データ
+    function approveTransfer(
+        uint256 _escrowId,
+        string memory _transferApprovalData
+    )
+        public
+        returns (bool)
+    {
+        ApplicationForTransfer memory application;
+        (
+            application.token,
+            application.applicationData,
+            application.approvalData,
+            application.valid,
+            application.approved
+        ) = EscrowStorage(storageAddress).getApplicationForTransfer(_escrowId);
+
+        // チェック：移転申請が存在すること
+        require(
+            application.token != address(0),
+            "Application does not exist."
+        );
+
+        // チェック：承認者がトークンのオーナーであること
+        require(
+            msg.sender == Ownable(application.token).owner(),
+            "Approver must be the owner of the token."
+        );
+
+        // チェック：移転申請が有効状態であること
+        require(
+            application.valid == true,
+            "Application for transfer must be valid."
+        );
+
+        // 更新：移転承諾
+        EscrowStorage(storageAddress).setApplicationForTransfer(
+            _escrowId,
+            application.token,
+            application.applicationData,
+            _transferApprovalData,
+            application.valid,
+            true
+        );
+
+        // イベント登録
+        emit ApproveTransfer(
+            _escrowId,
+            application.token,
+            _transferApprovalData
         );
 
         return true;
@@ -349,9 +525,37 @@ contract IbetEscrow is Ownable, IbetExchangeInterface {
 
         // チェック：トークンのステータスが有効であること
         require(
-            IbetStandardTokenInterface(escrow.token).status() == true,
+            IbetSecurityTokenInterface(escrow.token).status() == true,
             "The status of the token must be true."
         );
+
+        if (IbetSecurityTokenInterface(escrow.token).transferApprovalRequired() == true) {
+            ApplicationForTransfer memory application;
+            (
+                application.token,
+                application.applicationData,
+                application.approvalData,
+                application.valid,
+                application.approved
+            ) = EscrowStorage(storageAddress).getApplicationForTransfer(_escrowId);
+
+            if (application.token != address(0)) {
+                // チェック：移転承諾済みであること
+                require(
+                    application.approved == true,
+                    "Transfer must have been approved."
+                );
+
+                // イベント登録
+                emit FinishTransfer(
+                    _escrowId,
+                    escrow.token,
+                    escrow.sender,
+                    escrow.recipient,
+                    application.approvalData
+                );
+            }
+        }
 
         // 更新：残高
         EscrowStorage(storageAddress).setBalance(
@@ -414,7 +618,7 @@ contract IbetEscrow is Ownable, IbetExchangeInterface {
         );
 
         // 更新処理：トークン引き出し（送信）
-        IbetStandardTokenInterface(_token).transfer(msg.sender, balance);
+        IbetSecurityTokenInterface(_token).transfer(msg.sender, balance);
         EscrowStorage(storageAddress).setBalance(msg.sender, _token, 0);
 
         // イベント登録

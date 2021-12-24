@@ -85,3 +85,23 @@ def escrow(IbetEscrow, users, escrow_storage):
     escrow = users['admin'].deploy(IbetEscrow, *deploy_args)
     escrow_storage.upgradeVersion.transact(escrow.address, {'from': users['admin']})
     return escrow
+
+
+@pytest.fixture()
+def st_escrow_storage(EscrowStorage, users):
+    escrow_storage = users['admin'].deploy(EscrowStorage)
+    return escrow_storage
+
+
+@pytest.fixture()
+def st_escrow(IbetSecurityTokenEscrow, users, st_escrow_storage):
+    deploy_args = [st_escrow_storage.address]
+    st_escrow = users['admin'].deploy(
+        IbetSecurityTokenEscrow,
+        *deploy_args
+    )
+    st_escrow_storage.upgradeVersion.transact(
+        st_escrow.address,
+        {'from': users['admin']}
+    )
+    return st_escrow
