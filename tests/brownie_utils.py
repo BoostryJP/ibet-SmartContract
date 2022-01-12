@@ -61,7 +61,7 @@ def force_deploy(deployer, contract, *deploy_args):
     # web3を用いてデプロイする
     web3_contract = web3.eth.contract(abi=contract.abi, bytecode=contract.bytecode)
     txn_hash = web3_contract.constructor(*deploy_args).transact({'from': deployer.address})
-    receipt = web3.eth.waitForTransactionReceipt(txn_hash)
+    receipt = web3.eth.wait_for_transaction_receipt(txn_hash)
     contract_address = receipt['contractAddress']
 
     # Brownieでエラーを発生させるメソッドを取り除いたABIを作成する
