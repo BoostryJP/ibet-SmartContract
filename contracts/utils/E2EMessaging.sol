@@ -24,6 +24,7 @@ pragma solidity ^0.8.0;
 contract E2EMessaging {
 
     event Message(address indexed sender, address indexed receiver, uint256 time, string text);
+    event MessageCleared(address indexed sender, address indexed receiver, uint256 index);
     event PublicKeyUpdated(address indexed who, string key, string key_type);
 
     struct message {
@@ -110,6 +111,23 @@ contract E2EMessaging {
             messages[_who][_index].text,
             messages[_who][_index].time
         );
+    }
+
+    /// @notice Clear message
+    /// @param _to Message receiver address
+    /// @param _index Message index
+    function clearMessage(address _to, uint256 _index)
+        public
+    {
+        message storage message = messages[_to][_index];
+        require(
+            message.from == msg.sender,
+            "msg.sender must be the sender of the message."
+        );
+
+        messages[_to][_index].from = msg.sender;
+        messages[_to][_index].text = '';
+        emit MessageCleared(msg.sender, _to, _index);
     }
 
     /// @notice Get public key
