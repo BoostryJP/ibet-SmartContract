@@ -43,7 +43,7 @@ contract PersonalInfo {
     // [CONSTRUCTOR]
     constructor() {}
 
-    /// @notice 個人情報を登録する
+    /// @notice 個人情報登録
     /// @param _link_address 通知先アドレス
     /// @param _encrypted_info 暗号化済個人情報
     /// @return 処理結果
@@ -62,23 +62,7 @@ contract PersonalInfo {
         return true;
     }
 
-    /// @notice 登録状況の確認
-    /// @param _account_address アカウントアドレス
-    /// @param _link_address 通知先アドレス
-    /// @return 登録状況
-    function isRegistered(address _account_address, address _link_address)
-        public
-        view returns (bool)
-    {
-        Info storage info = personal_info[_account_address][_link_address];
-        if (info.account_address == address(0)) {
-            return false;
-        } else {
-            return true;
-        }
-    }
-
-    /// @notice 個人情報を修正する。
+    /// @notice 個人情報修正
     /// @dev 個人情報通知先アカウントによる修正。通知元アカウントによる修正はregister()を使う。
     /// @param _account_address 個人情報通知元アカウントアドレス
     /// @param _encrypted_info 暗号化済個人情報
@@ -97,5 +81,39 @@ contract PersonalInfo {
 
         emit Modify(_account_address, msg.sender);
         return true;
+    }
+
+    /// @notice 個人情報登録（強制登録）
+    /// @param _account_address アカウントアドレス
+    /// @param _encrypted_info 暗号化済個人情報
+    /// @return 処理結果
+    function forceRegister(address _account_address, string memory _encrypted_info)
+        public
+        returns (bool)
+    {
+        Info storage info = personal_info[_account_address][msg.sender];
+
+        info.account_address = _account_address;
+        info.link_address = msg.sender;
+        info.encrypted_info = _encrypted_info;
+
+        emit Register(_account_address, msg.sender);
+        return true;
+    }
+
+    /// @notice 登録状況の確認
+    /// @param _account_address アカウントアドレス
+    /// @param _link_address 通知先アドレス
+    /// @return 登録状況
+    function isRegistered(address _account_address, address _link_address)
+        public
+        view returns (bool)
+    {
+        Info storage info = personal_info[_account_address][_link_address];
+        if (info.account_address == address(0)) {
+            return false;
+        } else {
+            return true;
+        }
     }
 }

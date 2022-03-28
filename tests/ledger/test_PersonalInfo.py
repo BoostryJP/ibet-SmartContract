@@ -206,3 +206,64 @@ class TestModify:
         assert actual_personal_info[0] == account
         assert actual_personal_info[1] == link
         assert actual_personal_info[2] == encrypted_message
+
+
+# TEST_forceRegister
+class TestForceRegister:
+
+    #######################################
+    # Normal
+    #######################################
+
+    # Normal_1
+    def test_normal_1(self, users, personal_info):
+        account = users['trader']
+        link = users['issuer']
+
+        # register
+        tx = personal_info.forceRegister.transact(
+            account.address,
+            encrypted_message,
+            {'from': link}
+        )
+
+        # assertion
+        registered_personal_info = personal_info.personal_info(account, link)
+        assert registered_personal_info[0] == account
+        assert registered_personal_info[1] == link
+        assert registered_personal_info[2] == encrypted_message
+
+        is_registered = personal_info.isRegistered(account, link)
+        assert is_registered is True
+
+        assert tx.events['Register']['account_address'] == account.address
+        assert tx.events['Register']['link_address'] == link.address
+
+    # Normal_2
+    # Update
+    def test_normal_2(self, users, personal_info):
+        account = users['trader']
+        link = users['issuer']
+
+        # register 1
+        personal_info.forceRegister.transact(
+            account.address,
+            encrypted_message,
+            {'from': link}
+        )
+
+        # register 2
+        personal_info.forceRegister.transact(
+            account.address,
+            encrypted_message_after,
+            {'from': link}
+        )
+
+        # assertion
+        registered_personal_info = personal_info.personal_info(account, link)
+        assert registered_personal_info[0] == account
+        assert registered_personal_info[1] == link
+        assert registered_personal_info[2] == encrypted_message_after
+
+        is_registered = personal_info.isRegistered(account, link)
+        assert is_registered is True
