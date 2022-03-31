@@ -128,6 +128,7 @@ contract IbetSecurityTokenEscrow is Ownable, IbetExchangeInterface {
         string applicationData; // 移転申請データ
         string approvalData; // 移転承認データ
         bool valid; // 申請有効状態
+        bool escrowFinished; // エスクロー完了状態
         bool approved; // 移転承認状態
     }
 
@@ -170,6 +171,7 @@ contract IbetSecurityTokenEscrow is Ownable, IbetExchangeInterface {
     /// @return applicationData 移転申請データ
     /// @return approvalData 移転承認データ
     /// @return valid 申請有効状態
+    /// @return escrowFinished エスクロー完了状態
     /// @return approved 移転承認状態
     function getApplicationForTransfer(
         uint256 _escrowId
@@ -181,6 +183,7 @@ contract IbetSecurityTokenEscrow is Ownable, IbetExchangeInterface {
             string memory applicationData,
             string memory approvalData,
             bool valid,
+            bool escrowFinished,
             bool approved
         )
     {
@@ -296,6 +299,7 @@ contract IbetSecurityTokenEscrow is Ownable, IbetExchangeInterface {
                 _transferApplicationData,
                 "",
                 true,
+                false,
                 false
             );
             // イベント登録
@@ -396,6 +400,7 @@ contract IbetSecurityTokenEscrow is Ownable, IbetExchangeInterface {
                 application.applicationData,
                 application.approvalData,
                 application.valid,
+                application.escrowFinished,
                 application.approved
             ) = EscrowStorage(storageAddress).getApplicationForTransfer(_escrowId);
 
@@ -406,6 +411,7 @@ contract IbetSecurityTokenEscrow is Ownable, IbetExchangeInterface {
                     application.applicationData,
                     application.approvalData,
                     false,
+                    application.escrowFinished,
                     application.approved
                 );
                 // イベント登録
@@ -448,8 +454,19 @@ contract IbetSecurityTokenEscrow is Ownable, IbetExchangeInterface {
             application.applicationData,
             application.approvalData,
             application.valid,
+            application.escrowFinished,
             application.approved
         ) = EscrowStorage(storageAddress).getApplicationForTransfer(_escrowId);
+
+        Escrow memory escrow;
+        (
+            escrow.token,
+            escrow.sender,
+            escrow.recipient,
+            escrow.amount,
+            escrow.agent,
+            escrow.valid
+        ) = EscrowStorage(storageAddress).getEscrow(_escrowId);
 
         // チェック：移転申請が存在すること
         require(
@@ -469,6 +486,18 @@ contract IbetSecurityTokenEscrow is Ownable, IbetExchangeInterface {
             "Application for transfer must be valid."
         );
 
+        // チェック：移転申請のエスクロー状態が完了状態であること
+        require(
+            application.escrowFinished == true,
+            "The escrow status of the application must be in a finished state."
+        );
+
+        // チェック：トークンのステータスが有効であること
+        require(
+            IbetSecurityTokenInterface(escrow.token).status() == true,
+            "The status of the token must be true."
+        );
+
         // 更新：移転承諾
         EscrowStorage(storageAddress).setApplicationForTransfer(
             _escrowId,
@@ -476,7 +505,33 @@ contract IbetSecurityTokenEscrow is Ownable, IbetExchangeInterface {
             application.applicationData,
             _transferApprovalData,
             application.valid,
+            application.escrowFinished,
             true
+        );
+
+        // 更新：残高
+        EscrowStorage(storageAddress).setBalance(
+            escrow.recipient,
+            escrow.token,
+            balanceOf(escrow.recipient, escrow.token).add(escrow.amount)
+        );
+
+        // 更新：エスクロー中数量
+        EscrowStorage(storageAddress).setCommitment(
+            escrow.sender,
+            escrow.token,
+            commitmentOf(escrow.sender, escrow.token).sub(escrow.amount)
+        );
+
+        // 更新：エスクロー情報
+        EscrowStorage(storageAddress).setEscrow(
+            _escrowId,
+            escrow.token,
+            escrow.sender,
+            escrow.recipient,
+            escrow.amount,
+            escrow.agent,
+            false
         );
 
         // イベント登録
@@ -484,6 +539,22 @@ contract IbetSecurityTokenEscrow is Ownable, IbetExchangeInterface {
             _escrowId,
             application.token,
             _transferApprovalData
+        );
+
+        emit EscrowFinished(
+            _escrowId,
+            escrow.token,
+            escrow.sender,
+            escrow.recipient,
+            escrow.amount,
+            escrow.agent
+        );
+
+        emit HolderChanged(
+            escrow.token,
+            escrow.sender,
+            escrow.recipient,
+            escrow.amount
         );
 
         return true;
@@ -530,73 +601,69 @@ contract IbetSecurityTokenEscrow is Ownable, IbetExchangeInterface {
         );
 
         if (IbetSecurityTokenInterface(escrow.token).transferApprovalRequired() == true) {
+            // 更新：移転承諾
             ApplicationForTransfer memory application;
             (
                 application.token,
                 application.applicationData,
                 application.approvalData,
                 application.valid,
+                application.escrowFinished,
                 application.approved
             ) = EscrowStorage(storageAddress).getApplicationForTransfer(_escrowId);
 
-            if (application.token != address(0)) {
-                // チェック：移転承諾済みであること
-                require(
-                    application.approved == true,
-                    "Transfer must have been approved."
-                );
+            EscrowStorage(storageAddress).setApplicationForTransfer(
+                _escrowId,
+                application.token,
+                application.applicationData,
+                application.approvalData,
+                application.valid,
+                true,
+                application.approved
+            );
+        } else {
+            // 更新：残高
+            EscrowStorage(storageAddress).setBalance(
+                escrow.recipient,
+                escrow.token,
+                balanceOf(escrow.recipient, escrow.token).add(escrow.amount)
+            );
 
-                // イベント登録
-                emit FinishTransfer(
-                    _escrowId,
-                    escrow.token,
-                    escrow.sender,
-                    escrow.recipient,
-                    application.approvalData
-                );
-            }
+            // 更新：エスクロー中数量
+            EscrowStorage(storageAddress).setCommitment(
+                escrow.sender,
+                escrow.token,
+                commitmentOf(escrow.sender, escrow.token).sub(escrow.amount)
+            );
+
+            // 更新：エスクロー情報
+            EscrowStorage(storageAddress).setEscrow(
+                _escrowId,
+                escrow.token,
+                escrow.sender,
+                escrow.recipient,
+                escrow.amount,
+                escrow.agent,
+                false
+            );
+
+            // イベント登録
+            emit EscrowFinished(
+                _escrowId,
+                escrow.token,
+                escrow.sender,
+                escrow.recipient,
+                escrow.amount,
+                escrow.agent
+            );
+
+            emit HolderChanged(
+                escrow.token,
+                escrow.sender,
+                escrow.recipient,
+                escrow.amount
+            );
         }
-
-        // 更新：残高
-        EscrowStorage(storageAddress).setBalance(
-            escrow.recipient,
-            escrow.token,
-            balanceOf(escrow.recipient, escrow.token).add(escrow.amount)
-        );
-
-        // 更新：エスクロー中数量
-        EscrowStorage(storageAddress).setCommitment(
-            escrow.sender,
-            escrow.token,
-            commitmentOf(escrow.sender, escrow.token).sub(escrow.amount)
-        );
-
-        // 更新：エスクロー情報
-        EscrowStorage(storageAddress).setEscrow(
-            _escrowId,
-            escrow.token,
-            escrow.sender,
-            escrow.recipient,
-            escrow.amount,
-            escrow.agent,
-            false
-        );
-
-        // イベント登録
-        emit EscrowFinished(
-            _escrowId,
-            escrow.token,
-            escrow.sender,
-            escrow.recipient,
-            escrow.amount,
-            escrow.agent
-        );
-        emit HolderChanged(
-            escrow.token,
-            escrow.sender,
-            escrow.recipient,
-            escrow.amount
-        );
 
         return true;
     }
