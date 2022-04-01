@@ -18,7 +18,7 @@
   - Version 3.8 or greater
 - [Solidity](https://docs.soliditylang.org/)
   - We are using Solidity to implement our smart contracts. 
-  - Currently, we are using v0.8.11.
+  - Currently, we are using v0.8.13.
 - [eth-brownie](https://github.com/eth-brownie/brownie)
   - We are using the eth-brownie framework for developing and testing our contracts.
 - [GoQuorum](https://github.com/ConsenSys/quorum)
