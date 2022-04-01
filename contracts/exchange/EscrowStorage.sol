@@ -231,6 +231,7 @@ contract EscrowStorage is Ownable {
         string applicationData; // 移転申請データ
         string approvalData; // 移転承認データ
         bool valid; // 申請有効状態
+        bool escrowFinished; // エスクロー完了状態
         bool approved; // 移転承認状態
     }
     mapping(uint256 => ApplicationForTransfer) private applicationsForTransfer;
@@ -241,6 +242,7 @@ contract EscrowStorage is Ownable {
     /// @param _applicationData 移転申請データ
     /// @param _approvalData 移転承認データ
     /// @param _valid 申請有効状態
+    /// @param _escrowFinished エスクロー完了状態
     /// @param _approved 移転承認状態
     function setApplicationForTransfer(
         uint256 _escrowId,
@@ -248,6 +250,7 @@ contract EscrowStorage is Ownable {
         string memory _applicationData,
         string memory _approvalData,
         bool _valid,
+        bool _escrowFinished,
         bool _approved
     )
         public
@@ -257,6 +260,7 @@ contract EscrowStorage is Ownable {
         applicationsForTransfer[_escrowId].applicationData = _applicationData;
         applicationsForTransfer[_escrowId].approvalData = _approvalData;
         applicationsForTransfer[_escrowId].valid = _valid;
+        applicationsForTransfer[_escrowId].escrowFinished = _escrowFinished;
         applicationsForTransfer[_escrowId].approved = _approved;
     }
 
@@ -266,6 +270,7 @@ contract EscrowStorage is Ownable {
     /// @return applicationData 移転申請データ
     /// @return approvalData 移転承認データ
     /// @return valid 申請有効状態
+    /// @return escrowFinished エスクロー完了状態
     /// @return approved 移転承認状態
     function getApplicationForTransfer(
         uint256 _escrowId
@@ -277,6 +282,7 @@ contract EscrowStorage is Ownable {
             string memory applicationData,
             string memory approvalData,
             bool valid,
+            bool escrowFinished,
             bool approved
         )
     {
@@ -285,6 +291,7 @@ contract EscrowStorage is Ownable {
             applicationsForTransfer[_escrowId].applicationData,
             applicationsForTransfer[_escrowId].approvalData,
             applicationsForTransfer[_escrowId].valid,
+            applicationsForTransfer[_escrowId].escrowFinished,
             applicationsForTransfer[_escrowId].approved
         );
     }

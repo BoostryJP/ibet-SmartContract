@@ -119,9 +119,9 @@ contract E2EMessaging {
     function clearMessage(address _to, uint256 _index)
         public
     {
-        message storage message = messages[_to][_index];
+        message storage _message = messages[_to][_index];
         require(
-            message.from == msg.sender,
+            _message.from == msg.sender,
             "msg.sender must be the sender of the message."
         );
 
