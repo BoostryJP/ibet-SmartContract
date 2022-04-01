@@ -89,15 +89,6 @@ contract IbetSecurityTokenEscrow is Ownable, IbetExchangeInterface {
         string data
     );
 
-    /// Event: 移転完了
-    event FinishTransfer(
-        uint256 indexed escrowId,
-        address indexed token,
-        address from,
-        address to,
-        string data
-    );
-
     // ---------------------------------------------------------------
     // Constructor
     // ---------------------------------------------------------------
