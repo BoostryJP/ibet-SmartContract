@@ -15,7 +15,7 @@
 
 ## Dependencies
 - [python3](https://www.python.org/downloads/release/python-368/)
-  - Version 3.6 or greater
+  - Version 3.8 or greater
 - [Solidity](https://docs.soliditylang.org/)
   - We are using Solidity to implement our smart contracts. 
   - Currently, we are using v0.8.11.
@@ -155,7 +155,7 @@ $ pytest tests/
 ## Branching model
 
 <p align='center'>
-  <img alt="ibet" src="https://user-images.githubusercontent.com/963333/128963415-df122a46-b813-4832-a64e-7830a175f825.png"/>
+  <img alt="ibet" src="https://user-images.githubusercontent.com/963333/161243132-5216b4f0-cbc6-443f-bcfc-9eafb4858cb1.png"/>
 </p>
 
 
