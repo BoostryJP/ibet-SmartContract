@@ -1352,18 +1352,6 @@ class TestApproveTransfer:
         assert tx.events["ApproveTransfer"]["token"] == token.address
         assert tx.events["ApproveTransfer"]["data"] == _transfer_approval_data
 
-        assert tx.events["EscrowFinished"]["escrowId"] == latest_escrow_id
-        assert tx.events["EscrowFinished"]["token"] == token.address
-        assert tx.events["EscrowFinished"]["sender"] == _issuer
-        assert tx.events["EscrowFinished"]["recipient"] == _recipient
-        assert tx.events["EscrowFinished"]["amount"] == _escrow_amount
-        assert tx.events["EscrowFinished"]["agent"] == _agent
-
-        assert tx.events["HolderChanged"]["token"] == token.address
-        assert tx.events["HolderChanged"]["from"] == _issuer
-        assert tx.events["HolderChanged"]["to"] == _recipient
-        assert tx.events["HolderChanged"]["value"] == _escrow_amount
-
     #######################################
     # Error
     #######################################
@@ -1686,6 +1674,7 @@ class TestFinishEscrow:
         assert tx.events["EscrowFinished"]["recipient"] == _recipient
         assert tx.events["EscrowFinished"]["amount"] == _escrow_amount
         assert tx.events["EscrowFinished"]["agent"] == _agent
+        assert tx.events["EscrowFinished"]["transferApprovalRequired"] == False
 
         assert tx.events["HolderChanged"]["token"] == token.address
         assert tx.events["HolderChanged"]["from"] == _issuer
@@ -1747,7 +1736,7 @@ class TestFinishEscrow:
             _recipient,
             _escrow_amount,
             _agent,
-            True
+            False
         )
         assert st_escrow.getApplicationForTransfer(latest_escrow_id) == (
             token.address,
@@ -1757,6 +1746,14 @@ class TestFinishEscrow:
             True,
             False
         )
+
+        assert tx.events["EscrowFinished"]["escrowId"] == latest_escrow_id
+        assert tx.events["EscrowFinished"]["token"] == token.address
+        assert tx.events["EscrowFinished"]["sender"] == _issuer
+        assert tx.events["EscrowFinished"]["recipient"] == _recipient
+        assert tx.events["EscrowFinished"]["amount"] == _escrow_amount
+        assert tx.events["EscrowFinished"]["agent"] == _agent
+        assert tx.events["EscrowFinished"]["transferApprovalRequired"] == True
 
     #######################################
     # Error

@@ -61,7 +61,8 @@ contract IbetSecurityTokenEscrow is Ownable, IbetExchangeInterface {
         address sender,
         address recipient,
         uint256 amount,
-        address agent
+        address agent,
+        bool transferApprovalRequired
     );
 
     /// Event: 移転申請
@@ -514,31 +515,11 @@ contract IbetSecurityTokenEscrow is Ownable, IbetExchangeInterface {
             commitmentOf(escrow.sender, escrow.token).sub(escrow.amount)
         );
 
-        // 更新：エスクロー情報
-        EscrowStorage(storageAddress).setEscrow(
-            _escrowId,
-            escrow.token,
-            escrow.sender,
-            escrow.recipient,
-            escrow.amount,
-            escrow.agent,
-            false
-        );
-
         // イベント登録
         emit ApproveTransfer(
             _escrowId,
             application.token,
             _transferApprovalData
-        );
-
-        emit EscrowFinished(
-            _escrowId,
-            escrow.token,
-            escrow.sender,
-            escrow.recipient,
-            escrow.amount,
-            escrow.agent
         );
 
         emit HolderChanged(
@@ -612,6 +593,28 @@ contract IbetSecurityTokenEscrow is Ownable, IbetExchangeInterface {
                 true,
                 application.approved
             );
+
+            // 更新：エスクロー情報
+            EscrowStorage(storageAddress).setEscrow(
+                _escrowId,
+                escrow.token,
+                escrow.sender,
+                escrow.recipient,
+                escrow.amount,
+                escrow.agent,
+                false
+            );
+
+            // イベント登録
+            emit EscrowFinished(
+                _escrowId,
+                escrow.token,
+                escrow.sender,
+                escrow.recipient,
+                escrow.amount,
+                escrow.agent,
+                true
+            );
         } else {
             // 更新：残高
             EscrowStorage(storageAddress).setBalance(
@@ -645,7 +648,8 @@ contract IbetSecurityTokenEscrow is Ownable, IbetExchangeInterface {
                 escrow.sender,
                 escrow.recipient,
                 escrow.amount,
-                escrow.agent
+                escrow.agent,
+                false
             );
 
             emit HolderChanged(
