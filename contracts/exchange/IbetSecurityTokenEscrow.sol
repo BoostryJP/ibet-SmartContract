@@ -62,7 +62,7 @@ contract IbetSecurityTokenEscrow is Ownable, IbetExchangeInterface {
         address recipient,
         uint256 amount,
         address agent,
-        bool transferApprovalRequired
+        bool indexed transferApprovalRequired
     );
 
     /// Event: 移転申請
