@@ -26,7 +26,7 @@
   - We use [ganache-cli](https://github.com/trufflesuite/ganache-cli) for local development and unit testing, and we use the latest version.
 - [OpenZeppelin](https://openzeppelin.com/contracts/)
   - Our project is partly dependent on OpenZeppelin.
-  - We use openzeppelin-contracts v4.2.
+  - We use openzeppelin-contracts v4.5.
   
 ## Overview
 
