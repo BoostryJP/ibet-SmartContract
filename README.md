@@ -1,7 +1,7 @@
 # ibet Smart Contract
 
 <p>
-  <img alt="Version" src="https://img.shields.io/badge/version-21.12-blue.svg?cacheSeconds=2592000" />
+  <img alt="Version" src="https://img.shields.io/badge/version-22.3-blue.svg?cacheSeconds=2592000" />
   <img alt="License: Apache--2.0" src="https://img.shields.io/badge/License-Apache--2.0-yellow.svg" />
 </p>
 
@@ -15,7 +15,10 @@
 
 ## Dependencies
 - [python3](https://www.python.org/downloads/release/python-368/)
-  - Version 3.6 or greater
+  - Version 3.8 or greater
+- [Solidity](https://docs.soliditylang.org/)
+  - We are using Solidity to implement our smart contracts. 
+  - Currently, we are using v0.8.13.
 - [eth-brownie](https://github.com/eth-brownie/brownie)
   - We are using the eth-brownie framework for developing and testing our contracts.
 - [GoQuorum](https://github.com/ConsenSys/quorum)
@@ -23,7 +26,7 @@
   - We use [ganache-cli](https://github.com/trufflesuite/ganache-cli) for local development and unit testing, and we use the latest version.
 - [OpenZeppelin](https://openzeppelin.com/contracts/)
   - Our project is partly dependent on OpenZeppelin.
-  - We use openzeppelin-contracts v4.2.
+  - We use openzeppelin-contracts v4.5.
   
 ## Overview
 
@@ -52,7 +55,7 @@ $ pip install -r requirements.txt
 Install openzeppelin-contracts.
 
 ```bash
-$ brownie pm install OpenZeppelin/openzeppelin-contracts@4.2.0
+$ brownie pm install OpenZeppelin/openzeppelin-contracts@4.5.0
 ```
 
 ## Compile Contracts
@@ -152,7 +155,7 @@ $ pytest tests/
 ## Branching model
 
 <p align='center'>
-  <img alt="ibet" src="https://user-images.githubusercontent.com/963333/128963415-df122a46-b813-4832-a64e-7830a175f825.png"/>
+  <img alt="ibet" src="https://user-images.githubusercontent.com/963333/161243132-5216b4f0-cbc6-443f-bcfc-9eafb4858cb1.png"/>
 </p>
 
 

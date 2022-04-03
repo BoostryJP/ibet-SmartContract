@@ -310,6 +310,86 @@ class TestGetMessageByIndex:
         assert message[2] == 0
 
 
+class TestClearMessage:
+
+    ##########################################################
+    # Normal
+    ##########################################################
+
+    # Normal_1
+    def test_normal_1(self, E2EMessaging, users):
+        admin = users["admin"]
+        sender = users["user1"]
+        receiver = users["user2"]
+
+        test_message = "test_message"
+
+        # Deploy contract
+        e2e_messaging = admin.deploy(E2EMessaging)
+
+        # Send message
+        tx1 = e2e_messaging.sendMessage.transact(
+            receiver,
+            test_message,
+            {"from": sender}
+        )
+
+        # Clear message
+        latest_index = e2e_messaging.last_msg_index(receiver)
+        tx2 = e2e_messaging.clearMessage.transact(
+            receiver,
+            latest_index - 1,
+            {"from": sender}
+        )
+
+        # Assertion
+        assert tx2.events["MessageCleared"]["sender"] == sender
+        assert tx2.events["MessageCleared"]["receiver"] == receiver
+        assert tx2.events["MessageCleared"]["index"] == latest_index - 1
+
+        message = e2e_messaging.messages(receiver, latest_index - 1)
+        assert message[0] == sender
+        assert message[1] == ''
+        assert message[2] == tx1.events["Message"]["time"]
+
+    ##########################################################
+    # Error
+    ##########################################################
+
+    # Error_1
+    # msg.sender must be the sender of the message.
+    def test_error_1(self, E2EMessaging, users):
+        admin = users["admin"]
+        sender = users["user1"]
+        receiver = users["user2"]
+
+        test_message = "test_message"
+
+        # Deploy contract
+        e2e_messaging = admin.deploy(E2EMessaging)
+
+        # Send message
+        tx1 = e2e_messaging.sendMessage.transact(
+            receiver,
+            test_message,
+            {"from": sender}
+        )
+
+        # Clear message
+        latest_index = e2e_messaging.last_msg_index(receiver)
+        with brownie.reverts(revert_msg="msg.sender must be the sender of the message."):
+            e2e_messaging.clearMessage.transact(
+                receiver,
+                latest_index - 1,
+                {"from": receiver}
+            )
+
+        message = e2e_messaging.messages(receiver, latest_index - 1)
+        assert message[0] == sender
+        assert message[1] == test_message
+        assert message[2] == tx1.events["Message"]["time"]
+
+
 class TestGetPublicKey:
 
     ##########################################################

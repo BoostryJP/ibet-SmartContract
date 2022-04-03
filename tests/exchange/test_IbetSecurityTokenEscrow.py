@@ -246,6 +246,7 @@ class TestGetApplicationForTransfer:
             _transfer_application_data,
             "",
             True,
+            False,
             False
         )
 
@@ -453,6 +454,7 @@ class TestCreateEscrow:
             _transfer_application_data,
             "",
             True,
+            False,
             False
         )
 
@@ -904,6 +906,7 @@ class TestCancelEscrow:
             _transfer_application_data,
             "",
             False,
+            False,
             False
         )
 
@@ -1310,8 +1313,14 @@ class TestApproveTransfer:
             {'from': _issuer}
         )
 
-        # approve transfer
+        # finish escrow
         latest_escrow_id = st_escrow.latestEscrowId()
+        st_escrow.finishEscrow(
+            latest_escrow_id,
+            {'from': _agent}
+        )
+
+        # approve transfer
         tx = st_escrow.approveTransfer(
             latest_escrow_id,
             _transfer_approval_data,
@@ -1324,7 +1333,19 @@ class TestApproveTransfer:
             _transfer_application_data,
             _transfer_approval_data,
             True,
+            True,
             True
+        )
+        assert st_escrow.balanceOf(_issuer, token.address) == _deposit_amount - _escrow_amount
+        assert st_escrow.balanceOf(_recipient, token.address) == _escrow_amount
+        assert st_escrow.commitmentOf(_issuer, token.address) == 0
+        assert st_escrow.getEscrow(latest_escrow_id) == (
+            token.address,
+            _issuer,
+            _recipient,
+            _escrow_amount,
+            _agent,
+            False
         )
 
         assert tx.events["ApproveTransfer"]["escrowId"] == latest_escrow_id
@@ -1474,6 +1495,114 @@ class TestApproveTransfer:
                 {'from': _issuer}
             )
 
+    # Error_4
+    # The escrow status of the application must be in a finished state.
+    def test_error_4(self, users, st_escrow):
+        _issuer = users['issuer']
+        _recipient = users['user1']
+        _agent = users['agent']
+        _transfer_application_data = 'transfer_application_data'
+        _transfer_approval_data = 'transfer_approval_data'
+        _data = 'test_data'
+        _deposit_amount = 1000
+        _escrow_amount = 100
+
+        # issue token
+        deploy_args = init_args()
+        token = deploy(
+            users,
+            deploy_args=deploy_args,
+            tradable_exchange=st_escrow.address,
+            transfer_approval_required=True
+        )
+
+        # transfer to escrow contract
+        token.transfer(
+            st_escrow.address,
+            _deposit_amount,
+            {'from': _issuer}
+        )
+
+        # create escrow
+        st_escrow.createEscrow(
+            token.address,
+            _recipient,
+            _escrow_amount,
+            _agent,
+            _transfer_application_data,
+            _data,
+            {'from': _issuer}
+        )
+
+        # approve transfer
+        latest_escrow_id = st_escrow.latestEscrowId()
+        with brownie.reverts(revert_msg="The escrow status of the application must be in a finished state."):
+            st_escrow.approveTransfer(
+                latest_escrow_id,
+                _transfer_approval_data,
+                {'from': _issuer}
+            )
+
+    # Error_5
+    # The status of the token must be true.
+    def test_error_5(self, users, st_escrow):
+        _issuer = users['issuer']
+        _recipient = users['user1']
+        _agent = users['agent']
+        _transfer_application_data = 'transfer_application_data'
+        _transfer_approval_data = 'transfer_approval_data'
+        _data = 'test_data'
+        _deposit_amount = 1000
+        _escrow_amount = 100
+
+        # issue token
+        deploy_args = init_args()
+        token = deploy(
+            users,
+            deploy_args=deploy_args,
+            tradable_exchange=st_escrow.address,
+            transfer_approval_required=True
+        )
+
+        # transfer to escrow contract
+        token.transfer(
+            st_escrow.address,
+            _deposit_amount,
+            {'from': _issuer}
+        )
+
+        # create escrow
+        st_escrow.createEscrow(
+            token.address,
+            _recipient,
+            _escrow_amount,
+            _agent,
+            _transfer_application_data,
+            _data,
+            {'from': _issuer}
+        )
+
+        # finish escrow
+        latest_escrow_id = st_escrow.latestEscrowId()
+        st_escrow.finishEscrow(
+            latest_escrow_id,
+            {'from': _agent}
+        )
+
+        # set status to False
+        token.setStatus(
+            False,
+            {'from': _issuer}
+        )
+
+        # approve transfer
+        with brownie.reverts(revert_msg="The status of the token must be true."):
+            st_escrow.approveTransfer(
+                latest_escrow_id,
+                _transfer_approval_data,
+                {'from': _issuer}
+            )
+
 
 # TEST_finishEscrow
 class TestFinishEscrow:
@@ -1545,6 +1674,7 @@ class TestFinishEscrow:
         assert tx.events["EscrowFinished"]["recipient"] == _recipient
         assert tx.events["EscrowFinished"]["amount"] == _escrow_amount
         assert tx.events["EscrowFinished"]["agent"] == _agent
+        assert tx.events["EscrowFinished"]["transferApprovalRequired"] == False
 
         assert tx.events["HolderChanged"]["token"] == token.address
         assert tx.events["HolderChanged"]["from"] == _issuer
@@ -1558,7 +1688,6 @@ class TestFinishEscrow:
         _recipient = users['user1']
         _agent = users['agent']
         _transfer_application_data = 'transfer_application_data'
-        _transfer_approval_data = 'transfer_approval_data'
         _data = 'test_data'
         _deposit_amount = 1000
         _escrow_amount = 100
@@ -1590,15 +1719,8 @@ class TestFinishEscrow:
             {'from': _issuer}
         )
 
-        # approve transfer
-        latest_escrow_id = st_escrow.latestEscrowId()
-        st_escrow.approveTransfer(
-            latest_escrow_id,
-            _transfer_approval_data,
-            {'from': _issuer}
-        )
-
         # finish escrow
+        latest_escrow_id = st_escrow.latestEscrowId()
         tx = st_escrow.finishEscrow(
             latest_escrow_id,
             {'from': _agent}
@@ -1606,8 +1728,8 @@ class TestFinishEscrow:
 
         # assertion
         assert st_escrow.balanceOf(_issuer, token.address) == _deposit_amount - _escrow_amount
-        assert st_escrow.balanceOf(_recipient, token.address) == _escrow_amount
-        assert st_escrow.commitmentOf(_issuer, token.address) == 0
+        assert st_escrow.balanceOf(_recipient, token.address) == 0
+        assert st_escrow.commitmentOf(_issuer, token.address) == _escrow_amount
         assert st_escrow.getEscrow(latest_escrow_id) == (
             token.address,
             _issuer,
@@ -1619,16 +1741,11 @@ class TestFinishEscrow:
         assert st_escrow.getApplicationForTransfer(latest_escrow_id) == (
             token.address,
             _transfer_application_data,
-            _transfer_approval_data,
+            "",
             True,
-            True
+            True,
+            False
         )
-
-        assert tx.events["FinishTransfer"]["escrowId"] == latest_escrow_id
-        assert tx.events["FinishTransfer"]["token"] == token.address
-        assert tx.events["FinishTransfer"]["from"] == _issuer
-        assert tx.events["FinishTransfer"]["to"] == _recipient
-        assert tx.events["FinishTransfer"]["data"] == _transfer_approval_data
 
         assert tx.events["EscrowFinished"]["escrowId"] == latest_escrow_id
         assert tx.events["EscrowFinished"]["token"] == token.address
@@ -1636,11 +1753,7 @@ class TestFinishEscrow:
         assert tx.events["EscrowFinished"]["recipient"] == _recipient
         assert tx.events["EscrowFinished"]["amount"] == _escrow_amount
         assert tx.events["EscrowFinished"]["agent"] == _agent
-
-        assert tx.events["HolderChanged"]["token"] == token.address
-        assert tx.events["HolderChanged"]["from"] == _issuer
-        assert tx.events["HolderChanged"]["to"] == _recipient
-        assert tx.events["HolderChanged"]["value"] == _escrow_amount
+        assert tx.events["EscrowFinished"]["transferApprovalRequired"] == True
 
     #######################################
     # Error
