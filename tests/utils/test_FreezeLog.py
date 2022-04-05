@@ -42,7 +42,6 @@ class TestFreezeLog:
         assert tx.events["Recorded"]["recorder"] == user
 
     # Normal_2
-    # Write twice
     def test_normal_2(self, FreezeLog, users, web3):
         admin = users["admin"]
         user1 = users["user1"]
@@ -105,8 +104,10 @@ class TestLastLogIndex:
             {"from": user1}
         )
 
+        # get last_log_index of user1
         user1_last_log_index = freeze_log.lastLogIndex(user1, {"from": user2})
         assert user1_last_log_index == 1
+        # get last_log_index of user2
         user2_last_log_index = freeze_log.lastLogIndex(user2, {"from": user2})
         assert user2_last_log_index == 0
 
