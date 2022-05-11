@@ -37,7 +37,7 @@ if [ "${REFER_ACCOUNT}" != "GETH" ]; then
     set timeout 300
     spawn python scripts/deploy_shared_contract.py $*
     expect {
-      \"Enter the password to unlock this account:\" {
+      \"Enter password for \\\"deploy_user\\\": \" {
         send \"${ETH_ACCOUNT_PASSWORD}\n\"
         exp_continue
       }
