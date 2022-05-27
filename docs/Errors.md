@@ -51,17 +51,17 @@ Developers will receive error msg as code, and each error code is described belo
 
 #### lock (110X)
 
-| Code     | Situation                                             | Possible causes                                                                                                                      | 
-|----------|-------------------------------------------------------|--------------------------------------------------------------------------------------------------------------------------------------|
-| **1101** | Lock address is invalid.                              | Any of following conditions is not matched.<br/> - Lock address isn't authorized for locking <br/> - Lock Address isn't token owner. |
-| **1102** | Lock amount must be less than message sender balance. | -                                                                                                                                    |
+| Code     | Situation                                           | Possible causes                                                                                                                      | 
+|----------|-----------------------------------------------------|--------------------------------------------------------------------------------------------------------------------------------------|
+| **1101** | Lock address is invalid.                            | Any of following conditions is not matched.<br/> - Lock address isn't authorized for locking.<br/> - Lock Address isn't token owner. |
+| **1102** | Lock amount is greater than message sender balance. | -                                                                                                                                    |
 
 #### unlock (111X)
 
-| Code     | Situation                                      | Possible causes                                                                                                                          | 
-|----------|------------------------------------------------|------------------------------------------------------------------------------------------------------------------------------------------|
-| **1111** | Unlock address is invalid.                     | Any of following conditions is not matched.<br/> - Unlock address isn't authorized for locking <br/> - Unlock Address isn't token owner. |
-| **1112** | Unlock amount must be less than locked amount. | -                                                                                                                                        |
+| Code     | Situation                                    | Possible causes                                                                                                                          | 
+|----------|----------------------------------------------|------------------------------------------------------------------------------------------------------------------------------------------|
+| **1111** | Unlock address is invalid.                   | Any of following conditions is not matched.<br/> - Unlock address isn't authorized for locking.<br/> - Unlock Address isn't token owner. |
+| **1112** | Unlock amount is greater than locked amount. | -                                                                                                                                        |
 
 #### transferToAddress (112X)
 
@@ -100,10 +100,10 @@ Developers will receive error msg as code, and each error code is described belo
 
 #### applyForTransfer (117X)
 
-| Code     | Situation                            | Possible causes                                                                                                                                                                                           | 
-|----------|--------------------------------------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| **1171** | Apply for transfer is invalid.       | Any of following conditions is matched.<br/> - Approval is not required for the token transferring.<br/> - The token is not transferable.<br/> - Message sender balance is less than transferring amount. |
-| **1172** | Destination address check is failed. | All of following conditions is matched.<br/> - Destination address isn't token owner.<br/> - Destination address hasn't registered personal information to token owner.                                   |
+| Code     | Situation                            | Possible causes                                                                                                                                                                          | 
+|----------|--------------------------------------|------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| **1171** | Apply for transfer is invalid.       | Any of following conditions is matched.<br/> - Approval is not required for the token transferring.<br/> - The token is not transferable.<br/> - Message sender balance is insufficient. |
+| **1172** | Destination address check is failed. | All of following conditions is matched.<br/> - Destination address isn't token owner.<br/> - Destination address hasn't registered personal information to token owner.                  |
 
 #### cancelTransfer (118X)
 
@@ -137,17 +137,17 @@ Developers will receive error msg as code, and each error code is described belo
 
 #### lock (130X)
 
-| Code     | Situation                                             | Possible causes                                                                                                                      | 
-|----------|-------------------------------------------------------|--------------------------------------------------------------------------------------------------------------------------------------|
-| **1301** | Lock address is invalid.                              | Any of following conditions is not matched.<br/> - Lock address isn't authorized for locking <br/> - Lock Address isn't token owner. |
-| **1302** | Lock amount must be less than message sender balance. | -                                                                                                                                    |
+| Code     | Situation                                           | Possible causes                                                                                                                      | 
+|----------|-----------------------------------------------------|--------------------------------------------------------------------------------------------------------------------------------------|
+| **1301** | Lock address is invalid.                            | Any of following conditions is not matched.<br/> - Lock address isn't authorized for locking <br/> - Lock Address isn't token owner. |
+| **1302** | Lock amount is greater than message sender balance. | -                                                                                                                                    |
 
 #### unlock (131X)
 
-| Code     | Situation                                      | Possible causes                                                                                                                          | 
-|----------|------------------------------------------------|------------------------------------------------------------------------------------------------------------------------------------------|
-| **1311** | Unlock address is invalid.                     | Any of following conditions is not matched.<br/> - Unlock address isn't authorized for locking <br/> - Unlock Address isn't token owner. |
-| **1312** | Unlock amount must be less than locked amount. | -                                                                                                                                        |
+| Code     | Situation                                    | Possible causes                                                                                                                          | 
+|----------|----------------------------------------------|------------------------------------------------------------------------------------------------------------------------------------------|
+| **1311** | Unlock address is invalid.                   | Any of following conditions is not matched.<br/> - Unlock address isn't authorized for locking <br/> - Unlock Address isn't token owner. |
+| **1312** | Unlock amount is greater than locked amount. | -                                                                                                                                        |
 
 #### transferToAddress (132X)
 
