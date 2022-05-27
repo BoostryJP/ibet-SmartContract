@@ -21,6 +21,7 @@ pragma solidity ^0.8.0;
 import "OpenZeppelin/openzeppelin-contracts@4.5.0/contracts/utils/math/SafeMath.sol";
 import "./EscrowStorage.sol";
 import "../access/Ownable.sol";
+import "../utils/Errors.sol";
 import "../../interfaces/IbetExchangeInterface.sol";
 import "../../interfaces/IbetSecurityTokenInterface.sol";
 
@@ -239,19 +240,19 @@ contract IbetSecurityTokenEscrow is Ownable, IbetExchangeInterface {
         // チェック：数量がゼロより大きいこと
         require(
             _amount > 0,
-            "The amount must be greater than zero."
+            ErrorCode.ERR_IbetSecurityTokenEscrow_createEscrow_2401
         );
 
         // チェック：数量が残高以下であること
         require(
             EscrowStorage(storageAddress).getBalance(msg.sender, _token) >= _amount,
-            "The amount must be less than or equal to the balance."
+            ErrorCode.ERR_IbetSecurityTokenEscrow_createEscrow_2402
         );
 
         // チェック：トークンのステータスが有効であること
         require(
             IbetSecurityTokenInterface(_token).status() == true,
-            "The status of the token must be true."
+            ErrorCode.ERR_IbetSecurityTokenEscrow_createEscrow_2403
         );
 
         // 更新：エスクローIDをカウントアップ
@@ -328,7 +329,7 @@ contract IbetSecurityTokenEscrow is Ownable, IbetExchangeInterface {
         // チェック：エスクローIDが直近ID以下であること
         require(
             _escrowId <= EscrowStorage(storageAddress).getLatestEscrowId(),
-            "The escrowId must be less than or equal to the latest escrow ID."
+            ErrorCode.ERR_IbetSecurityTokenEscrow_cancelEscrow_2411
         );
 
         Escrow memory escrow;
@@ -344,19 +345,19 @@ contract IbetSecurityTokenEscrow is Ownable, IbetExchangeInterface {
         // チェック：エスクローが有効であること
         require(
             escrow.valid == true,
-            "Escrow must be valid."
+            ErrorCode.ERR_IbetSecurityTokenEscrow_cancelEscrow_2412
         );
 
         // チェック：msg.senderがエスクローのsender、またはagentであること
         require(
             msg.sender == escrow.sender || msg.sender == escrow.agent,
-            "msg.sender must be the sender or agent of the escrow."
+            ErrorCode.ERR_IbetSecurityTokenEscrow_cancelEscrow_2413
         );
 
         // チェック：トークンのステータスが有効であること
         require(
             IbetSecurityTokenInterface(escrow.token).status() == true,
-            "The status of the token must be true."
+            ErrorCode.ERR_IbetSecurityTokenEscrow_cancelEscrow_2414
         );
 
         // 更新：残高
@@ -463,31 +464,31 @@ contract IbetSecurityTokenEscrow is Ownable, IbetExchangeInterface {
         // チェック：移転申請が存在すること
         require(
             application.token != address(0),
-            "Application does not exist."
+            ErrorCode.ERR_IbetSecurityTokenEscrow_approveTransfer_2421
         );
 
         // チェック：承認者がトークンのオーナーであること
         require(
             msg.sender == Ownable(application.token).owner(),
-            "Approver must be the owner of the token."
+            ErrorCode.ERR_IbetSecurityTokenEscrow_approveTransfer_2422
         );
 
         // チェック：移転申請が有効状態であること
         require(
             application.valid == true,
-            "Application for transfer must be valid."
+            ErrorCode.ERR_IbetSecurityTokenEscrow_approveTransfer_2423
         );
 
         // チェック：移転申請のエスクロー状態が完了状態であること
         require(
             application.escrowFinished == true,
-            "The escrow status of the application must be in a finished state."
+            ErrorCode.ERR_IbetSecurityTokenEscrow_approveTransfer_2424
         );
 
         // チェック：トークンのステータスが有効であること
         require(
             IbetSecurityTokenInterface(escrow.token).status() == true,
-            "The status of the token must be true."
+            ErrorCode.ERR_IbetSecurityTokenEscrow_approveTransfer_2425
         );
 
         // 更新：移転承諾
@@ -541,7 +542,7 @@ contract IbetSecurityTokenEscrow is Ownable, IbetExchangeInterface {
         // チェック：エスクローIDが直近ID以下であること
         require(
             _escrowId <= EscrowStorage(storageAddress).getLatestEscrowId(),
-            "The escrowId must be less than or equal to the latest escrow ID."
+            ErrorCode.ERR_IbetSecurityTokenEscrow_finishEscrow_2431
         );
 
         Escrow memory escrow;
@@ -557,19 +558,19 @@ contract IbetSecurityTokenEscrow is Ownable, IbetExchangeInterface {
         // チェック：エスクローが取消済みではないこと
         require(
             escrow.valid == true,
-            "Escrow must be valid."
+            ErrorCode.ERR_IbetSecurityTokenEscrow_finishEscrow_2432
         );
 
         // チェック：msg.senderがエスクローのagentであること
         require(
             escrow.agent == msg.sender,
-            "msg.sender must be the agent of the escrow."
+            ErrorCode.ERR_IbetSecurityTokenEscrow_finishEscrow_2433
         );
 
         // チェック：トークンのステータスが有効であること
         require(
             IbetSecurityTokenInterface(escrow.token).status() == true,
-            "The status of the token must be true."
+            ErrorCode.ERR_IbetSecurityTokenEscrow_finishEscrow_2434
         );
 
         if (IbetSecurityTokenInterface(escrow.token).transferApprovalRequired() == true) {
@@ -676,7 +677,7 @@ contract IbetSecurityTokenEscrow is Ownable, IbetExchangeInterface {
 
         require(
             balance > 0,
-            "The balance must be greater than zero."
+            ErrorCode.ERR_IbetSecurityTokenEscrow_withdraw_2441
         );
 
         // 更新処理：トークン引き出し（送信）

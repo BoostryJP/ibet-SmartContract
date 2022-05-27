@@ -146,7 +146,7 @@ class TestRegister:
         pg_contract.ban.transact(trader, {'from': agent})
 
         # register (2)
-        with brownie.reverts():
+        with brownie.reverts(revert_msg="3001"):
             pg_contract.register.transact(
                 agent,
                 encrypted_message_after,
@@ -219,7 +219,7 @@ class TestModify:
         pg_contract = admin.deploy(PaymentGateway)
 
         # modify
-        with brownie.reverts():
+        with brownie.reverts(revert_msg="3051"):
             pg_contract.modify.transact(
                 trader,
                 encrypted_message_after,
@@ -251,7 +251,7 @@ class TestModify:
         )
 
         # modify
-        with brownie.reverts():
+        with brownie.reverts(revert_msg="3051"):
             pg_contract.modify.transact(
                 trader,
                 encrypted_message_after,
@@ -316,7 +316,7 @@ class TestApprove:
         pg_contract = admin.deploy(PaymentGateway)
 
         # approve
-        with brownie.reverts():
+        with brownie.reverts(revert_msg="3011"):
             pg_contract.approve.transact(trader, {'from': agent})
 
         # assertion
@@ -374,7 +374,7 @@ class TestWarn:
         pg_contract = admin.deploy(PaymentGateway)
 
         # warn
-        with brownie.reverts():
+        with brownie.reverts(revert_msg="3021"):
             pg_contract.warn.transact(trader, {'from': agent})
 
         # assertion
@@ -461,7 +461,7 @@ class TestDisapprove:
         pg_contract = admin.deploy(PaymentGateway)
 
         # disapprove
-        with brownie.reverts():
+        with brownie.reverts(revert_msg="3031"):
             pg_contract.disapprove.transact(trader, {'from': agent})
 
         # assertion
@@ -519,7 +519,7 @@ class TestBan:
         pg_contract = admin.deploy(PaymentGateway)
 
         # ban
-        with brownie.reverts():
+        with brownie.reverts(revert_msg="3041"):
             pg_contract.ban.transact(trader, {'from': agent})
 
         # assertion
@@ -602,7 +602,7 @@ class TestAddAgent:
         pg_contract = admin.deploy(PaymentGateway)
 
         # add agent
-        with brownie.reverts():
+        with brownie.reverts(revert_msg="5001"):
             pg_contract.addAgent.transact(agent, {'from': attacker})
 
         # assertion
@@ -674,7 +674,7 @@ class TestRemoveAgent:
         pg_contract.addAgent.transact(agent, {'from': admin})
 
         # remove agent
-        with brownie.reverts():
+        with brownie.reverts(revert_msg="5001"):
             pg_contract.removeAgent.transact(agent, {'from': attacker})
 
         # assertion

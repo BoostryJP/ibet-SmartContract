@@ -19,6 +19,7 @@
 
 pragma solidity ^0.8.0;
 
+import "../utils/Errors.sol";
 
 /// @title Personal Information Registry
 contract PersonalInfo {
@@ -74,8 +75,8 @@ contract PersonalInfo {
         Info storage info = personal_info[_account_address][msg.sender];
 
         // 登録済みか確認
-        require(info.account_address == _account_address);
-        require(info.link_address == msg.sender);
+        require(info.account_address == _account_address, ErrorCode.ERR_PersonalInfo_modify_4001);
+        require(info.link_address == msg.sender, ErrorCode.ERR_PersonalInfo_modify_4002);
 
         info.encrypted_info = _encrypted_info;
 

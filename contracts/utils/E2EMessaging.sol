@@ -19,6 +19,7 @@
 
 pragma solidity ^0.8.0;
 
+import "./Errors.sol";
 
 // @title E2E Messaging
 contract E2EMessaging {
@@ -83,7 +84,7 @@ contract E2EMessaging {
             uint256 _time
         )
     {
-        require(last_msg_index[_who] > 0);
+        require(last_msg_index[_who] > 0, ErrorCode.ERR_E2EMessaging_getLastMessage_6101);
         return (
             messages[_who][last_msg_index[_who] - 1].from,
             messages[_who][last_msg_index[_who] - 1].text,
@@ -122,7 +123,7 @@ contract E2EMessaging {
         message storage _message = messages[_to][_index];
         require(
             _message.from == msg.sender,
-            "msg.sender must be the sender of the message."
+            ErrorCode.ERR_E2EMessaging_clearMessage_6111
         );
 
         messages[_to][_index].from = msg.sender;

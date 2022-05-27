@@ -21,6 +21,7 @@ pragma solidity ^0.8.0;
 import "OpenZeppelin/openzeppelin-contracts@4.5.0/contracts/utils/math/SafeMath.sol";
 import "../access/Ownable.sol";
 import "../ledger/PersonalInfo.sol";
+import "../utils/Errors.sol";
 import "../../interfaces/ContractReceiver.sol";
 import "../../interfaces/IbetSecurityTokenInterface.sol";
 
@@ -111,13 +112,13 @@ contract IbetStraightBond is Ownable, IbetSecurityTokenInterface {
         returns (bool success)
     {
         if (msg.sender != tradableExchange && transferApprovalRequired == true) {
-            revert("Direct transfer is not possible for tokens that require approval for transfer.");
+            revert(ErrorCode.ERR_IbetStraightBond_transferToAddress_1321);
         }
 
         if (_to != owner) {
             require(
                 PersonalInfo(personalInfoAddress).isRegistered(_to, owner) == true,
-                "The transfer is only possible if personal information is registered."
+                ErrorCode.ERR_IbetStraightBond_transferToAddress_1322
             );
         }
 
@@ -142,7 +143,7 @@ contract IbetStraightBond is Ownable, IbetSecurityTokenInterface {
         // 宛先はtradableExchangeのみ可能
         require(
             _to == tradableExchange,
-            "Transfers to contract addresses are only possible to tradableExchange."
+            ErrorCode.ERR_IbetStraightBond_transferToContract_1331
         );
 
         balances[msg.sender] = balanceOf(msg.sender).sub(_value);
@@ -168,12 +169,12 @@ contract IbetStraightBond is Ownable, IbetSecurityTokenInterface {
     {
         require(
             balanceOf(msg.sender) >= _value,
-            "Sufficient balance is required."
+            ErrorCode.ERR_IbetStraightBond_transfer_1341
         );
 
         require(
             transferable == true,
-            "Must be transferable."
+            ErrorCode.ERR_IbetStraightBond_transfer_1342
         );
 
         bytes memory empty;
@@ -195,7 +196,7 @@ contract IbetStraightBond is Ownable, IbetSecurityTokenInterface {
     {
         // <CHK>
         // リスト長が等しくない場合、エラーを返す
-        if (_toList.length != _valueList.length) revert();
+        if (_toList.length != _valueList.length) revert(ErrorCode.ERR_IbetStraightBond_bulkTransfer_1351);
 
         // <CHK>
         // 数量が残高を超えている場合、エラーを返す
@@ -203,12 +204,12 @@ contract IbetStraightBond is Ownable, IbetSecurityTokenInterface {
         for(uint i = 0; i < _toList.length; i++) {
              totalValue += _valueList[i];
         }
-        if (balanceOf(msg.sender) < totalValue) revert();
+        if (balanceOf(msg.sender) < totalValue) revert(ErrorCode.ERR_IbetStraightBond_bulkTransfer_1352);
 
         // <CHK>
         // 譲渡可能ではない場合、エラーを返す
         if (msg.sender != tradableExchange) {
-            require(transferable == true);
+            require(transferable == true, ErrorCode.ERR_IbetStraightBond_bulkTransfer_1353);
         }
 
         bytes memory empty;
@@ -241,7 +242,7 @@ contract IbetStraightBond is Ownable, IbetSecurityTokenInterface {
     {
         // <CHK>
         //  数量が送信元アドレス（from）の残高を超えている場合、エラーを返す
-        if (balanceOf(_from) < _value) revert();
+        if (balanceOf(_from) < _value) revert(ErrorCode.ERR_IbetStraightBond_transferFrom_1361);
 
         bytes memory empty;
 
@@ -436,13 +437,13 @@ contract IbetStraightBond is Ownable, IbetSecurityTokenInterface {
         // 申込ステータスが停止中の場合、エラーを返す
         require(
             isOffering == true,
-            "Must be in offering."
+            ErrorCode.ERR_IbetStraightBond_applyForOffering_1401
         );
 
         // 個人情報未登録の場合、エラーを返す
         require(
             PersonalInfo(personalInfoAddress).isRegistered(msg.sender, owner) == true,
-            "Personal info must be registered."
+            ErrorCode.ERR_IbetStraightBond_applyForOffering_1402
         );
 
         applicationsForOffering[msg.sender].applicationAmount = _amount;
@@ -515,11 +516,12 @@ contract IbetStraightBond is Ownable, IbetSecurityTokenInterface {
         // ロック対象が認可済みアドレス、または発行者アドレスであることをチェック
         require(
             authorizedLockAddress[_lockAddress] == true ||
-            _lockAddress == owner
+            _lockAddress == owner,
+            ErrorCode.ERR_IbetStraightBond_lock_1301
         );
 
         // ロック数量が保有数量を上回っている場合、エラーを返す
-        if (balanceOf(msg.sender) < _value) revert();
+        if (balanceOf(msg.sender) < _value) revert(ErrorCode.ERR_IbetStraightBond_lock_1302);
 
         // データ更新
         balances[msg.sender] = balanceOf(msg.sender).sub(_value);
@@ -544,11 +546,12 @@ contract IbetStraightBond is Ownable, IbetSecurityTokenInterface {
         // msg.senderが認可済みアドレス、または発行者アドレスであることをチェック
         require(
             authorizedLockAddress[msg.sender] == true ||
-            msg.sender == owner
+            msg.sender == owner,
+            ErrorCode.ERR_IbetStraightBond_unlock_1311
         );
 
         // アンロック数量がロック数量を上回ってる場合、エラーを返す
-        if (lockedOf(msg.sender, _accountAddress) < _value) revert();
+        if (lockedOf(msg.sender, _accountAddress) < _value) revert(ErrorCode.ERR_IbetStraightBond_unlock_1312);
 
         // データ更新
         locked[msg.sender][_accountAddress] = lockedOf(msg.sender, _accountAddress).sub(_value);
@@ -580,14 +583,17 @@ contract IbetStraightBond is Ownable, IbetSecurityTokenInterface {
             transferable == false ||
             balanceOf(msg.sender) < _value)
         {
-            revert();
+            revert(ErrorCode.ERR_IbetStraightBond_applyForTransfer_1371);
         }
 
         // <CHK>
         // 個人情報登録済みチェック
         // 発行体への移転の場合はチェックを行わない
         if (_to != owner) {
-            require(PersonalInfo(personalInfoAddress).isRegistered(_to, owner) == true);
+            require(
+                PersonalInfo(personalInfoAddress).isRegistered(_to, owner) == true,
+                ErrorCode.ERR_IbetStraightBond_applyForTransfer_1372
+            );
         }
 
         balances[msg.sender] -= _value;
@@ -626,13 +632,13 @@ contract IbetStraightBond is Ownable, IbetSecurityTokenInterface {
         if (applicationsForTransfer[_index].from != msg.sender &&
             msg.sender != owner)
         {
-            revert();
+            revert(ErrorCode.ERR_IbetStraightBond_cancelTransfer_1381);
         }
 
         // <CHK>
         // すでに無効な申請に対する取消の場合
         // -> REVERT
-        if (applicationsForTransfer[_index].valid == false) revert();
+        if (applicationsForTransfer[_index].valid == false) revert(ErrorCode.ERR_IbetStraightBond_cancelTransfer_1382);
 
         balances[applicationsForTransfer[_index].from] += applicationsForTransfer[_index].amount;
         pendingTransfer[applicationsForTransfer[_index].from] -= applicationsForTransfer[_index].amount;
@@ -660,12 +666,12 @@ contract IbetStraightBond is Ownable, IbetSecurityTokenInterface {
         // <CHK>
         // 移転不可の場合
         // -> REVERT
-        if (transferable == false) revert();
+        if (transferable == false) revert(ErrorCode.ERR_IbetStraightBond_approveTransfer_1391);
 
         // <CHK>
         // すでに無効な申請に対する取消の場合
         // -> REVERT
-        if (applicationsForTransfer[_index].valid == false) revert();
+        if (applicationsForTransfer[_index].valid == false) revert(ErrorCode.ERR_IbetStraightBond_approveTransfer_1392);
 
         balances[applicationsForTransfer[_index].to] += applicationsForTransfer[_index].amount;
         pendingTransfer[applicationsForTransfer[_index].from] -= applicationsForTransfer[_index].amount;
@@ -734,14 +740,14 @@ contract IbetStraightBond is Ownable, IbetSecurityTokenInterface {
         // locked_addressを指定しない場合：アカウントアドレスの残高から減資を行う
         if (_lockAddress != address(0)) {
             // 減資数量が対象アドレスのロック数量を上回っている場合はエラー
-            if (lockedOf(_lockAddress, _targetAddress) < _amount) revert();
+            if (lockedOf(_lockAddress, _targetAddress) < _amount) revert(ErrorCode.ERR_IbetStraightBond_redeemFrom_1411);
             // ロック資産の更新
             locked[_lockAddress][_targetAddress] = lockedOf(_lockAddress, _targetAddress).sub(_amount);
             // 総発行数量の更新
             totalSupply = totalSupply.sub(_amount);
         } else {
             // 減資数量が対象アドレスの残高数量を上回っている場合はエラーを返す
-            if (balances[_targetAddress] < _amount) revert();
+            if (balances[_targetAddress] < _amount) revert(ErrorCode.ERR_IbetStraightBond_redeemFrom_1412);
             // アカウント残高の更新
             balances[_targetAddress] = balanceOf(_targetAddress).sub(_amount);
             // 総発行数量の更新

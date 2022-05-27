@@ -21,6 +21,7 @@ pragma solidity ^0.8.0;
 
 import "OpenZeppelin/openzeppelin-contracts@4.5.0/contracts/utils/math/SafeMath.sol";
 import "../access/Ownable.sol";
+import "../utils/Errors.sol";
 import "../../interfaces/ContractReceiver.sol";
 import "../../interfaces/IbetStandardTokenInterface.sol";
 
@@ -131,7 +132,7 @@ contract IbetMembership is Ownable, IbetStandardTokenInterface {
         private
         returns (bool success)
     {
-        require(_to == tradableExchange);
+        require(_to == tradableExchange, ErrorCode.ERR_IbetMembership_transferToContract_1601);
         balances[msg.sender] = balanceOf(msg.sender).sub(_value);
         balances[_to] = balanceOf(_to).add(_value);
 
@@ -154,10 +155,10 @@ contract IbetMembership is Ownable, IbetStandardTokenInterface {
         returns (bool)
     {
         //  数量が残高を超えている場合、エラーを返す
-        if (balanceOf(msg.sender) < _value) revert();
+        if (balanceOf(msg.sender) < _value) revert(ErrorCode.ERR_IbetMembership_transfer_1611);
         if (msg.sender != tradableExchange) {
             // 譲渡可能ではない場合、エラーを返す
-            require(transferable == true);
+            require(transferable == true, ErrorCode.ERR_IbetMembership_transfer_1612);
         }
 
         bytes memory empty;
@@ -179,7 +180,7 @@ contract IbetMembership is Ownable, IbetStandardTokenInterface {
     {
         // <CHK>
         // リスト長が等しくない場合、エラーを返す
-        if (_toList.length != _valueList.length) revert();
+        if (_toList.length != _valueList.length) revert(ErrorCode.ERR_IbetMembership_bulkTransfer_1621);
 
         // <CHK>
         // 数量が残高を超えている場合、エラーを返す
@@ -187,12 +188,12 @@ contract IbetMembership is Ownable, IbetStandardTokenInterface {
         for(uint i = 0; i < _toList.length; i++) {
              totalValue += _valueList[i];
         }
-        if (balanceOf(msg.sender) < totalValue) revert();
+        if (balanceOf(msg.sender) < totalValue) revert(ErrorCode.ERR_IbetMembership_bulkTransfer_1622);
 
         // <CHK>
         // 譲渡可能ではない場合、エラーを返す
         if (msg.sender != tradableExchange) {
-            require(transferable == true);
+            require(transferable == true, ErrorCode.ERR_IbetMembership_bulkTransfer_1623);
         }
 
         bytes memory empty;
@@ -224,7 +225,7 @@ contract IbetMembership is Ownable, IbetStandardTokenInterface {
         returns (bool)
     {
         //  数量が送信元アドレス（from）の残高を超えている場合、エラーを返す
-        if (balanceOf(_from) < _value) revert();
+        if (balanceOf(_from) < _value) revert(ErrorCode.ERR_IbetMembership_transferFrom_1631);
 
         bytes memory empty;
         if (isContract(_to)) {// 送信先アドレスがコントラクトアドレスの場合
@@ -399,7 +400,7 @@ contract IbetMembership is Ownable, IbetStandardTokenInterface {
         public
     {
         // 申込ステータスが停止中の場合、エラーを返す
-        require(initialOfferingStatus == true);
+        require(initialOfferingStatus == true, ErrorCode.ERR_IbetMembership_applyForOffering_1641);
         applications[msg.sender] = _data;
         emit ApplyFor(msg.sender);
     }

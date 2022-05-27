@@ -19,6 +19,7 @@
 
 pragma solidity ^0.8.0;
 
+import "../utils/Errors.sol";
 
 /// @title Ownership Management Contract
 contract Ownable {
@@ -35,7 +36,7 @@ contract Ownable {
 
     /// @notice オーナー権限チェック
     modifier onlyOwner() {
-        require(msg.sender == owner);
+        require(msg.sender == owner, ErrorCode.ERR_Ownable_onlyOwner_5001);
         _;
     }
 
@@ -46,7 +47,7 @@ contract Ownable {
         public
         onlyOwner
     {
-        require(newOwner != address(0));
+        require(newOwner != address(0), ErrorCode.ERR_Ownable_transferOwnership_5011);
         emit OwnershipTransferred(owner, newOwner);
         owner = newOwner;
     }

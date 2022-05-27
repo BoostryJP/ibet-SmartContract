@@ -21,6 +21,7 @@ pragma solidity ^0.8.0;
 
 import "OpenZeppelin/openzeppelin-contracts@4.5.0/contracts/utils/math/SafeMath.sol";
 import "../access/Ownable.sol";
+import "../utils/Errors.sol";
 import "../../interfaces/ContractReceiver.sol";
 import "../../interfaces/IbetStandardTokenInterface.sol";
 
@@ -94,7 +95,7 @@ contract IbetStandardToken is Ownable, IbetStandardTokenInterface {
         private
         returns (bool success)
     {
-        require(_to == tradableExchange);
+        require(_to == tradableExchange, ErrorCode.ERR_IbetStandardToken_transferToContract_1701);
         balances[msg.sender] = balanceOf(msg.sender).sub(_value);
         balances[_to] = balanceOf(_to).add(_value);
         ContractReceiver receiver = ContractReceiver(_to);
@@ -113,7 +114,7 @@ contract IbetStandardToken is Ownable, IbetStandardTokenInterface {
         returns (bool success)
     {
         // 譲渡しようとしている数量が残高を超えている場合、エラーを返す
-        if (balanceOf(msg.sender) < _value) revert();
+        if (balanceOf(msg.sender) < _value) revert(ErrorCode.ERR_IbetStandardToken_transfer_1711);
 
         bytes memory empty;
         if (isContract(_to)) {
@@ -137,7 +138,7 @@ contract IbetStandardToken is Ownable, IbetStandardTokenInterface {
         returns (bool)
     {
         //  数量が送信元アドレス（from）の残高を超えている場合、エラーを返す
-        if (balanceOf(_from) < _value) revert();
+        if (balanceOf(_from) < _value) revert(ErrorCode.ERR_IbetStandardToken_transferFrom_1731);
 
         bytes memory empty;
         if (isContract(_to)) {// 送信先アドレスがコントラクトアドレスの場合
@@ -167,7 +168,7 @@ contract IbetStandardToken is Ownable, IbetStandardTokenInterface {
     {
         // <CHK>
         // リスト長が等しくない場合、エラーを返す
-        if (_toList.length != _valueList.length) revert();
+        if (_toList.length != _valueList.length) revert(ErrorCode.ERR_IbetStandardToken_bulkTransfer_1721);
 
         // <CHK>
         // 数量が残高を超えている場合、エラーを返す
@@ -175,7 +176,7 @@ contract IbetStandardToken is Ownable, IbetStandardTokenInterface {
         for(uint i = 0; i < _toList.length; i++) {
              totalValue += _valueList[i];
         }
-        if (balanceOf(msg.sender) < totalValue) revert();
+        if (balanceOf(msg.sender) < totalValue) revert(ErrorCode.ERR_IbetStandardToken_bulkTransfer_1722);
 
         bytes memory empty;
         bool result;

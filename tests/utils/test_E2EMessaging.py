@@ -377,7 +377,7 @@ class TestClearMessage:
 
         # Clear message
         latest_index = e2e_messaging.last_msg_index(receiver)
-        with brownie.reverts(revert_msg="msg.sender must be the sender of the message."):
+        with brownie.reverts(revert_msg="6111"):
             e2e_messaging.clearMessage.transact(
                 receiver,
                 latest_index - 1,

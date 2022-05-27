@@ -19,6 +19,7 @@
 pragma solidity ^0.8.0;
 
 import "../access/Ownable.sol";
+import "../utils/Errors.sol";
 
 
 /// @title Contract Registry
@@ -57,13 +58,13 @@ contract ContractRegistry is Ownable {
         }
         require(
             extCodeLength > 0,
-            "Need to set the address of contract."
+            ErrorCode.ERR_ContractRegistry_register_6001
         );
 
         // チェック：msg.senderがコントラクトのオーナーであること
         require(
             msg.sender == Ownable(_contractAddress).owner(),
-            "The msg.sender must be the owner of the contract."
+            ErrorCode.ERR_ContractRegistry_register_6002
         );
 
         registry[_contractAddress].contractType = _contractType;

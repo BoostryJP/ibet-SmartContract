@@ -20,6 +20,7 @@
 pragma solidity ^0.8.0;
 
 import "../access/Ownable.sol";
+import "../utils/Errors.sol";
 
 
 /// @title Token Registry
@@ -52,8 +53,8 @@ contract TokenList {
     function register(address _token_address, string memory _token_template)
         public
     {
-        require(tokens[_token_address].token_address == address(0));
-        require(Ownable(_token_address).owner() == msg.sender);
+        require(tokens[_token_address].token_address == address(0), ErrorCode.ERR_TokenList_register_1001);
+        require(Ownable(_token_address).owner() == msg.sender, ErrorCode.ERR_TokenList_register_1002);
         tokens[_token_address].token_address = _token_address;
         tokens[_token_address].token_template = _token_template;
         tokens[_token_address].owner_address = msg.sender;
@@ -71,8 +72,8 @@ contract TokenList {
     function changeOwner(address _token_address, address _new_owner_address)
         public
     {
-        require(tokens[_token_address].token_address != address(0));
-        require(tokens[_token_address].owner_address == msg.sender);
+        require(tokens[_token_address].token_address != address(0), ErrorCode.ERR_TokenList_changeOwner_1011);
+        require(tokens[_token_address].owner_address == msg.sender, ErrorCode.ERR_TokenList_changeOwner_1012);
         tokens[_token_address].owner_address = _new_owner_address;
         for (uint i = 0; i < token_list.length; i++) {
             if (token_list[i].token_address == _token_address) {

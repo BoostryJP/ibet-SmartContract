@@ -181,7 +181,7 @@ class TestWithdraw:
         token = deploy(users, deploy_args)
 
         # withdraw
-        with brownie.reverts(revert_msg="The balance must be greater than zero."):
+        with brownie.reverts(revert_msg="2161"):
             exchange.withdraw.transact(
                 token.address,
                 {'from': _issuer}
@@ -239,7 +239,7 @@ class TestWithdraw:
         )
 
         # withdraw
-        with brownie.reverts(revert_msg="Must be transferable."):
+        with brownie.reverts(revert_msg="1142"):
             exchange.withdraw(
                 token.address,
                 {'from': _issuer}
@@ -378,7 +378,7 @@ class TestCreateOrder:
         _isBuy = True
 
         order_id_before = exchange.latestOrderId()
-        with brownie.reverts():
+        with brownie.reverts(revert_msg="2101"):
             exchange.createOrder.transact(
                 token.address,
                 _amount,
@@ -415,7 +415,7 @@ class TestCreateOrder:
         _isBuy = True
 
         order_id_before = exchange.latestOrderId()
-        with brownie.reverts():
+        with brownie.reverts(revert_msg="2101"):
             exchange.createOrder.transact(
                 token.address,
                 _amount,
@@ -448,7 +448,7 @@ class TestCreateOrder:
         _isBuy = True
 
         order_id_before = exchange.latestOrderId()
-        with brownie.reverts():
+        with brownie.reverts(revert_msg="2101"):
             exchange.createOrder.transact(
                 token.address,
                 _amount,
@@ -648,7 +648,7 @@ class TestCreateOrder:
         # make sell order
         _price = 123
         _isBuy = False
-        with brownie.reverts(revert_msg="Must be transferable."):
+        with brownie.reverts(revert_msg="1142"):
             exchange.createOrder(
                 token.address,
                 _amount,
@@ -817,7 +817,7 @@ class TestCancelOrder:
 
         # cancel order
         latest_order_id = exchange.latestOrderId()
-        with brownie.reverts(revert_msg="The orderId must be less than or equal to the latest order ID."):
+        with brownie.reverts(revert_msg="2111"):
             exchange.cancelOrder.transact(
                 latest_order_id + 1,
                 {'from': issuer}
@@ -883,7 +883,7 @@ class TestCancelOrder:
         assert exchange.getOrder(order_id)[2] == 0
 
         # cancel order
-        with brownie.reverts(revert_msg="The remaining amount of the original order must be greater than zero."):
+        with brownie.reverts(revert_msg="2112"):
             exchange.cancelOrder.transact(
                 order_id,
                 {'from': issuer}
@@ -930,7 +930,7 @@ class TestCancelOrder:
         exchange.cancelOrder.transact(order_id, {'from': trader})
 
         # cancel order (2)
-        with brownie.reverts(revert_msg="The order to be cancelled must not have been cancelled."):
+        with brownie.reverts(revert_msg="2113"):
             exchange.cancelOrder.transact(order_id, {'from': trader})
 
         # assertion
@@ -971,7 +971,7 @@ class TestCancelOrder:
 
         # cancel order
         order_id = exchange.latestOrderId()
-        with brownie.reverts(revert_msg="msg.sender must be an orderer."):
+        with brownie.reverts(revert_msg="2114"):
             exchange.cancelOrder.transact(
                 order_id,
                 {'from': users['user1']}
@@ -1047,7 +1047,7 @@ class TestCancelOrder:
 
         # cancel order
         order_id = exchange.latestOrderId()
-        with brownie.reverts(revert_msg="Must be transferable."):
+        with brownie.reverts(revert_msg="1142"):
             exchange.cancelOrder(
                 order_id,
                 {'from': issuer}
@@ -1212,7 +1212,7 @@ class TestForceCancelOrder:
 
         # cancel order
         latest_order_id = exchange.latestOrderId()
-        with brownie.reverts(revert_msg="The orderId must be less than or equal to the latest order ID."):
+        with brownie.reverts(revert_msg="2121"):
             exchange.forceCancelOrder(
                 latest_order_id + 1,
                 {'from': agent}
@@ -1278,7 +1278,7 @@ class TestForceCancelOrder:
         assert exchange.getOrder(order_id)[2] == 0
 
         # cancel order
-        with brownie.reverts(revert_msg="The remaining amount of the original order must be greater than zero."):
+        with brownie.reverts(revert_msg="2122"):
             exchange.forceCancelOrder(
                 order_id,
                 {'from': agent}
@@ -1325,7 +1325,7 @@ class TestForceCancelOrder:
         exchange.cancelOrder(order_id, {'from': trader})
 
         # cancel order (2)
-        with brownie.reverts(revert_msg="The order to be cancelled must not have been cancelled."):
+        with brownie.reverts(revert_msg="2123"):
             exchange.forceCancelOrder(
                 order_id,
                 {'from': agent}
@@ -1369,7 +1369,7 @@ class TestForceCancelOrder:
 
         # cancel order
         order_id = exchange.latestOrderId()
-        with brownie.reverts(revert_msg="msg.sender must be an agent."):
+        with brownie.reverts(revert_msg="2124"):
             exchange.forceCancelOrder(
                 order_id,
                 {'from': trader}
@@ -1445,7 +1445,7 @@ class TestForceCancelOrder:
 
         # cancel order
         order_id = exchange.latestOrderId()
-        with brownie.reverts(revert_msg="Must be transferable."):
+        with brownie.reverts(revert_msg="1142"):
             exchange.forceCancelOrder(
                 order_id,
                 {'from': agent}
@@ -1629,7 +1629,7 @@ class TestExecuteOrder:
         # take BUY order by trader
         _take_amount = 2 ** 256 - 1
         order_id = exchange.latestOrderId()
-        with brownie.reverts():
+        with brownie.reverts(revert_msg="2131"):
             exchange.executeOrder.transact(
                 order_id + 1,
                 _take_amount,
@@ -1685,7 +1685,7 @@ class TestExecuteOrder:
 
         # take BUY order by trader
         order_id = exchange.latestOrderId()
-        with brownie.reverts():
+        with brownie.reverts(revert_msg="2132"):
             exchange.executeOrder.transact(
                 order_id,
                 0,
@@ -1737,7 +1737,7 @@ class TestExecuteOrder:
         # take BUY order by trader
         _take_amount = 2 ** 256 - 1
         order_id = exchange.latestOrderId()
-        with brownie.reverts():
+        with brownie.reverts(revert_msg="2132"):
             exchange.executeOrder.transact(
                 order_id,
                 _take_amount,
@@ -1793,7 +1793,7 @@ class TestExecuteOrder:
         # take BUY order by trader
         _take_amount = 2 ** 256 - 1
         order_id = exchange.latestOrderId()
-        with brownie.reverts():
+        with brownie.reverts(revert_msg="2132"):
             exchange.executeOrder.transact(
                 order_id,
                 _take_amount,
@@ -1853,7 +1853,7 @@ class TestExecuteOrder:
         # take BUY order by trader
         _take_amount = 2 ** 256 - 1
         order_id = exchange.latestOrderId()
-        with brownie.reverts():
+        with brownie.reverts(revert_msg="2132"):
             exchange.executeOrder.transact(
                 order_id,
                 _take_amount,
@@ -1912,7 +1912,7 @@ class TestExecuteOrder:
         # take BUY order by trader
         _take_amount = 2 ** 256 - 1
         order_id = exchange.latestOrderId()
-        with brownie.reverts():
+        with brownie.reverts(revert_msg="2132"):
             exchange.executeOrder.transact(
                 order_id,
                 _take_amount,
@@ -1968,7 +1968,7 @@ class TestExecuteOrder:
         # take BUY order by trader
         _take_amount = 101
         order_id = exchange.latestOrderId()
-        with brownie.reverts():
+        with brownie.reverts(revert_msg="2132"):
             exchange.executeOrder.transact(
                 order_id,
                 _take_amount,
@@ -2457,7 +2457,7 @@ class TestExecuteOrder:
         )
 
         # take SELL
-        with brownie.reverts(revert_msg="Must be transferable."):
+        with brownie.reverts(revert_msg="1142"):
             exchange.executeOrder.transact(
                 order_id,
                 _take_amount,
@@ -2697,7 +2697,7 @@ class TestConfirmAgreement:
 
         # confirm agreement
         agreement_id = exchange.latestAgreementId(order_id)
-        with brownie.reverts():
+        with brownie.reverts(revert_msg="2141"):
             exchange.confirmAgreement.transact(
                 order_id + 1,
                 agreement_id,
@@ -2768,7 +2768,7 @@ class TestConfirmAgreement:
 
         # confirm agreement
         agreement_id = exchange.latestAgreementId(order_id)
-        with brownie.reverts():
+        with brownie.reverts(revert_msg="2142"):
             exchange.confirmAgreement.transact(
                 order_id,
                 agreement_id + 1,
@@ -2846,7 +2846,7 @@ class TestConfirmAgreement:
         )
 
         # confirm agreement (2)
-        with brownie.reverts():
+        with brownie.reverts(revert_msg="2143"):
             exchange.confirmAgreement.transact(
                 order_id,
                 agreement_id,
@@ -2924,7 +2924,7 @@ class TestConfirmAgreement:
         )
 
         # confirm agreement
-        with brownie.reverts():
+        with brownie.reverts(revert_msg="2143"):
             exchange.confirmAgreement.transact(
                 order_id,
                 agreement_id,
@@ -2995,7 +2995,7 @@ class TestConfirmAgreement:
 
         # confirm agreement
         agreement_id = exchange.latestAgreementId(order_id)
-        with brownie.reverts():
+        with brownie.reverts(revert_msg="2142"):
             exchange.confirmAgreement.transact(
                 order_id,
                 agreement_id + 1,
@@ -3093,7 +3093,7 @@ class TestConfirmAgreement:
 
         # confirm agreement
         agreement_id = exchange.latestAgreementId(order_id)
-        with brownie.reverts(revert_msg="Must be transferable."):
+        with brownie.reverts(revert_msg="1142"):
             exchange.confirmAgreement.transact(
                 order_id,
                 agreement_id,
@@ -3322,7 +3322,7 @@ class TestCancelAgreement:
 
         # cancel agreement
         agreement_id = exchange.latestAgreementId(order_id)
-        with brownie.reverts():
+        with brownie.reverts(revert_msg="2151"):
             exchange.cancelAgreement.transact(
                 order_id + 1,
                 agreement_id,
@@ -3393,7 +3393,7 @@ class TestCancelAgreement:
 
         # cancel agreement
         agreement_id = exchange.latestAgreementId(order_id)
-        with brownie.reverts():
+        with brownie.reverts(revert_msg="2152"):
             exchange.cancelAgreement.transact(
                 order_id,
                 agreement_id + 1,
@@ -3471,8 +3471,8 @@ class TestCancelAgreement:
         )
 
         # cancel agreement
-        with brownie.reverts():
-            exchange.confirmAgreement.transact(
+        with brownie.reverts(revert_msg="2154"):
+            exchange.cancelAgreement.transact(
                 order_id,
                 agreement_id,
                 {'from': agent}
@@ -3549,7 +3549,7 @@ class TestCancelAgreement:
         )
 
         # cancel agreement (2)
-        with brownie.reverts():
+        with brownie.reverts(revert_msg="2154"):
             exchange.cancelAgreement.transact(
                 order_id,
                 agreement_id,
@@ -3620,7 +3620,7 @@ class TestCancelAgreement:
 
         # cancel agreement
         agreement_id = exchange.latestAgreementId(order_id)
-        with brownie.reverts():
+        with brownie.reverts(revert_msg="2154"):
             exchange.cancelAgreement.transact(
                 order_id,
                 agreement_id,
@@ -3718,7 +3718,7 @@ class TestCancelAgreement:
 
         # cancel agreement
         agreement_id = exchange.latestAgreementId(order_id)
-        with brownie.reverts(revert_msg="Must be transferable."):
+        with brownie.reverts(revert_msg="1142"):
             exchange.cancelAgreement(
                 order_id,
                 agreement_id,

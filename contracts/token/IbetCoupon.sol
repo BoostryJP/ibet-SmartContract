@@ -21,6 +21,7 @@ pragma solidity ^0.8.0;
 
 import "OpenZeppelin/openzeppelin-contracts@4.5.0/contracts/utils/math/SafeMath.sol";
 import "../access/Ownable.sol";
+import "../utils/Errors.sol";
 import "../../interfaces/ContractReceiver.sol";
 import "../../interfaces/IbetStandardTokenInterface.sol";
 
@@ -135,7 +136,7 @@ contract IbetCoupon is Ownable, IbetStandardTokenInterface {
         private
         returns (bool success)
     {
-        require(_to == tradableExchange);
+        require(_to == tradableExchange, ErrorCode.ERR_IbetCoupon_transferToContract_1501);
         balances[msg.sender] = balanceOf(msg.sender).sub(_value);
         balances[_to] = balanceOf(_to).add(_value);
         ContractReceiver receiver = ContractReceiver(_to);
@@ -154,10 +155,10 @@ contract IbetCoupon is Ownable, IbetStandardTokenInterface {
         returns (bool success)
     {
         // 譲渡しようとしている数量が残高を超えている場合、エラーを返す
-        if (balanceOf(msg.sender) < _value) revert();
+        if (balanceOf(msg.sender) < _value) revert(ErrorCode.ERR_IbetCoupon_transfer_1511);
         if (msg.sender != tradableExchange) {
             // 譲渡可能なクーポンではない場合、エラーを返す
-            require(transferable == true);
+            require(transferable == true, ErrorCode.ERR_IbetCoupon_transfer_1512);
         }
         bytes memory empty;
         if (isContract(_to)) {
@@ -179,7 +180,7 @@ contract IbetCoupon is Ownable, IbetStandardTokenInterface {
     {
         // <CHK>
         // リスト長が等しくない場合、エラーを返す
-        if (_toList.length != _valueList.length) revert();
+        if (_toList.length != _valueList.length) revert(ErrorCode.ERR_IbetCoupon_bulkTransfer_1521);
 
         // <CHK>
         // 数量が残高を超えている場合、エラーを返す
@@ -187,12 +188,12 @@ contract IbetCoupon is Ownable, IbetStandardTokenInterface {
         for(uint i = 0; i < _toList.length; i++) {
              totalValue += _valueList[i];
         }
-        if (balanceOf(msg.sender) < totalValue) revert();
+        if (balanceOf(msg.sender) < totalValue) revert(ErrorCode.ERR_IbetCoupon_bulkTransfer_1522);
 
         // <CHK>
         // 譲渡可能ではない場合、エラーを返す
         if (msg.sender != tradableExchange) {
-            require(transferable == true);
+            require(transferable == true, ErrorCode.ERR_IbetCoupon_bulkTransfer_1523);
         }
 
         bytes memory empty;
@@ -224,7 +225,7 @@ contract IbetCoupon is Ownable, IbetStandardTokenInterface {
         returns (bool)
     {
         //  数量が送信元アドレス（from）の残高を超えている場合、エラーを返す
-        if (balanceOf(_from) < _value) revert();
+        if (balanceOf(_from) < _value) revert(ErrorCode.ERR_IbetCoupon_transferFrom_1531);
 
         bytes memory empty;
         if (isContract(_to)) {// 送信先アドレスがコントラクトアドレスの場合
@@ -249,7 +250,7 @@ contract IbetCoupon is Ownable, IbetStandardTokenInterface {
         public
     {
         // 消費しようとしている数量が残高を超えている場合、エラーを返す
-        if (balanceOf(msg.sender) < _value) revert();
+        if (balanceOf(msg.sender) < _value) revert(ErrorCode.ERR_IbetCoupon_consume_1541);
 
         // 残高数量を更新する
         balances[msg.sender] = balanceOf(msg.sender).sub(_value);
@@ -426,7 +427,7 @@ contract IbetCoupon is Ownable, IbetStandardTokenInterface {
         public
     {
         // 申込ステータスが停止中の場合、エラーを返す
-        require(initialOfferingStatus == true);
+        require(initialOfferingStatus == true, ErrorCode.ERR_IbetCoupon_applyForOffering_1551);
         applications[msg.sender] = _data;
         emit ApplyFor(msg.sender);
     }
