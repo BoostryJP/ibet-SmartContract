@@ -3,33 +3,33 @@ This is a definition list of errors to be thrown when transaction reverts.
 Developers will receive error msg as code, and each error code is described below, including description of situation and possible causes.    
 
 ### Token Error
-- [TokenList (10XX)](#TokenList-(10XX))
-- [IbetShare (11XX/12XX)](#IbetShare-(11XX/12XX))
-- [IbetStraightBond (13XX/14XX)](#IbetStraightBond-(13XX/14XX))
-- [IbetCoupon (15XX)](#IbetCoupon-(15XX))
-- [IbetMembership (16XX)](#IbetMembership-(16XX))
-- [IbetStandardToken (17XX)](#IbetStandardToken-(17XX))
+- [TokenList (10XX)](#tokenlist-10XX)
+- [IbetShare (11XX/12XX)](#ibetshare-11XX12XX)
+- [IbetStraightBond (13XX/14XX)](#ibetstraightbond-13XX14XX)
+- [IbetCoupon (15XX)](#ibetcoupon-15XX)
+- [IbetMembership (16XX)](#ibetmembership-16XX)
+- [IbetStandardToken (17XX)](#ibetstandardtoken-17XX)
 
 ### Exchange & Escrow Error
-- [ExchangeStorage (20XX)](#ExchangeStorage-(20XX))
-- [IbetExchange (21XX)](#IbetExchange-(21XX))
-- [EscrowStorage (22XX)](#EscrowStorage-(22XX))
-- [IbetEscrow (23XX)](#IbetEscrow-(23XX))
-- [IbetSecurityTokenEscrow (24XX)](#IbetSecurityTokenEscrow-(24XX))
+- [ExchangeStorage (20XX)](#exchangestorage-20XX)
+- [IbetExchange (21XX)](#ibetexchange-21XX)
+- [EscrowStorage (22XX)](#escrowstorage-22XX)
+- [IbetEscrow (23XX)](#ibetescrow-23XX)
+- [IbetSecurityTokenEscrow (24XX)](#ibetsecuritytokenescrow-24XX)
 
 ### Payment Error
-- [PaymentGateway (30XX)](#PaymentGateway-(30XX))
+- [PaymentGateway (30XX)](#paymentgateway-30XX)
 
 ### Ledger Error
-- [PersonalInfo (40XX)](#PersonalInfo-(40XX))
+- [PersonalInfo (40XX)](#personalinfo-40XX)
 
 ### Access Error
-- [Ownable (50XX)](#Ownable-(50XX))
+- [Ownable (50XX)](#ownable-50XX)
 
 ### Utils Error
-- [ContractRegistry (60XX)](#ContractRegistry-(60XX))
-- [E2EMessaging (61XX)](#E2EMessaging-(61XX))
-- [FreezeLog (62XX)](#FreezeLog-(62XX))
+- [ContractRegistry (60XX)](#contractregistry-60XX)
+- [E2EMessaging (61XX)](#e2emessaging-61XX)
+- [FreezeLog (62XX)](#freezelog-62XX)
 
 ### TokenList (10XX)
 
