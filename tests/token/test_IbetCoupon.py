@@ -157,7 +157,7 @@ class TestTransfer:
 
         # transfer
         _value = deploy_args[2] + 1
-        with brownie.reverts():
+        with brownie.reverts(revert_msg="130101"):
             coupon.transfer.transact(_to, _value, {'from': _from})
 
         # assertion
@@ -209,7 +209,7 @@ class TestTransfer:
 
         # transfer
         _value = 1
-        with brownie.reverts():
+        with brownie.reverts(revert_msg="130102"):
             coupon.transfer.transact(_to, _value, {'from': _from})
 
         # assertion
@@ -236,7 +236,7 @@ class TestTransfer:
 
         # transfer
         _value = deploy_args[2]
-        with brownie.reverts():
+        with brownie.reverts(revert_msg="130001"):
             coupon.transfer.transact(
                 not_tradable_exchange.address,
                 _value,
@@ -362,7 +362,7 @@ class TestBulkTransfer:
         coupon_contract = from_address.deploy(IbetCoupon, *deploy_args)
 
         # over the upper limit
-        with brownie.reverts():
+        with brownie.reverts(revert_msg="Integer overflow"):
             coupon_contract.bulkTransfer.transact(
                 [to_address, to_address],
                 [2 ** 256 - 1, 1],
@@ -394,7 +394,7 @@ class TestBulkTransfer:
         coupon_contract = from_address.deploy(IbetCoupon, *deploy_args)
 
         # bulk transfer
-        with brownie.reverts():
+        with brownie.reverts(revert_msg="130202"):
             coupon_contract.bulkTransfer.transact(
                 [to_address, to_address],
                 [deploy_args[2], 1],
@@ -419,7 +419,7 @@ class TestBulkTransfer:
         coupon_contract.setTransferable.transact(False, {"from": from_address})
 
         # bulk transfer
-        with brownie.reverts():
+        with brownie.reverts(revert_msg="130203"):
             coupon_contract.bulkTransfer.transact(
                 [to_address],
                 [1],
@@ -606,7 +606,7 @@ class TestTransferFrom:
 
         # transfer
         transfer_amount = 10000000000
-        with brownie.reverts():
+        with brownie.reverts(revert_msg="130301"):
             coupon_contract.transferFrom.transact(
                 issuer,
                 to_address,
@@ -631,7 +631,7 @@ class TestTransferFrom:
         coupon_contract = issuer.deploy(IbetCoupon, *deploy_args)
 
         # transfer
-        with brownie.reverts():
+        with brownie.reverts(revert_msg="500001"):
             coupon_contract.transferFrom.transact(
                 issuer,
                 to_address,
@@ -688,7 +688,7 @@ class TestConsume:
         coupon = _issuer.deploy(IbetCoupon, *deploy_args)
 
         # consume
-        with brownie.reverts():
+        with brownie.reverts(revert_msg="130401"):
             _value = deploy_args[2] + 1
             coupon.consume.transact(_value, {'from': _issuer})
 
@@ -747,7 +747,7 @@ class TestIssue:
         )
 
         # additional issue
-        with brownie.reverts():
+        with brownie.reverts(revert_msg="Integer overflow"):
             coupon.issue.transact(_value, {'from': _issuer})  # 2**256 - 1 + 1
 
         # assertion
@@ -768,7 +768,7 @@ class TestIssue:
         coupon = _issuer.deploy(IbetCoupon, *deploy_args)
 
         # additional issue
-        with brownie.reverts():
+        with brownie.reverts(revert_msg="500001"):
             coupon.issue.transact(_value, {'from': _other})
 
         # assertion
@@ -815,7 +815,7 @@ class TestSetDetails:
         coupon = issuer.deploy(IbetCoupon, *deploy_args)
 
         # set details
-        with brownie.reverts():
+        with brownie.reverts(revert_msg="500001"):
             coupon.setDetails.transact('updated details', {'from': other})
 
         details = coupon.details()
@@ -859,7 +859,7 @@ class TestSetMemo:
         coupon = issuer.deploy(IbetCoupon, *deploy_args)
 
         # set memo
-        with brownie.reverts():
+        with brownie.reverts(revert_msg="500001"):
             coupon.setMemo.transact('updated memo', {'from': other})
 
         # assertion
@@ -1000,7 +1000,7 @@ class TestSetImageUrl:
 
         # set image url
         image_url = 'https://some_image_url.com/image.png'
-        with brownie.reverts():
+        with brownie.reverts(revert_msg="500001"):
             coupon.setImageURL.transact(0, image_url, {'from': other})  # エラーになる
 
         # assertion
@@ -1044,7 +1044,7 @@ class TestSetStatus:
         coupon = issuer.deploy(IbetCoupon, *deploy_args)
 
         # change status
-        with brownie.reverts():
+        with brownie.reverts(revert_msg="500001"):
             coupon.setStatus.transact(False, {'from': other})
 
         # assertion
@@ -1090,7 +1090,7 @@ class TestSetTradableExchange:
         coupon = issuer.deploy(IbetCoupon, *deploy_args)
 
         # change exchange contract
-        with brownie.reverts():
+        with brownie.reverts(revert_msg="500001"):
             coupon.setTradableExchange.transact(
                 brownie.ZERO_ADDRESS,
                 {'from': trader}
@@ -1139,7 +1139,7 @@ class TestSetExpirationDate:
         coupon = issuer.deploy(IbetCoupon, *deploy_args)
 
         # set expiration date
-        with brownie.reverts():
+        with brownie.reverts(revert_msg="500001"):
             coupon.setExpirationDate.transact(
                 after_expiration_date,
                 {'from': attacker}
@@ -1187,7 +1187,7 @@ class TestSetTransferable:
         coupon = issuer.deploy(IbetCoupon, *deploy_args)
 
         # set transferable
-        with brownie.reverts():
+        with brownie.reverts(revert_msg="500001"):
             coupon.setTransferable.transact(False, {'from': attacker})
 
         # assertion
@@ -1231,7 +1231,7 @@ class TestSetInitialOfferingStatus:
         assert coupon.initialOfferingStatus() is False
 
         # change initial offering status
-        with brownie.reverts():
+        with brownie.reverts(revert_msg="500001"):
             coupon.setInitialOfferingStatus.transact(True, {'from': unauthorized_user})
         assert coupon.initialOfferingStatus() is False
 
@@ -1290,7 +1290,7 @@ class TestApplyForOffering:
         coupon = issuer.deploy(IbetCoupon, *deploy_args)
 
         # apply for
-        with brownie.reverts():
+        with brownie.reverts(revert_msg="130501"):
             coupon.applyForOffering.transact('abcdefgh', {'from': trader})
 
         # assertion
@@ -1339,7 +1339,7 @@ class TestSetReturnDetails:
         coupon = issuer.deploy(IbetCoupon, *deploy_args)
 
         # set return details
-        with brownie.reverts():
+        with brownie.reverts(revert_msg="500001"):
             coupon.setReturnDetails.transact(
                 after_return_details,
                 {'from': attacker}
@@ -1390,7 +1390,7 @@ class TestSetContactInformation:
         coupon = issuer.deploy(IbetCoupon, *deploy_args)
 
         # set contact information
-        with brownie.reverts():
+        with brownie.reverts(revert_msg="500001"):
             coupon.setContactInformation.transact(
                 'updated contact information',
                 {'from': other}
@@ -1441,7 +1441,7 @@ class TestSetPrivacyPolicy:
         coupon = issuer.deploy(IbetCoupon, *deploy_args)
 
         # set privacy policy
-        with brownie.reverts():
+        with brownie.reverts(revert_msg="500001"):
             coupon.setPrivacyPolicy.transact(
                 'updated privacy policy',
                 {'from': other}

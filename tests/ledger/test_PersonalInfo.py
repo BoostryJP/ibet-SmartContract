@@ -163,7 +163,7 @@ class TestModify:
         link = users['issuer']
 
         # modify
-        with brownie.reverts():
+        with brownie.reverts(revert_msg="400001"):
             personal_info.modify.transact(
                 account,
                 encrypted_message_after,
@@ -194,7 +194,7 @@ class TestModify:
         )
 
         # modify
-        with brownie.reverts():
+        with brownie.reverts(revert_msg="400001"):
             personal_info.modify.transact(
                 account,
                 encrypted_message_after,

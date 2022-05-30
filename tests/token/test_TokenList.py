@@ -95,7 +95,7 @@ class TestRegister:
         )
 
         # register to list (2)
-        with brownie.reverts():
+        with brownie.reverts(revert_msg="100001"):
             token_list.register.transact(
                 token.address,
                 'IbetStandardToken',
@@ -115,7 +115,7 @@ class TestRegister:
         token = issuer.deploy(IbetStandardToken, *deploy_args)
 
         # register to list
-        with brownie.reverts():
+        with brownie.reverts(revert_msg="100002"):
             token_list.register.transact(
                 token.address,
                 'IbetStandardToken',
@@ -187,7 +187,7 @@ class TestChangeOwner:
         token = issuer.deploy(IbetStandardToken, *deploy_args)
 
         # change token owner
-        with brownie.reverts():
+        with brownie.reverts(revert_msg="100101"):
             token_list.changeOwner.transact(
                 token.address,
                 new_owner.address,
@@ -222,7 +222,7 @@ class TestChangeOwner:
         )
 
         # change token owner
-        with brownie.reverts():
+        with brownie.reverts(revert_msg="100102"):
             token_list.changeOwner.transact(
                 token.address,
                 new_owner.address,

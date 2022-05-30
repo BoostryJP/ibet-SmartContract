@@ -19,6 +19,8 @@
 
 pragma solidity ^0.8.0;
 
+import "./Errors.sol";
+
 /// @title Freeze Log
 contract FreezeLog {
     // Event: log recorded
@@ -88,7 +90,7 @@ contract FreezeLog {
             storageLog.createdBlockNumber +
                 storageLog.freezingGraceBlockCount >=
                 block.number,
-            "frozen"
+            ErrorCode.ERR_FreezeLog_updateLog_620001
         );
 
         storageLog.log = _log;

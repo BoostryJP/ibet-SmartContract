@@ -555,7 +555,7 @@ class TestCreateEscrow:
         )
 
         # create escrow
-        with brownie.reverts(revert_msg="The amount must be greater than zero."):
+        with brownie.reverts(revert_msg="240001"):
             st_escrow.createEscrow(
                 token.address,
                 _recipient,
@@ -596,7 +596,7 @@ class TestCreateEscrow:
         )
 
         # create escrow
-        with brownie.reverts(revert_msg="The amount must be less than or equal to the balance."):
+        with brownie.reverts(revert_msg="240002"):
             st_escrow.createEscrow(
                 token.address,
                 _recipient,
@@ -644,7 +644,7 @@ class TestCreateEscrow:
         )
 
         # create escrow
-        with brownie.reverts(revert_msg="The status of the token must be true."):
+        with brownie.reverts(revert_msg="240003"):
             st_escrow.createEscrow(
                 token.address,
                 _recipient,
@@ -694,7 +694,7 @@ class TestCreateEscrow:
 
         # create escrow
         bf_latest_escrow_id = st_escrow.latestEscrowId()
-        with brownie.reverts():
+        with brownie.reverts(revert_msg=""):
             st_escrow.createEscrow(
                 token.address,
                 _recipient,
@@ -1034,7 +1034,7 @@ class TestCancelEscrow:
 
         # cancel escrow
         latest_escrow_id = st_escrow.latestEscrowId()
-        with brownie.reverts(revert_msg="The escrowId must be less than or equal to the latest escrow ID."):
+        with brownie.reverts(revert_msg="240101"):
             st_escrow.cancelEscrow(
                 latest_escrow_id + 1,
                 {'from': _issuer}
@@ -1097,7 +1097,7 @@ class TestCancelEscrow:
         )
 
         # cancel escrow (2)
-        with brownie.reverts(revert_msg="Escrow must be valid."):
+        with brownie.reverts(revert_msg="240102"):
             st_escrow.cancelEscrow(
                 latest_escrow_id,
                 {'from': _issuer}
@@ -1142,7 +1142,7 @@ class TestCancelEscrow:
 
         # cancel escrow
         latest_escrow_id = st_escrow.latestEscrowId()
-        with brownie.reverts(revert_msg="msg.sender must be the sender or agent of the escrow."):
+        with brownie.reverts(revert_msg="240103"):
             st_escrow.cancelEscrow(
                 latest_escrow_id,
                 {'from': _recipient}
@@ -1193,7 +1193,7 @@ class TestCancelEscrow:
 
         # cancel escrow
         latest_escrow_id = st_escrow.latestEscrowId()
-        with brownie.reverts(revert_msg="The status of the token must be true."):
+        with brownie.reverts(revert_msg="240104"):
             st_escrow.cancelEscrow(
                 latest_escrow_id,
                 {'from': _issuer}
@@ -1257,7 +1257,7 @@ class TestCancelEscrow:
 
         # cancel escrow
         latest_escrow_id = st_escrow.latestEscrowId()
-        with brownie.reverts():
+        with brownie.reverts(revert_msg=""):
             st_escrow.cancelEscrow(
                 latest_escrow_id,
                 {'from': _issuer}
@@ -1386,7 +1386,7 @@ class TestApproveTransfer:
 
         # approve transfer
         latest_escrow_id = st_escrow.latestEscrowId()
-        with brownie.reverts(revert_msg="Application does not exist."):
+        with brownie.reverts(revert_msg="240201"):
             st_escrow.approveTransfer(
                 latest_escrow_id,
                 _transfer_approval_data,
@@ -1434,7 +1434,7 @@ class TestApproveTransfer:
 
         # approve transfer
         latest_escrow_id = st_escrow.latestEscrowId()
-        with brownie.reverts(revert_msg="Approver must be the owner of the token."):
+        with brownie.reverts(revert_msg="240202"):
             st_escrow.approveTransfer(
                 latest_escrow_id,
                 _transfer_approval_data,
@@ -1488,7 +1488,7 @@ class TestApproveTransfer:
         )
 
         # approve transfer
-        with brownie.reverts(revert_msg="Application for transfer must be valid."):
+        with brownie.reverts(revert_msg="240203"):
             st_escrow.approveTransfer(
                 latest_escrow_id,
                 _transfer_approval_data,
@@ -1536,7 +1536,7 @@ class TestApproveTransfer:
 
         # approve transfer
         latest_escrow_id = st_escrow.latestEscrowId()
-        with brownie.reverts(revert_msg="The escrow status of the application must be in a finished state."):
+        with brownie.reverts(revert_msg="240204"):
             st_escrow.approveTransfer(
                 latest_escrow_id,
                 _transfer_approval_data,
@@ -1596,7 +1596,7 @@ class TestApproveTransfer:
         )
 
         # approve transfer
-        with brownie.reverts(revert_msg="The status of the token must be true."):
+        with brownie.reverts(revert_msg="240205"):
             st_escrow.approveTransfer(
                 latest_escrow_id,
                 _transfer_approval_data,
@@ -1798,7 +1798,7 @@ class TestFinishEscrow:
 
         # finish escrow
         latest_escrow_id = st_escrow.latestEscrowId()
-        with brownie.reverts(revert_msg="The escrowId must be less than or equal to the latest escrow ID."):
+        with brownie.reverts(revert_msg="240301"):
             st_escrow.finishEscrow(
                 latest_escrow_id + 1,
                 {'from': _agent}
@@ -1862,7 +1862,7 @@ class TestFinishEscrow:
         )
 
         # finish escrow (2)
-        with brownie.reverts(revert_msg="Escrow must be valid."):
+        with brownie.reverts(revert_msg="240302"):
             st_escrow.finishEscrow(
                 latest_escrow_id,
                 {'from': _agent}
@@ -1920,7 +1920,7 @@ class TestFinishEscrow:
 
         # finish escrow
         latest_escrow_id = st_escrow.latestEscrowId()
-        with brownie.reverts(revert_msg="msg.sender must be the agent of the escrow."):
+        with brownie.reverts(revert_msg="240303"):
             st_escrow.finishEscrow(
                 latest_escrow_id,
                 {'from': _recipient}
@@ -1984,7 +1984,7 @@ class TestFinishEscrow:
 
         # finish escrow
         latest_escrow_id = st_escrow.latestEscrowId()
-        with brownie.reverts(revert_msg="The status of the token must be true."):
+        with brownie.reverts(revert_msg="240304"):
             st_escrow.finishEscrow(
                 latest_escrow_id,
                 {'from': _agent}
@@ -2049,7 +2049,7 @@ class TestFinishEscrow:
 
         # finish escrow
         latest_escrow_id = st_escrow.latestEscrowId()
-        with brownie.reverts():
+        with brownie.reverts(revert_msg=""):
             st_escrow.finishEscrow(
                 latest_escrow_id,
                 {'from': _agent}
@@ -2118,7 +2118,7 @@ class TestWithdraw:
         )
 
         # withdraw
-        with brownie.reverts(revert_msg="The balance must be greater than zero."):
+        with brownie.reverts(revert_msg="240401"):
             st_escrow.withdraw(
                 token.address,
                 {'from': _issuer}
@@ -2157,7 +2157,7 @@ class TestWithdraw:
         )
 
         # withdraw
-        with brownie.reverts():
+        with brownie.reverts(revert_msg=""):
             st_escrow.withdraw(
                 token.address,
                 {'from': _issuer}
@@ -2195,7 +2195,7 @@ class TestWithdraw:
         )
 
         # withdraw
-        with brownie.reverts(revert_msg="Must be transferable."):
+        with brownie.reverts(revert_msg="110402"):
             st_escrow.withdraw(
                 token.address,
                 {'from': _issuer}
@@ -2299,7 +2299,7 @@ class TestTokenFallback:
         )
 
         # transfer to escrow contract
-        with brownie.reverts():
+        with brownie.reverts(revert_msg=""):
             token.transfer(
                 st_escrow.address,
                 _value,
