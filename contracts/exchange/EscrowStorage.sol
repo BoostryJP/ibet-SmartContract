@@ -48,7 +48,7 @@ contract EscrowStorage is Ownable {
 
     /// @dev 実行者が最新バージョンのEscrowアドレスであることをチェック
     modifier onlyLatestVersion() {
-       require(msg.sender == latestVersion, ErrorCode.ERR_EscrowStorage_onlyLatestVersion_2201);
+       require(msg.sender == latestVersion, ErrorCode.ERR_EscrowStorage_onlyLatestVersion_220001);
         _;
     }
 

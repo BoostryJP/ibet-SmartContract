@@ -77,7 +77,7 @@ class TestRegister:
         contract_registry = admin.deploy(ContractRegistry)
 
         # register to list
-        with brownie.reverts(revert_msg="6001"):
+        with brownie.reverts(revert_msg="600001"):
             contract_registry.register.transact(
                 brownie.ZERO_ADDRESS,
                 'IbetStandardToken',
@@ -97,7 +97,7 @@ class TestRegister:
         token = issuer.deploy(IbetStandardToken, *deploy_args)
 
         # register to list
-        with brownie.reverts(revert_msg="6002"):
+        with brownie.reverts(revert_msg="600002"):
             contract_registry.register.transact(
                 token.address,
                 'IbetStandardToken',

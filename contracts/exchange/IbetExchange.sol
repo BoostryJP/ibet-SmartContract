@@ -435,7 +435,7 @@ contract IbetExchange is Ownable, IbetExchangeInterface {
                 isContract(msg.sender) == true ||
                 validateAgent(_agent) == false)
             {
-                revert(ErrorCode.ERR_IbetExchange_createOrder_2101);
+                revert(ErrorCode.ERR_IbetExchange_createOrder_210001);
             }
         }
 
@@ -487,7 +487,7 @@ contract IbetExchange is Ownable, IbetExchangeInterface {
         // チェック：指定した注文番号は直近の注文ID以下であること
         require(
             _orderId <= latestOrderId(),
-            ErrorCode.ERR_IbetExchange_cancelOrder_2111
+            ErrorCode.ERR_IbetExchange_cancelOrder_210101
         );
 
         Order memory order;
@@ -497,19 +497,19 @@ contract IbetExchange is Ownable, IbetExchangeInterface {
         // チェック：元注文の残注文が存在すること
         require(
             order.amount > 0,
-            ErrorCode.ERR_IbetExchange_cancelOrder_2112
+            ErrorCode.ERR_IbetExchange_cancelOrder_210102
         );
 
         // チェック：キャンセル対象の注文が未キャンセルであること
         require(
             order.canceled == false,
-            ErrorCode.ERR_IbetExchange_cancelOrder_2113
+            ErrorCode.ERR_IbetExchange_cancelOrder_210103
         );
 
         // チェック：msg.senderが発注者（owner）であること
         require(
             msg.sender == order.owner,
-            ErrorCode.ERR_IbetExchange_cancelOrder_2114
+            ErrorCode.ERR_IbetExchange_cancelOrder_210104
         );
 
         // 更新処理：売り注文の場合、注文で拘束している預かりを解放 => 残高を発注者のアカウントに戻す
@@ -561,7 +561,7 @@ contract IbetExchange is Ownable, IbetExchangeInterface {
         // チェック：指定した注文番号は直近の注文ID以下であること
         require(
             _orderId <= latestOrderId(),
-            ErrorCode.ERR_IbetExchange_forceCancelOrder_2121
+            ErrorCode.ERR_IbetExchange_forceCancelOrder_210201
         );
 
         Order memory order;
@@ -571,19 +571,19 @@ contract IbetExchange is Ownable, IbetExchangeInterface {
         // チェック：元注文の残注文が存在すること
         require(
             order.amount > 0,
-            ErrorCode.ERR_IbetExchange_forceCancelOrder_2122
+            ErrorCode.ERR_IbetExchange_forceCancelOrder_210202
         );
 
         // チェック：キャンセル対象の注文が未キャンセルであること
         require(
             order.canceled == false,
-            ErrorCode.ERR_IbetExchange_forceCancelOrder_2123
+            ErrorCode.ERR_IbetExchange_forceCancelOrder_210203
         );
 
         // チェック：msg.senderが決済代行（agent）
         require(
             msg.sender == order.agent,
-            ErrorCode.ERR_IbetExchange_forceCancelOrder_2124
+            ErrorCode.ERR_IbetExchange_forceCancelOrder_210204
         );
 
         // 更新処理：売り注文の場合、注文で拘束している預かりを解放 => 残高を発注者（msg.sender）のアカウントに戻す
@@ -636,7 +636,7 @@ contract IbetExchange is Ownable, IbetExchangeInterface {
     {
         // <CHK>
         //  指定した注文IDが直近の注文IDを超えている場合
-        require(_orderId <= latestOrderId(), ErrorCode.ERR_IbetExchange_executeOrder_2131);
+        require(_orderId <= latestOrderId(), ErrorCode.ERR_IbetExchange_executeOrder_210301);
 
         Order memory order;
         (order.owner, order.token, order.amount, order.price, order.isBuy, order.agent, order.canceled) =
@@ -660,7 +660,7 @@ contract IbetExchange is Ownable, IbetExchangeInterface {
                 IbetStandardTokenInterface(order.token).status() == false ||
                 order.amount < _amount )
             {
-                revert(ErrorCode.ERR_IbetExchange_executeOrder_2132);
+                revert(ErrorCode.ERR_IbetExchange_executeOrder_210302);
             }
         }
 
@@ -734,8 +734,8 @@ contract IbetExchange is Ownable, IbetExchangeInterface {
         //  1) 指定した注文番号が、直近の注文ID以上の場合
         //  2) 指定した約定IDが、直近の約定ID以上の場合
         //   -> REVERT
-        require(_orderId <= latestOrderId(), ErrorCode.ERR_IbetExchange_confirmAgreement_2141);
-        require(_agreementId <= latestAgreementId(_orderId), ErrorCode.ERR_IbetExchange_confirmAgreement_2142);
+        require(_orderId <= latestOrderId(), ErrorCode.ERR_IbetExchange_confirmAgreement_210401);
+        require(_agreementId <= latestAgreementId(_orderId), ErrorCode.ERR_IbetExchange_confirmAgreement_210402);
 
         Order memory order;
         (order.owner, order.token, order.amount, order.price, order.isBuy,
@@ -755,7 +755,7 @@ contract IbetExchange is Ownable, IbetExchangeInterface {
         if (agreement.paid ||
             agreement.canceled ||
             msg.sender != order.agent) {
-            revert(ErrorCode.ERR_IbetExchange_confirmAgreement_2143);
+            revert(ErrorCode.ERR_IbetExchange_confirmAgreement_210403);
         }
 
         // 更新処理：資産移転
@@ -851,8 +851,8 @@ contract IbetExchange is Ownable, IbetExchangeInterface {
         //  1) 指定した注文番号が、直近の注文ID以上の場合
         //  2) 指定した約定IDが、直近の約定ID以上の場合
         //   -> REVERT
-        require(_orderId <= latestOrderId(), ErrorCode.ERR_IbetExchange_cancelAgreement_2151);
-        require(_agreementId <= latestAgreementId(_orderId), ErrorCode.ERR_IbetExchange_cancelAgreement_2152);
+        require(_orderId <= latestOrderId(), ErrorCode.ERR_IbetExchange_cancelAgreement_210501);
+        require(_agreementId <= latestAgreementId(_orderId), ErrorCode.ERR_IbetExchange_cancelAgreement_210502);
 
         Order memory order;
         (order.owner, order.token, order.amount, order.price, order.isBuy,
@@ -879,7 +879,7 @@ contract IbetExchange is Ownable, IbetExchangeInterface {
                     msg.sender != agreement.counterpart
                 )
             ) {
-                revert(ErrorCode.ERR_IbetExchange_cancelAgreement_2153);
+                revert(ErrorCode.ERR_IbetExchange_cancelAgreement_210503);
             }
         } else { // 約定明細の有効期限を超過していない場合
             // <CHK>
@@ -892,7 +892,7 @@ contract IbetExchange is Ownable, IbetExchangeInterface {
                 agreement.canceled ||
                 msg.sender != order.agent
             ) {
-                revert(ErrorCode.ERR_IbetExchange_cancelAgreement_2154);
+                revert(ErrorCode.ERR_IbetExchange_cancelAgreement_210504);
             }
         }
 
@@ -972,7 +972,7 @@ contract IbetExchange is Ownable, IbetExchangeInterface {
 
         require(
             balance > 0,
-            ErrorCode.ERR_IbetExchange_withdraw_2161
+            ErrorCode.ERR_IbetExchange_withdraw_210601
         );
 
         // 更新処理：トークン引き出し（送信）

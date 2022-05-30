@@ -1,543 +1,543 @@
 ## Error Code
 This is a definition list of errors to be thrown when transaction reverts.
-Developers will receive error msg as code, and each error code is described below, including description of situation and possible causes.    
+Developers will receive error msg as code, and each error code is described below, including description of situation and possible causes.
 
 ### Token Error
-- [TokenList (10XX)](#tokenlist-10XX)
-- [IbetShare (11XX/12XX)](#ibetshare-11XX12XX)
-- [IbetStraightBond (13XX/14XX)](#ibetstraightbond-13XX14XX)
-- [IbetCoupon (15XX)](#ibetcoupon-15XX)
-- [IbetMembership (16XX)](#ibetmembership-16XX)
-- [IbetStandardToken (17XX)](#ibetstandardtoken-17XX)
+- [TokenList (10XX)](#tokenlist-10XXXX)
+- [IbetShare (11XX/12XX)](#ibetshare-11XXXX)
+- [IbetStraightBond (13XX/14XX)](#ibetstraightbond-12XXXX)
+- [IbetCoupon (15XX)](#ibetcoupon-13XXXX)
+- [IbetMembership (16XX)](#ibetmembership-14XXXX)
+- [IbetStandardToken (17XX)](#ibetstandardtoken-15XXXX)
 
 ### Exchange & Escrow Error
-- [ExchangeStorage (20XX)](#exchangestorage-20XX)
-- [IbetExchange (21XX)](#ibetexchange-21XX)
-- [EscrowStorage (22XX)](#escrowstorage-22XX)
-- [IbetEscrow (23XX)](#ibetescrow-23XX)
-- [IbetSecurityTokenEscrow (24XX)](#ibetsecuritytokenescrow-24XX)
+- [ExchangeStorage (20XX)](#exchangestorage-20XXXX)
+- [IbetExchange (21XX)](#ibetexchange-21XXXX)
+- [EscrowStorage (22XX)](#escrowstorage-22XXXX)
+- [IbetEscrow (23XX)](#ibetescrow-23XXXX)
+- [IbetSecurityTokenEscrow (24XX)](#ibetsecuritytokenescrow-24XXXX)
 
 ### Payment Error
-- [PaymentGateway (30XX)](#paymentgateway-30XX)
+- [PaymentGateway (30XX)](#paymentgateway-30XXXX)
 
 ### Ledger Error
-- [PersonalInfo (40XX)](#personalinfo-40XX)
+- [PersonalInfo (40XX)](#personalinfo-40XXXX)
 
 ### Access Error
-- [Ownable (50XX)](#ownable-50XX)
+- [Ownable (50XX)](#ownable-50XXXX)
 
 ### Utils Error
-- [ContractRegistry (60XX)](#contractregistry-60XX)
-- [E2EMessaging (61XX)](#e2emessaging-61XX)
-- [FreezeLog (62XX)](#freezelog-62XX)
+- [ContractRegistry (60XX)](#contractregistry-60XXXX)
+- [E2EMessaging (61XX)](#e2emessaging-61XXXX)
+- [FreezeLog (62XX)](#freezelog-62XXXX)
 
-### TokenList (10XX)
+### TokenList (10XXXX)
 
-#### register (100X)
+#### register (1000XX)
 
-| Code     | Situation                                | Possible causes | 
-|----------|------------------------------------------|-----------------|
-| **1001** | The address has already been registered. | -               |
-| **1002** | Message sender must be the token owner.  | -               |
+| Code       | Situation                                | Possible causes | 
+|------------|------------------------------------------|-----------------|
+| **100001** | The address has already been registered. | -               |
+| **100002** | Message sender must be the token owner.  | -               |
 
-#### changeOwner (101X)
+#### changeOwner (1001XX)
 
-| Code     | Situation                               | Possible causes | 
-|----------|-----------------------------------------|-----------------|
-| **1011** | The address has not been registered.    | -               |
-| **1012** | Message sender must be the token owner. | -               |
+| Code       | Situation                               | Possible causes | 
+|------------|-----------------------------------------|-----------------|
+| **100101** | The address has not been registered.    | -               |
+| **100102** | Message sender must be the token owner. | -               |
 
-### IbetShare (11XX/12XX)
+### IbetShare (11XXXX)
 
-#### lock (110X)
+#### lock (1100XX)
 
-| Code     | Situation                                           | Possible causes                                                                                                                      | 
-|----------|-----------------------------------------------------|--------------------------------------------------------------------------------------------------------------------------------------|
-| **1101** | Lock address is invalid.                            | Any of following conditions is not matched.<br/> - Lock address isn't authorized for locking.<br/> - Lock Address isn't token owner. |
-| **1102** | Lock amount is greater than message sender balance. | -                                                                                                                                    |
+| Code       | Situation                                           | Possible causes                                                                                                                      | 
+|------------|-----------------------------------------------------|--------------------------------------------------------------------------------------------------------------------------------------|
+| **110001** | Lock address is invalid.                            | Any of following conditions is not matched.<br/> - Lock address isn't authorized for locking.<br/> - Lock Address isn't token owner. |
+| **110002** | Lock amount is greater than message sender balance. | -                                                                                                                                    |
 
-#### unlock (111X)
+#### unlock (1101XX)
 
-| Code     | Situation                                    | Possible causes                                                                                                                          | 
-|----------|----------------------------------------------|------------------------------------------------------------------------------------------------------------------------------------------|
-| **1111** | Unlock address is invalid.                   | Any of following conditions is not matched.<br/> - Unlock address isn't authorized for locking.<br/> - Unlock Address isn't token owner. |
-| **1112** | Unlock amount is greater than locked amount. | -                                                                                                                                        |
+| Code       | Situation                                    | Possible causes                                                                                                                          | 
+|------------|----------------------------------------------|------------------------------------------------------------------------------------------------------------------------------------------|
+| **110101** | Unlock address is invalid.                   | Any of following conditions is not matched.<br/> - Unlock address isn't authorized for locking.<br/> - Unlock Address isn't token owner. |
+| **110102** | Unlock amount is greater than locked amount. | -                                                                                                                                        |
 
-#### transferToAddress (112X)
+#### transferToAddress (1102XX)
 
-| Code     | Situation                            | Possible causes                                                                                                                                                        | 
-|----------|--------------------------------------|------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| **1121** | The token isn't transferable.        | All of following conditions is matched.<br/> - Message sender isn't tradable Exchange.<br/> - Approval is required for the token transferring.                         |
-| **1122** | Destination address check is failed. | All of following conditions is matched.<br/> - Destination address isn't token owner.<br/> - Destination address isn't registered personal information to token owner. |
+| Code       | Situation                            | Possible causes                                                                                                                                                        | 
+|------------|--------------------------------------|------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| **110201** | The token isn't transferable.        | All of following conditions is matched.<br/> - Message sender isn't tradable Exchange.<br/> - Approval is required for the token transferring.                         |
+| **110202** | Destination address check is failed. | All of following conditions is matched.<br/> - Destination address isn't token owner.<br/> - Destination address isn't registered personal information to token owner. |
 
-#### transferToContract (113X)
+#### transferToContract (1103XX)
 
-| Code     | Situation                                    | Possible causes | 
-|----------|----------------------------------------------|-----------------|
-| **1131** | Destination address isn't tradable exchange. | -               |
+| Code       | Situation                                    | Possible causes | 
+|------------|----------------------------------------------|-----------------|
+| **110301** | Destination address isn't tradable exchange. | -               |
 
-#### transfer (114X)
+#### transfer (1104XX)
 
-| Code     | Situation                               | Possible causes | 
-|----------|-----------------------------------------|-----------------|
-| **1141** | Message sender balance is insufficient. | -               |
-| **1142** | The token isn't transferable.           | -               |
+| Code       | Situation                               | Possible causes | 
+|------------|-----------------------------------------|-----------------|
+| **110401** | Message sender balance is insufficient. | -               |
+| **110402** | The token isn't transferable.           | -               |
 
-#### bulkTransfer (115X)
+#### bulkTransfer (1105XX)
 
-| Code     | Situation                                             | Possible causes                                                                                                                                | 
-|----------|-------------------------------------------------------|------------------------------------------------------------------------------------------------------------------------------------------------|
-| **1151** | Transferring of this token requires approval.         | -                                                                                                                                              |
-| **1152** | Length of To and of Value aren't matched.             | -                                                                                                                                              |
-| **1153** | Transfer amount is greater than from address balance. | -                                                                                                                                              |
-| **1154** | The token isn't transferable.                         | All of following conditions is matched.<br/> - Message sender isn't tradable Exchange.<br/> - Approval is required for the token transferring. |
+| Code       | Situation                                             | Possible causes                                                                                                                                | 
+|------------|-------------------------------------------------------|------------------------------------------------------------------------------------------------------------------------------------------------|
+| **110501** | Transferring of this token requires approval.         | -                                                                                                                                              |
+| **110502** | Length of To and of Value aren't matched.             | -                                                                                                                                              |
+| **110503** | Transfer amount is greater than from address balance. | -                                                                                                                                              |
+| **110504** | The token isn't transferable.                         | All of following conditions is matched.<br/> - Message sender isn't tradable Exchange.<br/> - Approval is required for the token transferring. |
 
-#### transferFrom (116X)
+#### transferFrom (1106XX)
 
-| Code     | Situation                                             | Possible causes | 
-|----------|-------------------------------------------------------|-----------------|
-| **1161** | Transfer amount is greater than from address balance. | -               |
+| Code       | Situation                                             | Possible causes | 
+|------------|-------------------------------------------------------|-----------------|
+| **110601** | Transfer amount is greater than from address balance. | -               |
 
-#### applyForTransfer (117X)
+#### applyForTransfer (1107XX)
 
-| Code     | Situation                            | Possible causes                                                                                                                                                                          | 
-|----------|--------------------------------------|------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| **1171** | Apply for transfer is invalid.       | Any of following conditions is matched.<br/> - Approval is not required for the token transferring.<br/> - The token is not transferable.<br/> - Message sender balance is insufficient. |
-| **1172** | Destination address check is failed. | All of following conditions is matched.<br/> - Destination address isn't token owner.<br/> - Destination address hasn't registered personal information to token owner.                  |
+| Code       | Situation                            | Possible causes                                                                                                                                                                          | 
+|------------|--------------------------------------|------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| **110701** | Apply for transfer is invalid.       | Any of following conditions is matched.<br/> - Approval is not required for the token transferring.<br/> - The token is not transferable.<br/> - Message sender balance is insufficient. |
+| **110702** | Destination address check is failed. | All of following conditions is matched.<br/> - Destination address isn't token owner.<br/> - Destination address hasn't registered personal information to token owner.                  |
 
-#### cancelTransfer (118X)
+#### cancelTransfer (1108XX)
 
-| Code     | Situation                                      | Possible causes                                                                                                                 | 
-|----------|------------------------------------------------|---------------------------------------------------------------------------------------------------------------------------------|
-| **1181** | Canceling application for transfer is invalid. | All of following conditions is matched.<br/> - Message sender isn't application owner.<br/> - Message sender isn't token owner. |
-| **1182** | Application is invalid.                        | -                                                                                                                               |
+| Code       | Situation                                      | Possible causes                                                                                                                 | 
+|------------|------------------------------------------------|---------------------------------------------------------------------------------------------------------------------------------|
+| **110801** | Canceling application for transfer is invalid. | All of following conditions is matched.<br/> - Message sender isn't application owner.<br/> - Message sender isn't token owner. |
+| **110802** | Application is invalid.                        | -                                                                                                                               |
 
-#### approveTransfer (119X)
+#### approveTransfer (1109XX)
 
-| Code     | Situation                 | Possible causes | 
-|----------|---------------------------|-----------------|
-| **1191** | Token isn't transferable. | -               |
-| **1192** | Application is invalid.   | -               |
+| Code       | Situation                 | Possible causes | 
+|------------|---------------------------|-----------------|
+| **110901** | Token isn't transferable. | -               |
+| **110902** | Application is invalid.   | -               |
 
-#### applyForOffering (120X)
+#### applyForOffering (1110XX)
 
-| Code     | Situation                                                               | Possible causes | 
-|----------|-------------------------------------------------------------------------|-----------------|
-| **1201** | Offering is stopped.                                                    | -               |
-| **1202** | Personal information of message sender isn't registered to token owner. |                 |
+| Code       | Situation                                                               | Possible causes | 
+|------------|-------------------------------------------------------------------------|-----------------|
+| **111001** | Offering is stopped.                                                    | -               |
+| **111002** | Personal information of message sender isn't registered to token owner. |                 |
 
-#### redeemFrom (121X)
+#### redeemFrom (1111XX)
 
-| Code     | Situation                                          | Possible causes | 
-|----------|----------------------------------------------------|-----------------|
-| **1211** | Redeem amount is less than locked address balance. | -               |
-| **1212** | Redeem amount is less than target address balance. | -               |
+| Code       | Situation                                          | Possible causes | 
+|------------|----------------------------------------------------|-----------------|
+| **111101** | Redeem amount is less than locked address balance. | -               |
+| **111102** | Redeem amount is less than target address balance. | -               |
 
-### IbetStraightBond (13XX/14XX)
+### IbetStraightBond (12XXXX)
 
-#### lock (130X)
+#### lock (1200XX)
 
-| Code     | Situation                                           | Possible causes                                                                                                                      | 
-|----------|-----------------------------------------------------|--------------------------------------------------------------------------------------------------------------------------------------|
-| **1301** | Lock address is invalid.                            | Any of following conditions is not matched.<br/> - Lock address isn't authorized for locking <br/> - Lock Address isn't token owner. |
-| **1302** | Lock amount is greater than message sender balance. | -                                                                                                                                    |
+| Code       | Situation                                           | Possible causes                                                                                                                      | 
+|------------|-----------------------------------------------------|--------------------------------------------------------------------------------------------------------------------------------------|
+| **120001** | Lock address is invalid.                            | Any of following conditions is not matched.<br/> - Lock address isn't authorized for locking <br/> - Lock Address isn't token owner. |
+| **120002** | Lock amount is greater than message sender balance. | -                                                                                                                                    |
 
-#### unlock (131X)
+#### unlock (1201XX)
 
-| Code     | Situation                                    | Possible causes                                                                                                                          | 
-|----------|----------------------------------------------|------------------------------------------------------------------------------------------------------------------------------------------|
-| **1311** | Unlock address is invalid.                   | Any of following conditions is not matched.<br/> - Unlock address isn't authorized for locking <br/> - Unlock Address isn't token owner. |
-| **1312** | Unlock amount is greater than locked amount. | -                                                                                                                                        |
+| Code       | Situation                                    | Possible causes                                                                                                                          | 
+|------------|----------------------------------------------|------------------------------------------------------------------------------------------------------------------------------------------|
+| **120101** | Unlock address is invalid.                   | Any of following conditions is not matched.<br/> - Unlock address isn't authorized for locking <br/> - Unlock Address isn't token owner. |
+| **120102** | Unlock amount is greater than locked amount. | -                                                                                                                                        |
 
-#### transferToAddress (132X)
+#### transferToAddress (1202XX)
 
-| Code     | Situation                            | Possible causes                                                                                                                                                         | 
-|----------|--------------------------------------|-------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| **1321** | The token isn't transferable.        | All of following conditions is matched.<br/> - Message sender isn't tradable Exchange.<br/> - Approval is required for the token transferring.                          |
-| **1322** | Destination address check is failed. | All of following conditions is matched.<br/> - Destination address isn't token owner.<br/> - Destination address hasn't registered personal information to token owner. |
+| Code       | Situation                            | Possible causes                                                                                                                                                         | 
+|------------|--------------------------------------|-------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| **120201** | The token isn't transferable.        | All of following conditions is matched.<br/> - Message sender isn't tradable Exchange.<br/> - Approval is required for the token transferring.                          |
+| **120202** | Destination address check is failed. | All of following conditions is matched.<br/> - Destination address isn't token owner.<br/> - Destination address hasn't registered personal information to token owner. |
 
-#### transferToContract (133X)
+#### transferToContract (1203XX)
 
-| Code     | Situation                                    | Possible causes | 
-|----------|----------------------------------------------|-----------------|
-| **1331** | Destination address isn't tradable exchange. | -               |
+| Code       | Situation                                    | Possible causes | 
+|------------|----------------------------------------------|-----------------|
+| **120301** | Destination address isn't tradable exchange. | -               |
 
-#### transfer (134X)
+#### transfer (1204XX)
 
-| Code     | Situation                               | Possible causes | 
-|----------|-----------------------------------------|-----------------|
-| **1341** | Message sender balance is insufficient. | -               |
-| **1342** | The token isn't transferable.           | -               |
+| Code       | Situation                               | Possible causes | 
+|------------|-----------------------------------------|-----------------|
+| **120401** | Message sender balance is insufficient. | -               |
+| **120402** | The token isn't transferable.           | -               |
 
-#### bulkTransfer (135X)
+#### bulkTransfer (1205XX)
 
-| Code     | Situation                                             | Possible causes                                                                                                             | 
-|----------|-------------------------------------------------------|-----------------------------------------------------------------------------------------------------------------------------|
-| **1351** | Length of To and of Value aren't matched.             | -                                                                                                                           |
-| **1352** | Transfer amount is greater than from address balance. | -                                                                                                                           |
-| **1353** | The token isn't transferable.                         | All of following conditions is matched.<br/> - Message sender isn't tradable Exchange.<br/> - The token isn't transferable. |
+| Code       | Situation                                             | Possible causes                                                                                                             | 
+|------------|-------------------------------------------------------|-----------------------------------------------------------------------------------------------------------------------------|
+| **120501** | Length of To and of Value aren't matched.             | -                                                                                                                           |
+| **120502** | Transfer amount is greater than from address balance. | -                                                                                                                           |
+| **120503** | The token isn't transferable.                         | All of following conditions is matched.<br/> - Message sender isn't tradable Exchange.<br/> - The token isn't transferable. |
 
-#### transferFrom (136X)
+#### transferFrom (1206XX)
 
-| Code     | Situation                                             | Possible causes | 
-|----------|-------------------------------------------------------|-----------------|
-| **1361** | Transfer amount is greater than from address balance. | -               |
+| Code       | Situation                                             | Possible causes | 
+|------------|-------------------------------------------------------|-----------------|
+| **120601** | Transfer amount is greater than from address balance. | -               |
 
-#### applyForTransfer (137X)
+#### applyForTransfer (1207XX)
 
-| Code     | Situation                            | Possible causes                                                                                                                                                                                           | 
-|----------|--------------------------------------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| **1371** | Apply for transfer is invalid.       | Any of following conditions is matched.<br/> - Approval is not required for the token transferring.<br/> - The token is not transferable.<br/> - Message sender balance is less than transferring amount. |
-| **1372** | Destination address check is failed. | All of following conditions is matched.<br/> - Destination address isn't token owner.<br/> - Destination address hasn't registered personal information to token owner.                                   || **a**    |                                        |                                                                                                                                                                                                          |
+| Code       | Situation                            | Possible causes                                                                                                                                                                                           | 
+|------------|--------------------------------------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| **120701** | Apply for transfer is invalid.       | Any of following conditions is matched.<br/> - Approval is not required for the token transferring.<br/> - The token is not transferable.<br/> - Message sender balance is less than transferring amount. |
+| **120702** | Destination address check is failed. | All of following conditions is matched.<br/> - Destination address isn't token owner.<br/> - Destination address hasn't registered personal information to token owner.                                   || **a**    |                                        |                                                                                                                                                                                                          |
 
-#### cancelTransfer (138X)
+#### cancelTransfer (1208XX)
 
-| Code     | Situation                                      | Possible causes                                                                                                                 | 
-|----------|------------------------------------------------|---------------------------------------------------------------------------------------------------------------------------------|
-| **1381** | Canceling application for transfer is invalid. | All of following conditions is matched.<br/> - Message sender isn't application owner.<br/> - Message sender isn't token owner. |
-| **1382** | Application is invalid.                        | -                                                                                                                               |
+| Code       | Situation                                      | Possible causes                                                                                                                 | 
+|------------|------------------------------------------------|---------------------------------------------------------------------------------------------------------------------------------|
+| **120801** | Canceling application for transfer is invalid. | All of following conditions is matched.<br/> - Message sender isn't application owner.<br/> - Message sender isn't token owner. |
+| **120802** | Application is invalid.                        | -                                                                                                                               |
 
-#### approveTransfer (139X)
+#### approveTransfer (1209XX)
 
-| Code     | Situation                 | Possible causes | 
-|----------|---------------------------|-----------------|
-| **1391** | Token isn't transferable. | -               |
-| **1392** | Application is invalid.   | -               |
+| Code       | Situation                 | Possible causes | 
+|------------|---------------------------|-----------------|
+| **120901** | Token isn't transferable. | -               |
+| **120902** | Application is invalid.   | -               |
 
-#### applyForOffering (140X)
+#### applyForOffering (1210XX)
 
-| Code     | Situation                                                               | Possible causes | 
-|----------|-------------------------------------------------------------------------|-----------------|
-| **1401** | Offering is stopped.                                                    | -               |
-| **1402** | Personal information of message sender isn't registered to token owner. |                 |
+| Code       | Situation                                                               | Possible causes | 
+|------------|-------------------------------------------------------------------------|-----------------|
+| **121001** | Offering is stopped.                                                    | -               |
+| **121002** | Personal information of message sender isn't registered to token owner. |                 |
 
-#### redeemFrom (141X)
+#### redeemFrom (1211XX)
 
-| Code     | Situation                                          | Possible causes | 
-|----------|----------------------------------------------------|-----------------|
-| **1411** | Redeem amount is less than locked address balance. | -               |
-| **1412** | Redeem amount is less than target address balance. | -               |
+| Code       | Situation                                          | Possible causes | 
+|------------|----------------------------------------------------|-----------------|
+| **121101** | Redeem amount is less than locked address balance. | -               |
+| **121102** | Redeem amount is less than target address balance. | -               |
 
-### IbetCoupon (15XX)
+### IbetCoupon (13XXXX)
 
-#### transferToContract (150X)
+#### transferToContract (1300XX)
 
-| Code     | Situation                                    | Possible causes | 
-|----------|----------------------------------------------|-----------------|
-| **1501** | Destination address isn't tradable exchange. | -               |
+| Code       | Situation                                    | Possible causes | 
+|------------|----------------------------------------------|-----------------|
+| **130001** | Destination address isn't tradable exchange. | -               |
 
-#### transfer (151X)
+#### transfer (1301XX)
 
-| Code     | Situation                               | Possible causes | 
-|----------|-----------------------------------------|-----------------|
-| **1511** | Message sender balance is insufficient. | -               |
-| **1512** | The token isn't transferable.           | -               |
+| Code       | Situation                               | Possible causes | 
+|------------|-----------------------------------------|-----------------|
+| **130101** | Message sender balance is insufficient. | -               |
+| **130102** | The token isn't transferable.           | -               |
 
-#### bulkTransfer (152X)
+#### bulkTransfer (1302XX)
 
-| Code     | Situation                                             | Possible causes                                                                                                             | 
-|----------|-------------------------------------------------------|-----------------------------------------------------------------------------------------------------------------------------|
-| **1521** | Length of To and of Value aren't matched.             | -                                                                                                                           |
-| **1522** | Transfer amount is greater than from address balance. | -                                                                                                                           |
-| **1523** | The token isn't transferable.                         | All of following conditions is matched.<br/> - Message sender isn't tradable Exchange.<br/> - The token isn't transferable. |
+| Code       | Situation                                             | Possible causes                                                                                                             | 
+|------------|-------------------------------------------------------|-----------------------------------------------------------------------------------------------------------------------------|
+| **130201** | Length of To and of Value aren't matched.             | -                                                                                                                           |
+| **130202** | Transfer amount is greater than from address balance. | -                                                                                                                           |
+| **130203** | The token isn't transferable.                         | All of following conditions is matched.<br/> - Message sender isn't tradable Exchange.<br/> - The token isn't transferable. |
 
-#### transferFrom (153X)
+#### transferFrom (1303XX)
 
-| Code     | Situation                                             | Possible causes | 
-|----------|-------------------------------------------------------|-----------------|
-| **1531** | Transfer amount is greater than from address balance. | -               |
+| Code       | Situation                                             | Possible causes | 
+|------------|-------------------------------------------------------|-----------------|
+| **130301** | Transfer amount is greater than from address balance. | -               |
 
-#### consume (154X)
+#### consume (1304XX)
 
-| Code     | Situation                               | Possible causes | 
-|----------|-----------------------------------------|-----------------|
-| **1541** | Message sender balance is insufficient. | -               |
+| Code       | Situation                               | Possible causes | 
+|------------|-----------------------------------------|-----------------|
+| **130401** | Message sender balance is insufficient. | -               |
 
-#### applyForOffering (155X)
+#### applyForOffering (1305XX)
 
-| Code     | Situation                                                               | Possible causes | 
-|----------|-------------------------------------------------------------------------|-----------------|
-| **1551** | Offering is stopped.                                                    | -               |
-| **1552** | Personal information of message sender isn't registered to token owner. |                 |
+| Code       | Situation                                                               | Possible causes | 
+|------------|-------------------------------------------------------------------------|-----------------|
+| **130501** | Offering is stopped.                                                    | -               |
+| **130502** | Personal information of message sender isn't registered to token owner. |                 |
 
-### IbetMembership (16XX)
+### IbetMembership (14XXXX)
 
-#### transferToContract (160X)
+#### transferToContract (1400XX)
 
-| Code     | Situation                                    | Possible causes | 
-|----------|----------------------------------------------|-----------------|
-| **1601** | Destination address isn't tradable exchange. | -               |
+| Code       | Situation                                    | Possible causes | 
+|------------|----------------------------------------------|-----------------|
+| **140001** | Destination address isn't tradable exchange. | -               |
 
-#### transfer (161X)
+#### transfer (1401XX)
 
-| Code     | Situation                               | Possible causes | 
-|----------|-----------------------------------------|-----------------|
-| **1611** | Message sender balance is insufficient. | -               |
-| **1612** | The token isn't transferable.           | -               |
+| Code       | Situation                               | Possible causes | 
+|------------|-----------------------------------------|-----------------|
+| **140101** | Message sender balance is insufficient. | -               |
+| **140102** | The token isn't transferable.           | -               |
 
-#### bulkTransfer (162X)
+#### bulkTransfer (1402XX)
 
-| Code     | Situation                                             | Possible causes                                                                                                             | 
-|----------|-------------------------------------------------------|-----------------------------------------------------------------------------------------------------------------------------|
-| **1621** | Length of To and of Value aren't matched.             | -                                                                                                                           |
-| **1622** | Transfer amount is greater than from address balance. | -                                                                                                                           |
-| **1623** | The token isn't transferable.                         | All of following conditions is matched.<br/> - Message sender isn't tradable Exchange.<br/> - The token isn't transferable. |
+| Code       | Situation                                             | Possible causes                                                                                                             | 
+|------------|-------------------------------------------------------|-----------------------------------------------------------------------------------------------------------------------------|
+| **140201** | Length of To and of Value aren't matched.             | -                                                                                                                           |
+| **140202** | Transfer amount is greater than from address balance. | -                                                                                                                           |
+| **140203** | The token isn't transferable.                         | All of following conditions is matched.<br/> - Message sender isn't tradable Exchange.<br/> - The token isn't transferable. |
 
-#### transferFrom (163X)
+#### transferFrom (1403XX)
 
-| Code     | Situation                                             | Possible causes | 
-|----------|-------------------------------------------------------|-----------------|
-| **1631** | Transfer amount is greater than from address balance. | -               |
+| Code       | Situation                                             | Possible causes | 
+|------------|-------------------------------------------------------|-----------------|
+| **140301** | Transfer amount is greater than from address balance. | -               |
 
-#### applyForOffering (164X)
+#### applyForOffering (1404XX)
 
-| Code     | Situation                                                               | Possible causes | 
-|----------|-------------------------------------------------------------------------|-----------------|
-| **1641** | Offering is stopped.                                                    | -               |
-| **1642** | Personal information of message sender isn't registered to token owner. |                 |
+| Code       | Situation                                                               | Possible causes | 
+|------------|-------------------------------------------------------------------------|-----------------|
+| **140401** | Offering is stopped.                                                    | -               |
+| **140402** | Personal information of message sender isn't registered to token owner. |                 |
 
-### IbetStandardToken (17XX)
+### IbetStandardToken (15XXXX)
 
-#### transferToContract (170X)
+#### transferToContract (1500XX)
 
-| Code     | Situation                                    | Possible causes | 
-|----------|----------------------------------------------|-----------------|
-| **1701** | Destination address isn't tradable exchange. | -               |
+| Code       | Situation                                    | Possible causes | 
+|------------|----------------------------------------------|-----------------|
+| **150001** | Destination address isn't tradable exchange. | -               |
 
-#### transfer (171X)
+#### transfer (1501XX)
 
-| Code     | Situation                               | Possible causes | 
-|----------|-----------------------------------------|-----------------|
-| **1711** | Message sender balance is insufficient. | -               |
+| Code       | Situation                               | Possible causes | 
+|------------|-----------------------------------------|-----------------|
+| **150101** | Message sender balance is insufficient. | -               |
 
-#### bulkTransfer (172X)
+#### bulkTransfer (1502XX)
 
-| Code     | Situation                                             | Possible causes                                                                                                             | 
-|----------|-------------------------------------------------------|-----------------------------------------------------------------------------------------------------------------------------|
-| **1721** | Length of To and of Value aren't matched.             | -                                                                                                                           |
-| **1722** | Transfer amount is greater than from address balance. | -                                                                                                                           |
+| Code       | Situation                                             | Possible causes                                                                                                             | 
+|------------|-------------------------------------------------------|-----------------------------------------------------------------------------------------------------------------------------|
+| **150201** | Length of To and of Value aren't matched.             | -                                                                                                                           |
+| **150202** | Transfer amount is greater than from address balance. | -                                                                                                                           |
 
-#### transferFrom (173X)
+#### transferFrom (1503XX)
 
-| Code     | Situation                                             | Possible causes | 
-|----------|-------------------------------------------------------|-----------------|
-| **1731** | Transfer amount is greater than from address balance. | -               |
+| Code       | Situation                                             | Possible causes | 
+|------------|-------------------------------------------------------|-----------------|
+| **150301** | Transfer amount is greater than from address balance. | -               |
 
-### ExchangeStorage (20XX)
+### ExchangeStorage (20XXXX)
 
-#### onlyLatestVersion (200X)
-| Code     | Situation                                               | Possible causes | 
-|----------|---------------------------------------------------------|-----------------|
-| **2001** | Message sender(exchange contract) isn't latest version. | -               |
+#### onlyLatestVersion (2000XX)
+| Code       | Situation                                               | Possible causes | 
+|------------|---------------------------------------------------------|-----------------|
+| **200001** | Message sender(exchange contract) isn't latest version. | -               |
 
-### IbetExchange (21XX)
+### IbetExchange (21XXXX)
 
-#### createOrder (210X)
-| Code     | Situation                          | Possible causes                                                                                                                                             | 
-|----------|------------------------------------|-------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| **2101** | Create order condition is invalid. | Any of following conditions is matched.<br/> - Amount is 0.<br/> - Token status is false.<br/> Message sender is contract address.<br/> - Agent is invalid. |
+#### createOrder (2100XX)
+| Code       | Situation                          | Possible causes                                                                                                                                             | 
+|------------|------------------------------------|-------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| **210001** | Create order condition is invalid. | Any of following conditions is matched.<br/> - Amount is 0.<br/> - Token status is false.<br/> Message sender is contract address.<br/> - Agent is invalid. |
 
-#### cancelOrder (211X)
+#### cancelOrder (2101XX)
 
-| Code     | Situation                              | Possible causes | 
-|----------|----------------------------------------|-----------------|
-| **2111** | Cancel order ID is invalid.            | -               |
-| **2112** | Amount of target order is remaining.   | -               |
-| **2113** | Order has already been canceled.       | -               |
-| **2114** | Message sender is not the order owner. | -               |
+| Code       | Situation                              | Possible causes | 
+|------------|----------------------------------------|-----------------|
+| **210101** | Cancel order ID is invalid.            | -               |
+| **210102** | Amount of target order is remaining.   | -               |
+| **210103** | Order has already been canceled.       | -               |
+| **210104** | Message sender is not the order owner. | -               |
 
-#### forceCancelOrder (212X)
+#### forceCancelOrder (2102XX)
 
-| Code     | Situation                              | Possible causes | 
-|----------|----------------------------------------|-----------------|
-| **2121** | Cancel order ID is invalid.            | -               |
-| **2122** | Amount of target order is remaining.   | -               |
-| **2123** | Order has already been canceled.       | -               |
-| **2124** | Message sender is not the order agent. | -               |
+| Code       | Situation                              | Possible causes | 
+|------------|----------------------------------------|-----------------|
+| **210201** | Cancel order ID is invalid.            | -               |
+| **210202** | Amount of target order is remaining.   | -               |
+| **210203** | Order has already been canceled.       | -               |
+| **210204** | Message sender is not the order agent. | -               |
 
-#### executeCancelOrder (213X)
+#### executeCancelOrder (2103XX)
 
-| Code     | Situation                           | Possible causes                                                                                                                                                                                                                                                                                                                                      | 
-|----------|-------------------------------------|------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| **2131** | Target order ID is invalid.         | -                                                                                                                                                                                                                                                                                                                                                    |
-| **2132** | Execute order condition is invalid. | Any of following conditions is matched<br/> - Amount is 0.<br/> - Take operation side is not matched to original order.<br/> - Message sender is original order owner.<br/> - Message sender is contract address.<br/> - Order has already been canceled.<br/> - Token status is inactive.<br/> - Take amount is greater than original order amount. |
+| Code       | Situation                           | Possible causes                                                                                                                                                                                                                                                                                                                                      | 
+|------------|-------------------------------------|------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| **210301** | Target order ID is invalid.         | -                                                                                                                                                                                                                                                                                                                                                    |
+| **210302** | Execute order condition is invalid. | Any of following conditions is matched<br/> - Amount is 0.<br/> - Take operation side is not matched to original order.<br/> - Message sender is original order owner.<br/> - Message sender is contract address.<br/> - Order has already been canceled.<br/> - Token status is inactive.<br/> - Take amount is greater than original order amount. |
 
-#### confirmAgreement (214X)
+#### confirmAgreement (2104XX)
 
-| Code     | Situation                       | Possible causes                                                                                                                                                             | 
-|----------|---------------------------------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| **2141** | Target order ID is invalid.     | -                                                                                                                                                                           |
-| **2142** | Target agreement ID is invalid. | -                                                                                                                                                                           |
-| **2143** | Agreement condition is invalid. | Any of following conditions is matched<br/> - Agreement has been already paid.<br/> - Agreement has been already canceled.<br/> - Message sender is not the agent of order. |
+| Code       | Situation                       | Possible causes                                                                                                                                                             | 
+|------------|---------------------------------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| **210401** | Target order ID is invalid.     | -                                                                                                                                                                           |
+| **210402** | Target agreement ID is invalid. | -                                                                                                                                                                           |
+| **210403** | Agreement condition is invalid. | Any of following conditions is matched<br/> - Agreement has been already paid.<br/> - Agreement has been already canceled.<br/> - Message sender is not the agent of order. |
 
-#### cancelAgreement (215X)
+#### cancelAgreement (2105XX)
 
-| Code     | Situation                                 | Possible causes                                                                                                                                  | 
-|----------|-------------------------------------------|--------------------------------------------------------------------------------------------------------------------------------------------------|
-| **2151** | Target order ID is invalid.               | -                                                                                                                                                |
-| **2152** | Target agreement ID is invalid.           | -                                                                                                                                                |
-| **2153** | Expired agreement condition is invalid.   | Any of following conditions is matched<br/> - Agreement has been already been paid or canceled.<br/> - Message sender is invalid.                |
-| **2154** | Unexpired agreement condition is invalid. | Any of following conditions is matched<br/> - Agreement has been already been paid or canceled.<br/> - Message sender is not the agent of order. |
+| Code       | Situation                                 | Possible causes                                                                                                                                  | 
+|------------|-------------------------------------------|--------------------------------------------------------------------------------------------------------------------------------------------------|
+| **210501** | Target order ID is invalid.               | -                                                                                                                                                |
+| **210502** | Target agreement ID is invalid.           | -                                                                                                                                                |
+| **210503** | Expired agreement condition is invalid.   | Any of following conditions is matched<br/> - Agreement has been already been paid or canceled.<br/> - Message sender is invalid.                |
+| **210504** | Unexpired agreement condition is invalid. | Any of following conditions is matched<br/> - Agreement has been already been paid or canceled.<br/> - Message sender is not the agent of order. |
 
-#### withdraw (216X)
+#### withdraw (2106XX)
 
-| Code     | Situation                               | Possible causes | 
-|----------|-----------------------------------------|-----------------|
-| **2161** | Message sender balance is insufficient. | -               |
+| Code       | Situation                               | Possible causes | 
+|------------|-----------------------------------------|-----------------|
+| **210601** | Message sender balance is insufficient. | -               |
 
-### EscrowStorage (22XX)
+### EscrowStorage (22XXXX)
 
-#### onlyLatestVersion (220X)
-| Code     | Situation                                               | Possible causes | 
-|----------|---------------------------------------------------------|-----------------|
-| **2201** | Message sender(exchange contract) isn't latest version. | -               |
+#### onlyLatestVersion (2200XX)
+| Code       | Situation                                               | Possible causes | 
+|------------|---------------------------------------------------------|-----------------|
+| **220001** | Message sender(exchange contract) isn't latest version. | -               |
 
-### IbetEscrow (23XX)
+### IbetEscrow (23XXXX)
 
-#### createEscrow (230X)
-| Code     | Situation                               | Possible causes | 
-|----------|-----------------------------------------|-----------------|
-| **2301** | Escrow amount is 0.                     | -               |
-| **2302** | Message sender balance is insufficient. | -               |
-| **2303** | Token status of escrow is inactive.     | -               |
+#### createEscrow (2300XX)
+| Code       | Situation                               | Possible causes | 
+|------------|-----------------------------------------|-----------------|
+| **230001** | Escrow amount is 0.                     | -               |
+| **230002** | Message sender balance is insufficient. | -               |
+| **230003** | Token status of escrow is inactive.     | -               |
 
 
-#### cancelEscrow (231X)
-| Code     | Situation                                             | Possible causes | 
-|----------|-------------------------------------------------------|-----------------|
-| **2311** | Target escrow ID is invalid.                          | -               |
-| **2312** | Target escrow status is invalid.                      | -               |
-| **2313** | Message sender is not escrow sender and escrow agent. | -               |
-| **2314** | Token status of escrow is inactive.                   | -               |
+#### cancelEscrow (2301XX)
+| Code       | Situation                                             | Possible causes | 
+|------------|-------------------------------------------------------|-----------------|
+| **230101** | Target escrow ID is invalid.                          | -               |
+| **230102** | Target escrow status is invalid.                      | -               |
+| **230103** | Message sender is not escrow sender and escrow agent. | -               |
+| **230104** | Token status of escrow is inactive.                   | -               |
 
-#### finishEscrow (232X)
-| Code     | Situation                           | Possible causes | 
-|----------|-------------------------------------|-----------------|
-| **2321** | Target escrow ID is invalid.        | -               |
-| **2322** | Target escrow status is invalid.    | -               |
-| **2323** | Message sender is not escrow agent. | -               |
-| **2324** | Token status of escrow is inactive. | -               |
+#### finishEscrow (2302XX)
+| Code       | Situation                           | Possible causes | 
+|------------|-------------------------------------|-----------------|
+| **230201** | Target escrow ID is invalid.        | -               |
+| **230202** | Target escrow status is invalid.    | -               |
+| **230203** | Message sender is not escrow agent. | -               |
+| **230204** | Token status of escrow is inactive. | -               |
 
-#### withdraw (233X)
-| Code     | Situation                               | Possible causes | 
-|----------|-----------------------------------------|-----------------|
-| **2331** | Message sender balance is insufficient. | -               |
+#### withdraw (2303XX)
+| Code       | Situation                               | Possible causes | 
+|------------|-----------------------------------------|-----------------|
+| **230301** | Message sender balance is insufficient. | -               |
 
-### IbetSecurityTokenEscrow (24XX)
+### IbetSecurityTokenEscrow (24XXXX)
 
-#### createEscrow (240X)
-| Code     | Situation                               | Possible causes | 
-|----------|-----------------------------------------|-----------------|
-| **2401** | Escrow amount is 0.                     | -               |
-| **2402** | Message sender balance is insufficient. | -               |
-| **2403** | Token status of escrow is inactive.     | -               |
+#### createEscrow (2400XX)
+| Code       | Situation                               | Possible causes | 
+|------------|-----------------------------------------|-----------------|
+| **240001** | Escrow amount is 0.                     | -               |
+| **240002** | Message sender balance is insufficient. | -               |
+| **240003** | Token status of escrow is inactive.     | -               |
 
-#### cancelEscrow (241X)
-| Code     | Situation                                             | Possible causes | 
-|----------|-------------------------------------------------------|-----------------|
-| **2411** | Target escrow ID is invalid.                          | -               |
-| **2412** | Target escrow status is invalid.                      | -               |
-| **2413** | Message sender is not escrow sender and escrow agent. | -               |
-| **2414** | Token status of escrow is inactive.                   | -               |
+#### cancelEscrow (2401XX)
+| Code       | Situation                                             | Possible causes | 
+|------------|-------------------------------------------------------|-----------------|
+| **240101** | Target escrow ID is invalid.                          | -               |
+| **240202** | Target escrow status is invalid.                      | -               |
+| **240303** | Message sender is not escrow sender and escrow agent. | -               |
+| **240404** | Token status of escrow is inactive.                   | -               |
 
-#### approveTransfer (242X)
-| Code     | Situation                                   | Possible causes | 
-|----------|---------------------------------------------|-----------------|
-| **2421** | Application doesn't exist.                  | -               |
-| **2422** | Message sender is not token owner.          | -               |
-| **2423** | Target escrow status is invalid.            | -               |
-| **2423** | Target escrow status has not been finished. | -               |
-| **2425** | Token status of escrow is inactive.         | -               |
+#### approveTransfer (2402XX)
+| Code       | Situation                                   | Possible causes | 
+|------------|---------------------------------------------|-----------------|
+| **240201** | Application doesn't exist.                  | -               |
+| **240202** | Message sender is not token owner.          | -               |
+| **240203** | Target escrow status is invalid.            | -               |
+| **240203** | Target escrow status has not been finished. | -               |
+| **240205** | Token status of escrow is inactive.         | -               |
 
-#### finishEscrow (243X)
-| Code     | Situation                           | Possible causes | 
-|----------|-------------------------------------|-----------------|
-| **2431** | Target escrow ID is invalid.        | -               |
-| **2432** | Target escrow status is invalid.    | -               |
-| **2433** | Message sender is not escrow agent. | -               |
-| **2434** | Token status of escrow is inactive. | -               |
+#### finishEscrow (2403XX)
+| Code       | Situation                           | Possible causes | 
+|------------|-------------------------------------|-----------------|
+| **240301** | Target escrow ID is invalid.        | -               |
+| **240302** | Target escrow status is invalid.    | -               |
+| **240303** | Message sender is not escrow agent. | -               |
+| **240304** | Token status of escrow is inactive. | -               |
 
-#### withdraw (244X)
-| Code     | Situation                               | Possible causes | 
-|----------|-----------------------------------------|-----------------|
-| **2441** | Message sender balance is insufficient. | -               |
+#### withdraw (2404XX)
+| Code       | Situation                               | Possible causes | 
+|------------|-----------------------------------------|-----------------|
+| **240401** | Message sender balance is insufficient. | -               |
 
-### PaymentGateway (30XX)
+### PaymentGateway (30XXXX)
 
-#### register (300X)
-| Code     | Situation                                 | Possible causes | 
-|----------|-------------------------------------------|-----------------|
-| **3001** | Payment account is banned.                | -               |
+#### register (3000XX)
+| Code       | Situation                                 | Possible causes | 
+|------------|-------------------------------------------|-----------------|
+| **300001** | Payment account is banned.                | -               |
 
 
-#### approve (301X)
-| Code     | Situation                                 | Possible causes | 
-|----------|-------------------------------------------|-----------------|
-| **3011** | Target account address is not registered. | -               |
+#### approve (3001XX)
+| Code       | Situation                                 | Possible causes | 
+|------------|-------------------------------------------|-----------------|
+| **300101** | Target account address is not registered. | -               |
 
-#### warn (302X)
-| Code     | Situation                                 | Possible causes | 
-|----------|-------------------------------------------|-----------------|
-| **3021** | Target account address is not registered. | -               |
+#### warn (3002XX)
+| Code       | Situation                                 | Possible causes | 
+|------------|-------------------------------------------|-----------------|
+| **300201** | Target account address is not registered. | -               |
 
-#### disapprove (303X)
-| Code     | Situation                                 | Possible causes | 
-|----------|-------------------------------------------|-----------------|
-| **3031** | Target account address is not registered. | -               |
+#### disapprove (3003XX)
+| Code       | Situation                                 | Possible causes | 
+|------------|-------------------------------------------|-----------------|
+| **300301** | Target account address is not registered. | -               |
 
-#### approve (304X)
-| Code     | Situation                                 | Possible causes | 
-|----------|-------------------------------------------|-----------------|
-| **3041** | Target account address is not registered. | -               |
+#### approve (3004XX)
+| Code       | Situation                                 | Possible causes | 
+|------------|-------------------------------------------|-----------------|
+| **300401** | Target account address is not registered. | -               |
 
-#### modify (305X)
-| Code     | Situation                                 | Possible causes | 
-|----------|-------------------------------------------|-----------------|
-| **3051** | Target account address is not registered. | -               |
+#### modify (3005XX)
+| Code       | Situation                                 | Possible causes | 
+|------------|-------------------------------------------|-----------------|
+| **300501** | Target account address is not registered. | -               |
 
-### PersonalInfo (40XX)
+### PersonalInfo (40XXXX)
 
-#### modify (400X)
-| Code     | Situation                                               | Possible causes | 
-|----------|---------------------------------------------------------|-----------------|
-| **4001** | Target account address is not registered.               | -               |
-| **4002** | Target account address is not linked to message sender. | -               |
+#### modify (4000XX)
+| Code       | Situation                                               | Possible causes | 
+|------------|---------------------------------------------------------|-----------------|
+| **400001** | Target account address is not registered.               | -               |
+| **400002** | Target account address is not linked to message sender. | -               |
 
-### Ownable (50XX)
+### Ownable (50XXXX)
 
-#### onlyOwner (500X)
-| Code     | Situation                             | Possible causes | 
-|----------|---------------------------------------|-----------------|
-| **5001** | Message sender is not contract owner. | -               |
+#### onlyOwner (5000XX)
+| Code       | Situation                             | Possible causes | 
+|------------|---------------------------------------|-----------------|
+| **500001** | Message sender is not contract owner. | -               |
 
-#### transferOwnership (501X)
-| Code     | Situation                     | Possible causes | 
-|----------|-------------------------------|-----------------|
-| **5011** | New owner address is not set. | -               |
+#### transferOwnership (5001XX)
+| Code       | Situation                     | Possible causes | 
+|------------|-------------------------------|-----------------|
+| **500101** | New owner address is not set. | -               |
 
-### ContractRegistry (60XX)
+### ContractRegistry (60XXXX)
 
-#### register (600X)
-| Code     | Situation                               | Possible causes | 
-|----------|-----------------------------------------|-----------------|
-| **6001** | Target address is not contract address. | -               |
-| **6002** | Message sender is not contract owner.   | -               |
+#### register (6000XX)
+| Code       | Situation                               | Possible causes | 
+|------------|-----------------------------------------|-----------------|
+| **600001** | Target address is not contract address. | -               |
+| **600002** | Message sender is not contract owner.   | -               |
 
-### E2EMessaging (61XX)
+### E2EMessaging (61XXXX)
 
-#### getLastMessage (610X)
-| Code     | Situation                                    | Possible causes | 
-|----------|----------------------------------------------|-----------------|
-| **6101** | E2E Message for message owner doesn't exist. | -               |
+#### getLastMessage (6100XX)
+| Code       | Situation                                    | Possible causes | 
+|------------|----------------------------------------------|-----------------|
+| **610001** | E2E Message for message owner doesn't exist. | -               |
 
-#### clearMessage (611X)
-| Code     | Situation                                 | Possible causes | 
-|----------|-------------------------------------------|-----------------|
-| **6111** | Message sender is not E2E Message sender. | -               |
+#### clearMessage (6101XX)
+| Code       | Situation                                 | Possible causes | 
+|------------|-------------------------------------------|-----------------|
+| **610011** | Message sender is not E2E Message sender. | -               |
 
-### FreezeLog (62XX)
+### FreezeLog (62XXXX)
 
-#### getLastMessage (620X)
-| Code     | Situation      | Possible causes | 
-|----------|----------------|-----------------|
-| **6201** | Log is frozen. | -               |
+#### getLastMessage (6200XX)
+| Code       | Situation      | Possible causes | 
+|------------|----------------|-----------------|
+| **620001** | Log is frozen. | -               |

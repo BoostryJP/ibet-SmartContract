@@ -112,7 +112,7 @@ contract PaymentGateway is Ownable {
         returns (bool)
     {
         PaymentAccount storage payment_account = payment_accounts[msg.sender][_agent_address];
-        require(payment_account.approval_status != 4, ErrorCode.ERR_PaymentGateway_register_3001);
+        require(payment_account.approval_status != 4, ErrorCode.ERR_PaymentGateway_register_300001);
 
         // 口座情報の登録
         payment_account.account_address = msg.sender;
@@ -132,7 +132,7 @@ contract PaymentGateway is Ownable {
         returns (bool)
     {
         PaymentAccount storage payment_account = payment_accounts[_account_address][msg.sender];
-        require(payment_account.account_address != address(0), ErrorCode.ERR_PaymentGateway_approve_3011);
+        require(payment_account.account_address != address(0), ErrorCode.ERR_PaymentGateway_approve_300101);
 
         payment_account.approval_status = 2;
 
@@ -148,7 +148,7 @@ contract PaymentGateway is Ownable {
         returns (bool)
     {
         PaymentAccount storage payment_account = payment_accounts[_account_address][msg.sender];
-        require(payment_account.account_address != address(0), ErrorCode.ERR_PaymentGateway_warn_3021);
+        require(payment_account.account_address != address(0), ErrorCode.ERR_PaymentGateway_warn_300201);
 
         payment_account.approval_status = 3;
 
@@ -164,7 +164,7 @@ contract PaymentGateway is Ownable {
         returns (bool)
     {
         PaymentAccount storage payment_account = payment_accounts[_account_address][msg.sender];
-        require(payment_account.account_address != address(0), ErrorCode.ERR_PaymentGateway_disapprove_3031);
+        require(payment_account.account_address != address(0), ErrorCode.ERR_PaymentGateway_disapprove_300301);
 
         payment_account.approval_status = 1;
 
@@ -180,7 +180,7 @@ contract PaymentGateway is Ownable {
         returns (bool)
     {
         PaymentAccount storage payment_account = payment_accounts[_account_address][msg.sender];
-        require(payment_account.account_address != address(0), ErrorCode.ERR_PaymentGateway_ban_3041);
+        require(payment_account.account_address != address(0), ErrorCode.ERR_PaymentGateway_ban_300401);
 
         payment_account.approval_status = 4;
 
@@ -220,7 +220,7 @@ contract PaymentGateway is Ownable {
         PaymentAccount storage payment_account = payment_accounts[_account_address][msg.sender];
 
         // 登録済みか確認
-        require(payment_account.account_address != address(0),ErrorCode.ERR_PaymentGateway_modify_3051);
+        require(payment_account.account_address != address(0),ErrorCode.ERR_PaymentGateway_modify_300501);
 
         payment_account.encrypted_info = _encrypted_info;
 

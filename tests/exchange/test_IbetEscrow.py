@@ -326,7 +326,7 @@ class TestTokenFallback:
         )
 
         # transfer to escrow contract
-        with brownie.reverts(revert_msg="2201"):
+        with brownie.reverts(revert_msg="220001"):
             token.transfer(
                 escrow.address,
                 _value,
@@ -388,7 +388,7 @@ class TestWithdraw:
         token = deploy(users, deploy_args)
 
         # withdraw
-        with brownie.reverts(revert_msg="2331"):
+        with brownie.reverts(revert_msg="230301"):
             escrow.withdraw(
                 token.address,
                 {'from': _issuer}
@@ -423,7 +423,7 @@ class TestWithdraw:
         )
 
         # withdraw
-        with brownie.reverts(revert_msg="2201"):
+        with brownie.reverts(revert_msg="220001"):
             escrow.withdraw(
                 token.address,
                 {'from': _issuer}
@@ -479,7 +479,7 @@ class TestWithdraw:
         )
 
         # withdraw
-        with brownie.reverts(revert_msg="1142"):
+        with brownie.reverts(revert_msg="110402"):
             escrow.withdraw(
                 token.address,
                 {'from': _issuer}
@@ -619,7 +619,7 @@ class TestCreateEscrow:
         )
 
         # create escrow
-        with brownie.reverts(revert_msg="2301"):
+        with brownie.reverts(revert_msg="230001"):
             escrow.createEscrow(
                 token.address,
                 _recipient,
@@ -654,7 +654,7 @@ class TestCreateEscrow:
         )
 
         # create escrow
-        with brownie.reverts(revert_msg="2302"):
+        with brownie.reverts(revert_msg="230002"):
             escrow.createEscrow(
                 token.address,
                 _recipient,
@@ -696,7 +696,7 @@ class TestCreateEscrow:
         )
 
         # create escrow
-        with brownie.reverts(revert_msg="2303"):
+        with brownie.reverts(revert_msg="230003"):
             escrow.createEscrow(
                 token.address,
                 _recipient,
@@ -740,7 +740,7 @@ class TestCreateEscrow:
 
         # create escrow
         bf_latest_escrow_id = escrow.latestEscrowId()
-        with brownie.reverts(revert_msg="2201"):
+        with brownie.reverts(revert_msg="220001"):
             escrow.createEscrow(
                 token.address,
                 _recipient,
@@ -915,7 +915,7 @@ class TestCancelEscrow:
 
         # cancel escrow
         latest_escrow_id = escrow.latestEscrowId()
-        with brownie.reverts(revert_msg="2311"):
+        with brownie.reverts(revert_msg="230101"):
             escrow.cancelEscrow(
                 latest_escrow_id + 1,
                 {'from': _issuer}
@@ -972,7 +972,7 @@ class TestCancelEscrow:
         )
 
         # cancel escrow (2)
-        with brownie.reverts(revert_msg="2312"):
+        with brownie.reverts(revert_msg="230102"):
             escrow.cancelEscrow(
                 latest_escrow_id,
                 {'from': _issuer}
@@ -1011,7 +1011,7 @@ class TestCancelEscrow:
 
         # cancel escrow
         latest_escrow_id = escrow.latestEscrowId()
-        with brownie.reverts(revert_msg="2313"):
+        with brownie.reverts(revert_msg="230103"):
             escrow.cancelEscrow(
                 latest_escrow_id,
                 {'from': _recipient}
@@ -1056,7 +1056,7 @@ class TestCancelEscrow:
 
         # cancel escrow
         latest_escrow_id = escrow.latestEscrowId()
-        with brownie.reverts(revert_msg="2314"):
+        with brownie.reverts(revert_msg="230104"):
             escrow.cancelEscrow(
                 latest_escrow_id,
                 {'from': _issuer}
@@ -1114,7 +1114,7 @@ class TestCancelEscrow:
 
         # cancel escrow
         latest_escrow_id = escrow.latestEscrowId()
-        with brownie.reverts(revert_msg="2201"):
+        with brownie.reverts(revert_msg="220001"):
             escrow.cancelEscrow(
                 latest_escrow_id,
                 {'from': _issuer}
@@ -1231,7 +1231,7 @@ class TestFinishEscrow:
 
         # finish escrow
         latest_escrow_id = escrow.latestEscrowId()
-        with brownie.reverts(revert_msg="2321"):
+        with brownie.reverts(revert_msg="230201"):
             escrow.finishEscrow(
                 latest_escrow_id + 1,
                 {'from': _agent}
@@ -1289,7 +1289,7 @@ class TestFinishEscrow:
         )
 
         # finish escrow (2)
-        with brownie.reverts(revert_msg="2322"):
+        with brownie.reverts(revert_msg="230202"):
             escrow.finishEscrow(
                 latest_escrow_id,
                 {'from': _agent}
@@ -1341,7 +1341,7 @@ class TestFinishEscrow:
 
         # finish escrow
         latest_escrow_id = escrow.latestEscrowId()
-        with brownie.reverts(revert_msg="2323"):
+        with brownie.reverts(revert_msg="230203"):
             escrow.finishEscrow(
                 latest_escrow_id,
                 {'from': _recipient}
@@ -1399,7 +1399,7 @@ class TestFinishEscrow:
 
         # finish escrow
         latest_escrow_id = escrow.latestEscrowId()
-        with brownie.reverts(revert_msg="2324"):
+        with brownie.reverts(revert_msg="230204"):
             escrow.finishEscrow(
                 latest_escrow_id,
                 {'from': _agent}
@@ -1458,7 +1458,7 @@ class TestFinishEscrow:
 
         # finish escrow
         latest_escrow_id = escrow.latestEscrowId()
-        with brownie.reverts(revert_msg="2201"):
+        with brownie.reverts(revert_msg="220001"):
             escrow.finishEscrow(
                 latest_escrow_id,
                 {'from': _agent}

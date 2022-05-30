@@ -84,7 +84,7 @@ contract E2EMessaging {
             uint256 _time
         )
     {
-        require(last_msg_index[_who] > 0, ErrorCode.ERR_E2EMessaging_getLastMessage_6101);
+        require(last_msg_index[_who] > 0, ErrorCode.ERR_E2EMessaging_getLastMessage_610001);
         return (
             messages[_who][last_msg_index[_who] - 1].from,
             messages[_who][last_msg_index[_who] - 1].text,
@@ -123,7 +123,7 @@ contract E2EMessaging {
         message storage _message = messages[_to][_index];
         require(
             _message.from == msg.sender,
-            ErrorCode.ERR_E2EMessaging_clearMessage_6111
+            ErrorCode.ERR_E2EMessaging_clearMessage_610101
         );
 
         messages[_to][_index].from = msg.sender;

@@ -298,11 +298,11 @@ contract IbetShare is Ownable, IbetSecurityTokenInterface {
         require(
             authorizedLockAddress[_lockAddress] == true ||
             _lockAddress == owner,
-            ErrorCode.ERR_IbetShare_lock_1101
+            ErrorCode.ERR_IbetShare_lock_110001
         );
 
         // ロック数量が保有数量を上回っている場合、エラーを返す
-        if (balanceOf(msg.sender) < _value) revert(ErrorCode.ERR_IbetShare_lock_1102);
+        if (balanceOf(msg.sender) < _value) revert(ErrorCode.ERR_IbetShare_lock_110002);
 
         // データ更新
         balances[msg.sender] = balanceOf(msg.sender).sub(_value);
@@ -328,11 +328,11 @@ contract IbetShare is Ownable, IbetSecurityTokenInterface {
         require(
             authorizedLockAddress[msg.sender] == true ||
             msg.sender == owner,
-            ErrorCode.ERR_IbetShare_unlock_1111
+            ErrorCode.ERR_IbetShare_unlock_110101
         );
 
         // アンロック数量がロック数量を上回ってる場合、エラーを返す
-        if (lockedOf(msg.sender, _accountAddress) < _value) revert(ErrorCode.ERR_IbetShare_unlock_1112);
+        if (lockedOf(msg.sender, _accountAddress) < _value) revert(ErrorCode.ERR_IbetShare_unlock_110102);
 
         // データ更新
         locked[msg.sender][_accountAddress] = lockedOf(msg.sender, _accountAddress).sub(_value);
@@ -371,13 +371,13 @@ contract IbetShare is Ownable, IbetSecurityTokenInterface {
         returns (bool success)
     {
         if (msg.sender != tradableExchange && transferApprovalRequired == true) {
-            revert(ErrorCode.ERR_IbetShare_transferToAddress_1121);
+            revert(ErrorCode.ERR_IbetShare_transferToAddress_110201);
         }
 
         if (_to != owner) {
             require(
                 PersonalInfo(personalInfoAddress).isRegistered(_to, owner) == true,
-                ErrorCode.ERR_IbetShare_transferToAddress_1122
+                ErrorCode.ERR_IbetShare_transferToAddress_110202
             );
         }
 
@@ -401,7 +401,7 @@ contract IbetShare is Ownable, IbetSecurityTokenInterface {
         // 宛先はtradableExchangeのみ可能
         require(
             _to == tradableExchange,
-            ErrorCode.ERR_IbetShare_transferToContract_1131
+            ErrorCode.ERR_IbetShare_transferToContract_110301
         );
 
         balances[msg.sender] = balanceOf(msg.sender).sub(_value);
@@ -426,12 +426,12 @@ contract IbetShare is Ownable, IbetSecurityTokenInterface {
     {
         require(
             balanceOf(msg.sender) >= _value,
-            ErrorCode.ERR_IbetShare_transfer_1141
+            ErrorCode.ERR_IbetShare_transfer_110401
         );
 
         require(
             transferable == true,
-            ErrorCode.ERR_IbetShare_transfer_1142
+            ErrorCode.ERR_IbetShare_transfer_110402
         );
 
         bytes memory empty;
@@ -453,11 +453,11 @@ contract IbetShare is Ownable, IbetSecurityTokenInterface {
     {
         // <CHK>
         // 移転時の発行体承諾が必要な場合、エラーを返す
-        if (transferApprovalRequired == true) revert(ErrorCode.ERR_IbetShare_bulkTransfer_1151);
+        if (transferApprovalRequired == true) revert(ErrorCode.ERR_IbetShare_bulkTransfer_110501);
 
         // <CHK>
         // リスト長が等しくない場合、エラーを返す
-        if (_toList.length != _valueList.length) revert(ErrorCode.ERR_IbetShare_bulkTransfer_1152);
+        if (_toList.length != _valueList.length) revert(ErrorCode.ERR_IbetShare_bulkTransfer_110502);
 
         // <CHK>
         // 数量が残高を超えている場合、エラーを返す
@@ -465,12 +465,12 @@ contract IbetShare is Ownable, IbetSecurityTokenInterface {
         for(uint i = 0; i < _toList.length; i++) {
              totalValue += _valueList[i];
         }
-        if (balanceOf(msg.sender) < totalValue) revert(ErrorCode.ERR_IbetShare_bulkTransfer_1153);
+        if (balanceOf(msg.sender) < totalValue) revert(ErrorCode.ERR_IbetShare_bulkTransfer_110503);
 
         // <CHK>
         // 譲渡可能ではない場合、エラーを返す
         if (msg.sender != tradableExchange) {
-            require(transferable == true, ErrorCode.ERR_IbetShare_bulkTransfer_1154);
+            require(transferable == true, ErrorCode.ERR_IbetShare_bulkTransfer_110504);
         }
 
         bytes memory empty;
@@ -502,7 +502,7 @@ contract IbetShare is Ownable, IbetSecurityTokenInterface {
         returns (bool success)
     {
         //  数量が送信元アドレス（from）の残高を超えている場合、エラーを返す
-        if (balanceOf(_from) < _value) revert(ErrorCode.ERR_IbetShare_transferFrom_1161);
+        if (balanceOf(_from) < _value) revert(ErrorCode.ERR_IbetShare_transferFrom_110601);
 
         bytes memory empty;
         if (isContract(_to)) {
@@ -539,14 +539,14 @@ contract IbetShare is Ownable, IbetSecurityTokenInterface {
             transferable == false ||
             balanceOf(msg.sender) < _value)
         {
-            revert(ErrorCode.ERR_IbetShare_applyForTransfer_1171);
+            revert(ErrorCode.ERR_IbetShare_applyForTransfer_110701);
         }
 
         // <CHK>
         // 個人情報登録済みチェック
         // 発行体への移転の場合はチェックを行わない
         if (_to != owner) {
-            require(PersonalInfo(personalInfoAddress).isRegistered(_to, owner) == true, ErrorCode.ERR_IbetShare_applyForTransfer_1172);
+            require(PersonalInfo(personalInfoAddress).isRegistered(_to, owner) == true, ErrorCode.ERR_IbetShare_applyForTransfer_110702);
         }
 
         balances[msg.sender] -= _value;
@@ -585,13 +585,13 @@ contract IbetShare is Ownable, IbetSecurityTokenInterface {
         if (applicationsForTransfer[_index].from != msg.sender &&
             msg.sender != owner)
         {
-            revert(ErrorCode.ERR_IbetShare_cancelTransfer_1181);
+            revert(ErrorCode.ERR_IbetShare_cancelTransfer_110801);
         }
 
         // <CHK>
         // すでに無効な申請に対する取消の場合
         // -> REVERT
-        if (applicationsForTransfer[_index].valid == false) revert(ErrorCode.ERR_IbetShare_cancelTransfer_1182);
+        if (applicationsForTransfer[_index].valid == false) revert(ErrorCode.ERR_IbetShare_cancelTransfer_110802);
 
         balances[applicationsForTransfer[_index].from] += applicationsForTransfer[_index].amount;
         pendingTransfer[applicationsForTransfer[_index].from] -= applicationsForTransfer[_index].amount;
@@ -619,12 +619,12 @@ contract IbetShare is Ownable, IbetSecurityTokenInterface {
         // <CHK>
         // 移転不可の場合
         // -> REVERT
-        if (transferable == false) revert(ErrorCode.ERR_IbetShare_approveTransfer_1191);
+        if (transferable == false) revert(ErrorCode.ERR_IbetShare_approveTransfer_110901);
 
         // <CHK>
         // すでに無効な申請に対する取消の場合
         // -> REVERT
-        if (applicationsForTransfer[_index].valid == false) revert(ErrorCode.ERR_IbetShare_approveTransfer_1192);
+        if (applicationsForTransfer[_index].valid == false) revert(ErrorCode.ERR_IbetShare_approveTransfer_110902);
 
         balances[applicationsForTransfer[_index].to] += applicationsForTransfer[_index].amount;
         pendingTransfer[applicationsForTransfer[_index].from] -= applicationsForTransfer[_index].amount;
@@ -655,13 +655,13 @@ contract IbetShare is Ownable, IbetSecurityTokenInterface {
         // 申込ステータスが停止中の場合、エラーを返す
         require(
             isOffering == true,
-            ErrorCode.ERR_IbetShare_applyForOffering_1201
+            ErrorCode.ERR_IbetShare_applyForOffering_111001
         );
 
         // 個人情報未登録の場合、エラーを返す
         require(
             PersonalInfo(personalInfoAddress).isRegistered(msg.sender, owner) == true,
-            ErrorCode.ERR_IbetShare_applyForOffering_1202
+            ErrorCode.ERR_IbetShare_applyForOffering_111002
         );
 
         applicationsForOffering[msg.sender].applicationAmount = _amount;
@@ -737,14 +737,14 @@ contract IbetShare is Ownable, IbetSecurityTokenInterface {
         // locked_addressを指定しない場合：アカウントアドレスの残高から減資を行う
         if (_locked_address != address(0)) {
             // 減資数量が対象アドレスのロック数量を上回っている場合はエラー
-            if (lockedOf(_locked_address, _target_address) < _amount) revert(ErrorCode.ERR_IbetShare_redeemFrom_1211);
+            if (lockedOf(_locked_address, _target_address) < _amount) revert(ErrorCode.ERR_IbetShare_redeemFrom_111101);
             // ロック資産の更新
             locked[_locked_address][_target_address] = lockedOf(_locked_address, _target_address).sub(_amount);
             // 総発行数量の更新
             totalSupply = totalSupply.sub(_amount);
         } else {
             // 減資数量が対象アドレスの残高数量を上回っている場合はエラーを返す
-            if (balances[_target_address] < _amount) revert(ErrorCode.ERR_IbetShare_redeemFrom_1212);
+            if (balances[_target_address] < _amount) revert(ErrorCode.ERR_IbetShare_redeemFrom_111102);
             // アカウント残高の更新
             balances[_target_address] = balanceOf(_target_address).sub(_amount);
             // 総発行数量の更新

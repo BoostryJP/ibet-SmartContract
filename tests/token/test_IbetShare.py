@@ -160,7 +160,7 @@ class TestSetPrincipalValue:
         share_token = issuer.deploy(IbetShare, *deploy_args)
 
         # update principal value
-        with brownie.reverts(revert_msg="5001"):
+        with brownie.reverts(revert_msg="500001"):
             share_token.setPrincipalValue.transact(
                 9000,
                 {"from": trader}
@@ -208,7 +208,7 @@ class TestSetTradableExchange:
         share_token = issuer.deploy(IbetShare, *deploy_args)
 
         # change exchange contract
-        with brownie.reverts(revert_msg="5001"):
+        with brownie.reverts(revert_msg="500001"):
             share_token.setTradableExchange.transact(
                 brownie.ETH_ADDRESS,
                 {'from': users['user1']}
@@ -256,7 +256,7 @@ class TestSetPersonalInfoAddress:
         share_token = issuer.deploy(IbetShare, *deploy_args)
 
         # update contract
-        with brownie.reverts(revert_msg="5001"):
+        with brownie.reverts(revert_msg="500001"):
             share_token.setPersonalInfoAddress.transact(
                 brownie.ETH_ADDRESS,
                 {'from': users['user1']}
@@ -309,7 +309,7 @@ class TestSetDividendInformation:
         share_token = issuer.deploy(IbetShare, *deploy_args)
 
         # update
-        with brownie.reverts(revert_msg="5001"):
+        with brownie.reverts(revert_msg="500001"):
             share_token.setDividendInformation.transact(
                 22000,
                 '20200829',
@@ -363,7 +363,7 @@ class TestSetCancellationDate:
         share_token = issuer.deploy(IbetShare, *deploy_args)
 
         # update
-        with brownie.reverts(revert_msg="5001"):
+        with brownie.reverts(revert_msg="500001"):
             share_token.setCancellationDate.transact(
                 '20200930',
                 {'from': users['user1']}
@@ -413,7 +413,7 @@ class TestSetContactInformation:
         share_token = issuer.deploy(IbetShare, *deploy_args)
 
         # update
-        with brownie.reverts(revert_msg="5001"):
+        with brownie.reverts(revert_msg="500001"):
             share_token.setContactInformation.transact(
                 'updated contact information',
                 {'from': users['user1']}
@@ -463,7 +463,7 @@ class TestSetPrivacyPolicy:
         share_token = issuer.deploy(IbetShare, *deploy_args)
 
         # update
-        with brownie.reverts(revert_msg="5001"):
+        with brownie.reverts(revert_msg="500001"):
             share_token.setPrivacyPolicy.transact(
                 'updated privacy policy',
                 {'from': users['user1']}
@@ -513,7 +513,7 @@ class TestSetMemo:
         share_token = issuer.deploy(IbetShare, *deploy_args)
 
         # set memo
-        with brownie.reverts(revert_msg="5001"):
+        with brownie.reverts(revert_msg="500001"):
             share_token.setMemo.transact(
                 'updated memo',
                 {'from': users['user1']}
@@ -558,7 +558,7 @@ class TestSetTransferable:
         share_token = issuer.deploy(IbetShare, *deploy_args)
 
         # update
-        with brownie.reverts(revert_msg="5001"):
+        with brownie.reverts(revert_msg="500001"):
             share_token.setTransferable.transact(True, {'from': users['user1']})
 
         # assertion
@@ -600,7 +600,7 @@ class TestChangeOfferingStatus:
         share_token = issuer.deploy(IbetShare, *deploy_args)
 
         # change exchange contract
-        with brownie.reverts(revert_msg="5001"):
+        with brownie.reverts(revert_msg="500001"):
             share_token.changeOfferingStatus.transact(True, {'from': users['user1']})
 
 
@@ -664,7 +664,7 @@ class TestAuthorize:
         share_token = issuer.deploy(IbetShare, *deploy_args)
 
         # authorize
-        with brownie.reverts(revert_msg="5001"):
+        with brownie.reverts(revert_msg="500001"):
             share_token.authorizeLockAddress.transact(
                 brownie.ETH_ADDRESS,
                 True,
@@ -757,7 +757,7 @@ class TestLock:
         share_token.transferFrom.transact(issuer, user, transfer_amount, {'from': issuer})
 
         # lock
-        with brownie.reverts(revert_msg="1102"):
+        with brownie.reverts(revert_msg="110002"):
             share_token.lock.transact(issuer, lock_amount, {'from': user})
 
         # assertion
@@ -782,7 +782,7 @@ class TestLock:
         share_token.transferFrom.transact(issuer, user, transfer_amount, {'from': issuer})
 
         # lock
-        with brownie.reverts(revert_msg="1101"):
+        with brownie.reverts(revert_msg="110001"):
             share_token.lock.transact(not_authorized_address, lock_amount, {'from': user})
 
         # assertion
@@ -924,7 +924,7 @@ class TestUnlock:
         share_token.lock.transact(issuer, lock_amount, {'from': user1})
 
         # unlock
-        with brownie.reverts(revert_msg="1112"):
+        with brownie.reverts(revert_msg="110102"):
             share_token.unlock.transact(user1, user2, unlock_amount, {'from': issuer})
 
         # assertion
@@ -954,7 +954,7 @@ class TestUnlock:
         share_token.lock.transact(issuer, lock_amount, {'from': user1})
 
         # unlock
-        with brownie.reverts(revert_msg="1111"):
+        with brownie.reverts(revert_msg="110101"):
             share_token.unlock.transact(user1, user2, unlock_amount, {'from': user2})
 
         # assertion
@@ -1064,7 +1064,7 @@ class TestTransfer:
 
         # transfer
         transfer_amount = deploy_args[3] + 1
-        with brownie.reverts(revert_msg="1141"):
+        with brownie.reverts(revert_msg="110401"):
             share_token.transfer.transact(
                 to_address.address,
                 transfer_amount,
@@ -1121,7 +1121,7 @@ class TestTransfer:
         share_token = issuer.deploy(IbetShare, *deploy_args)
 
         # transfer
-        with brownie.reverts(revert_msg="1142"):
+        with brownie.reverts(revert_msg="110402"):
             share_token.transfer.transact(
                 to_address,
                 transfer_amount,
@@ -1149,7 +1149,7 @@ class TestTransfer:
         )
 
         # transfer
-        with brownie.reverts(revert_msg="1131"):
+        with brownie.reverts(revert_msg="110301"):
             share_token.transfer.transact(
                 exchange,
                 transfer_amount,
@@ -1174,7 +1174,7 @@ class TestTransfer:
         )
 
         # transfer
-        with brownie.reverts(revert_msg="1122"):
+        with brownie.reverts(revert_msg="110202"):
             share_token.transfer.transact(
                 to_address.address,
                 transfer_amount,
@@ -1204,7 +1204,7 @@ class TestTransfer:
         )
 
         # transfer
-        with brownie.reverts(revert_msg="1121"):
+        with brownie.reverts(revert_msg="110201"):
             share_token.transfer.transact(
                 to_address,
                 transfer_amount,
@@ -1355,7 +1355,7 @@ class TestBulkTransfer:
         )
 
         # bulk transfer
-        with brownie.reverts(revert_msg="1153"):
+        with brownie.reverts(revert_msg="110503"):
             share_contract.bulkTransfer.transact(
                 [to_address, to_address],
                 [deploy_args[3], 1],
@@ -1392,7 +1392,7 @@ class TestBulkTransfer:
         )
 
         # bulk transfer
-        with brownie.reverts(revert_msg="1154"):
+        with brownie.reverts(revert_msg="110504"):
             share_contract.bulkTransfer.transact(
                 [to_address],
                 [1],
@@ -1419,7 +1419,7 @@ class TestBulkTransfer:
         )
 
         # bulk transfer
-        with brownie.reverts(revert_msg="1122"):
+        with brownie.reverts(revert_msg="110202"):
             share_contract.bulkTransfer.transact(
                 [to_address],
                 [1],
@@ -1450,7 +1450,7 @@ class TestBulkTransfer:
         )
 
         # bulk transfer
-        with brownie.reverts(revert_msg="1151"):
+        with brownie.reverts(revert_msg="110501"):
             share_contract.bulkTransfer.transact(
                 [to_address],
                 [1],
@@ -1516,7 +1516,7 @@ class TestTransferFrom:
         )
 
         # forced transfer
-        with brownie.reverts(revert_msg="1161"):
+        with brownie.reverts(revert_msg="110601"):
             share_token.transferFrom.transact(
                 from_address,
                 to_address,
@@ -1543,7 +1543,7 @@ class TestTransferFrom:
         )
 
         # forced transfer
-        with brownie.reverts(revert_msg="5001"):
+        with brownie.reverts(revert_msg="500001"):
             share_token.transferFrom.transact(
                 from_address,
                 to_address,
@@ -1677,7 +1677,7 @@ class TestApplyForOffering:
         )
 
         # apply for offering
-        with brownie.reverts(revert_msg="1201"):
+        with brownie.reverts(revert_msg="111001"):
             share_token.applyForOffering.transact(
                 10,
                 'abcdefgh',
@@ -1707,7 +1707,7 @@ class TestApplyForOffering:
         share_token.changeOfferingStatus.transact(True, {'from': issuer})
 
         # apply for offering
-        with brownie.reverts(revert_msg="1202"):
+        with brownie.reverts(revert_msg="111002"):
             share_token.applyForOffering.transact(
                 10,
                 'abcdefgh',
@@ -1791,7 +1791,7 @@ class TestAllot:
         share_token.changeOfferingStatus.transact(True, {'from': issuer})
 
         # allot
-        with brownie.reverts(revert_msg="5001"):
+        with brownie.reverts(revert_msg="500001"):
             share_token.allot.transact(applicant, 5, {'from': applicant})
 
         # assertion
@@ -1952,7 +1952,7 @@ class TestIssueFrom:
         share_token = issuer.deploy(IbetShare, *deploy_args)
 
         # issue from not authorized user
-        with brownie.reverts(revert_msg="5001"):
+        with brownie.reverts(revert_msg="500001"):
             share_token.issueFrom.transact(
                 issuer,
                 brownie.ZERO_ADDRESS,
@@ -2082,7 +2082,7 @@ class TestRedeemFrom:
         share_token = issuer.deploy(IbetShare, *deploy_args)
 
         # redeem
-        with brownie.reverts(revert_msg="1212"):
+        with brownie.reverts(revert_msg="111102"):
             share_token.redeemFrom.transact(
                 issuer,
                 brownie.ZERO_ADDRESS,
@@ -2122,7 +2122,7 @@ class TestRedeemFrom:
         )
 
         # redeem from lock address
-        with brownie.reverts(revert_msg="1211"):
+        with brownie.reverts(revert_msg="111101"):
             share_token.redeemFrom.transact(
                 issuer,
                 lock_address,
@@ -2146,7 +2146,7 @@ class TestRedeemFrom:
         share_token = issuer.deploy(IbetShare, *deploy_args)
 
         # redeem
-        with brownie.reverts(revert_msg="5001"):
+        with brownie.reverts(revert_msg="500001"):
             share_token.redeemFrom.transact(
                 issuer,
                 brownie.ZERO_ADDRESS,
@@ -2321,7 +2321,7 @@ class TestApplyForTransfer:
         )
 
         # apply for transfer
-        with brownie.reverts(revert_msg="1171"):
+        with brownie.reverts(revert_msg="110701"):
             share_token.applyForTransfer(
                 to_address,
                 transfer_amount,
@@ -2358,7 +2358,7 @@ class TestApplyForTransfer:
         )
 
         # apply for transfer
-        with brownie.reverts(revert_msg="1171"):
+        with brownie.reverts(revert_msg="110701"):
             share_token.applyForTransfer(
                 to_address,
                 transfer_amount,
@@ -2390,7 +2390,7 @@ class TestApplyForTransfer:
         )
 
         # apply for transfer
-        with brownie.reverts(revert_msg="1171"):
+        with brownie.reverts(revert_msg="110701"):
             share_token.applyForTransfer(
                 to_address,
                 deploy_args[3] + 1,
@@ -2423,7 +2423,7 @@ class TestApplyForTransfer:
         )
 
         # apply for transfer
-        with brownie.reverts(revert_msg="1172"):
+        with brownie.reverts(revert_msg="110702"):
             share_token.applyForTransfer(
                 to_address,
                 transfer_amount,
@@ -2615,7 +2615,7 @@ class TestCancelTransfer:
         )
 
         # cancel transfer (from issuer)
-        with brownie.reverts(revert_msg="1181"):
+        with brownie.reverts(revert_msg="110801"):
             share_token.cancelTransfer(
                 0,
                 "test_data",
@@ -2681,7 +2681,7 @@ class TestCancelTransfer:
         )
 
         # cancel transfer (2)
-        with brownie.reverts(revert_msg="1182"):
+        with brownie.reverts(revert_msg="110802"):
             share_token.cancelTransfer(
                 0,
                 "test_data",
@@ -2804,7 +2804,7 @@ class TestApproveTransfer:
         )
 
         # approve transfer
-        with brownie.reverts(revert_msg="5001"):
+        with brownie.reverts(revert_msg="500001"):
             share_token.approveTransfer(
                 0,
                 "test_data",
@@ -2860,7 +2860,7 @@ class TestApproveTransfer:
             False,
             {"from": issuer}
         )
-        with brownie.reverts(revert_msg="1191"):
+        with brownie.reverts(revert_msg="110901"):
             share_token.approveTransfer(
                 0,
                 "test_data",
@@ -2919,7 +2919,7 @@ class TestApproveTransfer:
         )
 
         # approve transfer (2)
-        with brownie.reverts(revert_msg="1192"):
+        with brownie.reverts(revert_msg="110902"):
             share_token.approveTransfer(
                 0,
                 "test_data",
@@ -2998,7 +2998,7 @@ class TestSetTransferApprovalRequired:
         )
 
         # set required to True
-        with brownie.reverts(revert_msg="5001"):
+        with brownie.reverts(revert_msg="500001"):
             share_token.setTransferApprovalRequired(
                 True,
                 {"from": users["user1"]}
@@ -3046,7 +3046,7 @@ class TestCancel:
         share_token = issuer.deploy(IbetShare, *deploy_args)
 
         # cancel
-        with brownie.reverts(revert_msg="5001"):
+        with brownie.reverts(revert_msg="500001"):
             share_token.changeToCanceled(
                 {"from": users["user1"]}
             )
@@ -3091,5 +3091,5 @@ class TestSetStatus:
         share_token = issuer.deploy(IbetShare, *deploy_args)
 
         # change exchange contract
-        with brownie.reverts(revert_msg="5001"):
+        with brownie.reverts(revert_msg="500001"):
             share_token.setStatus(False, {'from': users['user1']})

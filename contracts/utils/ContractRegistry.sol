@@ -58,13 +58,13 @@ contract ContractRegistry is Ownable {
         }
         require(
             extCodeLength > 0,
-            ErrorCode.ERR_ContractRegistry_register_6001
+            ErrorCode.ERR_ContractRegistry_register_600001
         );
 
         // チェック：msg.senderがコントラクトのオーナーであること
         require(
             msg.sender == Ownable(_contractAddress).owner(),
-            ErrorCode.ERR_ContractRegistry_register_6002
+            ErrorCode.ERR_ContractRegistry_register_600002
         );
 
         registry[_contractAddress].contractType = _contractType;

@@ -169,7 +169,7 @@ class TestUpdateLog:
 
         test_idx = 10
         test_message = "test1 message"
-        with brownie.reverts(revert_msg="6201"):
+        with brownie.reverts(revert_msg="620001"):
             freeze_log.updateLog(test_idx, test_message, {"from": user1})
         log = freeze_log.getLog(user1.address, 0, {"from": user1})
         assert log == (0, 0, "")
@@ -206,7 +206,7 @@ class TestUpdateLog:
             )
 
         # Trying to update a frozen log.
-        with brownie.reverts(revert_msg="6201"):
+        with brownie.reverts(revert_msg="620001"):
             test1_message_update = "test1 message updated"
             freeze_log.updateLog(0, test1_message_update, {"from": user1})
 

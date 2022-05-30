@@ -48,7 +48,7 @@ contract ExchangeStorage is Ownable {
 
     /// @dev 実行者が最新バージョンのExchangeアドレスであることをチェック
     modifier onlyLatestVersion() {
-       require(msg.sender == latestVersion, ErrorCode.ERR_ExchangeStorage_onlyLatestVersion_2001);
+       require(msg.sender == latestVersion, ErrorCode.ERR_ExchangeStorage_onlyLatestVersion_200001);
         _;
     }
 

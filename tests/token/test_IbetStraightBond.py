@@ -228,7 +228,7 @@ class TestTransfer:
 
         # transfer
         transfer_amount = deploy_args[3] + 1
-        with brownie.reverts(revert_msg="1341"):
+        with brownie.reverts(revert_msg="120401"):
             bond_token.transfer.transact(
                 to_address.address,
                 transfer_amount,
@@ -291,7 +291,7 @@ class TestTransfer:
         )
 
         # transfer
-        with brownie.reverts(revert_msg="1342"):
+        with brownie.reverts(revert_msg="120402"):
             bond_token.transfer.transact(
                 to_address,
                 transfer_amount,
@@ -318,7 +318,7 @@ class TestTransfer:
         )
 
         # transfer
-        with brownie.reverts(revert_msg="1331"):
+        with brownie.reverts(revert_msg="120301"):
             bond_token.transfer.transact(
                 exchange,
                 transfer_amount,
@@ -343,7 +343,7 @@ class TestTransfer:
         )
 
         # transfer
-        with brownie.reverts(revert_msg="1322"):
+        with brownie.reverts(revert_msg="120202"):
             bond_token.transfer.transact(
                 to_address.address,
                 transfer_amount,
@@ -492,7 +492,7 @@ class TestBulkTransfer:
         )
 
         # bulk transfer
-        with brownie.reverts(revert_msg="1352"):
+        with brownie.reverts(revert_msg="120502"):
             bond_token.bulkTransfer.transact(
                 [to_address, to_address],
                 [deploy_args[3], 1],
@@ -529,7 +529,7 @@ class TestBulkTransfer:
         )
 
         # bulk transfer
-        with brownie.reverts(revert_msg="1353"):
+        with brownie.reverts(revert_msg="120503"):
             bond_token.bulkTransfer.transact(
                 [to_address],
                 [1],
@@ -556,7 +556,7 @@ class TestBulkTransfer:
         )
 
         # bulk transfer
-        with brownie.reverts(revert_msg="1322"):
+        with brownie.reverts(revert_msg="120202"):
             bond_token.bulkTransfer.transact(
                 [to_address],
                 [1],
@@ -622,7 +622,7 @@ class TestTransferFrom:
         )
 
         # forced transfer
-        with brownie.reverts(revert_msg="1361"):
+        with brownie.reverts(revert_msg="120601"):
             bond_token.transferFrom.transact(
                 from_address,
                 to_address,
@@ -649,7 +649,7 @@ class TestTransferFrom:
         )
 
         # forced transfer
-        with brownie.reverts(revert_msg="5001"):
+        with brownie.reverts(revert_msg="500001"):
             bond_token.transferFrom.transact(
                 from_address,
                 to_address,
@@ -720,7 +720,7 @@ class TestSetTradableExchange:
         bond_token = brownie_utils.force_deploy(issuer, IbetStraightBond, *deploy_args)
 
         # change exchange contract
-        with brownie.reverts(revert_msg="5001"):
+        with brownie.reverts(revert_msg="500001"):
             bond_token.setTradableExchange.transact(
                 brownie.ETH_ADDRESS,
                 {'from': users['user1']}
@@ -768,7 +768,7 @@ class TestSetPersonalInfoAddress:
         bond_token = brownie_utils.force_deploy(issuer, IbetStraightBond, *deploy_args)
 
         # update contract
-        with brownie.reverts(revert_msg="5001"):
+        with brownie.reverts(revert_msg="500001"):
             bond_token.setPersonalInfoAddress.transact(
                 brownie.ETH_ADDRESS,
                 {'from': users['user1']}
@@ -817,7 +817,7 @@ class TestSetContactInformation:
         bond_token = brownie_utils.force_deploy(issuer, IbetStraightBond, *deploy_args)
 
         # update
-        with brownie.reverts(revert_msg="5001"):
+        with brownie.reverts(revert_msg="500001"):
             bond_token.setContactInformation.transact(
                 'updated contact information',
                 {'from': users['user1']}
@@ -867,7 +867,7 @@ class TestSetPrivacyPolicy:
         bond_token = brownie_utils.force_deploy(issuer, IbetStraightBond, *deploy_args)
 
         # update
-        with brownie.reverts(revert_msg="5001"):
+        with brownie.reverts(revert_msg="500001"):
             bond_token.setPrivacyPolicy.transact(
                 'updated privacy policy',
                 {'from': users['user1']}
@@ -917,7 +917,7 @@ class TestSetMemo:
         bond_token = brownie_utils.force_deploy(issuer, IbetStraightBond, *deploy_args)
 
         # set memo
-        with brownie.reverts(revert_msg="5001"):
+        with brownie.reverts(revert_msg="500001"):
             bond_token.setMemo.transact(
                 'updated memo',
                 {'from': users['user1']}
@@ -966,7 +966,7 @@ class TestSetInterestRate:
         bond_token = brownie_utils.force_deploy(issuer, IbetStraightBond, *deploy_args)
 
         # update
-        with brownie.reverts(revert_msg="5001"):
+        with brownie.reverts(revert_msg="500001"):
             bond_token.setInterestRate.transact(
                 123,
                 {'from': users['user1']}
@@ -1015,7 +1015,7 @@ class TestSetInterestPaymentDate:
         bond_token = brownie_utils.force_deploy(issuer, IbetStraightBond, *deploy_args)
 
         # Owner以外のアドレスから更新 -> Failure
-        with brownie.reverts(revert_msg="5001"):
+        with brownie.reverts(revert_msg="500001"):
             bond_token.setInterestPaymentDate.transact(
                 '{"interestPaymentDate1":"0331","interestPaymentDate2":"0930"}',
                 {'from': users['user1']}
@@ -1061,7 +1061,7 @@ class TestSetTransferable:
         bond_token = brownie_utils.force_deploy(issuer, IbetStraightBond, *deploy_args)
 
         # update
-        with brownie.reverts(revert_msg="5001"):
+        with brownie.reverts(revert_msg="500001"):
             bond_token.setTransferable.transact(True, {'from': users['user1']})
 
         # assertion
@@ -1103,7 +1103,7 @@ class TestSetStatus:
         bond_token = brownie_utils.force_deploy(issuer, IbetStraightBond, *deploy_args)
 
         # change exchange contract
-        with brownie.reverts(revert_msg="5001"):
+        with brownie.reverts(revert_msg="500001"):
             bond_token.setStatus(False, {'from': users['user1']})
 
 
@@ -1142,7 +1142,7 @@ class TestChangeOfferingStatus:
         bond_token = brownie_utils.force_deploy(issuer, IbetStraightBond, *deploy_args)
 
         # change exchange contract
-        with brownie.reverts(revert_msg="5001"):
+        with brownie.reverts(revert_msg="500001"):
             bond_token.changeOfferingStatus(True, {'from': users['user1']})
 
 
@@ -1267,7 +1267,7 @@ class TestApplyForOffering:
         )
 
         # apply for offering
-        with brownie.reverts(revert_msg="1401"):
+        with brownie.reverts(revert_msg="121001"):
             bond_token.applyForOffering.transact(
                 10,
                 'abcdefgh',
@@ -1297,7 +1297,7 @@ class TestApplyForOffering:
         bond_token.changeOfferingStatus.transact(True, {'from': issuer})
 
         # apply for offering
-        with brownie.reverts(revert_msg="1402"):
+        with brownie.reverts(revert_msg="121002"):
             bond_token.applyForOffering.transact(
                 10,
                 'abcdefgh',
@@ -1381,7 +1381,7 @@ class TestAllot:
         bond_token.changeOfferingStatus.transact(True, {'from': issuer})
 
         # allot
-        with brownie.reverts(revert_msg="5001"):
+        with brownie.reverts(revert_msg="500001"):
             bond_token.allot.transact(applicant, 5, {'from': applicant})
 
         # assertion
@@ -1427,7 +1427,7 @@ class TestChangeToRedeemed:
         bond_token = brownie_utils.force_deploy(issuer, IbetStraightBond, *deploy_args)
 
         # redeem
-        with brownie.reverts(revert_msg="5001"):
+        with brownie.reverts(revert_msg="500001"):
             bond_token.changeToRedeemed.transact({'from': users['user1']})
 
         # assertion
@@ -1475,7 +1475,7 @@ class TestAuthorizeLockAddress:
         bond_token = brownie_utils.force_deploy(issuer, IbetStraightBond, *deploy_args)
 
         # authorize
-        with brownie.reverts(revert_msg="5001"):
+        with brownie.reverts(revert_msg="500001"):
             bond_token.authorizeLockAddress.transact(
                 brownie.ETH_ADDRESS,
                 True,
@@ -1568,7 +1568,7 @@ class TestLock:
         bond_token.transferFrom.transact(issuer, user, transfer_amount, {'from': issuer})
 
         # lock
-        with brownie.reverts(revert_msg="1302"):
+        with brownie.reverts(revert_msg="120002"):
             bond_token.lock.transact(issuer, lock_amount, {'from': user})
 
         # assertion
@@ -1593,7 +1593,7 @@ class TestLock:
         bond_token.transferFrom.transact(issuer, user, transfer_amount, {'from': issuer})
 
         # lock
-        with brownie.reverts(revert_msg="1301"):
+        with brownie.reverts(revert_msg="120001"):
             bond_token.lock.transact(not_authorized_address, lock_amount, {'from': user})
 
         # assertion
@@ -1706,7 +1706,7 @@ class TestUnlock:
         bond_token.lock.transact(issuer, lock_amount, {'from': user1})
 
         # unlock
-        with brownie.reverts(revert_msg="1312"):
+        with brownie.reverts(revert_msg="120102"):
             bond_token.unlock.transact(user1, user2, unlock_amount, {'from': issuer})
 
         # assertion
@@ -1736,7 +1736,7 @@ class TestUnlock:
         bond_token.lock.transact(issuer, lock_amount, {'from': user1})
 
         # unlock
-        with brownie.reverts(revert_msg="1311"):
+        with brownie.reverts(revert_msg="120101"):
             bond_token.unlock.transact(user1, user2, unlock_amount, {'from': user2})
 
         # assertion
@@ -1896,7 +1896,7 @@ class TestIssueFrom:
         bond_token = brownie_utils.force_deploy(issuer, IbetStraightBond, *deploy_args)
 
         # issue from not authorized user
-        with brownie.reverts(revert_msg="5001"):
+        with brownie.reverts(revert_msg="500001"):
             bond_token.issueFrom.transact(
                 issuer,
                 brownie.ZERO_ADDRESS,
@@ -1940,7 +1940,7 @@ class TestSetFaceValue:
         bond_token = brownie_utils.force_deploy(issuer, IbetStraightBond, *deploy_args)
 
         # update
-        with brownie.reverts(revert_msg="5001"):
+        with brownie.reverts(revert_msg="500001"):
             bond_token.setFaceValue(10001, {'from': users['user1']})
 
         assert bond_token.faceValue() == deploy_args[3]
@@ -2068,7 +2068,7 @@ class TestRedeemFrom:
         bond_token = brownie_utils.force_deploy(issuer, IbetStraightBond, *deploy_args)
 
         # redeem
-        with brownie.reverts(revert_msg="1412"):
+        with brownie.reverts(revert_msg="121102"):
             bond_token.redeemFrom.transact(
                 issuer,
                 brownie.ZERO_ADDRESS,
@@ -2108,7 +2108,7 @@ class TestRedeemFrom:
         )
 
         # redeem from lock address
-        with brownie.reverts(revert_msg="1411"):
+        with brownie.reverts(revert_msg="121101"):
             bond_token.redeemFrom.transact(
                 issuer,
                 lock_address,
@@ -2133,7 +2133,7 @@ class TestRedeemFrom:
         bond_token = brownie_utils.force_deploy(issuer, IbetStraightBond, *deploy_args)
 
         # redeem
-        with brownie.reverts(revert_msg="5001"):
+        with brownie.reverts(revert_msg="500001"):
             bond_token.redeemFrom.transact(
                 issuer,
                 brownie.ZERO_ADDRESS,
@@ -2181,7 +2181,7 @@ class TestSetRedemptionValue:
         bond_token = brownie_utils.force_deploy(issuer, IbetStraightBond, *deploy_args)
 
         # update
-        with brownie.reverts(revert_msg="5001"):
+        with brownie.reverts(revert_msg="500001"):
             bond_token.setRedemptionValue(10000, {'from': users['user1']})
 
         # assertion
@@ -2248,7 +2248,7 @@ class TestSetTransferApprovalRequired:
         )
 
         # set required to True
-        with brownie.reverts(revert_msg="5001"):
+        with brownie.reverts(revert_msg="500001"):
             bond_token.setTransferApprovalRequired(
                 True,
                 {"from": users["user1"]}
@@ -2420,7 +2420,7 @@ class TestApplyForTransfer:
         )
 
         # apply for transfer
-        with brownie.reverts(revert_msg="1371"):
+        with brownie.reverts(revert_msg="120701"):
             bond_token.applyForTransfer(
                 to_address,
                 transfer_amount,
@@ -2457,7 +2457,7 @@ class TestApplyForTransfer:
         )
 
         # apply for transfer
-        with brownie.reverts(revert_msg="1371"):
+        with brownie.reverts(revert_msg="120701"):
             bond_token.applyForTransfer(
                 to_address,
                 transfer_amount,
@@ -2489,7 +2489,7 @@ class TestApplyForTransfer:
         )
 
         # apply for transfer
-        with brownie.reverts(revert_msg="1371"):
+        with brownie.reverts(revert_msg="120701"):
             bond_token.applyForTransfer(
                 to_address,
                 deploy_args[3] + 1,
@@ -2522,7 +2522,7 @@ class TestApplyForTransfer:
         )
 
         # apply for transfer
-        with brownie.reverts(revert_msg="1372"):
+        with brownie.reverts(revert_msg="120702"):
             bond_token.applyForTransfer(
                 to_address,
                 transfer_amount,
@@ -2714,7 +2714,7 @@ class TestCancelTransfer:
         )
 
         # cancel transfer (from issuer)
-        with brownie.reverts(revert_msg="1381"):
+        with brownie.reverts(revert_msg="120801"):
             bond_token.cancelTransfer(
                 0,
                 "test_data",
@@ -2780,7 +2780,7 @@ class TestCancelTransfer:
         )
 
         # cancel transfer (2)
-        with brownie.reverts(revert_msg="1382"):
+        with brownie.reverts(revert_msg="120802"):
             bond_token.cancelTransfer(
                 0,
                 "test_data",
@@ -2903,7 +2903,7 @@ class TestApproveTransfer:
         )
 
         # approve transfer
-        with brownie.reverts(revert_msg="5001"):
+        with brownie.reverts(revert_msg="500001"):
             bond_token.approveTransfer(
                 0,
                 "test_data",
@@ -2959,7 +2959,7 @@ class TestApproveTransfer:
             False,
             {"from": issuer}
         )
-        with brownie.reverts(revert_msg="1391"):
+        with brownie.reverts(revert_msg="120901"):
             bond_token.approveTransfer(
                 0,
                 "test_data",
@@ -3018,7 +3018,7 @@ class TestApproveTransfer:
         )
 
         # approve transfer (2)
-        with brownie.reverts(revert_msg="1392"):
+        with brownie.reverts(revert_msg="120902"):
             bond_token.approveTransfer(
                 0,
                 "test_data",

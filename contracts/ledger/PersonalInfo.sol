@@ -75,8 +75,8 @@ contract PersonalInfo {
         Info storage info = personal_info[_account_address][msg.sender];
 
         // 登録済みか確認
-        require(info.account_address == _account_address, ErrorCode.ERR_PersonalInfo_modify_4001);
-        require(info.link_address == msg.sender, ErrorCode.ERR_PersonalInfo_modify_4002);
+        require(info.account_address == _account_address, ErrorCode.ERR_PersonalInfo_modify_400001);
+        require(info.link_address == msg.sender, ErrorCode.ERR_PersonalInfo_modify_400002);
 
         info.encrypted_info = _encrypted_info;
 

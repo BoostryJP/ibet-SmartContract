@@ -90,7 +90,7 @@ contract FreezeLog {
             storageLog.createdBlockNumber +
                 storageLog.freezingGraceBlockCount >=
                 block.number,
-            ErrorCode.ERR_FreezeLog_updateLog_6201
+            ErrorCode.ERR_FreezeLog_updateLog_620001
         );
 
         storageLog.log = _log;
