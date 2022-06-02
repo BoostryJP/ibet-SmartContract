@@ -3,33 +3,33 @@ This is a definition list of errors to be thrown when transaction reverts.
 Developers will receive error msg as code, and each error code is described below, including description of situation and possible causes.
 
 ### Token Error
-- [TokenList (10XX)](#tokenlist-10XXXX)
-- [IbetShare (11XX/12XX)](#ibetshare-11XXXX)
-- [IbetStraightBond (13XX/14XX)](#ibetstraightbond-12XXXX)
-- [IbetCoupon (15XX)](#ibetcoupon-13XXXX)
-- [IbetMembership (16XX)](#ibetmembership-14XXXX)
-- [IbetStandardToken (17XX)](#ibetstandardtoken-15XXXX)
+- [TokenList (10XXXX)](#tokenlist-10XXXX)
+- [IbetShare (11XXXX)](#ibetshare-11XXXX)
+- [IbetStraightBond (12XXXX)](#ibetstraightbond-12XXXX)
+- [IbetCoupon (13XXXX)](#ibetcoupon-13XXXX)
+- [IbetMembership (14XXXX)](#ibetmembership-14XXXX)
+- [IbetStandardToken (15XXXX)](#ibetstandardtoken-15XXXX)
 
 ### Exchange & Escrow Error
-- [ExchangeStorage (20XX)](#exchangestorage-20XXXX)
-- [IbetExchange (21XX)](#ibetexchange-21XXXX)
-- [EscrowStorage (22XX)](#escrowstorage-22XXXX)
-- [IbetEscrow (23XX)](#ibetescrow-23XXXX)
-- [IbetSecurityTokenEscrow (24XX)](#ibetsecuritytokenescrow-24XXXX)
+- [ExchangeStorage (20XXXX)](#exchangestorage-20XXXX)
+- [IbetExchange (21XXXX)](#ibetexchange-21XXXX)
+- [EscrowStorage (22XXXX)](#escrowstorage-22XXXX)
+- [IbetEscrow (23XXXX)](#ibetescrow-23XXXX)
+- [IbetSecurityTokenEscrow (24XXXX)](#ibetsecuritytokenescrow-24XXXX)
 
 ### Payment Error
-- [PaymentGateway (30XX)](#paymentgateway-30XXXX)
+- [PaymentGateway (30XXXX)](#paymentgateway-30XXXX)
 
 ### Ledger Error
-- [PersonalInfo (40XX)](#personalinfo-40XXXX)
+- [PersonalInfo (40XXXX)](#personalinfo-40XXXX)
 
 ### Access Error
-- [Ownable (50XX)](#ownable-50XXXX)
+- [Ownable (50XXXX)](#ownable-50XXXX)
 
 ### Utils Error
-- [ContractRegistry (60XX)](#contractregistry-60XXXX)
-- [E2EMessaging (61XX)](#e2emessaging-61XXXX)
-- [FreezeLog (62XX)](#freezelog-62XXXX)
+- [ContractRegistry (60XXXX)](#contractregistry-60XXXX)
+- [E2EMessaging (61XXXX)](#e2emessaging-61XXXX)
+- [FreezeLog (62XXXX)](#freezelog-62XXXX)
 
 ### TokenList (10XXXX)
 
@@ -436,9 +436,9 @@ Developers will receive error msg as code, and each error code is described belo
 | Code       | Situation                                             | Possible causes | 
 |------------|-------------------------------------------------------|-----------------|
 | **240101** | Target escrow ID is invalid.                          | -               |
-| **240202** | Target escrow status is invalid.                      | -               |
-| **240303** | Message sender is not escrow sender and escrow agent. | -               |
-| **240404** | Token status of escrow is inactive.                   | -               |
+| **240102** | Target escrow status is invalid.                      | -               |
+| **240103** | Message sender is not escrow sender and escrow agent. | -               |
+| **240104** | Token status of escrow is inactive.                   | -               |
 
 #### approveTransfer (2402XX)
 | Code       | Situation                                   | Possible causes | 
@@ -446,7 +446,7 @@ Developers will receive error msg as code, and each error code is described belo
 | **240201** | Application doesn't exist.                  | -               |
 | **240202** | Message sender is not token owner.          | -               |
 | **240203** | Target escrow status is invalid.            | -               |
-| **240203** | Target escrow status has not been finished. | -               |
+| **240204** | Target escrow status has not been finished. | -               |
 | **240205** | Token status of escrow is inactive.         | -               |
 
 #### finishEscrow (2403XX)
