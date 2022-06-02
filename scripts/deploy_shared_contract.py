@@ -40,7 +40,8 @@ from brownie.project.ibet_smart_contract import (
     IbetExchange,
     EscrowStorage,
     IbetEscrow,
-    IbetSecurityTokenEscrow
+    IbetSecurityTokenEscrow,
+    FreezeLog
 )
 
 
@@ -108,6 +109,8 @@ def main():
             escrow.address,
             {'from': deployer}
         )
+    elif contract_type == "FreezeLog":
+        deployer.deploy(FreezeLog)
 
 
 def set_up_deployer():
@@ -166,7 +169,8 @@ def parse_args():
         "PaymentGateway",
         "IbetExchange",
         "IbetEscrow",
-        "IbetSecurityTokenEscrow"
+        "IbetSecurityTokenEscrow",
+        "FreezeLog"
     ]
     if _args.arg1 not in deployable_contracts:
         parser.error(f"This is a contract that cannot be deployed. : {_args.arg1}")
