@@ -115,6 +115,7 @@ You can deploy the following contract as `contract_name`.
 - IbetExchange (* need --payment_gateway option)
 - IbetEscrow
 - IbetSecurityTokenEscrow
+- FreezeLog
 
 All other contracts are not supported for deployment by script. You will need to deploy them in a different way.
 
