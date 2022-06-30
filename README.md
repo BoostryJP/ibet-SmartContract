@@ -1,7 +1,7 @@
 # ibet Smart Contract
 
 <p>
-  <img alt="Version" src="https://img.shields.io/badge/version-22.3-blue.svg?cacheSeconds=2592000" />
+  <img alt="Version" src="https://img.shields.io/badge/version-22.6-blue.svg?cacheSeconds=2592000" />
   <img alt="License: Apache--2.0" src="https://img.shields.io/badge/License-Apache--2.0-yellow.svg" />
 </p>
 
@@ -115,6 +115,7 @@ You can deploy the following contract as `contract_name`.
 - IbetExchange (* need --payment_gateway option)
 - IbetEscrow
 - IbetSecurityTokenEscrow
+- FreezeLog
 
 All other contracts are not supported for deployment by script. You will need to deploy them in a different way.
 

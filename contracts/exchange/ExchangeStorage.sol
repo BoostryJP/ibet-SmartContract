@@ -20,6 +20,7 @@
 pragma solidity ^0.8.0;
 
 import "../access/Ownable.sol";
+import "../utils/Errors.sol";
 
 
 /// @title Exchangeコントラクトの取引情報を永続化するためのEternalStorage
@@ -47,7 +48,7 @@ contract ExchangeStorage is Ownable {
 
     /// @dev 実行者が最新バージョンのExchangeアドレスであることをチェック
     modifier onlyLatestVersion() {
-       require(msg.sender == latestVersion);
+       require(msg.sender == latestVersion, ErrorCode.ERR_ExchangeStorage_onlyLatestVersion_200001);
         _;
     }
 
