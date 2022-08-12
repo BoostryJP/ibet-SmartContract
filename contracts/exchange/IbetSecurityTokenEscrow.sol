@@ -18,7 +18,7 @@
 */
 pragma solidity ^0.8.0;
 
-import "OpenZeppelin/openzeppelin-contracts@4.5.0/contracts/utils/math/SafeMath.sol";
+import "OpenZeppelin/openzeppelin-contracts@4.7.3/contracts/utils/math/SafeMath.sol";
 import "./EscrowStorage.sol";
 import "../access/Ownable.sol";
 import "../utils/Errors.sol";
