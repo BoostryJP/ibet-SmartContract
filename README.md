@@ -55,7 +55,7 @@ $ pip install -r requirements.txt
 Install openzeppelin-contracts.
 
 ```bash
-$ brownie pm install OpenZeppelin/openzeppelin-contracts@4.5.0
+$ brownie pm install OpenZeppelin/openzeppelin-contracts@4.7.3
 ```
 
 ## Compile Contracts
