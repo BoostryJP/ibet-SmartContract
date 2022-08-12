@@ -18,7 +18,7 @@
   - Version 3.8 or greater
 - [Solidity](https://docs.soliditylang.org/)
   - We are using Solidity to implement our smart contracts. 
-  - Currently, we are using v0.8.13.
+  - Currently, we are using v0.8.16.
 - [eth-brownie](https://github.com/eth-brownie/brownie)
   - We are using the eth-brownie framework for developing and testing our contracts.
 - [GoQuorum](https://github.com/ConsenSys/quorum)
@@ -26,7 +26,7 @@
   - We use [ganache-cli](https://github.com/trufflesuite/ganache-cli) for local development and unit testing, and we use the latest version.
 - [OpenZeppelin](https://openzeppelin.com/contracts/)
   - Our project is partly dependent on OpenZeppelin.
-  - We use openzeppelin-contracts v4.5.
+  - We use openzeppelin-contracts v4.7.
   
 ## Overview
 
