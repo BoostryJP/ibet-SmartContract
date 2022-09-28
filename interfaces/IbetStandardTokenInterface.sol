@@ -27,7 +27,11 @@ abstract contract IbetStandardTokenInterface {
     address public tradableExchange; // 取引可能Exchangeアドレス
     string public contactInformation; // 発行体の問い合わせ先情報
     string public privacyPolicy;  // 発行体のプライバシーポリシー
-    bool public status; // トークンの取扱状態(True：有効、False：無効)
+
+    /// トークンの状態
+    /// tradableExchangeとして指定したコントラクトにて、トークンの利用可否を制御する際に利用する
+    /// True：有効、False：無効
+    bool public status;
 
     /// @notice 取引コントラクトの更新
     /// @param _exchange 更新後の取引コントラクト
