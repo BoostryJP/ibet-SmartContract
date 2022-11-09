@@ -8,7 +8,7 @@ jobs:
     steps:
       - uses: actions/checkout@v3
       - name: change owner of output directory
-        run: sudo chown -R runner:docker output
+        run: sudo chown -R runner:docker /home/runner/work/ibet-SmartContract/ibet-SmartContract/output
       - name: UnitTest
         run: docker-compose run sc-unit-test
       - uses: actions/upload-artifact@v3
