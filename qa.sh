@@ -39,4 +39,7 @@ if grep -e "${PYTEST_ERRORS_HEADER}" -e "${PYTEST_FAILURES_HEADER}" "${TEST_LOG}
   exit 1
 fi
 
+# contract json の出力
+python tools/json_filter.py
+
 rm "${TEST_LOG}"

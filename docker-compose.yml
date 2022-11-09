@@ -6,7 +6,7 @@ services:
     ports:
       - "8545:8545"
     command: ganache-cli --gasPrice 0 --gasLimit 800000000
-  ibet-smartcontract:
+  sc-unit-test:
     build:
       context: .
       dockerfile: ./tests/Dockerfile
@@ -16,3 +16,5 @@ services:
       - ganache-cli:quorum
     depends_on:
       - ganache-cli
+    volumes:
+      - ./output:/app/ibet-SmartContract/output
