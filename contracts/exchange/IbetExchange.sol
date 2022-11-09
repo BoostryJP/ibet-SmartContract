@@ -19,7 +19,7 @@
 
 pragma solidity ^0.8.0;
 
-import "OpenZeppelin/openzeppelin-contracts@4.7.3/contracts/utils/math/SafeMath.sol";
+import "OpenZeppelin/openzeppelin-contracts@4.8.0/contracts/utils/math/SafeMath.sol";
 import "./ExchangeStorage.sol";
 import "../access/Ownable.sol";
 import "../utils/Errors.sol";
