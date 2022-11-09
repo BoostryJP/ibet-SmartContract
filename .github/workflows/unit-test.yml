@@ -6,8 +6,8 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 120
     steps:
+      - uses: actions/checkout@v3
       - name: UnitTest
-        uses: actions/checkout@v2
         run: docker-compose run sc-unit-test
       - uses: actions/upload-artifact@v3
         with:
