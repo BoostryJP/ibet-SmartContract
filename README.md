@@ -5,6 +5,8 @@
   <img alt="License: Apache--2.0" src="https://img.shields.io/badge/License-Apache--2.0-yellow.svg" />
 </p>
 
+English | [日本語](README_JA.md)
+
 <img width="33%" align="right" src="https://user-images.githubusercontent.com/963333/71672471-6383c080-2db9-11ea-85b6-8815519652ec.png"/>
 
 **Tokens and DEX contracts available in the ibet DeFi network**
@@ -14,7 +16,7 @@
 - The project aims to provide token standards, decentralized exchanges, and other utility functions that can be used on the ibet-Network.
 
 ## Dependencies
-- [python3](https://www.python.org/downloads/release/python-368/)
+- [Python3](https://www.python.org/downloads/release/python-368/)
   - Version 3.8 or greater
 - [Solidity](https://docs.soliditylang.org/)
   - We are using Solidity to implement our smart contracts. 
@@ -73,7 +75,7 @@ You can switch the EOA used for deploying the contract by setting an environment
 
 #### 1. GoQuorum (Geth)
 
-This is the case when you store and use your private key in Geth.
+This is the case when you store and use your private key in GoQuorum(Geth).
 
 - `ETH_ACCOUNT_PASSWORD` - The passphrase you have set for the Geth keystore file.
 
@@ -117,7 +119,8 @@ You can deploy the following contract as `contract_name`.
 - IbetSecurityTokenEscrow
 - FreezeLog
 
-All other contracts are not supported for deployment by script. You will need to deploy them in a different way.
+All other contracts are not supported for deployment by script. 
+You will need to deploy them in a different way.
 
 
 ## Developing Smart Contracts
@@ -154,6 +157,8 @@ $ pytest tests/
 ```
 
 ## Branching model
+
+This repository is version controlled using the following flow.
 
 <p align='center'>
   <img alt="ibet" src="https://user-images.githubusercontent.com/963333/161243132-5216b4f0-cbc6-443f-bcfc-9eafb4858cb1.png"/>
