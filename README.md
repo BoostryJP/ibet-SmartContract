@@ -16,8 +16,8 @@ English | [日本語](README_JA.md)
 - The project aims to provide token standards, decentralized exchanges, and other utility functions that can be used on the ibet-Network.
 
 ## Dependencies
-- [Python3](https://www.python.org/downloads/release/python-368/)
-  - Version 3.8 or greater
+- [Python3](https://www.python.org/downloads/)
+  - Version 3.10
 - [Solidity](https://docs.soliditylang.org/)
   - We are using Solidity to implement our smart contracts. 
   - Currently, we are using v0.8.17.

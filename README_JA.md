@@ -16,8 +16,8 @@
 - このプロジェクトでは、ibet-Network 上で利用可能なトークン規格、分散取引所、あるいはその他の有用なツール群などを提供することを目的にしています。
 
 ## 依存
-- [Python3](https://www.python.org/downloads/release/python-368/)
-  - バージョン 3.8 以上
+- [Python3](https://www.python.org/downloads/)
+  - バージョン 3.10
 - [Solidity](https://docs.soliditylang.org/)
   - スマートコントラクトの実装には Solidity を利用しています。
   - 現在、私たちは v0.8.17 を利用しています。
@@ -69,7 +69,7 @@ $ brownie compile
 
 ### 環境変数の設定
 
-You can switch the EOA used for deploying the contract by setting an environment variable.
+コントラクトデプロイ時に用いるEOAを、環境変数で切り替えることができます。
 
 #### 1. GoQuorum (Geth)
 
