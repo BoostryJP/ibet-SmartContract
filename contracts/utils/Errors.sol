@@ -33,8 +33,10 @@ library ErrorCode {
 
     // 11XXXX
     // IbetShare_lock
+    string constant ERR_IbetShare_lock_110001 = "110001";
     string constant ERR_IbetShare_lock_110002 = "110002";
     // IbetShare_unlock
+    string constant ERR_IbetShare_unlock_110101 = "110101";
     string constant ERR_IbetShare_unlock_110102 = "110102";
     // IbetShare_transferToAddress
     string constant ERR_IbetShare_transferToAddress_110201 = "110201";
@@ -71,8 +73,10 @@ library ErrorCode {
 
     // 12XXXX
     // IbetStraightBond_lock
+    string constant ERR_IbetStraightBond_lock_120001 = "120001";
     string constant ERR_IbetStraightBond_lock_120002 = "120002";
     // IbetStraightBond_unlock
+    string constant ERR_IbetStraightBond_unlock_120101 = "120101";
     string constant ERR_IbetStraightBond_unlock_120102 = "120102";
     // IbetStraightBond_transferToAddress
     string constant ERR_IbetStraightBond_transferToAddress_120201 = "120201";
