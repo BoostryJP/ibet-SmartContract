@@ -624,58 +624,7 @@ class TestBalanceOf:
         assert balance == deploy_args[3]
 
 
-# TEST_authorizeLockAddress
-class TestAuthorize:
-
-    #######################################
-    # Normal
-    #######################################
-
-    # Normal_1
-    def test_normal_1(self, users, IbetShare):
-        issuer = users['issuer']
-
-        # issue token
-        deploy_args = init_args()
-        share_token = issuer.deploy(IbetShare, *deploy_args)
-
-        # authorize
-        share_token.authorizeLockAddress.transact(
-            brownie.ETH_ADDRESS,
-            True,
-            {'from': issuer}
-        )
-
-        # assertion
-        assert share_token.authorizedLockAddress(brownie.ETH_ADDRESS) is True
-        assert share_token.authorizedLockAddress(brownie.ZERO_ADDRESS) is False
-
-    #######################################
-    # Error
-    #######################################
-
-    # Error_1
-    # Not authorized
-    def test_error_1(self, users, IbetShare):
-        issuer = users['issuer']
-
-        # issue token
-        deploy_args = init_args()
-        share_token = issuer.deploy(IbetShare, *deploy_args)
-
-        # authorize
-        with brownie.reverts(revert_msg="500001"):
-            share_token.authorizeLockAddress.transact(
-                brownie.ETH_ADDRESS,
-                True,
-                {'from': users['user1']}
-            )
-
-        # assertion
-        assert share_token.authorizedLockAddress(brownie.ETH_ADDRESS) is False
-
-
-# TEST_lock
+# TEST_lock/lockedOf
 class TestLock:
 
     #######################################
@@ -683,11 +632,11 @@ class TestLock:
     #######################################
 
     # Normal_1
-    # Lock assets to authorized addresses
+    # Lock assets to lock address
     def test_normal_1(self, users, IbetShare):
         issuer = users['issuer']
         user = users['user1']
-        target = users['user2']
+        lock_eoa = users['user2']
 
         # issue token
         deploy_args = init_args()
@@ -699,42 +648,17 @@ class TestLock:
         # transfer to account
         share_token.transferFrom.transact(issuer, user, transfer_amount, {'from': issuer})
 
-        # authorize target address
-        share_token.authorizeLockAddress.transact(target, True, {'from': issuer})
-
         # lock
-        tx = share_token.lock.transact(target, lock_amount, {'from': user})
+        tx = share_token.lock.transact(lock_eoa, lock_amount, "some_extra_data", {'from': user})
 
         # assertion
         assert share_token.balanceOf(user) == transfer_amount - lock_amount
-        assert share_token.lockedOf(target, user) == lock_amount
+        assert share_token.lockedOf(lock_eoa, user) == lock_amount
 
         assert tx.events["Lock"]["accountAddress"] == user
-        assert tx.events["Lock"]["lockAddress"] == target
+        assert tx.events["Lock"]["lockAddress"] == lock_eoa
         assert tx.events["Lock"]["value"] == lock_amount
-
-    # Normal_2
-    # Lock assets to issuer addresses
-    def test_normal_2(self, users, IbetShare):
-        issuer = users['issuer']
-        user = users['user1']
-
-        transfer_amount = 30
-        lock_amount = 10
-
-        # issue token
-        deploy_args = init_args()
-        share_token = issuer.deploy(IbetShare, *deploy_args)
-
-        # transfer to account
-        share_token.transferFrom.transact(issuer, user, transfer_amount, {'from': issuer})
-
-        # lock
-        share_token.lock.transact(issuer, lock_amount, {'from': user})
-
-        # assertion
-        assert share_token.balanceOf(user) == transfer_amount - lock_amount
-        assert share_token.lockedOf(issuer, user) == lock_amount
+        assert tx.events["Lock"]["data"] == "some_extra_data"
 
     #######################################
     # Error
@@ -745,6 +669,7 @@ class TestLock:
     def test_error_1(self, users, IbetShare):
         issuer = users['issuer']
         user = users['user1']
+        lock_eoa = users['user2']
 
         # issue token
         deploy_args = init_args()
@@ -758,65 +683,11 @@ class TestLock:
 
         # lock
         with brownie.reverts(revert_msg="110002"):
-            share_token.lock.transact(issuer, lock_amount, {'from': user})
+            share_token.lock.transact(lock_eoa, lock_amount, "some_extra_data", {'from': user})
 
         # assertion
         assert share_token.balanceOf(user) == transfer_amount
-        assert share_token.lockedOf(issuer, user) == 0
-
-    # Error_2
-    # Lock assets to not authorized address
-    def test_error_2(self, users, IbetShare):
-        issuer = users['issuer']
-        user = users['user1']
-        not_authorized_address = users['user2']
-
-        # issue token
-        deploy_args = init_args()
-        share_token = issuer.deploy(IbetShare, *deploy_args)
-
-        transfer_amount = 30
-        lock_amount = 10
-
-        # transfer to account
-        share_token.transferFrom.transact(issuer, user, transfer_amount, {'from': issuer})
-
-        # lock
-        with brownie.reverts(revert_msg="110001"):
-            share_token.lock.transact(not_authorized_address, lock_amount, {'from': user})
-
-        # assertion
-        assert share_token.balanceOf(user) == transfer_amount
-        assert share_token.lockedOf(issuer, user) == 0
-
-
-# TEST_lockedOf
-class TestLockedOf:
-
-    #######################################
-    # Normal
-    #######################################
-
-    # Normal_1
-    def test_normal_1(self, users, IbetShare):
-        issuer = users['issuer']
-        user = users['user1']
-
-        # issue token
-        deploy_args = init_args()
-        share_token = issuer.deploy(IbetShare, *deploy_args)
-
-        transfer_amount = 30
-        lock_amount = 10
-
-        # transfer to account
-        share_token.transferFrom.transact(issuer, user, transfer_amount, {'from': issuer})
-
-        # lock
-        share_token.lock.transact(issuer, lock_amount, {'from': user})
-
-        # assertion
-        assert share_token.lockedOf(issuer, user) == lock_amount
+        assert share_token.lockedOf(lock_eoa, user) == 0
 
 
 # TEST_unlock
@@ -827,49 +698,11 @@ class TestUnlock:
     #######################################
 
     # Normal_1
-    # authorized addresses
     def test_normal_1(self, users, IbetShare):
         issuer = users['issuer']
         user1 = users['user1']
         user2 = users['user2']
-        target = users['agent']
-
-        # issue token
-        deploy_args = init_args()
-        share_token = issuer.deploy(IbetShare, *deploy_args)
-
-        transfer_amount = 30
-        lock_amount = 20
-        unlock_amount = 10
-
-        # transfer to account
-        share_token.transferFrom.transact(issuer, user1, transfer_amount, {'from': issuer})
-
-        # authorize target address
-        share_token.authorizeLockAddress.transact(target, True, {'from': issuer})
-
-        # lock
-        share_token.lock.transact(target, lock_amount, {'from': user1})
-
-        # unlock
-        tx = share_token.unlock.transact(user1, user2, unlock_amount, {'from': target})
-
-        # assertion
-        assert share_token.balanceOf(user1) == transfer_amount - lock_amount
-        assert share_token.balanceOf(user2) == unlock_amount
-        assert share_token.lockedOf(target, user1) == lock_amount - unlock_amount
-
-        assert tx.events["Unlock"]["accountAddress"] == user1.address
-        assert tx.events["Unlock"]["lockAddress"] == target.address
-        assert tx.events["Unlock"]["recipientAddress"] == user2.address
-        assert tx.events["Unlock"]["value"] == unlock_amount
-
-    # Normal_2
-    # issuer
-    def test_normal_2(self, users, IbetShare):
-        issuer = users['issuer']
-        user1 = users['user1']
-        user2 = users['user2']
+        lock_eoa = users['agent']
 
         # issue token
         deploy_args = init_args()
@@ -883,20 +716,21 @@ class TestUnlock:
         share_token.transferFrom.transact(issuer, user1, transfer_amount, {'from': issuer})
 
         # lock
-        share_token.lock.transact(issuer, lock_amount, {'from': user1})
+        share_token.lock.transact(lock_eoa, lock_amount, "lock_message", {'from': user1})
 
         # unlock
-        tx = share_token.unlock.transact(user1, user2, unlock_amount, {'from': issuer})
+        tx = share_token.unlock.transact(user1, user2, unlock_amount, "unlock_message", {'from': lock_eoa})
 
         # assertion
         assert share_token.balanceOf(user1) == transfer_amount - lock_amount
         assert share_token.balanceOf(user2) == unlock_amount
-        assert share_token.lockedOf(issuer, user1) == lock_amount - unlock_amount
+        assert share_token.lockedOf(lock_eoa, user1) == lock_amount - unlock_amount
 
         assert tx.events["Unlock"]["accountAddress"] == user1.address
-        assert tx.events["Unlock"]["lockAddress"] == issuer.address
+        assert tx.events["Unlock"]["lockAddress"] == lock_eoa.address
         assert tx.events["Unlock"]["recipientAddress"] == user2.address
         assert tx.events["Unlock"]["value"] == unlock_amount
+        assert tx.events["Unlock"]["data"] == "unlock_message"
 
     #######################################
     # Error
@@ -908,6 +742,7 @@ class TestUnlock:
         issuer = users['issuer']
         user1 = users['user1']
         user2 = users['user2']
+        lock_eoa = users['agent']
 
         # issue token
         deploy_args = init_args()
@@ -921,23 +756,71 @@ class TestUnlock:
         share_token.transferFrom.transact(issuer, user1, transfer_amount, {'from': issuer})
 
         # lock
-        share_token.lock.transact(issuer, lock_amount, {'from': user1})
+        share_token.lock.transact(lock_eoa, lock_amount, "lock_message", {'from': user1})
 
         # unlock
         with brownie.reverts(revert_msg="110102"):
-            share_token.unlock.transact(user1, user2, unlock_amount, {'from': issuer})
+            share_token.unlock.transact(user1, user2, unlock_amount, "unlock_message", {'from': lock_eoa})
 
         # assertion
         assert share_token.balanceOf(user1) == transfer_amount - lock_amount
         assert share_token.balanceOf(user2) == 0
-        assert share_token.lockedOf(issuer, user1) == lock_amount
+        assert share_token.lockedOf(lock_eoa, user1) == lock_amount
 
-    # Error_2
-    # Not authorized
-    def test_error_2(self, users, IbetShare):
+
+# TEST_forceUnlock
+class TestForceUnlock:
+
+    #######################################
+    # Normal
+    #######################################
+
+    # Normal_1
+    def test_normal_1(self, users, IbetShare):
         issuer = users['issuer']
         user1 = users['user1']
         user2 = users['user2']
+        lock_eoa = users['agent']
+
+        # issue token
+        deploy_args = init_args()
+        share_token = issuer.deploy(IbetShare, *deploy_args)
+
+        transfer_amount = 30
+        lock_amount = 20
+        unlock_amount = 10
+
+        # transfer to account
+        share_token.transferFrom.transact(issuer, user1, transfer_amount, {'from': issuer})
+
+        # lock
+        share_token.lock.transact(lock_eoa, lock_amount, "lock_message", {'from': user1})
+
+        # forceUnlock
+        tx = share_token.forceUnlock.transact(lock_eoa, user1, user2, unlock_amount, "unlock_message", {'from': issuer})
+
+        # assertion
+        assert share_token.balanceOf(user1) == transfer_amount - lock_amount
+        assert share_token.balanceOf(user2) == unlock_amount
+        assert share_token.lockedOf(lock_eoa, user1) == lock_amount - unlock_amount
+
+        assert tx.events["Unlock"]["accountAddress"] == user1.address
+        assert tx.events["Unlock"]["lockAddress"] == lock_eoa.address
+        assert tx.events["Unlock"]["recipientAddress"] == user2.address
+        assert tx.events["Unlock"]["value"] == unlock_amount
+        assert tx.events["Unlock"]["data"] == "unlock_message"
+
+    #######################################
+    # Error
+    #######################################
+
+    # Error_1
+    # Cannot unlock a quantity that exceeds the lock quantity
+    def test_error_1(self, users, IbetShare):
+        issuer = users['issuer']
+        user1 = users['user1']
+        user2 = users['user2']
+        lock_eoa = users['agent']
 
         # issue token
         deploy_args = init_args()
@@ -945,22 +828,47 @@ class TestUnlock:
 
         transfer_amount = 30
         lock_amount = 10
-        unlock_amount = 3
+        unlock_amount = 11
 
         # transfer to account
         share_token.transferFrom.transact(issuer, user1, transfer_amount, {'from': issuer})
 
         # lock
-        share_token.lock.transact(issuer, lock_amount, {'from': user1})
+        share_token.lock.transact(lock_eoa, lock_amount, "lock_message", {'from': user1})
 
-        # unlock
-        with brownie.reverts(revert_msg="110101"):
-            share_token.unlock.transact(user1, user2, unlock_amount, {'from': user2})
+        # forceUnlock
+        with brownie.reverts(revert_msg="111201"):
+            share_token.forceUnlock.transact(lock_eoa, user1, user2, unlock_amount, "unlock_message", {'from': issuer})
 
         # assertion
         assert share_token.balanceOf(user1) == transfer_amount - lock_amount
         assert share_token.balanceOf(user2) == 0
-        assert share_token.lockedOf(issuer, user1) == lock_amount
+        assert share_token.lockedOf(lock_eoa, user1) == lock_amount
+
+    # Error_2
+    # Tx from not authorized account
+    def test_error_2(self, users, IbetShare):
+        issuer = users['issuer']
+        user1 = users['user1']
+        user2 = users['user2']
+        lock_eoa = users['agent']
+
+        # issue token
+        deploy_args = init_args()
+        share_token = issuer.deploy(IbetShare, *deploy_args)
+
+        transfer_amount = 30
+        lock_amount = 10
+
+        # transfer to account
+        share_token.transferFrom.transact(issuer, user1, transfer_amount, {'from': issuer})
+
+        # lock
+        share_token.lock.transact(lock_eoa, lock_amount, "lock_message", {'from': user1})
+
+        # forceUnlock
+        with brownie.reverts(revert_msg="500001"):
+            share_token.forceUnlock.transact(lock_eoa, user1, user2, lock_amount, "unlock_message", {'from': user2})
 
 
 # TEST_transfer
@@ -1868,11 +1776,8 @@ class TestIssueFrom:
         deploy_args[3] = 1000
         share_token = issuer.deploy(IbetShare, *deploy_args)
 
-        # authorize lock address
-        share_token.authorizeLockAddress.transact(lock_address, True, {'from': issuer})
-
         # lock
-        share_token.lock.transact(lock_address, lock_amount, {'from': issuer})
+        share_token.lock.transact(lock_address, lock_amount, "lock_message", {'from': issuer})
 
         # issue from lock address
         share_token.issueFrom.transact(
@@ -1923,11 +1828,8 @@ class TestIssueFrom:
         deploy_args = init_args()
         share_token = issuer.deploy(IbetShare, *deploy_args)
 
-        # authorize lock address
-        share_token.authorizeLockAddress.transact(lock_address, True, {'from': issuer})
-
         # lock
-        share_token.lock.transact(lock_address, lock_amount, {'from': issuer})
+        share_token.lock.transact(lock_address, lock_amount, "lock_message", {'from': issuer})
 
         # issue from lock address
         with brownie.reverts(revert_msg="Integer overflow"):
@@ -2039,17 +1941,11 @@ class TestRedeemFrom:
         deploy_args[3] = 1000
         share_token = issuer.deploy(IbetShare, *deploy_args)
 
-        # authorize lock address
-        share_token.authorizeLockAddress.transact(
-            lock_address,
-            True,
-            {'from': issuer}
-        )
-
         # lock
         share_token.lock.transact(
             lock_address,
             lock_amount,
+            "lock_message",
             {'from': issuer}
         )
 
@@ -2107,17 +2003,11 @@ class TestRedeemFrom:
         deploy_args[3] = 1000
         share_token = issuer.deploy(IbetShare, *deploy_args)
 
-        # authorize lock address
-        share_token.authorizeLockAddress.transact(
-            lock_address,
-            True,
-            {'from': issuer}
-        )
-
         # lock
         share_token.lock.transact(
             lock_address,
             lock_amount,
+            "lock_message",
             {'from': issuer}
         )
 

@@ -190,36 +190,42 @@ abstract contract IbetSecurityTokenInterface is IbetStandardTokenInterface {
     // 資産ロック関連機能
     // -------------------------------------------------------------------
 
-    /// 認可済みのロック先アドレス
-    mapping(address => bool) public authorizedLockAddress;
-
     /// ロック中数量
     /// lockAddress => accountAddress => balance
     mapping(address => mapping(address => uint256)) public locked;
 
-    /// @notice 資産ロックアドレスの認可
-    /// @param _lockAddress 認可対象のアドレス
-    /// @param _auth 認可状態（true:認可、false:未認可）
-    function authorizeLockAddress(
-        address _lockAddress,
-        bool _auth
-    ) public virtual;
-
     /// @notice 資産をロックする
     /// @param _lockAddress 資産ロック先アドレス
     /// @param _value ロックする数量
+    /// @param _data イベント出力用の任意のデータ
     function lock(
         address _lockAddress,
-        uint256 _value
+        uint256 _value,
+        string memory _data
     ) public virtual;
 
     /// @notice 資産をアンロックする
     /// @param _accountAddress アンロック対象のアドレス
     /// @param _recipientAddress 受取アドレス
+    /// @param _data イベント出力用の任意のデータ
     function unlock(
         address _accountAddress,
         address _recipientAddress,
-        uint256 _value
+        uint256 _value,
+        string memory _data
+    ) public virtual;
+
+    /// @notice 資産を強制アンロックする
+    /// @param _lockAddress 資産ロック先アドレス
+    /// @param _accountAddress アンロック対象のアドレス
+    /// @param _recipientAddress 受取アドレス
+    /// @param _data イベント出力用の任意のデータ
+    function forceUnlock(
+        address _lockAddress,
+        address _accountAddress,
+        address _recipientAddress,
+        uint256 _value,
+        string memory _data
     ) public virtual;
 
     /// @notice ロック中資産の参照
@@ -231,17 +237,12 @@ abstract contract IbetSecurityTokenInterface is IbetStandardTokenInterface {
         address _accountAddress
     ) public view virtual returns (uint256);
 
-    /// Event: 資産ロックアドレスの認可
-    event AuthorizeLockAddress(
-        address lockAddress,
-        bool auth
-    );
-
     /// Event: 資産ロック
     event Lock(
         address indexed accountAddress,
         address indexed lockAddress,
-        uint256 value
+        uint256 value,
+        string data
     );
 
     /// Event: 資産アンロック
@@ -249,7 +250,8 @@ abstract contract IbetSecurityTokenInterface is IbetStandardTokenInterface {
         address indexed accountAddress,
         address indexed lockAddress,
         address recipientAddress,
-        uint256 value
+        uint256 value,
+        string data
     );
 
     // -------------------------------------------------------------------

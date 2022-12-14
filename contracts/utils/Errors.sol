@@ -68,7 +68,8 @@ library ErrorCode {
     // IbetShare_redeemFrom
     string constant ERR_IbetShare_redeemFrom_111101 = "111101";
     string constant ERR_IbetShare_redeemFrom_111102 = "111102";
-
+    // IbetShare_forceUnlock
+    string constant ERR_IbetShare_forceUnlock_111201 = "111201";
 
     // 12XXXX
     // IbetStraightBond_lock
@@ -106,7 +107,8 @@ library ErrorCode {
     // IbetStraightBond_redeemFrom
     string constant ERR_IbetStraightBond_redeemFrom_121101 = "121101";
     string constant ERR_IbetStraightBond_redeemFrom_121102 = "121102";
-
+    // IbetStraightBond_forceUnlock
+    string constant ERR_IbetStraightBond_forceUnlock_121201 = "121201";
 
     // 13XXXX
     // IbetCoupon_transferToContract
