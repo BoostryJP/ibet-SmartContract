@@ -133,6 +133,12 @@ Developers will receive error msg as code, and each error code is described belo
 | **111101** | Redeem amount is less than locked address balance. | -               |
 | **111102** | Redeem amount is less than target address balance. | -               |
 
+#### forceUnlock (1112XX)
+
+| Code       | Situation                                          | Possible causes | 
+|------------|----------------------------------------------------|-----------------|
+| **111201** | Unlock amount is greater than locked amount.       | -               |
+
 ### IbetStraightBond (12XXXX)
 
 #### lock (1200XX)
@@ -217,6 +223,12 @@ Developers will receive error msg as code, and each error code is described belo
 |------------|----------------------------------------------------|-----------------|
 | **121101** | Redeem amount is less than locked address balance. | -               |
 | **121102** | Redeem amount is less than target address balance. | -               |
+
+#### forceUnlock (1212XX)
+
+| Code       | Situation                                          | Possible causes | 
+|------------|----------------------------------------------------|-----------------|
+| **121201** | Unlock amount is greater than locked amount.       | -               |
 
 ### IbetCoupon (13XXXX)
 

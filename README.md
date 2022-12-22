@@ -1,9 +1,11 @@
 # ibet Smart Contract
 
 <p>
-  <img alt="Version" src="https://img.shields.io/badge/version-22.9-blue.svg?cacheSeconds=2592000" />
+  <img alt="Version" src="https://img.shields.io/badge/version-22.12-blue.svg?cacheSeconds=2592000" />
   <img alt="License: Apache--2.0" src="https://img.shields.io/badge/License-Apache--2.0-yellow.svg" />
 </p>
+
+English | [日本語](README_JA.md)
 
 <img width="33%" align="right" src="https://user-images.githubusercontent.com/963333/71672471-6383c080-2db9-11ea-85b6-8815519652ec.png"/>
 
@@ -14,11 +16,11 @@
 - The project aims to provide token standards, decentralized exchanges, and other utility functions that can be used on the ibet-Network.
 
 ## Dependencies
-- [python3](https://www.python.org/downloads/release/python-368/)
-  - Version 3.8 or greater
+- [Python3](https://www.python.org/downloads/)
+  - Version 3.10
 - [Solidity](https://docs.soliditylang.org/)
   - We are using Solidity to implement our smart contracts. 
-  - Currently, we are using v0.8.16.
+  - Currently, we are using v0.8.17.
 - [eth-brownie](https://github.com/eth-brownie/brownie)
   - We are using the eth-brownie framework for developing and testing our contracts.
 - [GoQuorum](https://github.com/ConsenSys/quorum)
@@ -26,7 +28,7 @@
   - We use [ganache-cli](https://github.com/trufflesuite/ganache-cli) for local development and unit testing, and we use the latest version.
 - [OpenZeppelin](https://openzeppelin.com/contracts/)
   - Our project is partly dependent on OpenZeppelin.
-  - We use openzeppelin-contracts v4.7.
+  - We use openzeppelin-contracts v4.8.
   
 ## Overview
 
@@ -55,7 +57,7 @@ $ pip install -r requirements.txt
 Install openzeppelin-contracts.
 
 ```bash
-$ brownie pm install OpenZeppelin/openzeppelin-contracts@4.7.3
+$ brownie pm install OpenZeppelin/openzeppelin-contracts@4.8.0
 ```
 
 ## Compile Contracts
@@ -73,7 +75,7 @@ You can switch the EOA used for deploying the contract by setting an environment
 
 #### 1. GoQuorum (Geth)
 
-This is the case when you store and use your private key in Geth.
+This is the case when you store and use your private key in GoQuorum(Geth).
 
 - `ETH_ACCOUNT_PASSWORD` - The passphrase you have set for the Geth keystore file.
 
@@ -117,7 +119,8 @@ You can deploy the following contract as `contract_name`.
 - IbetSecurityTokenEscrow
 - FreezeLog
 
-All other contracts are not supported for deployment by script. You will need to deploy them in a different way.
+All other contracts are not supported for deployment by script. 
+You will need to deploy them in a different way.
 
 
 ## Developing Smart Contracts
@@ -154,6 +157,8 @@ $ pytest tests/
 ```
 
 ## Branching model
+
+This repository is version controlled using the following flow.
 
 <p align='center'>
   <img alt="ibet" src="https://user-images.githubusercontent.com/963333/161243132-5216b4f0-cbc6-443f-bcfc-9eafb4858cb1.png"/>

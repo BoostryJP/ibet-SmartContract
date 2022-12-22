@@ -18,7 +18,7 @@
 */
 pragma solidity ^0.8.0;
 
-import "OpenZeppelin/openzeppelin-contracts@4.7.3/contracts/utils/math/SafeMath.sol";
+import "OpenZeppelin/openzeppelin-contracts@4.8.0/contracts/utils/math/SafeMath.sol";
 import "../access/Ownable.sol";
 import "../ledger/PersonalInfo.sol";
 import "../utils/Errors.sol";
@@ -475,24 +475,6 @@ contract IbetStraightBond is Ownable, IbetSecurityTokenInterface {
         );
     }
 
-    /// @notice 資産ロックアドレスの認可
-    /// @dev オーナーのみ実行可能
-    /// @param _lockAddress 認可対象のアドレス
-    /// @param _auth 認可状態（true:認可、false:未認可）
-    function authorizeLockAddress(address _lockAddress, bool _auth)
-        public
-        override
-        onlyOwner()
-    {
-        authorizedLockAddress[_lockAddress] = _auth;
-
-        // イベント登録
-        emit AuthorizeLockAddress(
-            _lockAddress,
-            _auth
-        );
-    }
-
     /// @notice ロック中資産の参照
     /// @param _lockAddress ロック先アドレス
     /// @param _accountAddress ロック対象アカウント
@@ -509,17 +491,15 @@ contract IbetStraightBond is Ownable, IbetSecurityTokenInterface {
     /// @notice 資産をロックする
     /// @param _lockAddress 資産ロック先アドレス
     /// @param _value ロックする数量
-    function lock(address _lockAddress, uint256 _value)
+    /// @param _data イベント出力用の任意のデータ
+    function lock(
+        address _lockAddress,
+        uint256 _value,
+        string memory _data
+    )
         public
         override
     {
-        // ロック対象が認可済みアドレス、または発行者アドレスであることをチェック
-        require(
-            authorizedLockAddress[_lockAddress] == true ||
-            _lockAddress == owner,
-            ErrorCode.ERR_IbetStraightBond_lock_120001
-        );
-
         // ロック数量が保有数量を上回っている場合、エラーを返す
         if (balanceOf(msg.sender) < _value) revert(ErrorCode.ERR_IbetStraightBond_lock_120002);
 
@@ -531,25 +511,24 @@ contract IbetStraightBond is Ownable, IbetSecurityTokenInterface {
         emit Lock(
             msg.sender,
             _lockAddress,
-            _value
+            _value,
+            _data
         );
     }
 
     /// @notice 資産をアンロックする
-    /// @dev 認可済みアドレスあるいは発行体のみ実行可能
     /// @param _accountAddress アンロック対象のアドレス
     /// @param _recipientAddress 受取アドレス
-    function unlock(address _accountAddress, address _recipientAddress, uint256 _value)
+    /// @param _data イベント出力用の任意のデータ
+    function unlock(
+        address _accountAddress,
+        address _recipientAddress,
+        uint256 _value,
+        string memory _data
+    )
         public
         override
     {
-        // msg.senderが認可済みアドレス、または発行者アドレスであることをチェック
-        require(
-            authorizedLockAddress[msg.sender] == true ||
-            msg.sender == owner,
-            ErrorCode.ERR_IbetStraightBond_unlock_120101
-        );
-
         // アンロック数量がロック数量を上回ってる場合、エラーを返す
         if (lockedOf(msg.sender, _accountAddress) < _value) revert(ErrorCode.ERR_IbetStraightBond_unlock_120102);
 
@@ -562,7 +541,42 @@ contract IbetStraightBond is Ownable, IbetSecurityTokenInterface {
             _accountAddress,
             msg.sender,
             _recipientAddress,
-            _value
+            _value,
+            _data
+        );
+    }
+
+    /// @notice 資産を強制アンロックする
+    /// @dev 発行体のみ実行可能
+    /// @param _lockAddress 資産ロック先アドレス
+    /// @param _accountAddress アンロック対象のアドレス
+    /// @param _recipientAddress 受取アドレス
+    /// @param _data イベント出力用の任意のデータ
+    function forceUnlock(
+        address _lockAddress,
+        address _accountAddress,
+        address _recipientAddress,
+        uint256 _value,
+        string memory _data
+    )
+        public
+        override
+        onlyOwner()
+    {
+        // アンロック数量がロック数量を上回ってる場合、エラーを返す
+        if (lockedOf(_lockAddress, _accountAddress) < _value) revert(ErrorCode.ERR_IbetStraightBond_forceUnlock_121201);
+
+        // データ更新
+        locked[_lockAddress][_accountAddress] = lockedOf(_lockAddress, _accountAddress).sub(_value);
+        balances[_recipientAddress] = balanceOf(_recipientAddress).add(_value);
+
+        // イベント登録
+        emit Unlock(
+            _accountAddress,
+            _lockAddress,
+            _recipientAddress,
+            _value,
+            _data
         );
     }
 
