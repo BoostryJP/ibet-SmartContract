@@ -16,6 +16,7 @@ limitations under the License.
 
 SPDX-License-Identifier: Apache-2.0
 """
+from typing import TypedDict
 import pytest
 from brownie import web3
 from web3.middleware import geth_poa_middleware
@@ -23,8 +24,17 @@ from web3.middleware import geth_poa_middleware
 web3.middleware_onion.inject(geth_poa_middleware, layer=0)
 
 
+class Users(TypedDict):
+    admin: str
+    trader: str
+    issuer: str
+    agent: str
+    user1: str
+    user2: str
+
+
 @pytest.fixture()
-def users(web3, accounts):
+def users(web3, accounts) -> Users:
     admin = accounts[0]
     trader = accounts[1]
     issuer = accounts[2]
