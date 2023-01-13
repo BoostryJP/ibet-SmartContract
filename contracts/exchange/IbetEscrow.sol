@@ -398,6 +398,18 @@ contract IbetEscrow is Ownable, IbetExchangeInterface {
         return true;
     }
 
+    /// @notice エスクロー一括完了
+    /// @param _escrowIdList エスクローIDのリスト
+    function bulkFinishEscrow(uint256[] calldata _escrowIdList)
+        public
+        returns (bool success)
+    {
+        for(uint i = 0; i < _escrowIdList.length; i++) {
+            success = finishEscrow(_escrowIdList[i]);
+        }
+        return success;
+    }
+
     /// @notice 全ての残高を引き出しする
     /// @dev エスクローで拘束されているものは引き出しされない
     /// @param _token トークンアドレス

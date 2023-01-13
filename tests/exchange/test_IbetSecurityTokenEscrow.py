@@ -2060,6 +2060,610 @@ class TestFinishEscrow:
         assert st_escrow.commitmentOf(_issuer, token.address) == _escrow_amount
 
 
+# TEST_bulkFinishEscrow
+class TestBulkFinishEscrow:
+
+    #######################################
+    # Normal
+    #######################################
+
+    # Normal_1
+    # Transfer approval not required (1 data)
+    def test_normal_1(self, users, st_escrow):
+        _issuer = users["issuer"]
+        _recipient = users["user1"]
+        _agent = users["agent"]
+        _transfer_application_data = "transfer_application_data"
+        _data = "test_data"
+        _deposit_amount = 1000
+        _escrow_amount = 100
+
+        # issue token
+        deploy_args = init_args()
+        token = deploy(
+            users,
+            deploy_args=deploy_args,
+            tradable_exchange=st_escrow.address
+        )
+
+        # transfer to escrow contract
+        token.transfer(
+            st_escrow.address,
+            _deposit_amount,
+            {"from": _issuer}
+        )
+
+        # create escrow
+        st_escrow.createEscrow(
+            token.address,
+            _recipient,
+            _escrow_amount,
+            _agent,
+            _transfer_application_data,
+            _data,
+            {"from": _issuer}
+        )
+
+        # bulk finish escrow
+        latest_escrow_id = st_escrow.latestEscrowId()
+        tx = st_escrow.bulkFinishEscrow(
+            [latest_escrow_id],
+            {"from": _agent}
+        )
+
+        # assertion
+        assert st_escrow.balanceOf(_issuer, token.address) == _deposit_amount - _escrow_amount
+        assert st_escrow.balanceOf(_recipient, token.address) == _escrow_amount
+        assert st_escrow.commitmentOf(_issuer, token.address) == 0
+        assert st_escrow.getEscrow(latest_escrow_id) == (
+            token.address,
+            _issuer,
+            _recipient,
+            _escrow_amount,
+            _agent,
+            False
+        )
+
+        assert tx.events["EscrowFinished"]["escrowId"] == latest_escrow_id
+        assert tx.events["EscrowFinished"]["token"] == token.address
+        assert tx.events["EscrowFinished"]["sender"] == _issuer
+        assert tx.events["EscrowFinished"]["recipient"] == _recipient
+        assert tx.events["EscrowFinished"]["amount"] == _escrow_amount
+        assert tx.events["EscrowFinished"]["agent"] == _agent
+        assert tx.events["EscrowFinished"]["transferApprovalRequired"] == False
+
+        assert tx.events["HolderChanged"]["token"] == token.address
+        assert tx.events["HolderChanged"]["from"] == _issuer
+        assert tx.events["HolderChanged"]["to"] == _recipient
+        assert tx.events["HolderChanged"]["value"] == _escrow_amount
+
+    # Normal_2
+    # Transfer approval not required (multiple data)
+    def test_normal_2(self, users, st_escrow):
+        _issuer = users["issuer"]
+        _recipient = users["user1"]
+        _agent = users["agent"]
+        _transfer_application_data = "transfer_application_data"
+        _data = "test_data"
+        _deposit_amount = 10000
+        _escrow_amount = 100
+
+        # issue token
+        deploy_args = init_args()
+        token = deploy(
+            users,
+            deploy_args=deploy_args,
+            tradable_exchange=st_escrow.address
+        )
+
+        # transfer to escrow contract
+        token.transfer(
+            st_escrow.address,
+            _deposit_amount,
+            {"from": _issuer}
+        )
+
+        # create escrow
+        escrow_id_list = []
+        for _ in range(100):
+            st_escrow.createEscrow(
+                token.address,
+                _recipient,
+                _escrow_amount,
+                _agent,
+                _transfer_application_data,
+                _data,
+                {"from": _issuer}
+            )
+            latest_escrow_id = st_escrow.latestEscrowId()
+            escrow_id_list.append(latest_escrow_id)
+
+        # bulk finish escrow
+        tx = st_escrow.bulkFinishEscrow(
+            escrow_id_list,
+            {"from": _agent}
+        )
+
+        # assertion
+        assert st_escrow.balanceOf(_issuer, token.address) == _deposit_amount - _escrow_amount * 100
+        assert st_escrow.balanceOf(_recipient, token.address) == _escrow_amount * 100
+        assert st_escrow.commitmentOf(_issuer, token.address) == 0
+        for escrow_id in escrow_id_list:
+            assert st_escrow.getEscrow(escrow_id) == (
+                token.address,
+                _issuer,
+                _recipient,
+                _escrow_amount,
+                _agent,
+                False
+            )
+
+        for event, escrow_id in zip(tx.events["EscrowFinished"], escrow_id_list):
+            assert event["escrowId"] == escrow_id
+            assert event["token"] == token.address
+            assert event["sender"] == _issuer
+            assert event["recipient"] == _recipient
+            assert event["amount"] == _escrow_amount
+            assert event["agent"] == _agent
+            assert event["transferApprovalRequired"] == False
+
+        for event, escrow_id in zip(tx.events["HolderChanged"], escrow_id_list):
+            assert event["token"] == token.address
+            assert event["from"] == _issuer
+            assert event["to"] == _recipient
+            assert event["value"] == _escrow_amount
+
+    # Normal_3
+    # Transfer approval required (1 data)
+    def test_normal_3(self, users, st_escrow):
+        _issuer = users["issuer"]
+        _recipient = users["user1"]
+        _agent = users["agent"]
+        _transfer_application_data = "transfer_application_data"
+        _data = "test_data"
+        _deposit_amount = 1000
+        _escrow_amount = 100
+
+        # issue token
+        deploy_args = init_args()
+        token = deploy(
+            users,
+            deploy_args=deploy_args,
+            tradable_exchange=st_escrow.address,
+            transfer_approval_required=True
+        )
+
+        # transfer to escrow contract
+        token.transfer(
+            st_escrow.address,
+            _deposit_amount,
+            {"from": _issuer}
+        )
+
+        # create escrow
+        st_escrow.createEscrow(
+            token.address,
+            _recipient,
+            _escrow_amount,
+            _agent,
+            _transfer_application_data,
+            _data,
+            {"from": _issuer}
+        )
+
+        # bulk finish escrow
+        latest_escrow_id = st_escrow.latestEscrowId()
+        tx = st_escrow.bulkFinishEscrow(
+            [latest_escrow_id],
+            {"from": _agent}
+        )
+
+        # assertion
+        assert st_escrow.balanceOf(_issuer, token.address) == _deposit_amount - _escrow_amount
+        assert st_escrow.balanceOf(_recipient, token.address) == 0
+        assert st_escrow.commitmentOf(_issuer, token.address) == _escrow_amount
+        assert st_escrow.getEscrow(latest_escrow_id) == (
+            token.address,
+            _issuer,
+            _recipient,
+            _escrow_amount,
+            _agent,
+            False
+        )
+        assert st_escrow.getApplicationForTransfer(latest_escrow_id) == (
+            token.address,
+            _transfer_application_data,
+            "",
+            True,
+            True,
+            False
+        )
+
+        assert tx.events["EscrowFinished"]["escrowId"] == latest_escrow_id
+        assert tx.events["EscrowFinished"]["token"] == token.address
+        assert tx.events["EscrowFinished"]["sender"] == _issuer
+        assert tx.events["EscrowFinished"]["recipient"] == _recipient
+        assert tx.events["EscrowFinished"]["amount"] == _escrow_amount
+        assert tx.events["EscrowFinished"]["agent"] == _agent
+        assert tx.events["EscrowFinished"]["transferApprovalRequired"] == True
+
+    def test_normal_4(self, users, st_escrow):
+        _issuer = users["issuer"]
+        _recipient = users["user1"]
+        _agent = users["agent"]
+        _transfer_application_data = "transfer_application_data"
+        _data = "test_data"
+        _deposit_amount = 10000
+        _escrow_amount = 100
+
+        # issue token
+        deploy_args = init_args()
+        token = deploy(
+            users,
+            deploy_args=deploy_args,
+            tradable_exchange=st_escrow.address,
+            transfer_approval_required=True
+        )
+
+        # transfer to escrow contract
+        token.transfer(
+            st_escrow.address,
+            _deposit_amount,
+            {"from": _issuer}
+        )
+
+        # create escrow
+        escrow_id_list = []
+        for _ in range(100):
+            st_escrow.createEscrow(
+                token.address,
+                _recipient,
+                _escrow_amount,
+                _agent,
+                _transfer_application_data,
+                _data,
+                {"from": _issuer}
+            )
+            latest_escrow_id = st_escrow.latestEscrowId()
+            escrow_id_list.append(latest_escrow_id)
+
+        # bulk finish escrow
+        tx = st_escrow.bulkFinishEscrow(
+            escrow_id_list,
+            {"from": _agent}
+        )
+
+        # assertion
+        assert st_escrow.balanceOf(_issuer, token.address) == _deposit_amount - _escrow_amount * 100
+        assert st_escrow.balanceOf(_recipient, token.address) == 0
+        assert st_escrow.commitmentOf(_issuer, token.address) == _escrow_amount * 100
+
+        for escrow_id in escrow_id_list:
+            assert st_escrow.getEscrow(escrow_id) == (
+                token.address,
+                _issuer,
+                _recipient,
+                _escrow_amount,
+                _agent,
+                False
+            )
+
+        for event, escrow_id in zip(tx.events["EscrowFinished"], escrow_id_list):
+            assert event["escrowId"] == escrow_id
+            assert event["token"] == token.address
+            assert event["sender"] == _issuer
+            assert event["recipient"] == _recipient
+            assert event["amount"] == _escrow_amount
+            assert event["agent"] == _agent
+            assert event["transferApprovalRequired"] == True
+
+        assert "HolderChanged" not in tx.events
+
+    #######################################
+    # Error
+    #######################################
+
+    # Error_1
+    # The escrowId must be less than or equal to the latest escrow ID.
+    def test_error_1(self, users, st_escrow):
+        _issuer = users["issuer"]
+        _recipient = users["user1"]
+        _agent = users["agent"]
+        _transfer_application_data = "transfer_application_data"
+        _data = "test_data"
+        _deposit_amount = 1000
+        _escrow_amount = 100
+
+        # issue token
+        deploy_args = init_args()
+        token = deploy(
+            users,
+            deploy_args=deploy_args,
+            tradable_exchange=st_escrow.address
+        )
+
+        # transfer to escrow contract
+        token.transfer(
+            st_escrow.address,
+            _deposit_amount,
+            {"from": _issuer}
+        )
+
+        # create escrow
+        st_escrow.createEscrow(
+            token.address,
+            _recipient,
+            _escrow_amount,
+            _agent,
+            _transfer_application_data,
+            _data,
+            {"from": _issuer}
+        )
+
+        # bulk finish escrow
+        latest_escrow_id = st_escrow.latestEscrowId()
+        with brownie.reverts(revert_msg="240301"):
+            st_escrow.bulkFinishEscrow(
+                [latest_escrow_id + 1],
+                {"from": _agent}
+            )
+
+        # assertion
+        assert st_escrow.balanceOf(_issuer, token.address) == _deposit_amount - _escrow_amount
+        assert st_escrow.balanceOf(_recipient, token.address) == 0
+        assert st_escrow.commitmentOf(_issuer, token.address) == _escrow_amount
+        assert st_escrow.getEscrow(latest_escrow_id) == (
+            token.address,
+            _issuer,
+            _recipient,
+            _escrow_amount,
+            _agent,
+            True
+        )
+
+    # Error_2
+    # Escrow must be valid.
+    def test_error_2(self, users, st_escrow):
+        _issuer = users["issuer"]
+        _recipient = users["user1"]
+        _agent = users["agent"]
+        _transfer_application_data = "transfer_application_data"
+        _data = "test_data"
+        _deposit_amount = 1000
+        _escrow_amount = 100
+
+        # issue token
+        deploy_args = init_args()
+        token = deploy(
+            users,
+            deploy_args=deploy_args,
+            tradable_exchange=st_escrow.address
+        )
+
+        # transfer to escrow contract
+        token.transfer(
+            st_escrow.address,
+            _deposit_amount,
+            {"from": _issuer}
+        )
+
+        # create escrow
+        st_escrow.createEscrow(
+            token.address,
+            _recipient,
+            _escrow_amount,
+            _agent,
+            _transfer_application_data,
+            _data,
+            {"from": _issuer}
+        )
+
+        # bulk finish escrow (1)
+        latest_escrow_id = st_escrow.latestEscrowId()
+        st_escrow.bulkFinishEscrow(
+            [latest_escrow_id],
+            {"from": _agent}
+        )
+
+        # bulk finish escrow (2)
+        with brownie.reverts(revert_msg="240302"):
+            st_escrow.bulkFinishEscrow(
+                [latest_escrow_id],
+                {"from": _agent}
+            )
+
+        # assertion
+        assert st_escrow.balanceOf(_issuer, token.address) == _deposit_amount - _escrow_amount
+        assert st_escrow.balanceOf(_recipient, token.address) == _escrow_amount
+        assert st_escrow.commitmentOf(_issuer, token.address) == 0
+        assert st_escrow.getEscrow(latest_escrow_id) == (
+            token.address,
+            _issuer,
+            _recipient,
+            _escrow_amount,
+            _agent,
+            False
+        )
+
+    # Error_3
+    # msg.sender must be the agent of the escrow.
+    def test_error_3(self, users, st_escrow):
+        _issuer = users["issuer"]
+        _recipient = users["user1"]
+        _agent = users["agent"]
+        _transfer_application_data = "transfer_application_data"
+        _data = "test_data"
+        _deposit_amount = 1000
+        _escrow_amount = 100
+
+        # issue token
+        deploy_args = init_args()
+        token = deploy(
+            users,
+            deploy_args=deploy_args,
+            tradable_exchange=st_escrow.address
+        )
+
+        # transfer to escrow contract
+        token.transfer(
+            st_escrow.address,
+            _deposit_amount,
+            {"from": _issuer}
+        )
+
+        # create escrow
+        st_escrow.createEscrow(
+            token.address,
+            _recipient,
+            _escrow_amount,
+            _agent,
+            _transfer_application_data,
+            _data,
+            {"from": _issuer}
+        )
+
+        # bulk finish escrow
+        latest_escrow_id = st_escrow.latestEscrowId()
+        with brownie.reverts(revert_msg="240303"):
+            st_escrow.bulkFinishEscrow(
+                [latest_escrow_id],
+                {"from": _recipient}
+            )
+
+        # assertion
+        assert st_escrow.balanceOf(_issuer, token.address) == _deposit_amount - _escrow_amount
+        assert st_escrow.balanceOf(_recipient, token.address) == 0
+        assert st_escrow.commitmentOf(_issuer, token.address) == _escrow_amount
+        assert st_escrow.getEscrow(latest_escrow_id) == (
+            token.address,
+            _issuer,
+            _recipient,
+            _escrow_amount,
+            _agent,
+            True
+        )
+
+    # Error_4
+    # The status of the token must be true.
+    def test_error_4(self, users, st_escrow):
+        _issuer = users["issuer"]
+        _recipient = users["user1"]
+        _agent = users["agent"]
+        _transfer_application_data = "transfer_application_data"
+        _data = "test_data"
+        _deposit_amount = 1000
+        _escrow_amount = 100
+
+        # issue token
+        deploy_args = init_args()
+        token = deploy(
+            users,
+            deploy_args=deploy_args,
+            tradable_exchange=st_escrow.address
+        )
+
+        # transfer to escrow contract
+        token.transfer(
+            st_escrow.address,
+            _deposit_amount,
+            {"from": _issuer}
+        )
+
+        # create escrow
+        st_escrow.createEscrow(
+            token.address,
+            _recipient,
+            _escrow_amount,
+            _agent,
+            _transfer_application_data,
+            _data,
+            {"from": _issuer}
+        )
+
+        # set status to False
+        token.setStatus(
+            False,
+            {"from": _issuer}
+        )
+
+        # bulk finish escrow
+        latest_escrow_id = st_escrow.latestEscrowId()
+        with brownie.reverts(revert_msg="240304"):
+            st_escrow.bulkFinishEscrow(
+                [latest_escrow_id],
+                {"from": _agent}
+            )
+
+        # assertion
+        assert st_escrow.balanceOf(_issuer, token.address) == _deposit_amount - _escrow_amount
+        assert st_escrow.balanceOf(_recipient, token.address) == 0
+        assert st_escrow.commitmentOf(_issuer, token.address) == _escrow_amount
+        assert st_escrow.getEscrow(latest_escrow_id) == (
+            token.address,
+            _issuer,
+            _recipient,
+            _escrow_amount,
+            _agent,
+            True
+        )
+
+    # Error_5
+    # Storage is not writable.
+    def test_error_5(self, users, st_escrow, st_escrow_storage):
+        _admin = users["admin"]
+        _issuer = users["issuer"]
+        _recipient = users["user1"]
+        _agent = users["agent"]
+        _transfer_application_data = "transfer_application_data"
+        _data = "test_data"
+        _deposit_amount = 1000
+        _escrow_amount = 100
+
+        # issue token
+        deploy_args = init_args()
+        token = deploy(
+            users,
+            deploy_args=deploy_args,
+            tradable_exchange=st_escrow.address
+        )
+
+        # transfer to escrow contract
+        token.transfer(
+            st_escrow.address,
+            _deposit_amount,
+            {"from": _issuer}
+        )
+
+        # create escrow
+        st_escrow.createEscrow(
+            token.address,
+            _recipient,
+            _escrow_amount,
+            _agent,
+            _transfer_application_data,
+            _data,
+            {"from": _issuer}
+        )
+
+        # update storage
+        st_escrow_storage.upgradeVersion(
+            brownie.ZERO_ADDRESS,
+            {"from": _admin}
+        )
+
+        # bulk finish escrow
+        latest_escrow_id = st_escrow.latestEscrowId()
+        with brownie.reverts(revert_msg=""):
+            st_escrow.bulkFinishEscrow(
+                [latest_escrow_id],
+                {"from": _agent}
+            )
+
+        # assertion
+        assert st_escrow.balanceOf(_issuer, token.address) == _deposit_amount - _escrow_amount
+        assert st_escrow.commitmentOf(_issuer, token.address) == _escrow_amount
+
+
 # TEST_withdraw
 class TestWithdraw:
 
