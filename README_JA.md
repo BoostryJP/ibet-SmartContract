@@ -55,7 +55,7 @@ $ pip install -r requirements.txt
 
 openzeppelin-contractsをインストールします。
 ```bash
-$ brownie pm install OpenZeppelin/openzeppelin-contracts@4.8.0
+$ brownie pm install OpenZeppelin/openzeppelin-contracts@4.8.1
 ```
 
 ## コントラクトのコンパイル
