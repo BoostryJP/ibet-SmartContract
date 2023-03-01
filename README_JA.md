@@ -20,7 +20,7 @@
   - バージョン 3.10
 - [Solidity](https://docs.soliditylang.org/)
   - スマートコントラクトの実装には Solidity を利用しています。
-  - 現在、私たちは v0.8.17 を利用しています。
+  - 現在、私たちは v0.8.19 を利用しています。
 - [eth-brownie](https://github.com/eth-brownie/brownie)
   - eth-brownie フレームワークを利用して、コントラクトの開発とテストを行なっています。
 - [GoQuorum](https://github.com/ConsenSys/quorum)
