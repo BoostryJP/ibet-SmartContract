@@ -77,4 +77,4 @@ RUN mkdir -p /app/ibet-SmartContract/tests/
 COPY --chown=apl:apl tests/ /app/ibet-SmartContract/tests/
 RUN find /app/ibet-SmartContract/ -type d -name __pycache__ | xargs rm -fr
 
-CMD /app/ibet-SmartContract/qa.sh
+CMD sh /app/ibet-SmartContract/qa.sh
