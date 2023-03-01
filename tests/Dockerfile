@@ -1,4 +1,4 @@
-FROM python:3.10-alpine3.15
+FROM python:3.10-alpine3.17
 
 # make application directory
 RUN mkdir -p /app/ibet-SmartContract/
@@ -26,7 +26,7 @@ RUN apk update \
 # NOTE: This is because if it is musl-dev, a DynamicLinkError will occur in Solidity compiler.
 RUN wget -q -O /etc/apk/keys/sgerrand.rsa.pub https://alpine-pkgs.sgerrand.com/sgerrand.rsa.pub \
  && wget https://github.com/sgerrand/alpine-pkg-glibc/releases/download/2.33-r0/glibc-2.33-r0.apk \
- && apk add glibc-2.33-r0.apk \
+ && apk add --force-overwrite glibc-2.33-r0.apk \
  && rm -f glibc-2.33-r0.apk
 ENV LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/lib
 
