@@ -1,7 +1,7 @@
 # ibet Smart Contract
 
 <p>
-  <img alt="Version" src="https://img.shields.io/badge/version-22.12-blue.svg?cacheSeconds=2592000" />
+  <img alt="Version" src="https://img.shields.io/badge/version-23.3-blue.svg?cacheSeconds=2592000" />
   <img alt="License: Apache--2.0" src="https://img.shields.io/badge/License-Apache--2.0-yellow.svg" />
 </p>
 
@@ -20,7 +20,7 @@ English | [日本語](README_JA.md)
   - Version 3.10
 - [Solidity](https://docs.soliditylang.org/)
   - We are using Solidity to implement our smart contracts. 
-  - Currently, we are using v0.8.17.
+  - Currently, we are using v0.8.19.
 - [eth-brownie](https://github.com/eth-brownie/brownie)
   - We are using the eth-brownie framework for developing and testing our contracts.
 - [GoQuorum](https://github.com/ConsenSys/quorum)
@@ -43,7 +43,7 @@ English | [日本語](README_JA.md)
 - `exchange`: Implementations of the various exchanges.
 - `ledger`: A data storage system that manages the data required as additional information in the ledger.
 - `payment`: A set of functions required to build an off-chain payment system.
-- `token`: Implementation of the various token formats: Bonds, Shares, etc.
+- `token`: Implementation of the various token formats: ERC20, ERC721, Bonds, Shares, etc.
 - `utils`: A set of other utility functions.
 
 ## Install
@@ -57,7 +57,7 @@ $ pip install -r requirements.txt
 Install openzeppelin-contracts.
 
 ```bash
-$ brownie pm install OpenZeppelin/openzeppelin-contracts@4.8.0
+$ brownie pm install OpenZeppelin/openzeppelin-contracts@4.8.2
 ```
 
 ## Compile Contracts

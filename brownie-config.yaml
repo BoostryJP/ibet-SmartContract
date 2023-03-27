@@ -8,6 +8,6 @@ networks:
 compiler:
     evm_version: byzantium
     solc:
-        version: 0.8.17
+        version: 0.8.19
 dependencies:
-    OpenZeppelin/openzeppelin-contracts@4.8.0
+    OpenZeppelin/openzeppelin-contracts@4.8.2

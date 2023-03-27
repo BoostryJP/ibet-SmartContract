@@ -18,7 +18,7 @@
 */
 pragma solidity ^0.8.0;
 
-import "OpenZeppelin/openzeppelin-contracts@4.8.0/contracts/utils/math/SafeMath.sol";
+import "OpenZeppelin/openzeppelin-contracts@4.8.2/contracts/utils/math/SafeMath.sol";
 import "./EscrowStorage.sol";
 import "../access/Ownable.sol";
 import "../utils/Errors.sol";
@@ -396,6 +396,18 @@ contract IbetEscrow is Ownable, IbetExchangeInterface {
         );
 
         return true;
+    }
+
+    /// @notice エスクロー一括完了
+    /// @param _escrowIdList エスクローIDのリスト
+    function bulkFinishEscrow(uint256[] calldata _escrowIdList)
+        public
+        returns (bool success)
+    {
+        for(uint i = 0; i < _escrowIdList.length; i++) {
+            success = finishEscrow(_escrowIdList[i]);
+        }
+        return success;
     }
 
     /// @notice 全ての残高を引き出しする
