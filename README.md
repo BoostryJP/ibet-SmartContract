@@ -43,7 +43,7 @@ English | [日本語](README_JA.md)
 - `exchange`: Implementations of the various exchanges.
 - `ledger`: A data storage system that manages the data required as additional information in the ledger.
 - `payment`: A set of functions required to build an off-chain payment system.
-- `token`: Implementation of the various token formats: Bonds, Shares, etc.
+- `token`: Implementation of the various token formats: ERC20, ERC721, Bonds, Shares, etc.
 - `utils`: A set of other utility functions.
 
 ## Install
@@ -57,7 +57,7 @@ $ pip install -r requirements.txt
 Install openzeppelin-contracts.
 
 ```bash
-$ brownie pm install OpenZeppelin/openzeppelin-contracts@4.8.1
+$ brownie pm install OpenZeppelin/openzeppelin-contracts@4.8.2
 ```
 
 ## Compile Contracts
