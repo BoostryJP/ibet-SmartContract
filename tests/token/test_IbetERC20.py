@@ -16,6 +16,7 @@ limitations under the License.
 
 SPDX-License-Identifier: Apache-2.0
 """
+import brownie
 
 
 class TestDeploy:
@@ -61,3 +62,19 @@ class TestMint:
         assert token.decimals() == 18
         assert token.totalSupply() == 10
         assert token.balanceOf(issuer.address) == 10
+
+    ##########################################################
+    # Error
+    ##########################################################
+
+    # Error_1
+    def test_error_1(self, IbetERC20, users):
+        issuer = users["issuer"]
+        other = users["user1"]
+
+        # deploy
+        token = issuer.deploy(IbetERC20)
+
+        # mint
+        with brownie.reverts(revert_msg="Ownable: caller is not the owner"):
+            token.mint(issuer.address, 10, {"from": other})
