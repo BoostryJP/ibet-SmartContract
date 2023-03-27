@@ -43,7 +43,7 @@
 - `exchange`: 様々な取引機能（Exchange）の実装です。
 - `ledger`: 法定原簿に必要な付加情報を管理するためのデータストレージ機能を提供します。
 - `payment`: オフチェーン決済を実現するため機能群です。
-- `token`: 各種トークンフォーマットの実装です（Bond型、Share型など）。
+- `token`: 各種トークンフォーマットの実装です（ERC20、ERC721、Bond型、Share型など）。
 - `utils`: その他のユーティリティ機能です。
 
 ## インストール
@@ -55,7 +55,7 @@ $ pip install -r requirements.txt
 
 openzeppelin-contractsをインストールします。
 ```bash
-$ brownie pm install OpenZeppelin/openzeppelin-contracts@4.8.1
+$ brownie pm install OpenZeppelin/openzeppelin-contracts@4.8.2
 ```
 
 ## コントラクトのコンパイル
