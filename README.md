@@ -57,7 +57,7 @@ $ pip install -r requirements.txt
 Install openzeppelin-contracts.
 
 ```bash
-$ brownie pm install OpenZeppelin/openzeppelin-contracts@4.8.2
+$ brownie pm install OpenZeppelin/openzeppelin-contracts@4.9.3
 ```
 
 ## Compile Contracts
@@ -134,7 +134,7 @@ You will need to deploy them in a different way.
 
 #### Chain
 * gas price : 0
-* hard fork : Petersburg
+* evm version : berlin
 
 ### Brownie settings
 
