@@ -14,7 +14,7 @@ dataclassy==0.11.1
 eip712==0.1.0
 eth-abi==2.2.0
 eth-account==0.5.9
-eth-brownie==1.19.2
+eth-brownie==1.19.3
 eth-event==1.2.3
 eth-hash==0.3.3
 eth-keyfile==0.5.1
@@ -71,12 +71,13 @@ toml==0.10.2
 tomli==2.0.1
 toolz==0.12.0
 tqdm==4.64.1
+typing_extensions==4.4.0
 urllib3==1.26.12
 varint==1.0.2
 vvm==0.1.0
 vyper==0.3.7
 wcwidth==0.2.5
-web3==5.31.1
+web3==5.31.3
 websockets==9.1
 wrapt==1.14.1
 yarl==1.8.1
