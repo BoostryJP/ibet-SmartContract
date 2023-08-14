@@ -18,9 +18,9 @@
 */
 pragma solidity ^0.8.0;
 
-import "OpenZeppelin/openzeppelin-contracts@4.8.2/contracts/token/ERC20/ERC20.sol";
-import "OpenZeppelin/openzeppelin-contracts@4.8.2/contracts/token/ERC20/extensions/ERC20Burnable.sol";
-import "OpenZeppelin/openzeppelin-contracts@4.8.2/contracts/access/Ownable.sol";
+import "OpenZeppelin/openzeppelin-contracts@4.9.3/contracts/token/ERC20/ERC20.sol";
+import "OpenZeppelin/openzeppelin-contracts@4.9.3/contracts/token/ERC20/extensions/ERC20Burnable.sol";
+import "OpenZeppelin/openzeppelin-contracts@4.9.3/contracts/access/Ownable.sol";
 
 contract IbetERC20 is ERC20, ERC20Burnable, Ownable {
     constructor() ERC20("IbetERC20", "") {}
