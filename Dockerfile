@@ -49,7 +49,7 @@ RUN addgroup -g 1000 apl \
 USER apl
 COPY requirements.txt /app/requirements.txt
 RUN pip install --upgrade pip setuptools \
- && pip install -r /app/requirements.txt \
+ && pip install -r /app/requirements.txt --no-build-isolation \
  && rm -f /app/requirements.txt
 
 # app deploy

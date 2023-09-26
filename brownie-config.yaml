@@ -4,10 +4,10 @@ networks:
         gas_price: 0
         cmd_settings:
             port: 8545
-            evm_version: byzantium
+            evm_version: berlin
 compiler:
-    evm_version: byzantium
+    evm_version: berlin
     solc:
-        version: 0.8.19
+        version: 0.8.21
 dependencies:
-    OpenZeppelin/openzeppelin-contracts@4.8.2
+    OpenZeppelin/openzeppelin-contracts@4.9.3

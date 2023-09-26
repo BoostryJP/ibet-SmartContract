@@ -18,9 +18,9 @@
 */
 pragma solidity ^0.8.0;
 
-import "OpenZeppelin/openzeppelin-contracts@4.8.2/contracts/token/ERC721/ERC721.sol";
-import "OpenZeppelin/openzeppelin-contracts@4.8.2/contracts/token/ERC721/extensions/ERC721Burnable.sol";
-import "OpenZeppelin/openzeppelin-contracts@4.8.2/contracts/access/Ownable.sol";
+import "OpenZeppelin/openzeppelin-contracts@4.9.3/contracts/token/ERC721/ERC721.sol";
+import "OpenZeppelin/openzeppelin-contracts@4.9.3/contracts/token/ERC721/extensions/ERC721Burnable.sol";
+import "OpenZeppelin/openzeppelin-contracts@4.9.3/contracts/access/Ownable.sol";
 
 contract IbetERC721 is ERC721, ERC721Burnable, Ownable {
     constructor() ERC721("IbetERC721", "") {}

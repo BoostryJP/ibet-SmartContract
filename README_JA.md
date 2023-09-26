@@ -1,7 +1,7 @@
 # ibet Smart Contract
 
 <p>
-  <img alt="Version" src="https://img.shields.io/badge/version-23.3-blue.svg?cacheSeconds=2592000" />
+  <img alt="Version" src="https://img.shields.io/badge/version-23.9-blue.svg?cacheSeconds=2592000" />
   <img alt="License: Apache--2.0" src="https://img.shields.io/badge/License-Apache--2.0-yellow.svg" />
 </p>
 
@@ -20,7 +20,7 @@
   - バージョン 3.10
 - [Solidity](https://docs.soliditylang.org/)
   - スマートコントラクトの実装には Solidity を利用しています。
-  - 現在、私たちは v0.8.19 を利用しています。
+  - 現在、私たちは v0.8.21 を利用しています。
 - [eth-brownie](https://github.com/eth-brownie/brownie)
   - eth-brownie フレームワークを利用して、コントラクトの開発とテストを行なっています。
 - [GoQuorum](https://github.com/ConsenSys/quorum)
@@ -28,7 +28,7 @@
   - ローカル開発・テストでは [ganache-cli](https://github.com/trufflesuite/ganache-cli) を利用しています。最新バージョンを利用しています。
 - [OpenZeppelin](https://openzeppelin.com/contracts/)
   - 私たちのプロジェクトの一部は OpenZeppelin に依存しています。
-  - openzeppelin-contracts の v4.8 を利用しています。
+  - openzeppelin-contracts の v4.9 を利用しています。
   
 ## 各コントラクトの概要
 
@@ -55,7 +55,7 @@ $ pip install -r requirements.txt
 
 openzeppelin-contractsをインストールします。
 ```bash
-$ brownie pm install OpenZeppelin/openzeppelin-contracts@4.8.2
+$ brownie pm install OpenZeppelin/openzeppelin-contracts@4.9.3
 ```
 
 ## コントラクトのコンパイル

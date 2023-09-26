@@ -13,7 +13,7 @@ development:
 - cmd: ganache-cli
   cmd_settings:
     accounts: 10
-    evm_version: byzantium
+    evm_version: berlin
     mnemonic: brownie
     port: 8545
   host: http://quorum

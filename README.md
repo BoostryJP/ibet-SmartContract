@@ -1,7 +1,7 @@
 # ibet Smart Contract
 
 <p>
-  <img alt="Version" src="https://img.shields.io/badge/version-23.3-blue.svg?cacheSeconds=2592000" />
+  <img alt="Version" src="https://img.shields.io/badge/version-23.9-blue.svg?cacheSeconds=2592000" />
   <img alt="License: Apache--2.0" src="https://img.shields.io/badge/License-Apache--2.0-yellow.svg" />
 </p>
 
@@ -20,7 +20,7 @@ English | [日本語](README_JA.md)
   - Version 3.10
 - [Solidity](https://docs.soliditylang.org/)
   - We are using Solidity to implement our smart contracts. 
-  - Currently, we are using v0.8.19.
+  - Currently, we are using v0.8.21.
 - [eth-brownie](https://github.com/eth-brownie/brownie)
   - We are using the eth-brownie framework for developing and testing our contracts.
 - [GoQuorum](https://github.com/ConsenSys/quorum)
@@ -28,7 +28,7 @@ English | [日本語](README_JA.md)
   - We use [ganache-cli](https://github.com/trufflesuite/ganache-cli) for local development and unit testing, and we use the latest version.
 - [OpenZeppelin](https://openzeppelin.com/contracts/)
   - Our project is partly dependent on OpenZeppelin.
-  - We use openzeppelin-contracts v4.8.
+  - We use openzeppelin-contracts v4.9.
   
 ## Overview
 
@@ -57,7 +57,7 @@ $ pip install -r requirements.txt
 Install openzeppelin-contracts.
 
 ```bash
-$ brownie pm install OpenZeppelin/openzeppelin-contracts@4.8.2
+$ brownie pm install OpenZeppelin/openzeppelin-contracts@4.9.3
 ```
 
 ## Compile Contracts
@@ -134,7 +134,7 @@ You will need to deploy them in a different way.
 
 #### Chain
 * gas price : 0
-* hard fork : Petersburg
+* evm version : berlin
 
 ### Brownie settings
 
