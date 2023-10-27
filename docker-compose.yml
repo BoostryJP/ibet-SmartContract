@@ -2,10 +2,18 @@ version: "3"
 
 services:
   ganache-cli:
-    image: "trufflesuite/ganache-cli:latest"
+    image: "trufflesuite/ganache:latest"
     ports:
       - "8545:8545"
-    command: ganache-cli --gasPrice 0 --gasLimit 800000000
+    command:
+      - --host
+      - 0.0.0.0
+      - -k
+      - 'berlin'
+      - -g
+      - '0'
+      - --gasLimit
+      - '800000000'
   sc-unit-test:
     build:
       context: .

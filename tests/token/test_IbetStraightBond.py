@@ -122,10 +122,6 @@ class TestDeploy:
         assert is_redeemed == False
         assert status == True
 
-        # backward compatible calls
-        assert bond_contract.initialOfferingStatus() == False
-        assert bond_contract.getImageURL(0) == ""
-
 
 # TEST_transfer
 class TestTransfer:
@@ -2180,6 +2176,182 @@ class TestSetTransferApprovalRequired:
 
         # assertion
         assert bond_token.transferApprovalRequired() == False
+
+
+# TEST_setFaceValueCurrency
+class TestSetFaceValueCurrency:
+
+    #######################################
+    # Normal
+    #######################################
+
+    # Normal_1
+    def test_normal_1(self, users, IbetStraightBond):
+        issuer = users['issuer']
+
+        # issue token
+        deploy_args = init_args()
+        bond_token = brownie_utils.force_deploy(issuer, IbetStraightBond, *deploy_args)
+
+        # assertion
+        assert bond_token.faceValueCurrency() == ""
+
+        # update
+        bond_token.setFaceValueCurrency("JPY", {'from': issuer})
+
+        # assertion
+        assert bond_token.faceValueCurrency() == "JPY"
+
+    #######################################
+    # Error
+    #######################################
+
+    # Error_1
+    # Not authorized
+    def test_error_1(self, users, IbetStraightBond):
+        issuer = users['issuer']
+
+        # issue token
+        deploy_args = init_args()
+        bond_token = brownie_utils.force_deploy(issuer, IbetStraightBond, *deploy_args)
+
+        # update
+        with brownie.reverts(revert_msg="500001"):
+            bond_token.setFaceValueCurrency("JPY", {'from': users['user1']})
+
+        assert bond_token.faceValueCurrency() == ""
+
+
+# TEST_setInterestPaymentCurrency
+class TestSetInterestPaymentCurrency:
+
+    #######################################
+    # Normal
+    #######################################
+
+    # Normal_1
+    def test_normal_1(self, users, IbetStraightBond):
+        issuer = users['issuer']
+
+        # issue token
+        deploy_args = init_args()
+        bond_token = brownie_utils.force_deploy(issuer, IbetStraightBond, *deploy_args)
+
+        # assertion
+        assert bond_token.interestPaymentCurrency() == ""
+
+        # update
+        bond_token.setInterestPaymentCurrency("JPY", {'from': issuer})
+
+        # assertion
+        assert bond_token.interestPaymentCurrency() == "JPY"
+
+    #######################################
+    # Error
+    #######################################
+
+    # Error_1
+    # Not authorized
+    def test_error_1(self, users, IbetStraightBond):
+        issuer = users['issuer']
+
+        # issue token
+        deploy_args = init_args()
+        bond_token = brownie_utils.force_deploy(issuer, IbetStraightBond, *deploy_args)
+
+        # update
+        with brownie.reverts(revert_msg="500001"):
+            bond_token.setInterestPaymentCurrency("JPY", {'from': users['user1']})
+
+        assert bond_token.interestPaymentCurrency() == ""
+
+
+# TEST_setRedemptionValueCurrency
+class TestSetRedemptionValueCurrency:
+
+    #######################################
+    # Normal
+    #######################################
+
+    # Normal_1
+    def test_normal_1(self, users, IbetStraightBond):
+        issuer = users['issuer']
+
+        # issue token
+        deploy_args = init_args()
+        bond_token = brownie_utils.force_deploy(issuer, IbetStraightBond, *deploy_args)
+
+        # assertion
+        assert bond_token.redemptionValueCurrency() == ""
+
+        # update
+        bond_token.setRedemptionValueCurrency("JPY", {'from': issuer})
+
+        # assertion
+        assert bond_token.redemptionValueCurrency() == "JPY"
+
+    #######################################
+    # Error
+    #######################################
+
+    # Error_1
+    # Not authorized
+    def test_error_1(self, users, IbetStraightBond):
+        issuer = users['issuer']
+
+        # issue token
+        deploy_args = init_args()
+        bond_token = brownie_utils.force_deploy(issuer, IbetStraightBond, *deploy_args)
+
+        # update
+        with brownie.reverts(revert_msg="500001"):
+            bond_token.setRedemptionValueCurrency("JPY", {'from': users['user1']})
+
+        assert bond_token.redemptionValueCurrency() == ""
+
+
+# TEST_setBaseFXRate
+class TestSetBaseFXRate:
+
+    #######################################
+    # Normal
+    #######################################
+
+    # Normal_1
+    def test_normal_1(self, users, IbetStraightBond):
+        issuer = users['issuer']
+
+        # issue token
+        deploy_args = init_args()
+        bond_token = brownie_utils.force_deploy(issuer, IbetStraightBond, *deploy_args)
+
+        # assertion
+        assert bond_token.baseFXRate() == ""
+
+        # update
+        bond_token.setBaseFXRate("123.456", {'from': issuer})
+
+        # assertion
+        assert bond_token.baseFXRate() == "123.456"
+
+    #######################################
+    # Error
+    #######################################
+
+    # Error_1
+    # Not authorized
+    def test_error_1(self, users, IbetStraightBond):
+        issuer = users['issuer']
+
+        # issue token
+        deploy_args = init_args()
+        bond_token = brownie_utils.force_deploy(issuer, IbetStraightBond, *deploy_args)
+
+        # update
+        with brownie.reverts(revert_msg="500001"):
+            bond_token.setBaseFXRate("123.456", {'from': users['user1']})
+
+        assert bond_token.baseFXRate() == ""
 
 
 # TEST_applyForTransfer
