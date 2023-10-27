@@ -41,6 +41,10 @@ contract IbetStraightBond is Ownable, IbetSecurityTokenInterface {
     string public purpose; // 発行目的
     string public memo; // 補足情報
     bool public isRedeemed; // 償還状況
+    string public faceValueCurrency; // 額面金額通貨
+    string public interestPaymentCurrency; // 利払金額通貨
+    string public redemptionValueCurrency; // 償還金額通貨
+    string public baseFXRate; // 基準為替レート
 
     /// Event: 額面金額変更
     event ChangeFaceValue(uint256 faceValue);
@@ -411,6 +415,46 @@ contract IbetStraightBond is Ownable, IbetSecurityTokenInterface {
 
         // イベント登録
         emit ChangeTransferApprovalRequired(_required);
+    }
+
+    /// @notice 額面金額通貨の更新
+    /// @dev オーナーのみ実行可能
+    /// @param _faceValueCurrency 更新後の額面金額通貨
+    function setFaceValueCurrency(string memory _faceValueCurrency)
+        public
+        onlyOwner()
+    {
+        faceValueCurrency = _faceValueCurrency;
+    }
+
+    /// @notice 利払金額通貨の更新
+    /// @dev オーナーのみ実行可能
+    /// @param _interestPaymentCurrency 更新後の利払金額通貨
+    function setInterestPaymentCurrency(string memory _interestPaymentCurrency)
+        public
+        onlyOwner()
+    {
+        interestPaymentCurrency = _interestPaymentCurrency;
+    }
+
+    /// @notice 償還金額通貨の更新
+    /// @dev オーナーのみ実行可能
+    /// @param _redemptionValueCurrency 更新後の償還金額通貨
+    function setRedemptionValueCurrency(string memory _redemptionValueCurrency)
+        public
+        onlyOwner()
+    {
+        redemptionValueCurrency = _redemptionValueCurrency;
+    }
+
+    /// @notice 基準為替レートの更新
+    /// @dev オーナーのみ実行可能
+    /// @param _baseFXRate 更新後の基準為替レート
+    function setBaseFXRate(string memory _baseFXRate)
+        public
+        onlyOwner()
+    {
+        baseFXRate = _baseFXRate;
     }
 
     /// @notice 新規募集ステータスの更新
@@ -787,23 +831,6 @@ contract IbetStraightBond is Ownable, IbetSecurityTokenInterface {
 
         // イベント登録
         emit ChangeToRedeemed();
-    }
-
-
-    /// ---------------------------------------------------------------
-    /// 後方互換対応
-    ///  - 旧トークンフォーマットでのCallを一時的にサポート
-    ///  - 次回バージョン以降で削除予定
-    /// ---------------------------------------------------------------
-
-    bool public initialOfferingStatus;
-
-    function getImageURL(uint8 _class)
-        public
-        view
-        returns (string memory)
-    {
-        return "";
     }
 
 }

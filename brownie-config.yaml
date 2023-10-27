@@ -8,6 +8,6 @@ networks:
 compiler:
     evm_version: berlin
     solc:
-        version: 0.8.21
+        version: 0.8.22
 dependencies:
     OpenZeppelin/openzeppelin-contracts@4.9.3
