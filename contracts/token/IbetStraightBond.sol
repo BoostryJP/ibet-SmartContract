@@ -70,8 +70,10 @@ contract IbetStraightBond is Ownable, IbetSecurityTokenInterface {
         string memory _symbol,
         uint256 _totalSupply,
         uint256 _faceValue,
+        string memory _faceValueCurrency,
         string memory _redemptionDate,
         uint256 _redemptionValue,
+        string memory _redemptionValueCurrency,
         string memory _returnDate,
         string memory _returnAmount,
         string memory _purpose
@@ -82,8 +84,10 @@ contract IbetStraightBond is Ownable, IbetSecurityTokenInterface {
         symbol = _symbol;
         totalSupply = _totalSupply;
         faceValue = _faceValue;
+        faceValueCurrency = _faceValueCurrency;
         redemptionDate = _redemptionDate;
         redemptionValue = _redemptionValue;
+        redemptionValueCurrency = _redemptionValueCurrency;
         returnDate = _returnDate;
         returnAmount = _returnAmount;
         purpose = _purpose;

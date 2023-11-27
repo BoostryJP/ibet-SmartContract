@@ -26,8 +26,10 @@ def init_args():
     symbol = 'BND'
     total_supply = 2 ** 256 - 1
     face_value = 2 ** 256 - 1
+    face_value_currency = 'JPY'
     redemption_date = '20191231'
     redemption_value = 2 ** 256 - 1
+    redemption_value_currency = 'JPY'
     return_date = '20191231'
     return_amount = 'some_return'
     purpose = 'some_purpose'
@@ -37,8 +39,10 @@ def init_args():
         symbol,
         total_supply,
         face_value,
+        face_value_currency,
         redemption_date,
         redemption_value,
+        redemption_value_currency,
         return_date,
         return_amount,
         purpose
@@ -53,8 +57,10 @@ def issue_transferable_bond_token(issuer, exchange_address, personal_info_addres
     symbol = 'BND'
     total_supply = 10000
     face_value = 10000
+    face_value_currency = 'JPY'
     redemption_date = '20191231'
     redemption_value = 100
+    redemption_value_currency = 'JPY'
     return_date = '20191231'
     return_amount = 'some_return'
     purpose = 'some_purpose'
@@ -64,8 +70,10 @@ def issue_transferable_bond_token(issuer, exchange_address, personal_info_addres
         symbol,
         total_supply,
         face_value,
+        face_value_currency,
         redemption_date,
         redemption_value,
+        redemption_value_currency,
         return_date,
         return_amount,
         purpose
@@ -97,8 +105,10 @@ class TestDeploy:
         symbol = bond_contract.symbol()
         total_supply = bond_contract.totalSupply()
         face_value = bond_contract.faceValue()
+        face_value_currency = bond_contract.faceValueCurrency()
         redemption_date = bond_contract.redemptionDate()
         redemption_value = bond_contract.redemptionValue()
+        redemption_value_currency = bond_contract.redemptionValueCurrency()
         return_date = bond_contract.returnDate()
         return_amount = bond_contract.returnAmount()
         purpose = bond_contract.purpose()
@@ -112,11 +122,13 @@ class TestDeploy:
         assert symbol == deploy_args[1]
         assert total_supply == deploy_args[2]
         assert face_value == deploy_args[3]
-        assert redemption_date == deploy_args[4]
-        assert redemption_value == deploy_args[5]
-        assert return_date == deploy_args[6]
-        assert return_amount == deploy_args[7]
-        assert purpose == deploy_args[8]
+        assert face_value_currency == deploy_args[4]
+        assert redemption_date == deploy_args[5]
+        assert redemption_value == deploy_args[6]
+        assert redemption_value_currency == deploy_args[7]
+        assert return_date == deploy_args[8]
+        assert return_amount == deploy_args[9]
+        assert purpose == deploy_args[10]
         assert transferable == False
         assert balance == total_supply
         assert is_redeemed == False
@@ -2105,7 +2117,7 @@ class TestSetRedemptionValue:
             bond_token.setRedemptionValue(10000, {'from': users['user1']})
 
         # assertion
-        assert bond_token.redemptionValue() == deploy_args[5]
+        assert bond_token.redemptionValue() == deploy_args[6]
 
 
 # TEST_setTransferApprovalRequired
@@ -2194,13 +2206,13 @@ class TestSetFaceValueCurrency:
         bond_token = brownie_utils.force_deploy(issuer, IbetStraightBond, *deploy_args)
 
         # assertion
-        assert bond_token.faceValueCurrency() == ""
+        assert bond_token.faceValueCurrency() == "JPY"
 
         # update
-        bond_token.setFaceValueCurrency("JPY", {'from': issuer})
+        bond_token.setFaceValueCurrency("USD", {'from': issuer})
 
         # assertion
-        assert bond_token.faceValueCurrency() == "JPY"
+        assert bond_token.faceValueCurrency() == "USD"
 
     #######################################
     # Error
@@ -2217,9 +2229,9 @@ class TestSetFaceValueCurrency:
 
         # update
         with brownie.reverts(revert_msg="500001"):
-            bond_token.setFaceValueCurrency("JPY", {'from': users['user1']})
+            bond_token.setFaceValueCurrency("USD", {'from': users['user1']})
 
-        assert bond_token.faceValueCurrency() == ""
+        assert bond_token.faceValueCurrency() == "JPY"
 
 
 # TEST_setInterestPaymentCurrency
@@ -2261,7 +2273,7 @@ class TestSetInterestPaymentCurrency:
 
         # update
         with brownie.reverts(revert_msg="500001"):
-            bond_token.setInterestPaymentCurrency("JPY", {'from': users['user1']})
+            bond_token.setInterestPaymentCurrency("USD", {'from': users['user1']})
 
         assert bond_token.interestPaymentCurrency() == ""
 
@@ -2282,13 +2294,13 @@ class TestSetRedemptionValueCurrency:
         bond_token = brownie_utils.force_deploy(issuer, IbetStraightBond, *deploy_args)
 
         # assertion
-        assert bond_token.redemptionValueCurrency() == ""
+        assert bond_token.redemptionValueCurrency() == "JPY"
 
         # update
-        bond_token.setRedemptionValueCurrency("JPY", {'from': issuer})
+        bond_token.setRedemptionValueCurrency("USD", {'from': issuer})
 
         # assertion
-        assert bond_token.redemptionValueCurrency() == "JPY"
+        assert bond_token.redemptionValueCurrency() == "USD"
 
     #######################################
     # Error
@@ -2305,9 +2317,9 @@ class TestSetRedemptionValueCurrency:
 
         # update
         with brownie.reverts(revert_msg="500001"):
-            bond_token.setRedemptionValueCurrency("JPY", {'from': users['user1']})
+            bond_token.setRedemptionValueCurrency("USD", {'from': users['user1']})
 
-        assert bond_token.redemptionValueCurrency() == ""
+        assert bond_token.redemptionValueCurrency() == "JPY"
 
 
 # TEST_setBaseFXRate
