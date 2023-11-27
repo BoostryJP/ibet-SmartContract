@@ -60,8 +60,10 @@ contract IbetStraightBond is Ownable, IbetSecurityTokenInterface {
     /// @param _symbol 略称
     /// @param _totalSupply 総発行数量
     /// @param _faceValue 額面金額
+    /// @param _faceValueCurrency 額面金額通貨
     /// @param _redemptionDate 償還日
     /// @param _redemptionValue 償還金額
+    /// @param _redemptionValueCurrency 償還金額通貨
     /// @param _returnDate 特典付与日
     /// @param _returnAmount 特典内容
     /// @param _purpose 発行目的
