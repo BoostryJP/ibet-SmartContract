@@ -47,10 +47,10 @@ RUN addgroup -g 1000 apl \
 
 # Python requirements
 USER apl
-COPY requirements.txt /app/requirements.txt
+COPY requirements.lock /app/requirements.lock
 RUN pip install --upgrade pip setuptools \
- && pip install -r /app/requirements.txt --no-build-isolation \
- && rm -f /app/requirements.txt
+ && pip install -r /app/requirements.lock --no-build-isolation \
+ && rm -f /app/requirements.lock
 
 # app deploy
 COPY --chown=apl:apl LICENSE /app/ibet-SmartContract/
