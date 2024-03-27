@@ -1,21 +1,18 @@
 live:
 - name: ibet
   networks:
-  - chainid: 2017
+  - id: local_network
+    name: Local Network
+    chainid: 2017
     host: http://localhost:8545
-    id: local_network
-    name: local_network
-  - chainid: 2017
+  - id: dev_network
+    name: Dev Network
+    chainid: 2017
     host: http://quorum:8545
-    id: dev_network
-    name: dev_network
 development:
-- cmd: ganache-cli
+- id: hardhat
+  name: Hardhat Network
+  cmd: npx hardhat --config ./hardhat.config.js node
+  host: http://localhost
   cmd_settings:
-    accounts: 10
-    evm_version: berlin
-    mnemonic: brownie
     port: 8545
-  host: http://quorum
-  id: test_network
-  name: Ganache-CLI

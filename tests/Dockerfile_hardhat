@@ -1,0 +1,17 @@
+FROM node:20-alpine
+
+# make directory
+RUN mkdir -p /hardhat
+
+# copy files
+COPY package.json /hardhat
+COPY package-lock.json /hardhat
+COPY hardhat.config.js /hardhat
+
+WORKDIR /hardhat
+
+# install hardhat
+RUN npm install --save-dev hardhat
+
+# run hardhat node
+CMD ["npx", "hardhat", "--config", "./hardhat.config.js", "node"]
