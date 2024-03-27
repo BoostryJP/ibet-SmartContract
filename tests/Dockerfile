@@ -16,6 +16,7 @@ RUN apk update \
       autoconf \
       automake \
       libtool \
+      git \
       # use Solidity compiler and AWS CLI
       z3 \
       # use deploy.sh
