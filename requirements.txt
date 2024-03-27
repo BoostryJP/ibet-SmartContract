@@ -1,1 +1,1 @@
-eth-brownie==1.20.2
+eth-brownie @ git+https://github.com/BoostryJP/brownie
