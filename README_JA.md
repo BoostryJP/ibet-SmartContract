@@ -1,3 +1,7 @@
+<p align="center">
+  <img width="33%" src="https://user-images.githubusercontent.com/963333/71672471-6383c080-2db9-11ea-85b6-8815519652ec.png"/>
+</p>
+
 # ibet Smart Contract
 
 <p>
@@ -7,8 +11,6 @@
 
 [English](README.md) | 日本語
 
-<img width="33%" align="right" src="https://user-images.githubusercontent.com/963333/71672471-6383c080-2db9-11ea-85b6-8815519652ec.png"/>
-
 **ibet ネットワーク上で利用可能なトークンおよびDEXコントラクト実装**
 
 ## プロジェクトの概要
@@ -17,7 +19,7 @@
 
 ## 依存
 - [Python3](https://www.python.org/downloads/)
-  - バージョン 3.10
+  - バージョン 3.11
 - [Solidity](https://docs.soliditylang.org/)
   - スマートコントラクトの実装には Solidity を利用しています。
   - 現在、私たちは v0.8.23 を利用しています。
