@@ -72,4 +72,4 @@ COPY --chown=apl:apl contracts/ /app/ibet-SmartContract/contracts/
 RUN find /app/ibet-SmartContract/ -type d -name __pycache__ | xargs rm -fr \
  && chmod -R 755 /app/ibet-SmartContract/
 
-CMD sh /app/ibet-SmartContract/scripts/deploy.sh
+CMD sh /app/ibet-SmartContract/scripts/deploy_shared_contract.sh
