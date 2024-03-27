@@ -4,7 +4,7 @@ services:
   hardhat-network:
     build:
       context: .
-      dockerfile: ./tests/Dockerfile_hardhat
+      dockerfile: tests/Dockerfile_hardhat
     ports:
       - "8545:8545"
   sc-unit-test:
@@ -13,9 +13,5 @@ services:
       dockerfile: tests/Dockerfile_unittest
     environment:
       TEST_NETWORK: "test_network"
-    links:
-      - hardhat-network:quorum
-    depends_on:
-      - hardhat-network
     volumes:
       - ./output:/app/ibet-SmartContract/output

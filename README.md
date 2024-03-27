@@ -130,6 +130,7 @@ You will need to deploy them in a different way.
 ### Network(hardhat) settings
 Network settings are defined in the `hardhat.config.js` file.
 
+- chainId: 2017
 - gasPrice: 0
 - blockGasLimit: 800000000
 - hardfork: "berlin"

@@ -5,13 +5,14 @@ live:
     name: Local Network
     chainid: 2017
     host: http://localhost:8545
-  - id: dev_network
-    name: Dev Network
-    chainid: 2017
+  - id: main_network
+    name: ibet Main Network
+    chainid: 1010032
     host: http://quorum:8545
 development:
 - id: test_network
   name: Hardhat Network
-  host: http://localhost
+  host: http://localhost:8545
+  cmd: npx hardhat --config /app/ibet-SmartContract/hardhat.config.js node
   cmd_settings:
     port: 8545

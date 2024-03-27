@@ -131,6 +131,7 @@ $ ./scripts/deploy_shared_contract.sh {--payment_gateway 0xabcd...} {contract_na
 
 ネットワーク設定は `hardhat.config.js` ファイルに定義されています。
 
+- chainId: 2017
 - gasPrice: 0
 - blockGasLimit: 800000000
 - hardfork: "berlin"
