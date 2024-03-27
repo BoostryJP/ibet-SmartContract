@@ -9,10 +9,3 @@ live:
     name: Dev Network
     chainid: 2017
     host: http://quorum:8545
-development:
-- id: hardhat
-  name: Hardhat Network
-  cmd: npx hardhat --config ./hardhat.config.js node
-  host: http://localhost
-  cmd_settings:
-    port: 8545
