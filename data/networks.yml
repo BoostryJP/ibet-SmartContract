@@ -12,7 +12,6 @@ live:
 development:
 - id: test_network
   name: Hardhat Network
-  cmd: npx hardhat --config ./hardhat.config.js node
   host: http://localhost
   cmd_settings:
     port: 8545
