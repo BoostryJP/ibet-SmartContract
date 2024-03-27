@@ -1,4 +1,4 @@
-FROM python:3.10-alpine3.17
+FROM python:3.11-alpine3.17
 
 # make application directory
 RUN mkdir -p /app/ibet-SmartContract/
@@ -16,6 +16,7 @@ RUN apk update \
       autoconf \
       automake \
       libtool \
+      git \
       # use Solidity compiler and AWS CLI
       z3 \
       # use deploy.sh

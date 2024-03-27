@@ -1,4 +1,4 @@
-FROM python:3.10-alpine3.17
+FROM python:3.11-alpine3.17
 
 # make application directory
 RUN mkdir -p /app/ibet-SmartContract/
@@ -16,6 +16,7 @@ RUN apk update \
       autoconf \
       automake \
       libtool \
+      git \
       # use Solidity compiler and AWS CLI
       z3 \
       # use deploy.sh
@@ -47,10 +48,10 @@ RUN addgroup -g 1000 apl \
 
 # Python requirements
 USER apl
-COPY requirements.lock /app/requirements.lock
+COPY requirements.txt /app/requirements.txt
 RUN pip install --upgrade pip setuptools \
- && pip install -r /app/requirements.lock --no-build-isolation \
- && rm -f /app/requirements.lock
+ && pip install -r /app/requirements.txt --no-build-isolation \
+ && rm -f /app/requirements.txt
 
 # app deploy
 COPY --chown=apl:apl LICENSE /app/ibet-SmartContract/
