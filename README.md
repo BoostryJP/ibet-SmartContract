@@ -1,13 +1,15 @@
+<p align="center">
+  <img width="33%" src="https://user-images.githubusercontent.com/963333/71672471-6383c080-2db9-11ea-85b6-8815519652ec.png"/>
+</p>
+
 # ibet Smart Contract
 
 <p>
-  <img alt="Version" src="https://img.shields.io/badge/version-23.9-blue.svg?cacheSeconds=2592000" />
+  <img alt="Version" src="https://img.shields.io/badge/version-24.3-blue.svg?cacheSeconds=2592000" />
   <img alt="License: Apache--2.0" src="https://img.shields.io/badge/License-Apache--2.0-yellow.svg" />
 </p>
 
 English | [日本語](README_JA.md)
-
-<img width="33%" align="right" src="https://user-images.githubusercontent.com/963333/71672471-6383c080-2db9-11ea-85b6-8815519652ec.png"/>
 
 **Tokens and DEX contracts available in the ibet DeFi network**
 
@@ -17,7 +19,7 @@ English | [日本語](README_JA.md)
 
 ## Dependencies
 - [Python3](https://www.python.org/downloads/)
-  - Version 3.10
+  - Version 3.11
 - [Solidity](https://docs.soliditylang.org/)
   - We are using Solidity to implement our smart contracts. 
   - Currently, we are using v0.8.23.
@@ -25,7 +27,7 @@ English | [日本語](README_JA.md)
   - We are using the eth-brownie framework for developing and testing our contracts.
 - [GoQuorum](https://github.com/ConsenSys/quorum)
   - We support the official GoQuorum node of [ibet-Network](https://github.com/BoostryJP/ibet-Network).
-  - We use [ganache-cli](https://github.com/trufflesuite/ganache-cli) for local development and unit testing, and we use the latest version.
+  - We use [hardhat network](https://hardhat.org/hardhat-network/) for local development and unit testing, and we use the latest version.
 - [OpenZeppelin](https://openzeppelin.com/contracts/)
   - Our project is partly dependent on OpenZeppelin.
   - We use openzeppelin-contracts v4.9.
@@ -125,16 +127,16 @@ You will need to deploy them in a different way.
 
 ## Developing Smart Contracts
 
-### Ganache settings
+### Network(hardhat) settings
+Network settings are defined in the `hardhat.config.js` file.
 
-#### Server
-* hostname : 127.0.0.1 - lo0
-* port number : 8545
-* chain id : 2017
+- chainId: 2017
+- gasPrice: 0
+- blockGasLimit: 800000000
+- hardfork: "berlin"
 
-#### Chain
-* gas price : 0
-* evm version : berlin
+When developing in a local environment, start and use the `hardhat-network` container defined in `docker-compose.yml`. 
+By default, the RPC service starts on port 8545.
 
 ### Brownie settings
 

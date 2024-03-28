@@ -1,9 +1,10 @@
-FROM python:3.10-alpine3.17
+FROM python:3.11-alpine3.19
 
-# make application directory
+# Make application directory
 RUN mkdir -p /app/ibet-SmartContract/
+WORKDIR /app/ibet-SmartContract/
 
-# install packages
+# Install packages
 RUN apk update \
  && apk add --no-cache --virtual .build-deps \
       # use Python package installation
@@ -16,13 +17,17 @@ RUN apk update \
       autoconf \
       automake \
       libtool \
+      git \
       # use Solidity compiler and AWS CLI
       z3 \
       # use deploy.sh
       jq \
-      expect
+      expect \
+      # nodejs
+      nodejs \
+      npm
 
-# use glibc instead of musl-dev
+# Use glibc instead of musl-dev
 # NOTE: This is because if it is musl-dev, a DynamicLinkError will occur in Solidity compiler.
 RUN wget -q -O /etc/apk/keys/sgerrand.rsa.pub https://alpine-pkgs.sgerrand.com/sgerrand.rsa.pub \
  && wget https://github.com/sgerrand/alpine-pkg-glibc/releases/download/2.33-r0/glibc-2.33-r0.apk \
@@ -30,13 +35,13 @@ RUN wget -q -O /etc/apk/keys/sgerrand.rsa.pub https://alpine-pkgs.sgerrand.com/s
  && rm -f glibc-2.33-r0.apk
 ENV LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/lib
 
-# AWS CLI
+# Install AWS CLI
 RUN wget -q https://awscli.amazonaws.com/awscli-exe-linux-$(arch).zip -O awscliv2.zip \
  && unzip awscliv2.zip \
  && ./aws/install \
  && rm -r aws awscliv2.zip
 
-# add apl user/group
+# Add apl user/group
 # NOTE: '/bin/bash' was added when 'libtool' installed.
 RUN addgroup -g 1000 apl \
  && adduser -G apl -D -s /bin/bash -u 1000 apl \
@@ -45,14 +50,20 @@ RUN addgroup -g 1000 apl \
  && echo 'export LANG=ja_JP.utf8' >> ~apl/.bash_profile \
  && echo 'export PATH=$PATH:$HOME/.local/bin' >> ~apl/.bash_profile
 
-# Python requirements
+# Install python packages
 USER apl
-COPY requirements.lock /app/requirements.lock
+COPY requirements.txt /app/requirements.txt
 RUN pip install --upgrade pip setuptools \
- && pip install -r /app/requirements.lock --no-build-isolation \
- && rm -f /app/requirements.lock
+ && pip install -r /app/requirements.txt --no-build-isolation \
+ && rm -f /app/requirements.txt
 
-# app deploy
+# Install hardhat
+COPY --chown=apl:apl package.json /app/ibet-SmartContract
+COPY --chown=apl:apl package-lock.json /app/ibet-SmartContract
+COPY --chown=apl:apl hardhat.config.js /app/ibet-SmartContract
+RUN npm install --save-dev hardhat
+
+# Deploy app
 COPY --chown=apl:apl LICENSE /app/ibet-SmartContract/
 RUN mkdir -p /app/ibet-SmartContract/tools/
 COPY --chown=apl:apl tools/ /app/ibet-SmartContract/tools/
@@ -71,7 +82,7 @@ COPY --chown=apl:apl contracts/ /app/ibet-SmartContract/contracts/
 RUN find /app/ibet-SmartContract/ -type d -name __pycache__ | xargs rm -fr \
  && chmod -R 755 /app/ibet-SmartContract/
 
-# tests deploy
+# Deploy test modules
 COPY --chown=apl:apl qa.sh /app/ibet-SmartContract/
 RUN mkdir -p /app/ibet-SmartContract/tests/
 COPY --chown=apl:apl tests/ /app/ibet-SmartContract/tests/

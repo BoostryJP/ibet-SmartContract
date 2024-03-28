@@ -1,13 +1,15 @@
+<p align="center">
+  <img width="33%" src="https://user-images.githubusercontent.com/963333/71672471-6383c080-2db9-11ea-85b6-8815519652ec.png"/>
+</p>
+
 # ibet Smart Contract
 
 <p>
-  <img alt="Version" src="https://img.shields.io/badge/version-23.9-blue.svg?cacheSeconds=2592000" />
+  <img alt="Version" src="https://img.shields.io/badge/version-24.3-blue.svg?cacheSeconds=2592000" />
   <img alt="License: Apache--2.0" src="https://img.shields.io/badge/License-Apache--2.0-yellow.svg" />
 </p>
 
 [English](README.md) | 日本語
-
-<img width="33%" align="right" src="https://user-images.githubusercontent.com/963333/71672471-6383c080-2db9-11ea-85b6-8815519652ec.png"/>
 
 **ibet ネットワーク上で利用可能なトークンおよびDEXコントラクト実装**
 
@@ -17,7 +19,7 @@
 
 ## 依存
 - [Python3](https://www.python.org/downloads/)
-  - バージョン 3.10
+  - バージョン 3.11
 - [Solidity](https://docs.soliditylang.org/)
   - スマートコントラクトの実装には Solidity を利用しています。
   - 現在、私たちは v0.8.23 を利用しています。
@@ -25,7 +27,7 @@
   - eth-brownie フレームワークを利用して、コントラクトの開発とテストを行なっています。
 - [GoQuorum](https://github.com/ConsenSys/quorum)
   - [ibet-Network](https://github.com/BoostryJP/ibet-Network) の公式の GoQuorum ノード上での動作をサポートしています。
-  - ローカル開発・テストでは [ganache-cli](https://github.com/trufflesuite/ganache-cli) を利用しています。最新バージョンを利用しています。
+  - ローカル開発・テストでは [hardhat network](https://hardhat.org/hardhat-network/) を利用しています。最新バージョンを利用しています。
 - [OpenZeppelin](https://openzeppelin.com/contracts/)
   - 私たちのプロジェクトの一部は OpenZeppelin に依存しています。
   - openzeppelin-contracts の v4.9 を利用しています。
@@ -125,16 +127,17 @@ $ ./scripts/deploy_shared_contract.sh {--payment_gateway 0xabcd...} {contract_na
 
 ## スマートコントラクトの開発
 
-### Ganache の設定
+### ネットワーク（hardhat）の設定
 
-#### Server
-* hostname : 127.0.0.1 - lo0
-* port number : 8545
-* chain id : 2017
+ネットワーク設定は `hardhat.config.js` ファイルに定義されています。
 
-#### Chain
-* gas price : 0
-* hard fork : Petersburg
+- chainId: 2017
+- gasPrice: 0
+- blockGasLimit: 800000000
+- hardfork: "berlin"
+
+ローカル環境で開発を行う際は、`docker-compose.yml` に定義されている、`hardhat-network` コンテナを起動して利用してください。
+デフォルトでは 8545 ポートで RPC サービスが起動します。
 
 ### Brownie の設定
 

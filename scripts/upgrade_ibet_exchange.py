@@ -70,7 +70,7 @@ def set_up_deployer():
     if APP_ENV == 'local':
         network_id = 'local_network'
     else:
-        network_id = 'dev_network'
+        network_id = 'main_network'
     network.connect(network_id)
 
     # アカウント設定

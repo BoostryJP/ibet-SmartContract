@@ -1,4 +1,4 @@
-FROM python:3.10-alpine3.17
+FROM python:3.11-alpine3.19
 
 # make application directory
 RUN mkdir -p /app/ibet-SmartContract/
@@ -16,6 +16,7 @@ RUN apk update \
       autoconf \
       automake \
       libtool \
+      git \
       # use Solidity compiler and AWS CLI
       z3 \
       # use deploy.sh
@@ -71,4 +72,4 @@ COPY --chown=apl:apl contracts/ /app/ibet-SmartContract/contracts/
 RUN find /app/ibet-SmartContract/ -type d -name __pycache__ | xargs rm -fr \
  && chmod -R 755 /app/ibet-SmartContract/
 
-CMD sh /app/ibet-SmartContract/scripts/deploy.sh
+CMD sh /app/ibet-SmartContract/scripts/deploy_shared_contract.sh
