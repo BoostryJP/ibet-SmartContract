@@ -27,7 +27,7 @@
   - eth-brownie フレームワークを利用して、コントラクトの開発とテストを行なっています。
 - [GoQuorum](https://github.com/ConsenSys/quorum)
   - [ibet-Network](https://github.com/BoostryJP/ibet-Network) の公式の GoQuorum ノード上での動作をサポートしています。
-  - ローカル開発・テストでは [ganache-cli](https://github.com/trufflesuite/ganache-cli) を利用しています。最新バージョンを利用しています。
+  - ローカル開発・テストでは [hardhat network](https://hardhat.org/hardhat-network/) を利用しています。最新バージョンを利用しています。
 - [OpenZeppelin](https://openzeppelin.com/contracts/)
   - 私たちのプロジェクトの一部は OpenZeppelin に依存しています。
   - openzeppelin-contracts の v4.9 を利用しています。
@@ -127,16 +127,17 @@ $ ./scripts/deploy_shared_contract.sh {--payment_gateway 0xabcd...} {contract_na
 
 ## スマートコントラクトの開発
 
-### Ganache の設定
+### ネットワーク（hardhat）の設定
 
-#### Server
-* hostname : 127.0.0.1 - lo0
-* port number : 8545
-* chain id : 2017
+ネットワーク設定は `hardhat.config.js` ファイルに定義されています。
 
-#### Chain
-* gas price : 0
-* hard fork : Petersburg
+- chainId: 2017
+- gasPrice: 0
+- blockGasLimit: 800000000
+- hardfork: "berlin"
+
+ローカル環境で開発を行う際は、`docker-compose.yml` に定義されている、`hardhat-network` コンテナを起動して利用してください。
+デフォルトでは 8545 ポートで RPC サービスが起動します。
 
 ### Brownie の設定
 

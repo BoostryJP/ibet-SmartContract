@@ -19,8 +19,6 @@ SPDX-License-Identifier: Apache-2.0
 import brownie
 import pytest
 
-from brownie.exceptions import VirtualMachineError
-
 
 class TestSendMessage:
 
@@ -218,7 +216,7 @@ class TestGetLastMessage:
         e2e_messaging = admin.deploy(E2EMessaging)
 
         # Assertion
-        with pytest.raises(VirtualMachineError):
+        with pytest.raises(ValueError):
             e2e_messaging.getLastMessage(receiver)
 
 

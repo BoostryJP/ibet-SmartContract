@@ -8,7 +8,10 @@ reports/
 .vscode/
 .idea/
 
-#pyenv
+# pyenv
 .python-version
+
+# Node
+node_modules/
 
 !.gitkeep
