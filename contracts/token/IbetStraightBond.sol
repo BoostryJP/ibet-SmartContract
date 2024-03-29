@@ -96,6 +96,7 @@ contract IbetStraightBond is Ownable, IbetSecurityTokenInterface {
         balances[owner] = totalSupply;
         isRedeemed = false;
         status = true;
+        requirePersonalInfoRegistered = true;
     }
 
     /// @notice アドレスがコントラクトアドレスであるかを判定
@@ -125,7 +126,12 @@ contract IbetStraightBond is Ownable, IbetSecurityTokenInterface {
             revert(ErrorCode.ERR_IbetStraightBond_transferToAddress_120201);
         }
 
-        if (_to != owner) {
+        // <CHK>
+        // 個人情報登録済みチェック
+        // 以下の場合はチェックを行わない
+        // - 発行体への移転の場合
+        // - 移転時個人情報登録が不要の場合
+        if (_to != owner && requirePersonalInfoRegistered == true) {
             require(
                 PersonalInfo(personalInfoAddress).isRegistered(_to, owner) == true,
                 ErrorCode.ERR_IbetStraightBond_transferToAddress_120202
@@ -304,6 +310,17 @@ contract IbetStraightBond is Ownable, IbetSecurityTokenInterface {
         onlyOwner()
     {
         personalInfoAddress = _address;
+    }
+
+    /// @notice 移転時個人情報登録要否の更新
+    /// @dev オーナーのみ実行可能
+    /// @param _requireRegistered 移転時個人情報登録要否（true:必要）
+    function setRequirePersonalInfoRegistered(bool _requireRegistered)
+        public
+        override
+        onlyOwner()
+    {
+        requirePersonalInfoRegistered = _requireRegistered;
     }
 
     /// @notice 問い合わせ先情報の更新
@@ -490,11 +507,13 @@ contract IbetStraightBond is Ownable, IbetSecurityTokenInterface {
             ErrorCode.ERR_IbetStraightBond_applyForOffering_121001
         );
 
-        // 個人情報未登録の場合、エラーを返す
-        require(
-            PersonalInfo(personalInfoAddress).isRegistered(msg.sender, owner) == true,
-            ErrorCode.ERR_IbetStraightBond_applyForOffering_121002
-        );
+        if (requirePersonalInfoRegistered == true) {
+            // 個人情報未登録の場合、エラーを返す
+            require(
+                PersonalInfo(personalInfoAddress).isRegistered(msg.sender, owner) == true,
+                ErrorCode.ERR_IbetStraightBond_applyForOffering_121002
+            );
+        }
 
         applicationsForOffering[msg.sender].applicationAmount = _amount;
         applicationsForOffering[msg.sender].data = _data;
@@ -652,8 +671,10 @@ contract IbetStraightBond is Ownable, IbetSecurityTokenInterface {
 
         // <CHK>
         // 個人情報登録済みチェック
-        // 発行体への移転の場合はチェックを行わない
-        if (_to != owner) {
+        // 以下の場合はチェックを行わない
+        // - 発行体への移転の場合
+        // - 移転時個人情報登録が不要の場合
+        if (_to != owner && requirePersonalInfoRegistered == true) {
             require(
                 PersonalInfo(personalInfoAddress).isRegistered(_to, owner) == true,
                 ErrorCode.ERR_IbetStraightBond_applyForTransfer_120702

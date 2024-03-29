@@ -36,6 +36,15 @@ abstract contract IbetSecurityTokenInterface is IbetStandardTokenInterface {
         address _address
     ) public virtual;
 
+    /// 移転時個人情報登録要否
+    bool public requirePersonalInfoRegistered;
+
+    /// @notice 移転時個人情報登録要否の更新
+    /// @param _requireRegistered 移転時個人情報登録要否（true:必要）
+    function setRequirePersonalInfoRegistered(
+        bool _requireRegistered
+    ) public virtual;
+
     // -------------------------------------------------------------------
     // 譲渡制限関連機能
     // -------------------------------------------------------------------

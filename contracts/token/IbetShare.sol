@@ -90,6 +90,7 @@ contract IbetShare is Ownable, IbetSecurityTokenInterface {
         isCanceled = false;
         status = true;
         balances[owner] = totalSupply;
+        requirePersonalInfoRegistered = true;
     }
 
     /// @notice 一口あたりの元本額の更新
@@ -122,6 +123,17 @@ contract IbetShare is Ownable, IbetSecurityTokenInterface {
         onlyOwner()
     {
         personalInfoAddress = _address;
+    }
+
+    /// @notice 移転時個人情報登録要否の更新
+    /// @dev オーナーのみ実行可能
+    /// @param _requireRegistered 移転時個人情報登録要否（true:必要）
+    function setRequirePersonalInfoRegistered(bool _requireRegistered)
+        public
+        override
+        onlyOwner()
+    {
+        requirePersonalInfoRegistered = _requireRegistered;
     }
 
     /// @notice 配当情報の更新
@@ -388,7 +400,12 @@ contract IbetShare is Ownable, IbetSecurityTokenInterface {
             revert(ErrorCode.ERR_IbetShare_transferToAddress_110201);
         }
 
-        if (_to != owner) {
+        // <CHK>
+        // 個人情報登録済みチェック
+        // 以下の場合はチェックを行わない
+        // - 発行体への移転の場合
+        // - 移転時個人情報登録が不要の場合
+        if (_to != owner && requirePersonalInfoRegistered == true) {
             require(
                 PersonalInfo(personalInfoAddress).isRegistered(_to, owner) == true,
                 ErrorCode.ERR_IbetShare_transferToAddress_110202
@@ -558,9 +575,14 @@ contract IbetShare is Ownable, IbetSecurityTokenInterface {
 
         // <CHK>
         // 個人情報登録済みチェック
-        // 発行体への移転の場合はチェックを行わない
-        if (_to != owner) {
-            require(PersonalInfo(personalInfoAddress).isRegistered(_to, owner) == true, ErrorCode.ERR_IbetShare_applyForTransfer_110702);
+        // 以下の場合はチェックを行わない
+        // - 発行体への移転の場合
+        // - 移転時個人情報登録が不要の場合
+        if (_to != owner && requirePersonalInfoRegistered == true) {
+            require(
+                PersonalInfo(personalInfoAddress).isRegistered(_to, owner) == true,
+                ErrorCode.ERR_IbetShare_applyForTransfer_110702
+            );
         }
 
         balances[msg.sender] -= _value;
@@ -672,11 +694,13 @@ contract IbetShare is Ownable, IbetSecurityTokenInterface {
             ErrorCode.ERR_IbetShare_applyForOffering_111001
         );
 
-        // 個人情報未登録の場合、エラーを返す
-        require(
-            PersonalInfo(personalInfoAddress).isRegistered(msg.sender, owner) == true,
-            ErrorCode.ERR_IbetShare_applyForOffering_111002
-        );
+        if (requirePersonalInfoRegistered == true) {
+            // 個人情報未登録の場合、エラーを返す
+            require(
+                PersonalInfo(personalInfoAddress).isRegistered(msg.sender, owner) == true,
+                ErrorCode.ERR_IbetShare_applyForOffering_111002
+            );
+        }
 
         applicationsForOffering[msg.sender].applicationAmount = _amount;
         applicationsForOffering[msg.sender].data = _data;
