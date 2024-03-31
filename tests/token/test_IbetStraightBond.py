@@ -1309,7 +1309,7 @@ class TestApplyForOffering:
         assert application[2] == ''
 
     # Normal_2_1
-    # Apply fo offering
+    # Apply for offering
     # - requirePersonalInfoRegistered = true
     def test_normal_2_1(self, users, personal_info):
         issuer = users['issuer']
@@ -1346,7 +1346,7 @@ class TestApplyForOffering:
         assert application[2] == 'abcdefgh'
 
     # Normal_2_2
-    # Apply fo offering
+    # Apply for offering
     # - requirePersonalInfoRegistered = false
     def test_normal_2_2(self, users, personal_info):
         issuer = users['issuer']
