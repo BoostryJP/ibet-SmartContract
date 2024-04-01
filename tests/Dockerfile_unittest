@@ -61,7 +61,7 @@ RUN pip install --upgrade pip setuptools \
 COPY --chown=apl:apl package.json /app/ibet-SmartContract
 COPY --chown=apl:apl package-lock.json /app/ibet-SmartContract
 COPY --chown=apl:apl hardhat.config.js /app/ibet-SmartContract
-RUN npm install --save-dev hardhat
+RUN npm install --only=dev
 
 # Deploy app
 COPY --chown=apl:apl LICENSE /app/ibet-SmartContract/

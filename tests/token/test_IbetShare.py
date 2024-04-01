@@ -101,6 +101,7 @@ class TestDeploy:
         is_canceled = share_contract.isCanceled()
         status = share_contract.status()
         balance = share_contract.balanceOf(issuer)
+        requirePersonalInfoRegistered = share_contract.requirePersonalInfoRegistered()
 
         assert owner_address == issuer
         assert name == deploy_args[0]
@@ -115,6 +116,7 @@ class TestDeploy:
         assert is_canceled == False
         assert status == True
         assert balance == total_supply
+        assert requirePersonalInfoRegistered == True
 
         # backward compatible calls
         assert share_contract.offeringStatus() == False
@@ -264,6 +266,54 @@ class TestSetPersonalInfoAddress:
 
         # assertion
         assert share_token.personalInfoAddress() == brownie.ZERO_ADDRESS
+
+
+# TEST_setRequirePersonalInfoRegistered
+class TestSetRequirePersonalInfoRegistered:
+
+    #######################################
+    # Normal
+    #######################################
+
+    # Normal_1
+    def test_normal_1(self, users, IbetShare):
+        issuer = users['issuer']
+
+        # issue token
+        deploy_args = init_args()
+        share_token = issuer.deploy(IbetShare, *deploy_args)
+
+        # update contract
+        share_token.setRequirePersonalInfoRegistered.transact(
+            False,
+            {'from': issuer}
+        )
+
+        # assertion
+        assert share_token.requirePersonalInfoRegistered() == False
+
+    #######################################
+    # Error
+    #######################################
+
+    # Error_1
+    # Not authorized
+    def test_error_1(self, users, IbetShare):
+        issuer = users['issuer']
+
+        # issue token
+        deploy_args = init_args()
+        share_token = issuer.deploy(IbetShare, *deploy_args)
+
+        # update contract
+        with brownie.reverts(revert_msg="500001"):
+            share_token.setRequirePersonalInfoRegistered.transact(
+                False,
+                {'from': users['user1']}
+            )
+
+        # assertion
+        assert share_token.requirePersonalInfoRegistered() == True
 
 
 # TEST_setDividendInformation
@@ -878,9 +928,10 @@ class TestTransfer:
     # Normal
     #######################################
 
-    # Normal_1
+    # Normal_1_1
     # Transfer to EOA
-    def test_normal_1(self, users, personal_info):
+    # - requirePersonalInfoRegistered = true
+    def test_normal_1_1(self, users, personal_info):
         issuer = users["issuer"]
         from_address = issuer
         to_address = users["trader"]
@@ -898,6 +949,43 @@ class TestTransfer:
             from_address.address,
             "encrypted_message",
             {'from': to_address}
+        )
+
+        # transfer
+        tx = share_token.transfer.transact(
+            to_address.address,
+            transfer_amount,
+            {"from": issuer}
+        )
+
+        # assertion
+        assert share_token.balanceOf(issuer) == deploy_args[3] - transfer_amount
+        assert share_token.balanceOf(to_address) == transfer_amount
+
+        assert tx.events["Transfer"]["from"] == from_address
+        assert tx.events["Transfer"]["to"] == to_address
+        assert tx.events["Transfer"]["value"] == transfer_amount
+
+    # Normal_1_2
+    # Transfer to EOA
+    # - requirePersonalInfoRegistered = false
+    def test_normal_1_2(self, users, personal_info):
+        issuer = users["issuer"]
+        from_address = issuer
+        to_address = users["trader"]
+        transfer_amount = 100
+
+        # issue token
+        share_token, deploy_args = issue_transferable_share_token(
+            issuer=issuer,
+            exchange_address=brownie.ZERO_ADDRESS,
+            personal_info_address=personal_info.address
+        )
+
+        # set requirePersonalInfoRegistered to False
+        share_token.setRequirePersonalInfoRegistered.transact(
+            False,
+            {'from': issuer}
         )
 
         # transfer
@@ -1169,9 +1257,10 @@ class TestBulkTransfer:
         assert from_balance == deploy_args[3] - 1
         assert to_balance == 1
 
-    # Normal_2
+    # Normal_2_1
     # Bulk transfer to account address (multiple data)
-    def test_normal_2(self, users, personal_info):
+    # - requirePersonalInfoRegistered = true
+    def test_normal_2_1(self, users, personal_info):
         issuer = users["issuer"]
         from_address = issuer
         to_address = users["trader"]
@@ -1188,6 +1277,46 @@ class TestBulkTransfer:
             from_address.address,
             "encrypted_message",
             {"from": to_address}
+        )
+
+        # bulk transfer
+        to_address_list = []
+        amount_list = []
+        for i in range(100):
+            to_address_list.append(to_address)
+            amount_list.append(1)
+
+        share_contract.bulkTransfer.transact(
+            to_address_list,
+            amount_list,
+            {"from": from_address}
+        )
+
+        # assertion
+        from_balance = share_contract.balanceOf(from_address)
+        to_balance = share_contract.balanceOf(to_address)
+        assert from_balance == deploy_args[3] - 100
+        assert to_balance == 100
+
+    # Normal_2_2
+    # Bulk transfer to account address (multiple data)
+    # - requirePersonalInfoRegistered = false
+    def test_normal_2_2(self, users, personal_info):
+        issuer = users["issuer"]
+        from_address = issuer
+        to_address = users["trader"]
+
+        # issue share token
+        share_contract, deploy_args = issue_transferable_share_token(
+            issuer=issuer,
+            exchange_address=brownie.ZERO_ADDRESS,
+            personal_info_address=personal_info.address
+        )
+
+        # set requirePersonalInfoRegistered to False
+        share_contract.setRequirePersonalInfoRegistered.transact(
+            False,
+            {'from': issuer}
         )
 
         # bulk transfer
@@ -1489,8 +1618,10 @@ class TestApplyForOffering:
         assert application[1] == 0
         assert application[2] == ''
 
-    # Normal_2
-    def test_normal_2(self, users, personal_info):
+    # Normal_2_1
+    # Apply for offering
+    # - requirePersonalInfoRegistered = true
+    def test_normal_2_1(self, users, personal_info):
         issuer = users['issuer']
         applicant = users['user1']
 
@@ -1509,6 +1640,42 @@ class TestApplyForOffering:
             issuer,
             "encrypted_message",
             {'from': applicant}
+        )
+
+        # apply for offering
+        share_token.applyForOffering.transact(
+            10,
+            'abcdefgh',
+            {'from': applicant}
+        )
+
+        # assertion
+        application = share_token.applicationsForOffering(applicant)
+        assert application[0] == 10
+        assert application[1] == 0
+        assert application[2] == 'abcdefgh'
+
+    # Normal_2_2
+    # Apply for offering
+    # - requirePersonalInfoRegistered = false
+    def test_normal_2_2(self, users, personal_info):
+        issuer = users['issuer']
+        applicant = users['user1']
+
+        # issue token
+        share_token, deploy_args = issue_transferable_share_token(
+            issuer=issuer,
+            exchange_address=brownie.ZERO_ADDRESS,
+            personal_info_address=personal_info.address
+        )
+
+        # update offering status
+        share_token.changeOfferingStatus.transact(True, {'from': issuer})
+
+        # set requirePersonalInfoRegistered to False
+        share_token.setRequirePersonalInfoRegistered.transact(
+            False,
+            {'from': issuer}
         )
 
         # apply for offering
@@ -2190,6 +2357,56 @@ class TestApplyForTransfer:
             transfer_amount,
             True
         )
+
+    # Normal_4
+    # requirePersonalInfoRegistered = false
+    def test_normal_4(self, users, personal_info):
+        issuer = users["issuer"]
+        to_address = users["user1"]
+        transfer_amount = 100
+        transfer_data = "test_data"
+
+        # issue token
+        share_token, deploy_args = issue_transferable_share_token(
+            issuer=issuer,
+            exchange_address=brownie.ZERO_ADDRESS,
+            personal_info_address=personal_info.address
+        )
+        share_token.setTransferApprovalRequired(
+            True,
+            {"from": issuer}
+        )
+
+        # set requirePersonalInfoRegistered to False
+        share_token.setRequirePersonalInfoRegistered.transact(
+            False,
+            {'from': issuer}
+        )
+
+        # apply for transfer
+        tx = share_token.applyForTransfer(
+            to_address,
+            transfer_amount,
+            transfer_data,
+            {"from": issuer}
+        )
+
+        # assertion
+        assert share_token.balances(issuer) == deploy_args[3] - transfer_amount
+        assert share_token.balances(to_address) == 0
+        assert share_token.pendingTransfer(issuer) == transfer_amount
+        assert share_token.applicationsForTransfer(0) == (
+            issuer,
+            to_address,
+            transfer_amount,
+            True
+        )
+
+        assert tx.events["ApplyForTransfer"]["index"] == 0
+        assert tx.events["ApplyForTransfer"]["from"] == issuer
+        assert tx.events["ApplyForTransfer"]["to"] == to_address
+        assert tx.events["ApplyForTransfer"]["value"] == transfer_amount
+        assert tx.events["ApplyForTransfer"]["data"] == transfer_data
 
     #######################################
     # Error
