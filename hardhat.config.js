@@ -7,7 +7,8 @@ module.exports = {
       blockGasLimit: 800000000,
       hardfork: "berlin",
       throwOnTransactionFailures: false,
-      throwOnCallFailures: false
+      throwOnCallFailures: false,
+      allowBlocksWithSameTimestamp: true
     },
   },
   solidity: "0.8.23",
