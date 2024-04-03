@@ -41,6 +41,8 @@ from brownie.project.ibet_smart_contract import (
     EscrowStorage,
     IbetEscrow,
     IbetSecurityTokenEscrow,
+    DVPStorage,
+    IbetSecurityTokenDVP,
     FreezeLog
 )
 
@@ -109,6 +111,20 @@ def main():
             escrow.address,
             {'from': deployer}
         )
+    elif contract_type == "IbetSecurityTokenDVP":
+        # Escrow Storage
+        dvp_storage = deployer.deploy(DVPStorage)
+        # IbetSecurityTokenDVP
+        deploy_args = [dvp_storage.address]
+        dvp = deployer.deploy(
+            IbetSecurityTokenDVP,
+            *deploy_args
+        )
+        # Upgrade Version
+        dvp_storage.upgradeVersion(
+            dvp.address,
+            {'from': deployer}
+        )
     elif contract_type == "FreezeLog":
         deployer.deploy(FreezeLog)
 
@@ -170,6 +186,7 @@ def parse_args():
         "IbetExchange",
         "IbetEscrow",
         "IbetSecurityTokenEscrow",
+        "IbetSecurityTokenDVP",
         "FreezeLog"
     ]
     if _args.arg1 not in deployable_contracts:
