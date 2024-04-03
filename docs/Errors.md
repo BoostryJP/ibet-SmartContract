@@ -413,7 +413,6 @@ Developers will receive error msg as code, and each error code is described belo
 | **230002** | Message sender balance is insufficient. | -               |
 | **230003** | Token status of escrow is inactive.     | -               |
 
-
 #### cancelEscrow (2301XX)
 | Code       | Situation                                             | Possible causes | 
 |------------|-------------------------------------------------------|-----------------|
@@ -474,13 +473,70 @@ Developers will receive error msg as code, and each error code is described belo
 |------------|-----------------------------------------|-----------------|
 | **240401** | Message sender balance is insufficient. | -               |
 
+### DVPStorage (25XXXX)
+
+#### onlyLatestVersion (2500XX)
+| Code       | Situation                                               | Possible causes | 
+|------------|---------------------------------------------------------|-----------------|
+| **250001** | Message sender(exchange contract) isn't latest version. | -               |
+
+### IbetSecurityTokenDVP (26XXXX)
+
+#### createDelivery (2600XX)
+| Code       | Situation                                              | Possible causes | 
+|------------|--------------------------------------------------------|-----------------|
+| **260001** | Delivery amount is 0.                                  | -               |
+| **260002** | Message sender balance is insufficient.                | -               |
+| **260003** | Token status of delivery is inactive.                  | -               |
+| **260004** | Token transferApprovalRequired of delivery is enabled. | -               |
+
+#### cancelDelivery (2601XX)
+| Code       | Situation                                                         | Possible causes | 
+|------------|-------------------------------------------------------------------|-----------------|
+| **260101** | Target delivery ID is invalid.                                    | -               |
+| **260102** | Target delivery status is invalid.                                | -               |
+| **260103** | Target delivery has been confirmed.                               | -               |
+| **260104** | Message sender is not the delivery seller nor the delivery buyer. | -               |
+
+#### confirmDelivery (2602XX)
+| Code       | Situation                                              | Possible causes | 
+|------------|--------------------------------------------------------|-----------------|
+| **260201** | Target delivery ID is invalid.                         | -               |
+| **260202** | Target delivery status is invalid.                     | -               |
+| **260203** | Target delivery has been confirmed.                    | -               |
+| **260204** | Message sender is not the delivery buyer.              | -               |
+| **260205** | Token status of delivery is inactive.                  | -               |
+| **260206** | Token transferApprovalRequired of delivery is enabled. | -               |
+
+#### finishDelivery (2603XX)
+| Code       | Situation                                              | Possible causes | 
+|------------|--------------------------------------------------------|-----------------|
+| **260301** | Target delivery ID is invalid.                         | -               |
+| **260302** | Target delivery status is invalid.                     | -               |
+| **260303** | Target delivery has not been confirmed.                | -               |
+| **260304** | Message sender is not the delivery agent.              | -               |
+| **260305** | Token status of delivery is inactive.                  | -               |
+| **260306** | Token transferApprovalRequired of delivery is enabled. | -               |
+
+#### abortDelivery (2604XX)
+| Code       | Situation                                 | Possible causes | 
+|------------|-------------------------------------------|-----------------|
+| **260401** | Target delivery ID is invalid.            | -               |
+| **260402** | Target delivery status is invalid.        | -               |
+| **260403** | Target delivery has been confirmed.       | -               |
+| **260404** | Message sender is not the delivery agent. | -               |
+
+#### withdraw (2605XX)
+| Code       | Situation                               | Possible causes | 
+|------------|-----------------------------------------|-----------------|
+| **260501** | Message sender balance is insufficient. | -               |
+
 ### PaymentGateway (30XXXX)
 
 #### register (3000XX)
 | Code       | Situation                                 | Possible causes | 
 |------------|-------------------------------------------|-----------------|
 | **300001** | Payment account is banned.                | -               |
-
 
 #### approve (3001XX)
 | Code       | Situation                                 | Possible causes | 

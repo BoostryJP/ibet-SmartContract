@@ -239,6 +239,45 @@ library ErrorCode {
     string constant ERR_IbetSecurityTokenEscrow_withdraw_240401 = "240401";
 
 
+    // 25XXXX
+    // DVPStorage_onlyLatestVersion
+    string constant ERR_DVPStorage_onlyLatestVersion_250001 = "250001";
+
+
+    // 26XXXX
+    // IbetSecurityTokenDVP_createDelivery
+    string constant ERR_IbetSecurityTokenDVP_createDelivery_260001 = "260001";
+    string constant ERR_IbetSecurityTokenDVP_createDelivery_260002 = "260002";
+    string constant ERR_IbetSecurityTokenDVP_createDelivery_260003 = "260003";
+    string constant ERR_IbetSecurityTokenDVP_createDelivery_260004 = "260004";
+    // IbetSecurityTokenDVP_cancelDelivery
+    string constant ERR_IbetSecurityTokenDVP_cancelDelivery_260101 = "260101";
+    string constant ERR_IbetSecurityTokenDVP_cancelDelivery_260102 = "260102";
+    string constant ERR_IbetSecurityTokenDVP_cancelDelivery_260103 = "260103";
+    string constant ERR_IbetSecurityTokenDVP_cancelDelivery_260104 = "260104";
+    // IbetSecurityTokenDVP_confirmDelivery
+    string constant ERR_IbetSecurityTokenDVP_confirmDelivery_260201 = "260201";
+    string constant ERR_IbetSecurityTokenDVP_confirmDelivery_260202 = "260202";
+    string constant ERR_IbetSecurityTokenDVP_confirmDelivery_260203 = "260203";
+    string constant ERR_IbetSecurityTokenDVP_confirmDelivery_260204 = "260204";
+    string constant ERR_IbetSecurityTokenDVP_confirmDelivery_260205 = "260205";
+    string constant ERR_IbetSecurityTokenDVP_confirmDelivery_260206 = "260206";
+    // IbetSecurityTokenDVP_finishDelivery
+    string constant ERR_IbetSecurityTokenDVP_finishDelivery_260301 = "260301";
+    string constant ERR_IbetSecurityTokenDVP_finishDelivery_260302 = "260302";
+    string constant ERR_IbetSecurityTokenDVP_finishDelivery_260303 = "260303";
+    string constant ERR_IbetSecurityTokenDVP_finishDelivery_260304 = "260304";
+    string constant ERR_IbetSecurityTokenDVP_finishDelivery_260305 = "260305";
+    string constant ERR_IbetSecurityTokenDVP_finishDelivery_260306 = "260306";
+    // IbetSecurityTokenDVP_abortDelivery
+    string constant ERR_IbetSecurityTokenDVP_abortDelivery_260401 = "260401";
+    string constant ERR_IbetSecurityTokenDVP_abortDelivery_260402 = "260402";
+    string constant ERR_IbetSecurityTokenDVP_abortDelivery_260403 = "260403";
+    string constant ERR_IbetSecurityTokenDVP_abortDelivery_260404 = "260404";
+    // IbetSecurityTokenDVP_withdraw
+    string constant ERR_IbetSecurityTokenDVP_withdraw_260501 = "260501";
+
+
     // 30XXXX
     // PaymentGateway_register
     string constant ERR_PaymentGateway_register_300001 = "300001";

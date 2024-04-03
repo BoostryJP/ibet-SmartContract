@@ -115,3 +115,23 @@ def st_escrow(IbetSecurityTokenEscrow, users, st_escrow_storage):
         {'from': users['admin']}
     )
     return st_escrow
+
+
+@pytest.fixture()
+def st_dvp_storage(DVPStorage, users):
+    dvp_storage = users['admin'].deploy(DVPStorage)
+    return dvp_storage
+
+
+@pytest.fixture()
+def st_dvp(IbetSecurityTokenDVP, users, st_dvp_storage):
+    deploy_args = [st_dvp_storage.address]
+    st_dvp = users['admin'].deploy(
+        IbetSecurityTokenDVP,
+        *deploy_args
+    )
+    st_dvp_storage.upgradeVersion.transact(
+        st_dvp.address,
+        {'from': users['admin']}
+    )
+    return st_dvp
