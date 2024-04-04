@@ -89,13 +89,13 @@ def set_up_deployer():
 
 
 def upgrade_dvp(old_address, deployer):
-    old_escrow = IbetSecurityTokenDVP.at(old_address)
+    old_dvp = IbetSecurityTokenDVP.at(old_address)
 
     # Storage
-    dvp_storage_address = old_escrow.storageAddress({'from': deployer})
+    dvp_storage_address = old_dvp.storageAddress({'from': deployer})
     dvp_storage = DVPStorage.at(dvp_storage_address)
 
-    # Deploy new IbetEscrow
+    # Deploy new IbetSecurityTokenDVP
     deploy_args = [dvp_storage_address]
     dvp = deployer.deploy(IbetSecurityTokenDVP, *deploy_args)
 

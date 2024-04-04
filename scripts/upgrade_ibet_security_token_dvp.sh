@@ -34,7 +34,7 @@ if [ "${REFER_ACCOUNT}" != "GETH" ]; then
   # NOTE: Accounts.load内で用いられているgetpassで入力待ちとなるためexpectで自動応答する
   expect -c "
     set timeout 300
-    spawn python scripts/upgrade_ibet_security_token_escrow.py $@
+    spawn python scripts/upgrade_ibet_security_token_dvp.py $@
     expect {
       \"Enter the password to unlock this account:\" {
         send \"${ETH_ACCOUNT_PASSWORD}\n\"

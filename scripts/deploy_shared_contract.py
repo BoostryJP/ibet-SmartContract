@@ -112,7 +112,7 @@ def main():
             {'from': deployer}
         )
     elif contract_type == "IbetSecurityTokenDVP":
-        # Escrow Storage
+        # DVP Storage
         dvp_storage = deployer.deploy(DVPStorage)
         # IbetSecurityTokenDVP
         deploy_args = [dvp_storage.address]
