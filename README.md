@@ -20,6 +20,8 @@ English | [日本語](README_JA.md)
 ## Dependencies
 - [Python3](https://www.python.org/downloads/)
   - Version 3.11
+- [Node.js](https://nodejs.org/en/download/)
+  - Version 20
 - [Solidity](https://docs.soliditylang.org/)
   - We are using Solidity to implement our smart contracts. 
   - Currently, we are using v0.8.23.
@@ -60,6 +62,12 @@ Install openzeppelin-contracts.
 
 ```bash
 $ brownie pm install OpenZeppelin/openzeppelin-contracts@4.9.3
+```
+
+Install hardhat as a Node.js package.
+
+```bash
+$ npm install
 ```
 
 ## Compile Contracts

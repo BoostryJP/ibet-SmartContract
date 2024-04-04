@@ -13,6 +13,6 @@ development:
 - id: test_network
   name: Hardhat Network
   host: http://localhost:8545
-  cmd: npx hardhat --config /app/ibet-SmartContract/hardhat.config.js node
+  cmd: npx hardhat --config ./hardhat.config.js node
   cmd_settings:
     port: 8545
