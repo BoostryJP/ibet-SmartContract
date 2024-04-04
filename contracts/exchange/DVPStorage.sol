@@ -46,7 +46,7 @@ contract DVPStorage is Ownable {
         latestVersion = _newVersion;
     }
 
-    /// @dev 実行者が最新バージョンのDVPアドレスであることをチェック
+    /// @dev 実行者が最新バージョンのDVPコントラクトアドレスであることをチェック
     modifier onlyLatestVersion() {
        require(msg.sender == latestVersion, ErrorCode.ERR_DVPStorage_onlyLatestVersion_250001);
         _;
