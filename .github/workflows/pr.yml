@@ -1,8 +1,27 @@
-name: Unit Test
+name: Pull Request Check
 on: [pull_request]
 
 jobs:
+  lint-black:
+    name: "Lint check (black)"
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: psf/black@stable
+  lint-prettier:
+    name: "Lint check (prettier)"
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Use Node.js 20
+        uses: actions/setup-node@v3
+        with:
+          node-version: 20
+          cache: "pnpm"
+      - run: npm install
+      - run: npx prettier --check --plugin=prettier-plugin-solidity **/*.sol
   unit-test:
+    name: "Unit tests"
     runs-on: ubuntu-latest
     timeout-minutes: 120
     steps:

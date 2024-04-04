@@ -1,0 +1,23 @@
+[tool.poetry]
+name = "ibet-SmartContract"
+version = "24.6.0"
+description = "SmartContracts that provides token standards, decentralized exchanges, and other utility functions that can be used on the ibet-Network."
+authors = ["BOOSTRY Co., Ltd. <dev@boostry.co.jp>"]
+license = "Apache License, Version 2.0"
+
+[tool.poetry.dependencies]
+python = "3.11.2"
+eth-brownie = {git = "https://github.com/BoostryJP/brownie"}
+
+[tool.poetry.group.dev.dependencies]
+pre-commit = "^3.7.0"
+black = "^24.2.0"
+isort = "^5.13.2"
+
+[tool.isort]
+profile = "black"
+combine_as_imports = true
+
+[build-system]
+requires = ["poetry-core>=1.0.0"]
+build-backend = "poetry.core.masonry.api"
