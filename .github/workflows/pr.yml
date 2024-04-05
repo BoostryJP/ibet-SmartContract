@@ -17,9 +17,8 @@ jobs:
         uses: actions/setup-node@v3
         with:
           node-version: 20
-          cache: "pnpm"
       - run: npm install
-      - run: npx prettier --check --plugin=prettier-plugin-solidity **/*.sol
+      - run: npx prettier --check --plugin=prettier-plugin-solidity contracts/**/*.sol interfaces/**/*.sol sandbox/**/*.sol
   unit-test:
     name: "Unit tests"
     runs-on: ubuntu-latest

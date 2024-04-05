@@ -17,7 +17,7 @@ black:
 	black .
 
 prettier:
-	npx prettier --write --plugin=prettier-plugin-solidity **/*.sol
+	npx prettier --write --plugin=prettier-plugin-solidity contracts/**/*.sol interfaces/**/*.sol sandbox/**/*.sol
 
 compile:
 	brownie compile
