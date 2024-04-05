@@ -1,31 +1,29 @@
 /**
-* Copyright BOOSTRY Co., Ltd.
-*
-* Licensed under the Apache License, Version 2.0 (the "License");
-* you may not use this file except in compliance with the License.
-*
-* You may obtain a copy of the License at
-* http://www.apache.org/licenses/LICENSE-2.0
-*
-* Unless required by applicable law or agreed to in writing,
-* software distributed under the License is distributed on an "AS IS" BASIS,
-* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-*
-* See the License for the specific language governing permissions and
-* limitations under the License.
-*
-* SPDX-License-Identifier: Apache-2.0
-*/
+ * Copyright BOOSTRY Co., Ltd.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ *
+ * You may obtain a copy of the License at
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *
+ * SPDX-License-Identifier: Apache-2.0
+ */
 
 pragma solidity ^0.8.0;
 
 import "../access/Ownable.sol";
 import "../utils/Errors.sol";
 
-
 /// @title DvP Agent Contract
 contract PaymentGateway is Ownable {
-
     // 支払用口座情報
     struct PaymentAccount {
         address account_address; // アカウントアドレス
@@ -40,7 +38,8 @@ contract PaymentGateway is Ownable {
 
     // 支払用口座情報
     // account_address => agent_address => PaymentAccount
-    mapping(address => mapping(address => PaymentAccount)) public payment_accounts;
+    mapping(address => mapping(address => PaymentAccount))
+        public payment_accounts;
 
     // イベント：収納代行業者追加
     event AddAgent(address indexed agent_address);
@@ -49,22 +48,34 @@ contract PaymentGateway is Ownable {
     event RemoveAgent(address indexed agent_address);
 
     // イベント：登録
-    event Register(address indexed account_address, address indexed agent_address);
+    event Register(
+        address indexed account_address,
+        address indexed agent_address
+    );
 
     // イベント：承認
-    event Approve(address indexed account_address, address indexed agent_address);
+    event Approve(
+        address indexed account_address,
+        address indexed agent_address
+    );
 
     // イベント：警告
     event Warn(address indexed account_address, address indexed agent_address);
 
     // イベント：非承認
-    event Disapprove(address indexed account_address, address indexed agent_address);
+    event Disapprove(
+        address indexed account_address,
+        address indexed agent_address
+    );
 
     // イベント：アカウント停止（BAN）
     event Ban(address indexed account_address, address indexed agent_address);
 
     // イベント：修正
-    event Modify(address indexed account_address, address indexed agent_address);
+    event Modify(
+        address indexed account_address,
+        address indexed agent_address
+    );
 
     // [CONSTRUCTOR]
     constructor() {}
@@ -72,10 +83,7 @@ contract PaymentGateway is Ownable {
     /// @notice 収納代行業者の追加
     /// @dev オーナーのみ実行可能
     /// @param _agent_address 収納代行業者のアドレス
-    function addAgent(address _agent_address)
-        public
-        onlyOwner()
-    {
+    function addAgent(address _agent_address) public onlyOwner {
         agents[_agent_address] = true;
         emit AddAgent(_agent_address);
     }
@@ -83,10 +91,7 @@ contract PaymentGateway is Ownable {
     /// @notice 収納代行業者の削除
     /// @dev オーナーのみ実行可能
     /// @param _agent_address 収納代行業者のアドレス
-    function removeAgent(address _agent_address)
-        public
-        onlyOwner()
-    {
+    function removeAgent(address _agent_address) public onlyOwner {
         agents[_agent_address] = false;
         emit RemoveAgent(_agent_address);
     }
@@ -94,11 +99,7 @@ contract PaymentGateway is Ownable {
     /// @notice 収納代行業者の登録状態
     /// @param _agent_address 収納代行業者のアドレス
     /// @return 登録状態
-    function getAgent(address _agent_address)
-        public
-        view
-        returns (bool)
-    {
+    function getAgent(address _agent_address) public view returns (bool) {
         return agents[_agent_address];
     }
 
@@ -107,12 +108,17 @@ contract PaymentGateway is Ownable {
     /// @param _agent_address 収納代行業者のアドレス
     /// @param _encrypted_info 銀行口座情報（暗号化済）
     /// @return 処理結果
-    function register(address _agent_address, string memory _encrypted_info)
-        public
-        returns (bool)
-    {
-        PaymentAccount storage payment_account = payment_accounts[msg.sender][_agent_address];
-        require(payment_account.approval_status != 4, ErrorCode.ERR_PaymentGateway_register_300001);
+    function register(
+        address _agent_address,
+        string memory _encrypted_info
+    ) public returns (bool) {
+        PaymentAccount storage payment_account = payment_accounts[msg.sender][
+            _agent_address
+        ];
+        require(
+            payment_account.approval_status != 4,
+            ErrorCode.ERR_PaymentGateway_register_300001
+        );
 
         // 口座情報の登録
         payment_account.account_address = msg.sender;
@@ -127,12 +133,14 @@ contract PaymentGateway is Ownable {
     /// @notice 支払用口座情報の承認
     /// @param _account_address アカウントアドレス
     /// @return 処理結果
-    function approve(address _account_address)
-        public
-        returns (bool)
-    {
-        PaymentAccount storage payment_account = payment_accounts[_account_address][msg.sender];
-        require(payment_account.account_address != address(0), ErrorCode.ERR_PaymentGateway_approve_300101);
+    function approve(address _account_address) public returns (bool) {
+        PaymentAccount storage payment_account = payment_accounts[
+            _account_address
+        ][msg.sender];
+        require(
+            payment_account.account_address != address(0),
+            ErrorCode.ERR_PaymentGateway_approve_300101
+        );
 
         payment_account.approval_status = 2;
 
@@ -143,12 +151,14 @@ contract PaymentGateway is Ownable {
     /// @notice 支払用口座情報を警告状態にする
     /// @param _account_address アカウントアドレス
     /// @return 処理結果
-    function warn(address _account_address)
-        public
-        returns (bool)
-    {
-        PaymentAccount storage payment_account = payment_accounts[_account_address][msg.sender];
-        require(payment_account.account_address != address(0), ErrorCode.ERR_PaymentGateway_warn_300201);
+    function warn(address _account_address) public returns (bool) {
+        PaymentAccount storage payment_account = payment_accounts[
+            _account_address
+        ][msg.sender];
+        require(
+            payment_account.account_address != address(0),
+            ErrorCode.ERR_PaymentGateway_warn_300201
+        );
 
         payment_account.approval_status = 3;
 
@@ -159,12 +169,14 @@ contract PaymentGateway is Ownable {
     /// @notice 支払用口座情報を非承認状態にする
     /// @param _account_address アカウントアドレス
     /// @return 処理結果
-    function disapprove(address _account_address)
-        public
-        returns (bool)
-    {
-        PaymentAccount storage payment_account = payment_accounts[_account_address][msg.sender];
-        require(payment_account.account_address != address(0), ErrorCode.ERR_PaymentGateway_disapprove_300301);
+    function disapprove(address _account_address) public returns (bool) {
+        PaymentAccount storage payment_account = payment_accounts[
+            _account_address
+        ][msg.sender];
+        require(
+            payment_account.account_address != address(0),
+            ErrorCode.ERR_PaymentGateway_disapprove_300301
+        );
 
         payment_account.approval_status = 1;
 
@@ -175,12 +187,14 @@ contract PaymentGateway is Ownable {
     /// @notice 支払用口座情報を停止状態にする
     /// @param _account_address アカウントアドレス
     /// @return 処理結果
-    function ban(address _account_address)
-        public
-        returns (bool)
-    {
-        PaymentAccount storage payment_account = payment_accounts[_account_address][msg.sender];
-        require(payment_account.account_address != address(0), ErrorCode.ERR_PaymentGateway_ban_300401);
+    function ban(address _account_address) public returns (bool) {
+        PaymentAccount storage payment_account = payment_accounts[
+            _account_address
+        ][msg.sender];
+        require(
+            payment_account.account_address != address(0),
+            ErrorCode.ERR_PaymentGateway_ban_300401
+        );
 
         payment_account.approval_status = 4;
 
@@ -192,16 +206,18 @@ contract PaymentGateway is Ownable {
     /// @param _account_address アカウントアドレス
     /// @param _agent_address 収納代行業者のアドレス
     /// @return 承認状態
-    function accountApproved(address _account_address, address _agent_address)
-        public
-        view
-        returns (bool)
-    {
-        PaymentAccount storage payment_account = payment_accounts[_account_address][_agent_address];
+    function accountApproved(
+        address _account_address,
+        address _agent_address
+    ) public view returns (bool) {
+        PaymentAccount storage payment_account = payment_accounts[
+            _account_address
+        ][_agent_address];
         // アカウントが登録済み、かつ承認済みである場合、trueを返す
-        if (payment_account.account_address != address(0) &&
-        payment_account.approval_status == 2)
-        {
+        if (
+            payment_account.account_address != address(0) &&
+            payment_account.approval_status == 2
+        ) {
             return true;
         } else {
             return false;
@@ -213,14 +229,19 @@ contract PaymentGateway is Ownable {
     /// @param _account_address 銀行口座情報登録アカウントアドレス
     /// @param _encrypted_info 銀行口座情報（暗号化済）
     /// @return 処理結果
-    function modify(address _account_address, string memory _encrypted_info)
-        public
-        returns (bool)
-    {
-        PaymentAccount storage payment_account = payment_accounts[_account_address][msg.sender];
+    function modify(
+        address _account_address,
+        string memory _encrypted_info
+    ) public returns (bool) {
+        PaymentAccount storage payment_account = payment_accounts[
+            _account_address
+        ][msg.sender];
 
         // 登録済みか確認
-        require(payment_account.account_address != address(0),ErrorCode.ERR_PaymentGateway_modify_300501);
+        require(
+            payment_account.account_address != address(0),
+            ErrorCode.ERR_PaymentGateway_modify_300501
+        );
 
         payment_account.encrypted_info = _encrypted_info;
 

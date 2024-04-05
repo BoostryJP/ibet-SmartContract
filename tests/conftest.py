@@ -16,7 +16,9 @@ limitations under the License.
 
 SPDX-License-Identifier: Apache-2.0
 """
+
 from typing import TypedDict
+
 import pytest
 from brownie import web3
 from web3.middleware import geth_poa_middleware
@@ -47,7 +49,7 @@ def users(web3, accounts) -> Users:
         "issuer": issuer,
         "agent": agent,
         "user1": user1,
-        "user2": user2
+        "user2": user2,
     }
 
     yield users
@@ -55,83 +57,70 @@ def users(web3, accounts) -> Users:
 
 @pytest.fixture()
 def personal_info(PersonalInfo, users):
-    personal_info = users['admin'].deploy(PersonalInfo)
+    personal_info = users["admin"].deploy(PersonalInfo)
     return personal_info
 
 
 @pytest.fixture()
 def payment_gateway(PaymentGateway, users):
-    payment_gateway = users['admin'].deploy(PaymentGateway)
-    payment_gateway.addAgent.transact(
-        users['agent'],
-        {'from': users['admin']}
-    )
+    payment_gateway = users["admin"].deploy(PaymentGateway)
+    payment_gateway.addAgent.transact(users["agent"], {"from": users["admin"]})
     return payment_gateway
 
 
 @pytest.fixture()
 def exchange_storage(ExchangeStorage, users):
-    exchange_storage = users['admin'].deploy(ExchangeStorage)
+    exchange_storage = users["admin"].deploy(ExchangeStorage)
     return exchange_storage
 
 
 @pytest.fixture()
 def exchange(IbetExchange, users, payment_gateway, exchange_storage):
     deploy_args = [payment_gateway.address, exchange_storage.address]
-    exchange = users['admin'].deploy(IbetExchange, *deploy_args)
-    exchange_storage.upgradeVersion.transact(exchange.address, {'from': users['admin']})
+    exchange = users["admin"].deploy(IbetExchange, *deploy_args)
+    exchange_storage.upgradeVersion.transact(exchange.address, {"from": users["admin"]})
     return exchange
 
 
 @pytest.fixture()
 def escrow_storage(EscrowStorage, users):
-    escrow_storage = users['admin'].deploy(EscrowStorage)
+    escrow_storage = users["admin"].deploy(EscrowStorage)
     return escrow_storage
 
 
 @pytest.fixture()
 def escrow(IbetEscrow, users, escrow_storage):
     deploy_args = [escrow_storage.address]
-    escrow = users['admin'].deploy(IbetEscrow, *deploy_args)
-    escrow_storage.upgradeVersion.transact(escrow.address, {'from': users['admin']})
+    escrow = users["admin"].deploy(IbetEscrow, *deploy_args)
+    escrow_storage.upgradeVersion.transact(escrow.address, {"from": users["admin"]})
     return escrow
 
 
 @pytest.fixture()
 def st_escrow_storage(EscrowStorage, users):
-    escrow_storage = users['admin'].deploy(EscrowStorage)
+    escrow_storage = users["admin"].deploy(EscrowStorage)
     return escrow_storage
 
 
 @pytest.fixture()
 def st_escrow(IbetSecurityTokenEscrow, users, st_escrow_storage):
     deploy_args = [st_escrow_storage.address]
-    st_escrow = users['admin'].deploy(
-        IbetSecurityTokenEscrow,
-        *deploy_args
-    )
+    st_escrow = users["admin"].deploy(IbetSecurityTokenEscrow, *deploy_args)
     st_escrow_storage.upgradeVersion.transact(
-        st_escrow.address,
-        {'from': users['admin']}
+        st_escrow.address, {"from": users["admin"]}
     )
     return st_escrow
 
 
 @pytest.fixture()
 def st_dvp_storage(DVPStorage, users):
-    dvp_storage = users['admin'].deploy(DVPStorage)
+    dvp_storage = users["admin"].deploy(DVPStorage)
     return dvp_storage
 
 
 @pytest.fixture()
 def st_dvp(IbetSecurityTokenDVP, users, st_dvp_storage):
     deploy_args = [st_dvp_storage.address]
-    st_dvp = users['admin'].deploy(
-        IbetSecurityTokenDVP,
-        *deploy_args
-    )
-    st_dvp_storage.upgradeVersion.transact(
-        st_dvp.address,
-        {'from': users['admin']}
-    )
+    st_dvp = users["admin"].deploy(IbetSecurityTokenDVP, *deploy_args)
+    st_dvp_storage.upgradeVersion.transact(st_dvp.address, {"from": users["admin"]})
     return st_dvp

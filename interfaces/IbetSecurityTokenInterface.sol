@@ -1,28 +1,27 @@
 /**
-* Copyright BOOSTRY Co., Ltd.
-*
-* Licensed under the Apache License, Version 2.0 (the "License");
-* you may not use this file except in compliance with the License.
-*
-* You may obtain a copy of the License at
-* http://www.apache.org/licenses/LICENSE-2.0
-*
-* Unless required by applicable law or agreed to in writing,
-* software distributed under the License is distributed on an "AS IS" BASIS,
-* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-*
-* See the License for the specific language governing permissions and
-* limitations under the License.
-*
-* SPDX-License-Identifier: Apache-2.0
-*/
+ * Copyright BOOSTRY Co., Ltd.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ *
+ * You may obtain a copy of the License at
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *
+ * SPDX-License-Identifier: Apache-2.0
+ */
 pragma solidity ^0.8.0;
 
 import "./IbetStandardTokenInterface.sol";
 
 /// @title ibet Security Token Interface
 abstract contract IbetSecurityTokenInterface is IbetStandardTokenInterface {
-
     // -------------------------------------------------------------------
     // 投資家名簿関連機能
     // -------------------------------------------------------------------
@@ -32,9 +31,7 @@ abstract contract IbetSecurityTokenInterface is IbetStandardTokenInterface {
 
     /// @notice 個人情報コントラクトの更新
     /// @param _address 個人情報記帳コントラクトアドレス
-    function setPersonalInfoAddress(
-        address _address
-    ) public virtual;
+    function setPersonalInfoAddress(address _address) public virtual;
 
     /// 移転時個人情報登録要否
     bool public requirePersonalInfoRegistered;
@@ -54,9 +51,7 @@ abstract contract IbetSecurityTokenInterface is IbetStandardTokenInterface {
 
     /// @notice 譲渡可否を更新
     /// @param _transferable 譲渡可否
-    function setTransferable(
-        bool _transferable
-    ) public virtual;
+    function setTransferable(bool _transferable) public virtual;
 
     // -------------------------------------------------------------------
     // 募集関連機能
@@ -75,9 +70,7 @@ abstract contract IbetSecurityTokenInterface is IbetStandardTokenInterface {
 
     /// @notice 募集ステータス更新
     /// @param _isOffering 募集状態
-    function changeOfferingStatus(
-        bool _isOffering
-    ) public virtual;
+    function changeOfferingStatus(bool _isOffering) public virtual;
 
     /// @notice 募集申込
     /// @param _amount 申込数量
@@ -90,28 +83,16 @@ abstract contract IbetSecurityTokenInterface is IbetStandardTokenInterface {
     /// @notice 募集割当
     /// @param _accountAddress 割当先アカウント
     /// @param _amount 割当数量
-    function allot(
-        address _accountAddress,
-        uint256 _amount
-    ) public virtual;
+    function allot(address _accountAddress, uint256 _amount) public virtual;
 
     /// Event: 募集ステータス変更
-    event ChangeOfferingStatus(
-        bool indexed status
-    );
+    event ChangeOfferingStatus(bool indexed status);
 
     /// Event: 募集申込
-    event ApplyForOffering(
-        address accountAddress,
-        uint256 amount,
-        string data
-    );
+    event ApplyForOffering(address accountAddress, uint256 amount, string data);
 
     /// Event: 募集割当
-    event Allot(
-        address accountAddress,
-        uint256 amount
-    );
+    event Allot(address accountAddress, uint256 amount);
 
     // -------------------------------------------------------------------
     // 移転承諾関連機能
@@ -122,9 +103,7 @@ abstract contract IbetSecurityTokenInterface is IbetStandardTokenInterface {
 
     /// @notice 移転承諾要否フラグの更新
     /// @param _required 移転承諾要否
-    function setTransferApprovalRequired(
-        bool _required
-    ) public virtual;
+    function setTransferApprovalRequired(bool _required) public virtual;
 
     /// 移転申請
     struct ApplicationForTransfer {
@@ -152,10 +131,7 @@ abstract contract IbetSecurityTokenInterface is IbetStandardTokenInterface {
     /// @notice 移転申請取消
     /// @param _index 取消対象のインデックス
     /// @param _data イベント出力用の任意のデータ
-    function cancelTransfer(
-        uint256 _index,
-        string memory _data
-    ) public virtual;
+    function cancelTransfer(uint256 _index, string memory _data) public virtual;
 
     /// @notice 移転承認
     /// @param _index 承認対象のインデックス
@@ -166,9 +142,7 @@ abstract contract IbetSecurityTokenInterface is IbetStandardTokenInterface {
     ) public virtual;
 
     /// Event: 移転承諾要否フラグ変更
-    event ChangeTransferApprovalRequired(
-        bool required
-    );
+    event ChangeTransferApprovalRequired(bool required);
 
     /// Event: 移転申請
     event ApplyForTransfer(
@@ -302,5 +276,4 @@ abstract contract IbetSecurityTokenInterface is IbetStandardTokenInterface {
         address indexed lockAddress,
         uint256 amount
     );
-
 }

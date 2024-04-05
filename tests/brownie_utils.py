@@ -19,11 +19,20 @@ SPDX-License-Identifier: Apache-2.0
 
 import brownie
 from brownie import web3
-from brownie.network.contract import Contract, ContractTx, ContractCall
-
+from brownie.network.contract import Contract, ContractCall, ContractTx
 
 _BROWNIE_RESERVED_NAMES = [
-    'abi', 'at', 'bytecode', 'deploy', 'get_method', 'info', 'remove', 'selectors', 'signatures', 'topics', 'tx'
+    "abi",
+    "at",
+    "bytecode",
+    "deploy",
+    "get_method",
+    "info",
+    "remove",
+    "selectors",
+    "signatures",
+    "topics",
+    "tx",
 ]
 """
 Brownieコントラクトに定義済みのプロパティ名。
@@ -54,34 +63,45 @@ def force_deploy(deployer, contract, *deploy_args):
     :return: Brownieのコントラクトインスタンス
     """
     # 引数の型変換 (Note: web3.pyとBrownieでは型変換規則が異なる)
-    constructor_abi = list(filter(lambda entry: entry['type'] == 'constructor', contract.abi))
+    constructor_abi = list(
+        filter(lambda entry: entry["type"] == "constructor", contract.abi)
+    )
     if len(constructor_abi) == 1:
-        deploy_args = brownie.convert.normalize.format_input(constructor_abi[0], deploy_args)
+        deploy_args = brownie.convert.normalize.format_input(
+            constructor_abi[0], deploy_args
+        )
 
     # web3を用いてデプロイする
     web3_contract = web3.eth.contract(abi=contract.abi, bytecode=contract.bytecode)
-    txn_hash = web3_contract.constructor(*deploy_args).transact({'from': deployer.address})
+    txn_hash = web3_contract.constructor(*deploy_args).transact(
+        {"from": deployer.address}
+    )
     receipt = web3.eth.wait_for_transaction_receipt(txn_hash)
-    contract_address = receipt['contractAddress']
+    contract_address = receipt["contractAddress"]
 
     # Brownieでエラーを発生させるメソッドを取り除いたABIを作成する
     # このABIを用いることでBrownieのContractオブジェクトが作成できるようになる
     brownie_safe_abi = []
     excluded_function_abi = []
     for abi_entry in contract.abi:
-        if abi_entry['type'] == 'function' and abi_entry['name'] in _BROWNIE_RESERVED_NAMES:
+        if (
+            abi_entry["type"] == "function"
+            and abi_entry["name"] in _BROWNIE_RESERVED_NAMES
+        ):
             excluded_function_abi.append(abi_entry)
         else:
             brownie_safe_abi.append(abi_entry)
 
-    contract_name = _resolve_contract_name(contract) + '__brownie_utils'
-    brownie_contract = Contract.from_abi(contract_name, contract_address, brownie_safe_abi)
+    contract_name = _resolve_contract_name(contract) + "__brownie_utils"
+    brownie_contract = Contract.from_abi(
+        contract_name, contract_address, brownie_safe_abi
+    )
 
     # ABIから削除したメソッドを復元する
     # （オーバロードには未対応）
     brownie_contract.functions = _BrownieUnsafeFunctionContainer()
     for abi_entry in excluded_function_abi:
-        name = abi_entry['name']
+        name = abi_entry["name"]
         if _is_constant(abi_entry):
             recovered_function = ContractCall(contract_address, abi_entry, name, None)
         else:
@@ -93,15 +113,16 @@ def force_deploy(deployer, contract, *deploy_args):
 
 class _BrownieUnsafeFunctionContainer:
     """Brownieでエラーとなるスマートコントラクトの関数を保持するクラス"""
+
     pass
 
 
 def _resolve_contract_name(contract):
     # コントラクト名は非公開となっているため、存在確認してから取得する
-    if hasattr(contract, '_name'):
+    if hasattr(contract, "_name"):
         return str(contract._name)
     else:
-        return 'None'
+        return "None"
 
 
 def _is_constant(abi):

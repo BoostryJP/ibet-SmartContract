@@ -1,27 +1,25 @@
 /**
-* Copyright BOOSTRY Co., Ltd.
-*
-* Licensed under the Apache License, Version 2.0 (the "License");
-* you may not use this file except in compliance with the License.
-*
-* You may obtain a copy of the License at
-* http://www.apache.org/licenses/LICENSE-2.0
-*
-* Unless required by applicable law or agreed to in writing,
-* software distributed under the License is distributed on an "AS IS" BASIS,
-* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-*
-* See the License for the specific language governing permissions and
-* limitations under the License.
-*
-* SPDX-License-Identifier: Apache-2.0
-*/
+ * Copyright BOOSTRY Co., Ltd.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ *
+ * You may obtain a copy of the License at
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *
+ * SPDX-License-Identifier: Apache-2.0
+ */
 
 pragma solidity ^0.8.0;
 
 library ErrorCode {
-
-
     // 10XXXX
     // TokenList_register
     string constant ERR_TokenList_register_100001 = "100001";
@@ -29,7 +27,6 @@ library ErrorCode {
     // TokenList_changeOwner
     string constant ERR_TokenList_changeOwner_100101 = "100101";
     string constant ERR_TokenList_changeOwner_100102 = "100102";
-
 
     // 11XXXX
     // IbetShare_lock
@@ -127,7 +124,6 @@ library ErrorCode {
     // IbetCoupon_applyForOffering
     string constant ERR_IbetCoupon_applyForOffering_130501 = "130501";
 
-
     // 14XXXX
     // IbetMembership_transferToContract
     string constant ERR_IbetMembership_transferToContract_140001 = "140001";
@@ -143,7 +139,6 @@ library ErrorCode {
     // IbetMembership_applyForOffering
     string constant ERR_IbetMembership_applyForOffering_140401 = "140401";
 
-
     // 15XXXX
     // IbetStandardToken_transferToContract
     string constant ERR_IbetStandardToken_transferToContract_150001 = "150001";
@@ -155,11 +150,9 @@ library ErrorCode {
     // IbetStandardToken_transferFrom
     string constant ERR_IbetStandardToken_transferFrom_150301 = "150301";
 
-
     // 20XXXX
     // ExchangeStorage_onlyLatestVersion
     string constant ERR_ExchangeStorage_onlyLatestVersion_200001 = "200001";
-
 
     // 21XXXX
     // IbetExchange_createOrder
@@ -189,11 +182,9 @@ library ErrorCode {
     // IbetExchange_withdraw
     string constant ERR_IbetExchange_withdraw_210601 = "210601";
 
-
     // 22XXXX
     // EscrowStorage_onlyLatestVersion
     string constant ERR_EscrowStorage_onlyLatestVersion_220001 = "220001";
-
 
     // 23XXXX
     // IbetEscrow_createEscrow
@@ -213,7 +204,6 @@ library ErrorCode {
     // IbetEscrow_withdraw
     string constant ERR_IbetEscrow_withdraw_230301 = "230301";
 
-
     // 24XXXX
     // IbetSecurityTokenEscrow_createEscrow
     string constant ERR_IbetSecurityTokenEscrow_createEscrow_240001 = "240001";
@@ -225,11 +215,16 @@ library ErrorCode {
     string constant ERR_IbetSecurityTokenEscrow_cancelEscrow_240103 = "240103";
     string constant ERR_IbetSecurityTokenEscrow_cancelEscrow_240104 = "240104";
     // IbetSecurityTokenEscrow_approveTransfer
-    string constant ERR_IbetSecurityTokenEscrow_approveTransfer_240201 = "240201";
-    string constant ERR_IbetSecurityTokenEscrow_approveTransfer_240202 = "240202";
-    string constant ERR_IbetSecurityTokenEscrow_approveTransfer_240203 = "240203";
-    string constant ERR_IbetSecurityTokenEscrow_approveTransfer_240204 = "240204";
-    string constant ERR_IbetSecurityTokenEscrow_approveTransfer_240205 = "240205";
+    string constant ERR_IbetSecurityTokenEscrow_approveTransfer_240201 =
+        "240201";
+    string constant ERR_IbetSecurityTokenEscrow_approveTransfer_240202 =
+        "240202";
+    string constant ERR_IbetSecurityTokenEscrow_approveTransfer_240203 =
+        "240203";
+    string constant ERR_IbetSecurityTokenEscrow_approveTransfer_240204 =
+        "240204";
+    string constant ERR_IbetSecurityTokenEscrow_approveTransfer_240205 =
+        "240205";
     // IbetSecurityTokenEscrow_finishEscrow
     string constant ERR_IbetSecurityTokenEscrow_finishEscrow_240301 = "240301";
     string constant ERR_IbetSecurityTokenEscrow_finishEscrow_240302 = "240302";
@@ -238,11 +233,9 @@ library ErrorCode {
     // IbetSecurityTokenEscrow_withdraw
     string constant ERR_IbetSecurityTokenEscrow_withdraw_240401 = "240401";
 
-
     // 25XXXX
     // DVPStorage_onlyLatestVersion
     string constant ERR_DVPStorage_onlyLatestVersion_250001 = "250001";
-
 
     // 26XXXX
     // IbetSecurityTokenDVP_createDelivery
@@ -277,7 +270,6 @@ library ErrorCode {
     // IbetSecurityTokenDVP_withdraw
     string constant ERR_IbetSecurityTokenDVP_withdraw_260501 = "260501";
 
-
     // 30XXXX
     // PaymentGateway_register
     string constant ERR_PaymentGateway_register_300001 = "300001";
@@ -292,12 +284,10 @@ library ErrorCode {
     // PaymentGateway_modify
     string constant ERR_PaymentGateway_modify_300501 = "300501";
 
-
     // 40XXXX
     // PersonalInfo_modify
     string constant ERR_PersonalInfo_modify_400001 = "400001";
     string constant ERR_PersonalInfo_modify_400002 = "400002";
-
 
     // 50XXXX
     // Ownable_onlyOwner
@@ -305,19 +295,16 @@ library ErrorCode {
     // Ownable_transferOwnership
     string constant ERR_Ownable_transferOwnership_500101 = "500101";
 
-
     // 60XXXX
     // ContractRegistry_register
     string constant ERR_ContractRegistry_register_600001 = "600001";
     string constant ERR_ContractRegistry_register_600002 = "600002";
-
 
     // 61XXXX
     // E2EMessaging_getLastMessage
     string constant ERR_E2EMessaging_getLastMessage_610001 = "610001";
     // E2EMessaging_clearMessage
     string constant ERR_E2EMessaging_clearMessage_610101 = "610101";
-
 
     // 62XXXX
     // FreezeLog_updateLog

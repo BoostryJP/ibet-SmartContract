@@ -51,20 +51,19 @@ contract FreezeLog {
     /// @notice Get last index
     /// @param _recorder Recorder
     /// @return _index Last index
-    function lastLogIndex(address _recorder)
-        public
-        view
-        returns (uint256 _index)
-    {
+    function lastLogIndex(
+        address _recorder
+    ) public view returns (uint256 _index) {
         return last_log_index[_recorder];
     }
 
     /// @notice Record new logs
     /// @param _log Log text
     /// @param _freezingGraceBlockCount Freezing grace block count
-    function recordLog(string memory _log, uint256 _freezingGraceBlockCount)
-        public
-    {
+    function recordLog(
+        string memory _log,
+        uint256 _freezingGraceBlockCount
+    ) public {
         Log storage log = logs[msg.sender][last_log_index[msg.sender]];
 
         log.recorder = msg.sender;
@@ -101,7 +100,10 @@ contract FreezeLog {
     /// @notice Get log
     /// @param _recorder Recorder
     /// @param _index Index
-    function getLog(address _recorder, uint256 _index)
+    function getLog(
+        address _recorder,
+        uint256 _index
+    )
         public
         view
         returns (
