@@ -1,21 +1,21 @@
 /**
-* Copyright BOOSTRY Co., Ltd.
-*
-* Licensed under the Apache License, Version 2.0 (the "License");
-* you may not use this file except in compliance with the License.
-*
-* You may obtain a copy of the License at
-* http://www.apache.org/licenses/LICENSE-2.0
-*
-* Unless required by applicable law or agreed to in writing,
-* software distributed under the License is distributed on an "AS IS" BASIS,
-* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-*
-* See the License for the specific language governing permissions and
-* limitations under the License.
-*
-* SPDX-License-Identifier: Apache-2.0
-*/
+ * Copyright BOOSTRY Co., Ltd.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ *
+ * You may obtain a copy of the License at
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *
+ * SPDX-License-Identifier: Apache-2.0
+ */
 
 pragma solidity ^0.8.0;
 
@@ -27,7 +27,6 @@ import "./PaymentGateway.sol";
 import "./PersonalInfo.sol";
 import "../interfaces/RegulatorService.sol";
 import "../interfaces/ContractReceiver.sol";
-
 
 /// @title ibet Straight Bond DEX
 contract IbetStraightBondExchange is Ownable, ContractReceiver {
@@ -123,8 +122,7 @@ contract IbetStraightBondExchange is Ownable, ContractReceiver {
         address _personalInfoAddress,
         address _storageAddress,
         address _regulatorServiceAddress
-    )
-    {
+    ) {
         paymentGatewayAddress = _paymentGatewayAddress;
         personalInfoAddress = _personalInfoAddress;
         storageAddress = _storageAddress;
@@ -165,7 +163,9 @@ contract IbetStraightBondExchange is Ownable, ContractReceiver {
     /// @return isBuy 売買区分
     /// @return agent 決済業者のアドレス
     /// @return canceled キャンセル済み状態
-    function getOrder(uint256 _orderId)
+    function getOrder(
+        uint256 _orderId
+    )
         public
         view
         returns (
@@ -200,10 +200,7 @@ contract IbetStraightBondExchange is Ownable, ContractReceiver {
         bool _isBuy,
         address _agent,
         bool _canceled
-    )
-        private
-        returns (bool)
-    {
+    ) private returns (bool) {
         ExchangeStorage(storageAddress).setOrder(
             _orderId,
             _owner,
@@ -226,7 +223,10 @@ contract IbetStraightBondExchange is Ownable, ContractReceiver {
     /// @return _canceled キャンセル済み状態
     /// @return _paid 支払済状態
     /// @return _expiry 有効期限
-    function getAgreement(uint256 _orderId, uint256 _agreementId)
+    function getAgreement(
+        uint256 _orderId,
+        uint256 _agreementId
+    )
         public
         view
         returns (
@@ -238,7 +238,11 @@ contract IbetStraightBondExchange is Ownable, ContractReceiver {
             uint256 _expiry
         )
     {
-        return ExchangeStorage(storageAddress).getAgreement(_orderId, _agreementId);
+        return
+            ExchangeStorage(storageAddress).getAgreement(
+                _orderId,
+                _agreementId
+            );
     }
 
     /// @notice 約定情報更新
@@ -260,10 +264,7 @@ contract IbetStraightBondExchange is Ownable, ContractReceiver {
         bool _canceled,
         bool _paid,
         uint256 _expiry
-    )
-        private
-        returns (bool)
-    {
+    ) private returns (bool) {
         ExchangeStorage(storageAddress).setAgreement(
             _orderId,
             _agreementId,
@@ -279,21 +280,14 @@ contract IbetStraightBondExchange is Ownable, ContractReceiver {
 
     /// @notice 直近注文ID取得
     /// @return 直近注文ID
-    function latestOrderId()
-        public
-        view
-        returns (uint256)
-    {
+    function latestOrderId() public view returns (uint256) {
         return ExchangeStorage(storageAddress).getLatestOrderId();
     }
 
     /// @notice 直近注文ID更新
     /// @param _value 更新後の直近注文ID
     /// @return 処理結果
-    function setLatestOrderId(uint256 _value)
-        private
-        returns (bool)
-    {
+    function setLatestOrderId(uint256 _value) private returns (bool) {
         ExchangeStorage(storageAddress).setLatestOrderId(_value);
         return true;
     }
@@ -301,11 +295,7 @@ contract IbetStraightBondExchange is Ownable, ContractReceiver {
     /// @notice 直近約定ID取得
     /// @param _orderId 注文ID
     /// @return 直近約定ID
-    function latestAgreementId(uint256 _orderId)
-        public
-        view
-        returns (uint256)
-    {
+    function latestAgreementId(uint256 _orderId) public view returns (uint256) {
         return ExchangeStorage(storageAddress).getLatestAgreementId(_orderId);
     }
 
@@ -313,10 +303,10 @@ contract IbetStraightBondExchange is Ownable, ContractReceiver {
     /// @param _orderId 注文ID
     /// @param _value 更新後の直近約定ID
     /// @return 処理結果
-    function setLatestAgreementId(uint256 _orderId, uint256 _value)
-        private
-        returns (bool)
-    {
+    function setLatestAgreementId(
+        uint256 _orderId,
+        uint256 _value
+    ) private returns (bool) {
         ExchangeStorage(storageAddress).setLatestAgreementId(_orderId, _value);
         return true;
     }
@@ -325,15 +315,11 @@ contract IbetStraightBondExchange is Ownable, ContractReceiver {
     /// @param _account アカウントアドレス
     /// @param _token トークンアドレス
     /// @return 残高数量
-    function balanceOf(address _account, address _token)
-        public
-        view
-        returns (uint256)
-    {
-        return ExchangeStorage(storageAddress).getBalance(
-            _account,
-            _token
-        );
+    function balanceOf(
+        address _account,
+        address _token
+    ) public view returns (uint256) {
+        return ExchangeStorage(storageAddress).getBalance(_account, _token);
     }
 
     /// @notice 残高数量更新
@@ -341,30 +327,28 @@ contract IbetStraightBondExchange is Ownable, ContractReceiver {
     /// @param _token トークンアドレス
     /// @param _value 更新後の残高数量
     /// @return 処理結果
-    function setBalance(address _account, address _token, uint256 _value)
-        private
-        returns (bool)
-    {
-        return ExchangeStorage(storageAddress).setBalance(
-            _account,
-            _token,
-            _value
-        );
+    function setBalance(
+        address _account,
+        address _token,
+        uint256 _value
+    ) private returns (bool) {
+        return
+            ExchangeStorage(storageAddress).setBalance(
+                _account,
+                _token,
+                _value
+            );
     }
 
     /// @notice 拘束数量参照
     /// @param _account アカウントアドレス
     /// @param _token トークンアドレス
     /// @return 拘束数量
-    function commitmentOf(address _account, address _token)
-        public
-        view
-        returns (uint256)
-    {
-        return ExchangeStorage(storageAddress).getCommitment(
-            _account,
-            _token
-        );
+    function commitmentOf(
+        address _account,
+        address _token
+    ) public view returns (uint256) {
+        return ExchangeStorage(storageAddress).getCommitment(_account, _token);
     }
 
     /// @notice 拘束数量更新
@@ -372,26 +356,19 @@ contract IbetStraightBondExchange is Ownable, ContractReceiver {
     /// @param _token トークンアドレス
     /// @param _value 更新後の拘束数量
     /// @return 処理結果
-    function setCommitment(address _account, address _token, uint256 _value)
-        private
-        returns (bool)
-    {
-        ExchangeStorage(storageAddress).setCommitment(
-            _account,
-            _token,
-            _value
-        );
+    function setCommitment(
+        address _account,
+        address _token,
+        uint256 _value
+    ) private returns (bool) {
+        ExchangeStorage(storageAddress).setCommitment(_account, _token, _value);
         return true;
     }
 
     /// @notice 現在値参照
     /// @param _token トークンアドレス
     /// @return 現在値
-    function lastPrice(address _token)
-        public
-        view
-        returns(uint256)
-    {
+    function lastPrice(address _token) public view returns (uint256) {
         return ExchangeStorage(storageAddress).getLastPrice(_token);
     }
 
@@ -399,10 +376,10 @@ contract IbetStraightBondExchange is Ownable, ContractReceiver {
     /// @param _token トークンアドレス
     /// @param _value 更新後の現在値
     /// @return 処理結果
-    function setLastPrice(address _token, uint256 _value)
-        private
-        returns (bool)
-    {
+    function setLastPrice(
+        address _token,
+        uint256 _value
+    ) private returns (bool) {
         ExchangeStorage(storageAddress).setLastPrice(_token, _value);
         return true;
     }
@@ -424,15 +401,14 @@ contract IbetStraightBondExchange is Ownable, ContractReceiver {
         uint256 _price,
         bool _isBuy,
         address _agent
-    )
-        public
-        returns (bool)
-    {
+    ) public returns (bool) {
         // <CHK>
         //  取引参加者チェック
-        if (RegulatorService(regulatorServiceAddress).check(msg.sender) != 0) revert();
+        if (RegulatorService(regulatorServiceAddress).check(msg.sender) != 0)
+            revert();
 
-        if (_isBuy == true) { // 買注文の場合
+        if (_isBuy == true) {
+            // 買注文の場合
             // <CHK>
             //  1) 注文数量が0の場合
             //  2) 認可されたアドレスではない場合
@@ -442,20 +418,29 @@ contract IbetStraightBondExchange is Ownable, ContractReceiver {
             //  6) 取扱ステータスがFalseの場合
             //  7) 有効な収納代行業者（Agent）を指定していない場合
             //   -> REVERT
-            if (_amount == 0 ||
-                PaymentGateway(paymentGatewayAddress).accountApproved(msg.sender,_agent) == false ||
+            if (
+                _amount == 0 ||
+                PaymentGateway(paymentGatewayAddress).accountApproved(
+                    msg.sender,
+                    _agent
+                ) ==
+                false ||
                 PersonalInfo(personalInfoAddress).isRegistered(
-                    msg.sender,IbetStraightBond(_token).owner()) == false ||
+                    msg.sender,
+                    IbetStraightBond(_token).owner()
+                ) ==
+                false ||
                 isContract(msg.sender) == true ||
                 IbetStraightBond(_token).isRedeemed() == true ||
                 IbetStraightBond(_token).status() == false ||
-                validateAgent(_agent) == false)
-            {
+                validateAgent(_agent) == false
+            ) {
                 revert();
             }
         }
 
-        if (_isBuy == false) { // 売注文の場合
+        if (_isBuy == false) {
+            // 売注文の場合
             // <CHK>
             //  1) 注文数量が0の場合
             //  2) 残高数量が発注数量に満たない場合
@@ -465,16 +450,27 @@ contract IbetStraightBondExchange is Ownable, ContractReceiver {
             //  6) 取扱ステータスがFalseの場合
             //  7) 有効な収納代行業者（Agent）を指定していない場合
             //   -> 更新処理：全ての残高を投資家のアカウントに戻し、falseを返す
-            if (_amount == 0 ||
+            if (
+                _amount == 0 ||
                 balanceOf(msg.sender, _token) < _amount ||
-                PaymentGateway(paymentGatewayAddress).accountApproved(msg.sender,_agent) == false ||
+                PaymentGateway(paymentGatewayAddress).accountApproved(
+                    msg.sender,
+                    _agent
+                ) ==
+                false ||
                 PersonalInfo(personalInfoAddress).isRegistered(
-                    msg.sender,IbetStraightBond(_token).owner()) == false ||
+                    msg.sender,
+                    IbetStraightBond(_token).owner()
+                ) ==
+                false ||
                 IbetStraightBond(_token).isRedeemed() == true ||
                 IbetStraightBond(_token).status() == false ||
-                validateAgent(_agent) == false)
-            {
-                IbetStraightBond(_token).transfer(msg.sender, balanceOf(msg.sender, _token));
+                validateAgent(_agent) == false
+            ) {
+                IbetStraightBond(_token).transfer(
+                    msg.sender,
+                    balanceOf(msg.sender, _token)
+                );
                 setBalance(msg.sender, _token, 0);
                 return false;
             }
@@ -483,16 +479,41 @@ contract IbetStraightBondExchange is Ownable, ContractReceiver {
         // 更新処理：注文IDをカウントアップ -> 注文情報を挿入
         uint256 orderId = latestOrderId() + 1;
         setLatestOrderId(orderId);
-        setOrder(orderId, msg.sender, _token, _amount, _price, _isBuy, _agent, false);
+        setOrder(
+            orderId,
+            msg.sender,
+            _token,
+            _amount,
+            _price,
+            _isBuy,
+            _agent,
+            false
+        );
 
         // 更新処理：売り注文の場合、預かりを拘束
         if (!_isBuy) {
-            setBalance(msg.sender, _token, balanceOf(msg.sender, _token).sub(_amount));
-            setCommitment(msg.sender, _token, commitmentOf(msg.sender, _token).add(_amount));
+            setBalance(
+                msg.sender,
+                _token,
+                balanceOf(msg.sender, _token).sub(_amount)
+            );
+            setCommitment(
+                msg.sender,
+                _token,
+                commitmentOf(msg.sender, _token).add(_amount)
+            );
         }
 
         // イベント登録：新規注文
-        emit NewOrder(_token, orderId, msg.sender, _isBuy, _price, _amount, _agent);
+        emit NewOrder(
+            _token,
+            orderId,
+            msg.sender,
+            _isBuy,
+            _price,
+            _amount,
+            _agent
+        );
 
         return true;
     }
@@ -500,42 +521,68 @@ contract IbetStraightBondExchange is Ownable, ContractReceiver {
     /// @notice 注文キャンセル
     /// @param _orderId 注文ID
     /// @return 処理結果
-    function cancelOrder(uint256 _orderId)
-        public
-        returns (bool)
-    {
+    function cancelOrder(uint256 _orderId) public returns (bool) {
         // <CHK>
         //  指定した注文番号が、直近の注文ID以上の場合
         //   -> REVERT
         require(_orderId <= latestOrderId());
 
         Order memory order;
-        (order.owner, order.token, order.amount, order.price, order.isBuy, order.agent, order.canceled) =
-            getOrder(_orderId);
+        (
+            order.owner,
+            order.token,
+            order.amount,
+            order.price,
+            order.isBuy,
+            order.agent,
+            order.canceled
+        ) = getOrder(_orderId);
 
         // <CHK>
         //  1) 元注文の残注文数量が0の場合
         //  2) 注文がキャンセル済みの場合
         //  3) 元注文の発注者と、注文キャンセルの実施者が異なる場合
         //   -> REVERT
-        if (order.amount == 0 ||
+        if (
+            order.amount == 0 ||
             order.canceled == true ||
-            order.owner != msg.sender) {
+            order.owner != msg.sender
+        ) {
             revert();
         }
 
         // 更新処理：売り注文の場合、注文で拘束している預かりを解放 => 残高を投資家のアカウントに戻す
         if (!order.isBuy) {
-            setCommitment(msg.sender, order.token, commitmentOf(msg.sender, order.token).sub(order.amount));
-            IbetStraightBond(order.token).transfer(msg.sender,order.amount);
+            setCommitment(
+                msg.sender,
+                order.token,
+                commitmentOf(msg.sender, order.token).sub(order.amount)
+            );
+            IbetStraightBond(order.token).transfer(msg.sender, order.amount);
         }
 
         // 更新処理：キャンセル済みフラグをキャンセル済み（True）に更新
-        setOrder(_orderId, order.owner, order.token, order.amount, order.price, order.isBuy, order.agent, true);
+        setOrder(
+            _orderId,
+            order.owner,
+            order.token,
+            order.amount,
+            order.price,
+            order.isBuy,
+            order.agent,
+            true
+        );
 
         // イベント登録：注文キャンセル
-        emit CancelOrder(order.token, _orderId, msg.sender,
-                        order.isBuy, order.price, order.amount, order.agent);
+        emit CancelOrder(
+            order.token,
+            _orderId,
+            msg.sender,
+            order.isBuy,
+            order.price,
+            order.amount,
+            order.agent
+        );
 
         return true;
     }
@@ -545,25 +592,35 @@ contract IbetStraightBondExchange is Ownable, ContractReceiver {
     /// @param _amount 注文数量
     /// @param _isBuy 売買区分
     /// @return 処理結果
-    function executeOrder(uint256 _orderId, uint256 _amount, bool _isBuy)
-        public
-        returns (bool)
-    {
+    function executeOrder(
+        uint256 _orderId,
+        uint256 _amount,
+        bool _isBuy
+    ) public returns (bool) {
         // <CHK>
         //  取引参加者チェック
-        if (RegulatorService(regulatorServiceAddress).check(msg.sender) != 0) revert();
+        if (RegulatorService(regulatorServiceAddress).check(msg.sender) != 0)
+            revert();
 
         // <CHK>
         //  指定した注文IDが直近の注文IDを超えている場合
         require(_orderId <= latestOrderId());
 
         Order memory order;
-        (order.owner, order.token, order.amount, order.price, order.isBuy, order.agent, order.canceled) =
-            getOrder(_orderId);
+        (
+            order.owner,
+            order.token,
+            order.amount,
+            order.price,
+            order.isBuy,
+            order.agent,
+            order.canceled
+        ) = getOrder(_orderId);
 
         require(order.owner != address(0));
 
-        if (_isBuy == true) { // 買注文の場合
+        if (_isBuy == true) {
+            // 買注文の場合
             // <CHK>
             //  1) 注文数量が0の場合
             //  2) 元注文と、発注する注文が同一の売買区分の場合
@@ -576,23 +633,32 @@ contract IbetStraightBondExchange is Ownable, ContractReceiver {
             //  9) 取扱ステータスがFalseの場合
             //  10) 数量が元注文の残数量を超過している場合
             //   -> REVERT
-            if (_amount == 0 ||
+            if (
+                _amount == 0 ||
                 order.isBuy == _isBuy ||
                 msg.sender == order.owner ||
                 order.canceled == true ||
-                PaymentGateway(paymentGatewayAddress).accountApproved(msg.sender,order.agent) == false ||
+                PaymentGateway(paymentGatewayAddress).accountApproved(
+                    msg.sender,
+                    order.agent
+                ) ==
+                false ||
                 PersonalInfo(personalInfoAddress).isRegistered(
-                    msg.sender,IbetStraightBond(order.token).owner()) == false ||
+                    msg.sender,
+                    IbetStraightBond(order.token).owner()
+                ) ==
+                false ||
                 isContract(msg.sender) == true ||
                 IbetStraightBond(order.token).isRedeemed() == true ||
                 IbetStraightBond(order.token).status() == false ||
-                order.amount < _amount )
-            {
+                order.amount < _amount
+            ) {
                 revert();
             }
         }
 
-        if (_isBuy == false) { // 売注文の場合
+        if (_isBuy == false) {
+            // 売注文の場合
             // <CHK>
             //  1) 注文数量が0の場合
             //  2) 元注文と、発注する注文が同一の売買区分の場合
@@ -605,19 +671,30 @@ contract IbetStraightBondExchange is Ownable, ContractReceiver {
             //  9) 発注者の残高が発注数量を下回っている場合
             //  10) 数量が元注文の残数量を超過している場合
             //   -> 更新処理：残高を投資家のアカウントに全て戻し、falseを返す
-            if (_amount == 0 ||
+            if (
+                _amount == 0 ||
                 order.isBuy == _isBuy ||
                 msg.sender == order.owner ||
                 order.canceled == true ||
-                PaymentGateway(paymentGatewayAddress).accountApproved(msg.sender,order.agent) == false ||
+                PaymentGateway(paymentGatewayAddress).accountApproved(
+                    msg.sender,
+                    order.agent
+                ) ==
+                false ||
                 PersonalInfo(personalInfoAddress).isRegistered(
-                    msg.sender,IbetStraightBond(order.token).owner()) == false ||
+                    msg.sender,
+                    IbetStraightBond(order.token).owner()
+                ) ==
+                false ||
                 IbetStraightBond(order.token).isRedeemed() == true ||
                 IbetStraightBond(order.token).status() == false ||
                 balanceOf(msg.sender, order.token) < _amount ||
-                order.amount < _amount )
-            {
-                IbetStraightBond(order.token).transfer(msg.sender, balanceOf(msg.sender, order.token));
+                order.amount < _amount
+            ) {
+                IbetStraightBond(order.token).transfer(
+                    msg.sender,
+                    balanceOf(msg.sender, order.token)
+                );
                 setBalance(msg.sender, order.token, 0);
                 return false;
             }
@@ -627,23 +704,64 @@ contract IbetStraightBondExchange is Ownable, ContractReceiver {
         uint256 agreementId = latestAgreementId(_orderId) + 1;
         setLatestAgreementId(_orderId, agreementId);
         uint256 expiry = block.timestamp + lockingPeriod;
-        setAgreement(_orderId, agreementId, msg.sender, _amount, order.price, false, false, expiry);
+        setAgreement(
+            _orderId,
+            agreementId,
+            msg.sender,
+            _amount,
+            order.price,
+            false,
+            false,
+            expiry
+        );
 
         // 更新処理：元注文の数量を減らす
-        setOrder(_orderId, order.owner, order.token, order.amount.sub(_amount),
-            order.price, order.isBuy, order.agent, order.canceled);
+        setOrder(
+            _orderId,
+            order.owner,
+            order.token,
+            order.amount.sub(_amount),
+            order.price,
+            order.isBuy,
+            order.agent,
+            order.canceled
+        );
 
         if (order.isBuy) {
             // 更新処理：買い注文に対して売り注文で応じた場合、売りの預かりを拘束
-            setBalance(msg.sender, order.token, balanceOf(msg.sender, order.token).sub(_amount));
-            setCommitment(msg.sender, order.token, commitmentOf(msg.sender, order.token).add(_amount));
+            setBalance(
+                msg.sender,
+                order.token,
+                balanceOf(msg.sender, order.token).sub(_amount)
+            );
+            setCommitment(
+                msg.sender,
+                order.token,
+                commitmentOf(msg.sender, order.token).add(_amount)
+            );
             // イベント登録：約定
-            emit Agree(order.token, _orderId, agreementId, order.owner,
-                msg.sender, order.price, _amount, order.agent);
+            emit Agree(
+                order.token,
+                _orderId,
+                agreementId,
+                order.owner,
+                msg.sender,
+                order.price,
+                _amount,
+                order.agent
+            );
         } else {
             // イベント登録：約定
-            emit Agree(order.token, _orderId, agreementId,
-                msg.sender, order.owner, order.price, _amount, order.agent);
+            emit Agree(
+                order.token,
+                _orderId,
+                agreementId,
+                msg.sender,
+                order.owner,
+                order.price,
+                _amount,
+                order.agent
+            );
         }
 
         return true;
@@ -654,10 +772,10 @@ contract IbetStraightBondExchange is Ownable, ContractReceiver {
     /// @param _orderId 注文ID
     /// @param _agreementId 約定ID
     /// @return 処理結果
-    function confirmAgreement(uint256 _orderId, uint256 _agreementId)
-        public
-        returns (bool)
-    {
+    function confirmAgreement(
+        uint256 _orderId,
+        uint256 _agreementId
+    ) public returns (bool) {
         // <CHK>
         //  1) 指定した注文番号が、直近の注文ID以上の場合
         //  2) 指定した約定IDが、直近の約定ID以上の場合
@@ -666,50 +784,93 @@ contract IbetStraightBondExchange is Ownable, ContractReceiver {
         require(_agreementId <= latestAgreementId(_orderId));
 
         Order memory order;
-        (order.owner, order.token, order.amount, order.price, order.isBuy,
-            order.agent, order.canceled) =
-                getOrder(_orderId);
+        (
+            order.owner,
+            order.token,
+            order.amount,
+            order.price,
+            order.isBuy,
+            order.agent,
+            order.canceled
+        ) = getOrder(_orderId);
 
         Agreement memory agreement;
-        (agreement.counterpart, agreement.amount, agreement.price,
-            agreement.canceled, agreement.paid, agreement.expiry) =
-                getAgreement(_orderId, _agreementId);
+        (
+            agreement.counterpart,
+            agreement.amount,
+            agreement.price,
+            agreement.canceled,
+            agreement.paid,
+            agreement.expiry
+        ) = getAgreement(_orderId, _agreementId);
 
         // <CHK>
         //  1) すでに決済承認済み（支払い済み）の場合
         //  2) すでに決済非承認済み（キャンセル済み）の場合
         //  3) 元注文で指定した決済業者ではない場合
         //   -> REVERT
-        if (agreement.paid ||
-            agreement.canceled ||
-            msg.sender != order.agent) {
+        if (agreement.paid || agreement.canceled || msg.sender != order.agent) {
             revert();
         }
 
         // 更新処理：支払い済みフラグを支払い済み（True）に更新する
-        setAgreement(_orderId, _agreementId, agreement.counterpart, agreement.amount, agreement.price,
-            agreement.canceled, true, agreement.expiry);
+        setAgreement(
+            _orderId,
+            _agreementId,
+            agreement.counterpart,
+            agreement.amount,
+            agreement.price,
+            agreement.canceled,
+            true,
+            agreement.expiry
+        );
 
         if (order.isBuy) {
             // 更新処理：買注文の場合、突合相手（売り手）から注文者（買い手）へと資産移転を行う
             setCommitment(
-                agreement.counterpart, order.token,
-                    commitmentOf(agreement.counterpart, order.token).sub(agreement.amount));
-            IbetStraightBond(order.token).transfer(order.owner,agreement.amount);
+                agreement.counterpart,
+                order.token,
+                commitmentOf(agreement.counterpart, order.token).sub(
+                    agreement.amount
+                )
+            );
+            IbetStraightBond(order.token).transfer(
+                order.owner,
+                agreement.amount
+            );
             // イベント登録：決済OK
-            emit SettlementOK(order.token, _orderId, _agreementId,
-                order.owner, agreement.counterpart, order.price,
-                agreement.amount, order.agent);
+            emit SettlementOK(
+                order.token,
+                _orderId,
+                _agreementId,
+                order.owner,
+                agreement.counterpart,
+                order.price,
+                agreement.amount,
+                order.agent
+            );
         } else {
             // 更新処理：売注文の場合、注文者（売り手）から突合相手（買い手）へと資産移転を行う
             setCommitment(
-                order.owner, order.token,
-                    commitmentOf(order.owner, order.token).sub(agreement.amount));
-            IbetStraightBond(order.token).transfer(agreement.counterpart, agreement.amount);
+                order.owner,
+                order.token,
+                commitmentOf(order.owner, order.token).sub(agreement.amount)
+            );
+            IbetStraightBond(order.token).transfer(
+                agreement.counterpart,
+                agreement.amount
+            );
             // イベント登録：決済OK
-            emit SettlementOK(order.token, _orderId, _agreementId,
-                agreement.counterpart, order.owner, order.price,
-                agreement.amount, order.agent);
+            emit SettlementOK(
+                order.token,
+                _orderId,
+                _agreementId,
+                agreement.counterpart,
+                order.owner,
+                order.price,
+                agreement.amount,
+                order.agent
+            );
         }
 
         // 更新処理：現在値を更新する
@@ -723,10 +884,10 @@ contract IbetStraightBondExchange is Ownable, ContractReceiver {
     /// @param _orderId 注文ID
     /// @param _agreementId 約定ID
     /// @return 処理結果
-    function cancelAgreement(uint256 _orderId, uint256 _agreementId)
-        public
-        returns (bool)
-    {
+    function cancelAgreement(
+        uint256 _orderId,
+        uint256 _agreementId
+    ) public returns (bool) {
         // <CHK>
         //  1) 指定した注文番号が、直近の注文ID以上の場合
         //  2) 指定した約定IDが、直近の約定ID以上の場合
@@ -734,69 +895,119 @@ contract IbetStraightBondExchange is Ownable, ContractReceiver {
         require(_orderId <= latestOrderId());
         require(_agreementId <= latestAgreementId(_orderId));
 
-
         Order memory order;
-        (order.owner, order.token, order.amount, order.price, order.isBuy,
-            order.agent, order.canceled) =
-                getOrder(_orderId);
+        (
+            order.owner,
+            order.token,
+            order.amount,
+            order.price,
+            order.isBuy,
+            order.agent,
+            order.canceled
+        ) = getOrder(_orderId);
 
         Agreement memory agreement;
-        (agreement.counterpart, agreement.amount, agreement.price,
-            agreement.canceled, agreement.paid, agreement.expiry) =
-                getAgreement(_orderId, _agreementId);
+        (
+            agreement.counterpart,
+            agreement.amount,
+            agreement.price,
+            agreement.canceled,
+            agreement.paid,
+            agreement.expiry
+        ) = getAgreement(_orderId, _agreementId);
 
-        if (agreement.expiry <= block.timestamp) { // 約定明細の有効期限を超過している場合
-          // <CHK>
-          //  1) すでに決済承認済み（支払い済み）の場合
-          //  2) すでに決済非承認済み（キャンセル済み）の場合
-          //  3) msg.senderが、 決済代行（agent）、発注者（owner）、約定相手（counterpart）以外の場合
-          //   -> REVERT
-          if (agreement.paid ||
-              agreement.canceled ||
-              (
-                msg.sender != order.agent &&
-                msg.sender != order.owner &&
-                msg.sender != agreement.counterpart
-              )
-          ) {
-              revert();
-          }
-        } else { // 約定明細の有効期限を超過していない場合
-          // <CHK>
-          //  1) すでに支払い済みの場合
-          //  2) すでに決済非承認済み（キャンセル済み）の場合
-          //  3) msg.senderが、決済代行（agent）以外の場合
-          //   -> REVERT
-          if (agreement.paid ||
-              agreement.canceled ||
-              msg.sender != order.agent
-          ) {
-              revert();
-          }
+        if (agreement.expiry <= block.timestamp) {
+            // 約定明細の有効期限を超過している場合
+            // <CHK>
+            //  1) すでに決済承認済み（支払い済み）の場合
+            //  2) すでに決済非承認済み（キャンセル済み）の場合
+            //  3) msg.senderが、 決済代行（agent）、発注者（owner）、約定相手（counterpart）以外の場合
+            //   -> REVERT
+            if (
+                agreement.paid ||
+                agreement.canceled ||
+                (msg.sender != order.agent &&
+                    msg.sender != order.owner &&
+                    msg.sender != agreement.counterpart)
+            ) {
+                revert();
+            }
+        } else {
+            // 約定明細の有効期限を超過していない場合
+            // <CHK>
+            //  1) すでに支払い済みの場合
+            //  2) すでに決済非承認済み（キャンセル済み）の場合
+            //  3) msg.senderが、決済代行（agent）以外の場合
+            //   -> REVERT
+            if (
+                agreement.paid ||
+                agreement.canceled ||
+                msg.sender != order.agent
+            ) {
+                revert();
+            }
         }
 
         // 更新処理：キャンセル済みフラグをキャンセル（True）に更新する
-        setAgreement(_orderId, _agreementId, agreement.counterpart, agreement.amount, agreement.price,
-            true, agreement.paid, agreement.expiry);
+        setAgreement(
+            _orderId,
+            _agreementId,
+            agreement.counterpart,
+            agreement.amount,
+            agreement.price,
+            true,
+            agreement.paid,
+            agreement.expiry
+        );
 
         if (order.isBuy) {
             // 更新処理：買い注文の場合、突合相手（売り手）の預かりを解放 -> 預かりの引き出し
             // 取り消した注文は無効化する（注文中状態に戻さない）
-            setCommitment(agreement.counterpart, order.token,
-                commitmentOf(agreement.counterpart, order.token).sub(agreement.amount));
-            IbetStraightBond(order.token).transfer(agreement.counterpart, agreement.amount);
+            setCommitment(
+                agreement.counterpart,
+                order.token,
+                commitmentOf(agreement.counterpart, order.token).sub(
+                    agreement.amount
+                )
+            );
+            IbetStraightBond(order.token).transfer(
+                agreement.counterpart,
+                agreement.amount
+            );
             // イベント登録：決済NG
-            emit SettlementNG(order.token, _orderId, _agreementId,
-                order.owner, agreement.counterpart, order.price,
-                agreement.amount, order.agent);
+            emit SettlementNG(
+                order.token,
+                _orderId,
+                _agreementId,
+                order.owner,
+                agreement.counterpart,
+                order.price,
+                agreement.amount,
+                order.agent
+            );
         } else {
             // 更新処理：元注文の数量を戻す
-            setOrder(_orderId, order.owner, order.token, order.amount.add(agreement.amount),
-                order.price, order.isBuy, order.agent, order.canceled);
+            setOrder(
+                _orderId,
+                order.owner,
+                order.token,
+                order.amount.add(agreement.amount),
+                order.price,
+                order.isBuy,
+                order.agent,
+                order.canceled
+            );
             // イベント登録：決済NG
-            emit SettlementNG(order.token, _orderId, _agreementId,
-                agreement.counterpart, order.owner, order.price,
-                agreement.amount, order.agent);
+            emit SettlementNG(
+                order.token,
+                _orderId,
+                _agreementId,
+                agreement.counterpart,
+                order.owner,
+                order.price,
+                agreement.amount,
+                order.agent
+            );
         }
 
         return true;
@@ -806,15 +1017,14 @@ contract IbetStraightBondExchange is Ownable, ContractReceiver {
     /// @dev 未売却の預かりに対してのみ引き出しをおこなう。約定済、注文中の預かり（commitments）の引き出しはおこなわない。
     /// @param _token トークンアドレス
     /// @return 処理結果
-    function withdrawAll(address _token)
-        public
-        returns (bool)
-    {
+    function withdrawAll(address _token) public returns (bool) {
         uint256 balance = balanceOf(msg.sender, _token);
 
         // <CHK>
         //  残高がゼロの場合、REVERT
-        if (balance == 0 ) { revert(); }
+        if (balance == 0) {
+            revert();
+        }
 
         // 更新処理：トークン引き出し（送信）
         IbetStraightBond(_token).transfer(msg.sender, balance);
@@ -829,41 +1039,29 @@ contract IbetStraightBondExchange is Ownable, ContractReceiver {
     /// @notice Deposit Handler：デポジット処理
     /// @param _from アカウントアドレス：残高を保有するアドレス
     /// @param _value デポジット数量
-    function tokenFallback(address _from, uint _value, bytes memory /*_data*/)
-        public
-        override
-    {
-        setBalance(
-            _from,
-            msg.sender,
-            balanceOf(_from, msg.sender).add(_value)
-        );
+    function tokenFallback(
+        address _from,
+        uint _value,
+        bytes memory /*_data*/
+    ) public override {
+        setBalance(_from, msg.sender, balanceOf(_from, msg.sender).add(_value));
     }
 
     /// @notice アドレスがコントラクトアドレスであるかを判定
     /// @param _addr アドレス
     /// @return is_contract 判定結果
-    function isContract(address _addr)
-        private
-        view
-        returns (bool is_contract)
-    {
-      uint length;
-      assembly {
-        length := extcodesize(_addr)
-      }
-      return (length>0);
+    function isContract(address _addr) private view returns (bool is_contract) {
+        uint length;
+        assembly {
+            length := extcodesize(_addr)
+        }
+        return (length > 0);
     }
 
     /// @notice Agentアドレスが有効なものであることをチェックする
     /// @param _addr アドレス
     /// @return 有効状態
-    function validateAgent(address _addr)
-        private
-        view
-        returns (bool)
-    {
+    function validateAgent(address _addr) private view returns (bool) {
         return PaymentGateway(paymentGatewayAddress).getAgent(_addr);
     }
-
 }

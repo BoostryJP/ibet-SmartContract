@@ -1,21 +1,21 @@
 /**
-* Copyright BOOSTRY Co., Ltd.
-*
-* Licensed under the Apache License, Version 2.0 (the "License");
-* you may not use this file except in compliance with the License.
-*
-* You may obtain a copy of the License at
-* http://www.apache.org/licenses/LICENSE-2.0
-*
-* Unless required by applicable law or agreed to in writing,
-* software distributed under the License is distributed on an "AS IS" BASIS,
-* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-*
-* See the License for the specific language governing permissions and
-* limitations under the License.
-*
-* SPDX-License-Identifier: Apache-2.0
-*/
+ * Copyright BOOSTRY Co., Ltd.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ *
+ * You may obtain a copy of the License at
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *
+ * SPDX-License-Identifier: Apache-2.0
+ */
 pragma solidity ^0.8.0;
 
 import "OpenZeppelin/openzeppelin-contracts@4.9.3/contracts/utils/math/SafeMath.sol";
@@ -24,7 +24,6 @@ import "../access/Ownable.sol";
 import "../utils/Errors.sol";
 import "../../interfaces/IbetExchangeInterface.sol";
 import "../../interfaces/IbetSecurityTokenInterface.sol";
-
 
 /// @title ibet SecurityTokenDVP
 contract IbetSecurityTokenDVP is Ownable, IbetExchangeInterface {
@@ -92,8 +91,7 @@ contract IbetSecurityTokenDVP is Ownable, IbetExchangeInterface {
 
     // [CONSTRUCTOR]
     /// @param _storageAddress DVPStorageコントラクトアドレス
-    constructor(address _storageAddress)
-    {
+    constructor(address _storageAddress) {
         storageAddress = _storageAddress;
     }
 
@@ -107,17 +105,13 @@ contract IbetSecurityTokenDVP is Ownable, IbetExchangeInterface {
         address buyer;
         uint256 amount;
         address agent;
-        bool confirmed;  // Initially false
-        bool valid;  // Initially true
+        bool confirmed; // Initially false
+        bool valid; // Initially true
     }
 
     /// @notice 直近決済ID取得
     /// @return 直近決済ID
-    function latestDeliveryId()
-        public
-        view
-        returns (uint256)
-    {
+    function latestDeliveryId() public view returns (uint256) {
         return DVPStorage(storageAddress).getLatestDeliveryId();
     }
 
@@ -130,7 +124,9 @@ contract IbetSecurityTokenDVP is Ownable, IbetExchangeInterface {
     /// @return agent 決済エージェント
     /// @return confirmed 確認状態
     /// @return valid 有効状態
-    function getDelivery(uint256 _deliveryId)
+    function getDelivery(
+        uint256 _deliveryId
+    )
         public
         view
         returns (
@@ -150,32 +146,22 @@ contract IbetSecurityTokenDVP is Ownable, IbetExchangeInterface {
     /// @param _account アカウントアドレス
     /// @param _token トークンアドレス
     /// @return 残高数量
-    function balanceOf(address _account, address _token)
-        public
-        view
-        override
-        returns (uint256)
-    {
-        return DVPStorage(storageAddress).getBalance(
-            _account,
-            _token
-        );
+    function balanceOf(
+        address _account,
+        address _token
+    ) public view override returns (uint256) {
+        return DVPStorage(storageAddress).getBalance(_account, _token);
     }
 
     /// @notice 拘束数量の参照
     /// @param _account アカウントアドレス
     /// @param _token トークンアドレス
     /// @return 残高数量
-    function commitmentOf(address _account, address _token)
-        public
-        view
-        override
-        returns (uint256)
-    {
-        return DVPStorage(storageAddress).getCommitment(
-            _account,
-            _token
-        );
+    function commitmentOf(
+        address _account,
+        address _token
+    ) public view override returns (uint256) {
+        return DVPStorage(storageAddress).getCommitment(_account, _token);
     }
 
     // ---------------------------------------------------------------
@@ -194,10 +180,7 @@ contract IbetSecurityTokenDVP is Ownable, IbetExchangeInterface {
         uint256 _amount,
         address _agent,
         string memory _data
-    )
-        public
-        returns (uint256)
-    {
+    ) public returns (uint256) {
         // チェック：数量がゼロより大きいこと
         require(
             _amount > 0,
@@ -218,12 +201,14 @@ contract IbetSecurityTokenDVP is Ownable, IbetExchangeInterface {
 
         // チェック：トークンの移転承諾要否フラグが無効であること
         require(
-            IbetSecurityTokenInterface(_token).transferApprovalRequired() == false,
+            IbetSecurityTokenInterface(_token).transferApprovalRequired() ==
+                false,
             ErrorCode.ERR_IbetSecurityTokenDVP_createDelivery_260004
         );
 
         // 更新：決済IDをカウントアップ
-        uint256 _deliveryId = DVPStorage(storageAddress).getLatestDeliveryId() + 1;
+        uint256 _deliveryId = DVPStorage(storageAddress).getLatestDeliveryId() +
+            1;
         DVPStorage(storageAddress).setLatestDeliveryId(_deliveryId);
 
         // 更新：DVP決済情報の挿入
@@ -268,10 +253,7 @@ contract IbetSecurityTokenDVP is Ownable, IbetExchangeInterface {
 
     /// @notice DVP決済取消
     /// @param _deliveryId 決済ID
-    function cancelDelivery(uint256 _deliveryId)
-        public
-        returns (bool)
-    {
+    function cancelDelivery(uint256 _deliveryId) public returns (bool) {
         // チェック：決済IDが直近ID以下であること
         require(
             _deliveryId <= DVPStorage(storageAddress).getLatestDeliveryId(),
@@ -348,10 +330,7 @@ contract IbetSecurityTokenDVP is Ownable, IbetExchangeInterface {
 
     /// @notice DVP決済確認
     /// @param _deliveryId 決済ID
-    function confirmDelivery(uint256 _deliveryId)
-        public
-        returns (bool)
-    {
+    function confirmDelivery(uint256 _deliveryId) public returns (bool) {
         // チェック：決済IDが直近ID以下であること
         require(
             _deliveryId <= DVPStorage(storageAddress).getLatestDeliveryId(),
@@ -395,7 +374,8 @@ contract IbetSecurityTokenDVP is Ownable, IbetExchangeInterface {
 
         // チェック：トークンの移転承諾要否フラグが無効であること
         require(
-            IbetSecurityTokenInterface(delivery.token).transferApprovalRequired() == false,
+            IbetSecurityTokenInterface(delivery.token)
+                .transferApprovalRequired() == false,
             ErrorCode.ERR_IbetSecurityTokenDVP_confirmDelivery_260206
         );
 
@@ -426,10 +406,7 @@ contract IbetSecurityTokenDVP is Ownable, IbetExchangeInterface {
 
     /// @notice DVP決済完了
     /// @param _deliveryId 決済ID
-    function finishDelivery(uint256 _deliveryId)
-        public
-        returns (bool)
-    {
+    function finishDelivery(uint256 _deliveryId) public returns (bool) {
         // チェック：決済IDが直近ID以下であること
         require(
             _deliveryId <= DVPStorage(storageAddress).getLatestDeliveryId(),
@@ -473,7 +450,8 @@ contract IbetSecurityTokenDVP is Ownable, IbetExchangeInterface {
 
         // チェック：トークンの移転承諾要否フラグが無効であること
         require(
-            IbetSecurityTokenInterface(delivery.token).transferApprovalRequired() == false,
+            IbetSecurityTokenInterface(delivery.token)
+                .transferApprovalRequired() == false,
             ErrorCode.ERR_IbetSecurityTokenDVP_finishDelivery_260306
         );
 
@@ -524,10 +502,7 @@ contract IbetSecurityTokenDVP is Ownable, IbetExchangeInterface {
 
     /// @notice DVP決済中止
     /// @param _deliveryId 決済ID
-    function abortDelivery(uint256 _deliveryId)
-        public
-        returns (bool)
-    {
+    function abortDelivery(uint256 _deliveryId) public returns (bool) {
         // チェック：決済IDが直近ID以下であること
         require(
             _deliveryId <= DVPStorage(storageAddress).getLatestDeliveryId(),
@@ -604,11 +579,10 @@ contract IbetSecurityTokenDVP is Ownable, IbetExchangeInterface {
 
     /// @notice DVP決済一括完了
     /// @param _deliveryIdList 決済IDのリスト
-    function bulkFinishDelivery(uint256[] calldata _deliveryIdList)
-        public
-        returns (bool success)
-    {
-        for(uint i = 0; i < _deliveryIdList.length; i++) {
+    function bulkFinishDelivery(
+        uint256[] calldata _deliveryIdList
+    ) public returns (bool success) {
+        for (uint i = 0; i < _deliveryIdList.length; i++) {
             success = finishDelivery(_deliveryIdList[i]);
         }
         return success;
@@ -618,11 +592,7 @@ contract IbetSecurityTokenDVP is Ownable, IbetExchangeInterface {
     /// @dev 決済で拘束されているものは引き出しされない
     /// @param _token トークンアドレス
     /// @return 処理結果
-    function withdraw(address _token)
-        public
-        override
-        returns (bool)
-    {
+    function withdraw(address _token) public override returns (bool) {
         uint256 balance = balanceOf(msg.sender, _token);
 
         require(
@@ -643,10 +613,11 @@ contract IbetSecurityTokenDVP is Ownable, IbetExchangeInterface {
     /// @notice Deposit Handler：デポジット処理
     /// @param _from アカウントアドレス：残高を保有するアドレス
     /// @param _value デポジット数量
-    function tokenFallback(address _from, uint _value, bytes memory /*_data*/)
-        public
-        override
-    {
+    function tokenFallback(
+        address _from,
+        uint _value,
+        bytes memory /*_data*/
+    ) public override {
         DVPStorage(storageAddress).setBalance(
             _from,
             msg.sender,
@@ -656,5 +627,4 @@ contract IbetSecurityTokenDVP is Ownable, IbetExchangeInterface {
         // イベント登録
         emit Deposited(msg.sender, _from);
     }
-
 }

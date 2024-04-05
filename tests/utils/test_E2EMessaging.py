@@ -16,6 +16,7 @@ limitations under the License.
 
 SPDX-License-Identifier: Apache-2.0
 """
+
 import brownie
 import pytest
 
@@ -39,9 +40,7 @@ class TestSendMessage:
 
         # Send message
         tx = e2e_messaging.sendMessage.transact(
-            receiver,
-            test_message,
-            {"from": sender}
+            receiver, test_message, {"from": sender}
         )
 
         # Assertion
@@ -72,16 +71,12 @@ class TestSendMessage:
 
         # Send message (1)
         tx1 = e2e_messaging.sendMessage.transact(
-            receiver,
-            test_message_1,
-            {"from": sender}
+            receiver, test_message_1, {"from": sender}
         )
 
         # Send message (2)
         tx2 = e2e_messaging.sendMessage.transact(
-            receiver,
-            test_message_2,
-            {"from": sender}
+            receiver, test_message_2, {"from": sender}
         )
 
         # Assertion
@@ -127,11 +122,7 @@ class TestLastIndex:
         last_msg_index_before = e2e_messaging.last_msg_index(receiver)
 
         # Send message
-        e2e_messaging.sendMessage.transact(
-            receiver,
-            test_message,
-            {"from": sender}
-        )
+        e2e_messaging.sendMessage.transact(receiver, test_message, {"from": sender})
 
         # Assertion
         assert last_msg_index_before == 0
@@ -158,9 +149,7 @@ class TestGetLastMessage:
 
         # Send message
         tx = e2e_messaging.sendMessage.transact(
-            receiver,
-            test_message,
-            {"from": sender}
+            receiver, test_message, {"from": sender}
         )
 
         # Assertion
@@ -183,17 +172,11 @@ class TestGetLastMessage:
         e2e_messaging = admin.deploy(E2EMessaging)
 
         # Send message (1)
-        e2e_messaging.sendMessage.transact(
-            receiver,
-            test_message_1,
-            {"from": sender}
-        )
+        e2e_messaging.sendMessage.transact(receiver, test_message_1, {"from": sender})
 
         # Send message (2)
         tx = e2e_messaging.sendMessage.transact(
-            receiver,
-            test_message_2,
-            {"from": sender}
+            receiver, test_message_2, {"from": sender}
         )
 
         # Assertion
@@ -239,9 +222,7 @@ class TestGetMessageByIndex:
 
         # Send message
         tx = e2e_messaging.sendMessage.transact(
-            receiver,
-            test_message,
-            {"from": sender}
+            receiver, test_message, {"from": sender}
         )
 
         # Assertion
@@ -265,16 +246,12 @@ class TestGetMessageByIndex:
 
         # Send message (1)
         tx1 = e2e_messaging.sendMessage.transact(
-            receiver,
-            test_message_1,
-            {"from": sender}
+            receiver, test_message_1, {"from": sender}
         )
 
         # Send message (2)
         tx2 = e2e_messaging.sendMessage.transact(
-            receiver,
-            test_message_2,
-            {"from": sender}
+            receiver, test_message_2, {"from": sender}
         )
 
         # Assertion
@@ -327,17 +304,13 @@ class TestClearMessage:
 
         # Send message
         tx1 = e2e_messaging.sendMessage.transact(
-            receiver,
-            test_message,
-            {"from": sender}
+            receiver, test_message, {"from": sender}
         )
 
         # Clear message
         latest_index = e2e_messaging.last_msg_index(receiver)
         tx2 = e2e_messaging.clearMessage.transact(
-            receiver,
-            latest_index - 1,
-            {"from": sender}
+            receiver, latest_index - 1, {"from": sender}
         )
 
         # Assertion
@@ -347,7 +320,7 @@ class TestClearMessage:
 
         message = e2e_messaging.messages(receiver, latest_index - 1)
         assert message[0] == sender
-        assert message[1] == ''
+        assert message[1] == ""
         assert message[2] == tx1.events["Message"]["time"]
 
     ##########################################################
@@ -368,18 +341,14 @@ class TestClearMessage:
 
         # Send message
         tx1 = e2e_messaging.sendMessage.transact(
-            receiver,
-            test_message,
-            {"from": sender}
+            receiver, test_message, {"from": sender}
         )
 
         # Clear message
         latest_index = e2e_messaging.last_msg_index(receiver)
         with brownie.reverts(revert_msg="610101"):
             e2e_messaging.clearMessage.transact(
-                receiver,
-                latest_index - 1,
-                {"from": receiver}
+                receiver, latest_index - 1, {"from": receiver}
             )
 
         message = e2e_messaging.messages(receiver, latest_index - 1)
@@ -403,11 +372,7 @@ class TestGetPublicKey:
         e2e_messaging = admin.deploy(E2EMessaging)
 
         # Set public key
-        e2e_messaging.setPublicKey.transact(
-            "test_key",
-            "test_key_type",
-            {"from": who}
-        )
+        e2e_messaging.setPublicKey.transact("test_key", "test_key_type", {"from": who})
 
         # Assertion
         public_key = e2e_messaging.getPublicKey(who)
@@ -431,9 +396,7 @@ class TestSetPublicKey:
 
         # Set public key
         tx = e2e_messaging.setPublicKey.transact(
-            "test_key",
-            "test_key_type",
-            {"from": who}
+            "test_key", "test_key_type", {"from": who}
         )
 
         # Assertion
@@ -456,16 +419,12 @@ class TestSetPublicKey:
 
         # Set public key (1)
         e2e_messaging.setPublicKey.transact(
-            "test_key_1",
-            "test_key_type_1",
-            {"from": who}
+            "test_key_1", "test_key_type_1", {"from": who}
         )
 
         # Set public key (2)
         e2e_messaging.setPublicKey.transact(
-            "test_key_2",
-            "test_key_type_2",
-            {"from": who}
+            "test_key_2", "test_key_type_2", {"from": who}
         )
 
         # Assertion

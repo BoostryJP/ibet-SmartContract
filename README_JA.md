@@ -54,7 +54,7 @@
 
 eth-brownie をインストールします。
 ```bash
-$ pip install -r requirements.txt
+$ make install
 ```
 
 openzeppelin-contractsをインストールします。

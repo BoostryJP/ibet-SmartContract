@@ -16,18 +16,19 @@ limitations under the License.
 
 SPDX-License-Identifier: Apache-2.0
 """
+
 import brownie
-from eth_utils import to_checksum_address
 from brownie import IbetStandardToken
+from eth_utils import to_checksum_address
 
 
 def init_args(tradable_exchange):
-    name = 'test_token'
-    symbol = 'MEM'
-    initial_supply = 2 ** 256 - 1
+    name = "test_token"
+    symbol = "MEM"
+    initial_supply = 2**256 - 1
     tradable_exchange = tradable_exchange
-    contact_information = 'some_contact_information'
-    privacy_policy = 'some_privacy_policy'
+    contact_information = "some_contact_information"
+    privacy_policy = "some_privacy_policy"
 
     deploy_args = [
         name,
@@ -35,25 +36,20 @@ def init_args(tradable_exchange):
         initial_supply,
         tradable_exchange,
         contact_information,
-        privacy_policy
+        privacy_policy,
     ]
     return deploy_args
 
 
 def deploy(users, deploy_args):
-    token = users['issuer'].deploy(
-        IbetStandardToken,
-        *deploy_args
-    )
+    token = users["issuer"].deploy(IbetStandardToken, *deploy_args)
     return token
 
 
 def deploy_share(users, deploy_args):
     from brownie import IbetShare
-    token = users["issuer"].deploy(
-        IbetShare,
-        *deploy_args
-    )
+
+    token = users["issuer"].deploy(IbetShare, *deploy_args)
     return token
 
 
@@ -65,13 +61,12 @@ class TestDeploy:
     #######################################
 
     # Normal_1
-    def test_normal_1(self, users, exchange,
-                      exchange_storage, payment_gateway):
+    def test_normal_1(self, users, exchange, exchange_storage, payment_gateway):
         # assertion
         owner = exchange.owner()
         payment_gateway_address = exchange.paymentGatewayAddress()
         storage_address = exchange.storageAddress()
-        assert owner == users['admin']
+        assert owner == users["admin"]
         assert payment_gateway_address == to_checksum_address(payment_gateway.address)
         assert storage_address == to_checksum_address(exchange_storage.address)
 
@@ -85,7 +80,7 @@ class TestTokenFallback:
 
     # Normal_1
     def test_normal_1(self, users, exchange):
-        _issuer = users['issuer']
+        _issuer = users["issuer"]
         _value = 100
 
         # issue token
@@ -93,11 +88,7 @@ class TestTokenFallback:
         token = deploy(users, deploy_args)
 
         # transfer to exchange contract
-        token.transfer.transact(
-            exchange.address,
-            _value,
-            {'from': _issuer}
-        )
+        token.transfer.transact(exchange.address, _value, {"from": _issuer})
 
         # assertion
         balance_token = token.balanceOf(_issuer)
@@ -108,7 +99,7 @@ class TestTokenFallback:
     # Normal_2
     # Multiple deposit
     def test_normal_2(self, users, exchange):
-        _issuer = users['issuer']
+        _issuer = users["issuer"]
         _value = 100
 
         # issue token
@@ -116,18 +107,10 @@ class TestTokenFallback:
         token = deploy(users, deploy_args)
 
         # transfer to exchange contract (1)
-        token.transfer.transact(
-            exchange.address,
-            _value,
-            {'from': _issuer}
-        )
+        token.transfer.transact(exchange.address, _value, {"from": _issuer})
 
         # transfer to exchange contract (2)
-        token.transfer.transact(
-            exchange.address,
-            _value,
-            {'from': _issuer}
-        )
+        token.transfer.transact(exchange.address, _value, {"from": _issuer})
 
         # assertion
         balance_token = token.balanceOf(_issuer)
@@ -145,18 +128,18 @@ class TestWithdraw:
 
     # Normal_1
     def test_normal_1(self, users, exchange):
-        _issuer = users['issuer']
-        _value = 2 ** 256 - 1
+        _issuer = users["issuer"]
+        _value = 2**256 - 1
 
         # issue token
         deploy_args = init_args(exchange.address)
         token = deploy(users, deploy_args)
 
         # transfer to exchange contract
-        token.transfer.transact(exchange.address, _value, {'from': _issuer})
+        token.transfer.transact(exchange.address, _value, {"from": _issuer})
 
         # withdraw
-        tx = exchange.withdraw.transact(token.address, {'from': _issuer})
+        tx = exchange.withdraw.transact(token.address, {"from": _issuer})
 
         # assertion
         balance_token = token.balanceOf(_issuer)
@@ -174,7 +157,7 @@ class TestWithdraw:
     # Error_1
     # The balance must be greater than zero.
     def test_error_1(self, users, exchange):
-        _issuer = users['issuer']
+        _issuer = users["issuer"]
 
         # issue token
         deploy_args = init_args(exchange.address)
@@ -182,10 +165,7 @@ class TestWithdraw:
 
         # withdraw
         with brownie.reverts(revert_msg="210601"):
-            exchange.withdraw.transact(
-                token.address,
-                {'from': _issuer}
-            )
+            exchange.withdraw.transact(token.address, {"from": _issuer})
 
         # assertion
         balance_token = token.balanceOf(_issuer)
@@ -196,54 +176,38 @@ class TestWithdraw:
     # Error_2
     # Must be transferable.
     def test_error_2(self, users, exchange):
-        _issuer = users['issuer']
-        _value = 2 ** 256 - 1
+        _issuer = users["issuer"]
+        _value = 2**256 - 1
 
         # issue token
         deploy_args = [
-            'test_share',
-            'test_symbol',
-            2 ** 256 - 1,
-            2 ** 256 - 1,
-            2 ** 256 - 1,
-            '20200829',
-            '20200831',
-            '20191231',
-            2 ** 256 - 1
+            "test_share",
+            "test_symbol",
+            2**256 - 1,
+            2**256 - 1,
+            2**256 - 1,
+            "20200829",
+            "20200831",
+            "20191231",
+            2**256 - 1,
         ]
         token = deploy_share(users, deploy_args)
 
         # set to transferable
-        token.setTransferable(
-            True,
-            {'from': _issuer}
-        )
+        token.setTransferable(True, {"from": _issuer})
 
         # set to tradable contract
-        token.setTradableExchange(
-            exchange.address,
-            {'from': _issuer}
-        )
+        token.setTradableExchange(exchange.address, {"from": _issuer})
 
         # transfer to exchange contract
-        token.transfer(
-            exchange.address,
-            _value,
-            {'from': _issuer}
-        )
+        token.transfer(exchange.address, _value, {"from": _issuer})
 
         # set to not transferable
-        token.setTransferable(
-            False,
-            {'from': _issuer}
-        )
+        token.setTransferable(False, {"from": _issuer})
 
         # withdraw
         with brownie.reverts(revert_msg="110402"):
-            exchange.withdraw(
-                token.address,
-                {'from': _issuer}
-            )
+            exchange.withdraw(token.address, {"from": _issuer})
 
         # assertion
         assert token.balanceOf(_issuer) == 0
@@ -261,26 +225,21 @@ class TestCreateOrder:
     # Normal_1
     # Make order: BUY
     def test_normal_1(self, users, exchange):
-        issuer = users['issuer']
-        trader = users['trader']
-        agent = users['agent']
+        issuer = users["issuer"]
+        trader = users["trader"]
+        agent = users["agent"]
 
         # issue token
         deploy_args = init_args(exchange.address)
         token = deploy(users, deploy_args)
 
         # make order: BUY
-        _amount = 2 ** 256 - 1
+        _amount = 2**256 - 1
         _price = 123
         _isBuy = True
 
         tx = exchange.createOrder.transact(
-            token.address,
-            _amount,
-            _price,
-            _isBuy,
-            agent,
-            {'from': trader}
+            token.address, _amount, _price, _isBuy, agent, {"from": trader}
         )
 
         # assertion
@@ -292,7 +251,7 @@ class TestCreateOrder:
             _price,
             _isBuy,
             agent.address,
-            False
+            False,
         ]
         assert token.balanceOf(issuer) == deploy_args[2]
         assert token.balanceOf(trader) == 0
@@ -308,30 +267,21 @@ class TestCreateOrder:
     # Normal_2
     # Make order: SELL
     def test_normal_2(self, users, exchange):
-        issuer = users['issuer']
-        agent = users['agent']
+        issuer = users["issuer"]
+        agent = users["agent"]
 
         # issue token
         deploy_args = init_args(exchange.address)
         token = deploy(users, deploy_args)
 
         # transfer to contract -> make order: SELL
-        _amount = 2 ** 256 - 1
+        _amount = 2**256 - 1
         _price = 123
         _isBuy = False
 
-        token.transfer.transact(
-            exchange.address,
-            _amount,
-            {'from': issuer}
-        )
+        token.transfer.transact(exchange.address, _amount, {"from": issuer})
         tx = exchange.createOrder.transact(
-            token.address,
-            _amount,
-            _price,
-            _isBuy,
-            agent,
-            {'from': issuer}
+            token.address, _amount, _price, _isBuy, agent, {"from": issuer}
         )
 
         # assertion
@@ -343,7 +293,7 @@ class TestCreateOrder:
             _price,
             _isBuy,
             agent.address,
-            False
+            False,
         ]
         assert token.balanceOf(issuer) == deploy_args[2] - _amount
         assert exchange.commitmentOf(issuer, token.address) == _amount
@@ -364,9 +314,9 @@ class TestCreateOrder:
     # Make order: BUY
     # Amount must be greater than zero
     def test_error_1_1(self, users, exchange):
-        issuer = users['issuer']
-        trader = users['trader']
-        agent = users['agent']
+        issuer = users["issuer"]
+        trader = users["trader"]
+        agent = users["agent"]
 
         # issue token
         deploy_args = init_args(exchange.address)
@@ -380,12 +330,7 @@ class TestCreateOrder:
         order_id_before = exchange.latestOrderId()
         with brownie.reverts(revert_msg="210001"):
             exchange.createOrder.transact(
-                token.address,
-                _amount,
-                _price,
-                _isBuy,
-                agent,
-                {'from': trader}
+                token.address, _amount, _price, _isBuy, agent, {"from": trader}
             )
 
         # assertion
@@ -398,16 +343,16 @@ class TestCreateOrder:
     # Make order: BUY
     # Status must be True
     def test_error_1_2(self, users, exchange):
-        issuer = users['issuer']
-        trader = users['trader']
-        agent = users['agent']
+        issuer = users["issuer"]
+        trader = users["trader"]
+        agent = users["agent"]
 
         # issue token
         deploy_args = init_args(exchange.address)
         token = deploy(users, deploy_args)
 
         # change token status
-        token.setStatus.transact(False, {'from': issuer})
+        token.setStatus.transact(False, {"from": issuer})
 
         # make order: BUY
         _amount = 100
@@ -417,12 +362,7 @@ class TestCreateOrder:
         order_id_before = exchange.latestOrderId()
         with brownie.reverts(revert_msg="210001"):
             exchange.createOrder.transact(
-                token.address,
-                _amount,
-                _price,
-                _isBuy,
-                agent,
-                {'from': trader}
+                token.address, _amount, _price, _isBuy, agent, {"from": trader}
             )
 
         # assertion
@@ -435,8 +375,8 @@ class TestCreateOrder:
     # Make order: BUY
     # Agent must be valid
     def test_error_1_3(self, users, exchange):
-        issuer = users['issuer']
-        trader = users['trader']
+        issuer = users["issuer"]
+        trader = users["trader"]
 
         # issue token
         deploy_args = init_args(exchange.address)
@@ -454,8 +394,8 @@ class TestCreateOrder:
                 _amount,
                 _price,
                 _isBuy,
-                users['user1'],  # invalid
-                {'from': trader}
+                users["user1"],  # invalid
+                {"from": trader},
             )
 
         # assertion
@@ -468,30 +408,21 @@ class TestCreateOrder:
     # Make order: SELL
     # Amount must be greater than zero
     def test_error_2_1(self, users, exchange):
-        issuer = users['issuer']
-        agent = users['agent']
+        issuer = users["issuer"]
+        agent = users["agent"]
 
         # issue token
         deploy_args = init_args(exchange.address)
         token = deploy(users, deploy_args)
 
         # transfer to contract -> make order: SELL
-        _amount = 2 ** 256 - 1
+        _amount = 2**256 - 1
         _price = 123
         _isBuy = False
 
-        token.transfer.transact(
-            exchange.address,
-            _amount,
-            {'from': issuer}
-        )
+        token.transfer.transact(exchange.address, _amount, {"from": issuer})
         exchange.createOrder.transact(
-            token.address,
-            0,  # zero
-            _price,
-            _isBuy,
-            agent,
-            {'from': issuer}
+            token.address, 0, _price, _isBuy, agent, {"from": issuer}  # zero
         )
 
         # assertion
@@ -502,8 +433,8 @@ class TestCreateOrder:
     # Make order: SELL
     # Insufficient balance
     def test_error_2_2(self, users, exchange):
-        issuer = users['issuer']
-        agent = users['agent']
+        issuer = users["issuer"]
+        agent = users["agent"]
 
         # issue token
         deploy_args = init_args(exchange.address)
@@ -514,18 +445,14 @@ class TestCreateOrder:
         _price = 123
         _isBuy = False
 
-        token.transfer.transact(
-            exchange.address,
-            _amount,
-            {'from': issuer}
-        )
+        token.transfer.transact(exchange.address, _amount, {"from": issuer})
         exchange.createOrder.transact(
             token.address,
             101,  # greater than deposit amount
             _price,
             _isBuy,
             agent,
-            {'from': issuer}
+            {"from": issuer},
         )
 
         # assertion
@@ -536,33 +463,24 @@ class TestCreateOrder:
     # Make order: SELL
     # Status must be True
     def test_error_2_3(self, users, exchange):
-        issuer = users['issuer']
-        agent = users['agent']
+        issuer = users["issuer"]
+        agent = users["agent"]
 
         # issuer token
         deploy_args = init_args(exchange.address)
         token = deploy(users, deploy_args)
 
         # change token status
-        token.setStatus.transact(False, {'from': issuer})
+        token.setStatus.transact(False, {"from": issuer})
 
         # transfer to contract -> make order: SELL
         _amount = 100
         _price = 123
         _isBuy = False
 
-        token.transfer.transact(
-            exchange.address,
-            _amount,
-            {'from': issuer}
-        )
+        token.transfer.transact(exchange.address, _amount, {"from": issuer})
         exchange.createOrder.transact(
-            token.address,
-            _amount,
-            _price,
-            _isBuy,
-            agent,
-            {'from': issuer}
+            token.address, _amount, _price, _isBuy, agent, {"from": issuer}
         )
 
         # assertion
@@ -573,7 +491,7 @@ class TestCreateOrder:
     # Make order: SELL
     # Agent must be valid
     def test_error_2_4(self, users, exchange):
-        issuer = users['issuer']
+        issuer = users["issuer"]
 
         # issue token
         deploy_args = init_args(exchange.address)
@@ -584,18 +502,14 @@ class TestCreateOrder:
         _price = 123
         _isBuy = False
 
-        token.transfer.transact(
-            exchange.address,
-            _amount,
-            {'from': issuer}
-        )
+        token.transfer.transact(exchange.address, _amount, {"from": issuer})
         exchange.createOrder.transact(
             token.address,
             _amount,
             _price,
             _isBuy,
-            users['user1'],  # invalid agent
-            {'from': issuer}
+            users["user1"],  # invalid agent
+            {"from": issuer},
         )
 
         # assertion
@@ -606,44 +520,31 @@ class TestCreateOrder:
     # Make order: SELL
     # REVERT: Must be transferable.
     def test_error_2_5(self, users, exchange):
-        issuer = users['issuer']
+        issuer = users["issuer"]
 
         # issue token
         deploy_args = [
-            'test_share',
-            'test_symbol',
-            2 ** 256 - 1,
-            2 ** 256 - 1,
-            2 ** 256 - 1,
-            '20200829',
-            '20200831',
-            '20191231',
-            2 ** 256 - 1
+            "test_share",
+            "test_symbol",
+            2**256 - 1,
+            2**256 - 1,
+            2**256 - 1,
+            "20200829",
+            "20200831",
+            "20191231",
+            2**256 - 1,
         ]
         token = deploy_share(users, deploy_args)
 
-        token.setTransferable(
-            True,
-            {'from': issuer}
-        )
-        token.setTradableExchange(
-            exchange.address,
-            {'from': issuer}
-        )
+        token.setTransferable(True, {"from": issuer})
+        token.setTradableExchange(exchange.address, {"from": issuer})
 
         # transfer to exchange contract
-        _amount = 2 ** 256 - 1
-        token.transfer(
-            exchange.address,
-            _amount,
-            {'from': issuer}
-        )
+        _amount = 2**256 - 1
+        token.transfer(exchange.address, _amount, {"from": issuer})
 
         # set to not transferable
-        token.setTransferable(
-            False,
-            {'from': issuer}
-        )
+        token.setTransferable(False, {"from": issuer})
 
         # make sell order
         _price = 123
@@ -654,8 +555,8 @@ class TestCreateOrder:
                 _amount,
                 _price,
                 _isBuy,
-                users['user1'],  # invalid agent
-                {'from': issuer}
+                users["user1"],  # invalid agent
+                {"from": issuer},
             )
 
         # assertion
@@ -675,34 +576,26 @@ class TestCancelOrder:
     # Normal_1
     # Cancel order: BUY
     def test_normal_1(self, users, exchange):
-        issuer = users['issuer']
-        trader = users['trader']
-        agent = users['agent']
+        issuer = users["issuer"]
+        trader = users["trader"]
+        agent = users["agent"]
 
         # issue token
         deploy_args = init_args(exchange.address)
         token = deploy(users, deploy_args)
 
         # make order: BUY
-        _amount = 2 ** 256 - 1
-        _price = 2 ** 256 - 1
+        _amount = 2**256 - 1
+        _price = 2**256 - 1
         _isBuy = True
 
         exchange.createOrder.transact(
-            token.address,
-            _amount,
-            _price,
-            _isBuy,
-            agent,
-            {'from': trader}
+            token.address, _amount, _price, _isBuy, agent, {"from": trader}
         )
 
         # cancel order
         order_id = exchange.latestOrderId()
-        tx = exchange.cancelOrder.transact(
-            order_id,
-            {'from': trader}
-        )
+        tx = exchange.cancelOrder.transact(order_id, {"from": trader})
 
         # assertion
         assert exchange.getOrder(order_id) == [
@@ -712,7 +605,7 @@ class TestCancelOrder:
             _price,
             _isBuy,
             agent.address,
-            True
+            True,
         ]
         assert token.balanceOf(issuer) == deploy_args[2]
         assert token.balanceOf(trader) == 0
@@ -728,38 +621,26 @@ class TestCancelOrder:
     # Normal_2
     # Cancel order: SELL
     def test_normal_2(self, users, exchange):
-        issuer = users['issuer']
-        agent = users['agent']
+        issuer = users["issuer"]
+        agent = users["agent"]
 
         # issue token
         deploy_args = init_args(exchange.address)
         token = deploy(users, deploy_args)
 
         # transfer to contract -> make order: SELL
-        _amount = 2 ** 256 - 1
-        _price = 2 ** 256 - 1
+        _amount = 2**256 - 1
+        _price = 2**256 - 1
         _isBuy = False
 
-        token.transfer.transact(
-            exchange.address,
-            _amount,
-            {'from': issuer}
-        )
+        token.transfer.transact(exchange.address, _amount, {"from": issuer})
         exchange.createOrder.transact(
-            token.address,
-            _amount,
-            _price,
-            _isBuy,
-            agent,
-            {'from': issuer}
+            token.address, _amount, _price, _isBuy, agent, {"from": issuer}
         )
 
         # cancel order
         order_id = exchange.latestOrderId()
-        tx = exchange.cancelOrder.transact(
-            order_id,
-            {'from': issuer}
-        )
+        tx = exchange.cancelOrder.transact(order_id, {"from": issuer})
 
         # assertion
         assert exchange.getOrder(order_id) == [
@@ -769,7 +650,7 @@ class TestCancelOrder:
             _price,
             _isBuy,
             agent.address,
-            True
+            True,
         ]
         assert token.balanceOf(issuer) == deploy_args[2]
         assert exchange.commitmentOf(issuer, token.address) == 0
@@ -789,39 +670,27 @@ class TestCancelOrder:
     # Error_1
     # REVERT: The orderId must be less than or equal to the latest order ID.
     def test_error_1(self, users, exchange):
-        issuer = users['issuer']
-        agent = users['agent']
+        issuer = users["issuer"]
+        agent = users["agent"]
 
         # issue token
         deploy_args = init_args(exchange.address)
         token = deploy(users, deploy_args)
 
         # transfer to contract -> make order: SELL
-        _amount = 2 ** 256 - 1
-        _price = 2 ** 256 - 1
+        _amount = 2**256 - 1
+        _price = 2**256 - 1
         _isBuy = False
 
-        token.transfer.transact(
-            exchange.address,
-            _amount,
-            {'from': issuer}
-        )
+        token.transfer.transact(exchange.address, _amount, {"from": issuer})
         exchange.createOrder.transact(
-            token.address,
-            _amount,
-            _price,
-            _isBuy,
-            agent,
-            {'from': issuer}
+            token.address, _amount, _price, _isBuy, agent, {"from": issuer}
         )
 
         # cancel order
         latest_order_id = exchange.latestOrderId()
         with brownie.reverts(revert_msg="210101"):
-            exchange.cancelOrder.transact(
-                latest_order_id + 1,
-                {'from': issuer}
-            )
+            exchange.cancelOrder.transact(latest_order_id + 1, {"from": issuer})
 
         # assertion
         assert exchange.getOrder(latest_order_id) == [
@@ -831,7 +700,7 @@ class TestCancelOrder:
             _price,
             _isBuy,
             agent.address,
-            False
+            False,
         ]
         assert token.balanceOf(issuer) == deploy_args[2] - _amount
         assert exchange.commitmentOf(issuer, token.address) == _amount
@@ -839,55 +708,34 @@ class TestCancelOrder:
     # Error_2
     # REVERT: The remaining amount of the original order must be greater than zero.
     def test_error_2(self, users, exchange):
-        issuer = users['issuer']
-        trader = users['trader']
-        agent = users['agent']
+        issuer = users["issuer"]
+        trader = users["trader"]
+        agent = users["agent"]
 
         # issue token
         deploy_args = init_args(exchange.address)
         token = deploy(users, deploy_args)
 
         # make BUY order by trader
-        _amount = 2 ** 256 - 1
-        _price = 2 ** 256 - 1
+        _amount = 2**256 - 1
+        _price = 2**256 - 1
         exchange.createOrder.transact(
-            token.address,
-            _amount,
-            _price,
-            True,
-            agent,
-            {'from': trader}
+            token.address, _amount, _price, True, agent, {"from": trader}
         )
 
         # take SELL order by issuer
         order_id = exchange.latestOrderId()
-        token.transfer.transact(
-            exchange.address,
-            _amount,
-            {'from': issuer}
-        )
-        exchange.executeOrder.transact(
-            order_id,
-            _amount,
-            False,
-            {'from': issuer}
-        )
+        token.transfer.transact(exchange.address, _amount, {"from": issuer})
+        exchange.executeOrder.transact(order_id, _amount, False, {"from": issuer})
 
         # confirm agreement by agent
         agreement_id = exchange.latestAgreementId(order_id)
-        exchange.confirmAgreement.transact(
-            order_id,
-            agreement_id,
-            {'from': agent}
-        )
+        exchange.confirmAgreement.transact(order_id, agreement_id, {"from": agent})
         assert exchange.getOrder(order_id)[2] == 0
 
         # cancel order
         with brownie.reverts(revert_msg="210102"):
-            exchange.cancelOrder.transact(
-                order_id,
-                {'from': issuer}
-            )
+            exchange.cancelOrder.transact(order_id, {"from": issuer})
 
         # assertion
         assert exchange.getOrder(order_id) == [
@@ -897,7 +745,7 @@ class TestCancelOrder:
             _price,
             True,
             agent.address,
-            False
+            False,
         ]
         assert token.balanceOf(issuer) == deploy_args[2] - _amount
         assert token.balanceOf(trader) == _amount
@@ -905,33 +753,28 @@ class TestCancelOrder:
     # Error_3
     # REVERT: The order to be cancelled must not have been cancelled.
     def test_error_3(self, users, exchange):
-        issuer = users['issuer']
-        trader = users['trader']
-        agent = users['agent']
+        issuer = users["issuer"]
+        trader = users["trader"]
+        agent = users["agent"]
 
         # issue token
         deploy_args = init_args(exchange.address)
         token = deploy(users, deploy_args)
 
         # make BUY order
-        _amount = 2 ** 256 - 1
-        _price = 2 ** 256 - 1
+        _amount = 2**256 - 1
+        _price = 2**256 - 1
         exchange.createOrder.transact(
-            token.address,
-            _amount,
-            _price,
-            True,
-            agent,
-            {'from': trader}
+            token.address, _amount, _price, True, agent, {"from": trader}
         )
 
         # cancel order (1)
         order_id = exchange.latestOrderId()
-        exchange.cancelOrder.transact(order_id, {'from': trader})
+        exchange.cancelOrder.transact(order_id, {"from": trader})
 
         # cancel order (2)
         with brownie.reverts(revert_msg="210103"):
-            exchange.cancelOrder.transact(order_id, {'from': trader})
+            exchange.cancelOrder.transact(order_id, {"from": trader})
 
         # assertion
         assert exchange.getOrder(order_id) == [
@@ -941,7 +784,7 @@ class TestCancelOrder:
             _price,
             True,
             agent.address,
-            True
+            True,
         ]
         assert token.balanceOf(issuer) == deploy_args[2]
         assert token.balanceOf(trader) == 0
@@ -949,33 +792,25 @@ class TestCancelOrder:
     # Error_4
     # REVERT: msg.sender must be an orderer.
     def test_error_4(self, users, exchange):
-        issuer = users['issuer']
-        trader = users['trader']
-        agent = users['agent']
+        issuer = users["issuer"]
+        trader = users["trader"]
+        agent = users["agent"]
 
         # issue token
         deploy_args = init_args(exchange.address)
         token = deploy(users, deploy_args)
 
         # make BUY order by trader
-        _amount = 2 ** 256 - 1
-        _price = 2 ** 256 - 1
+        _amount = 2**256 - 1
+        _price = 2**256 - 1
         exchange.createOrder.transact(
-            token.address,
-            _amount,
-            _price,
-            True,
-            agent,
-            {'from': trader}
+            token.address, _amount, _price, True, agent, {"from": trader}
         )
 
         # cancel order
         order_id = exchange.latestOrderId()
         with brownie.reverts(revert_msg="210104"):
-            exchange.cancelOrder.transact(
-                order_id,
-                {'from': users['user1']}
-            )
+            exchange.cancelOrder.transact(order_id, {"from": users["user1"]})
 
         # assertion
         assert exchange.getOrder(order_id) == [
@@ -985,7 +820,7 @@ class TestCancelOrder:
             _price,
             True,
             agent.address,
-            False
+            False,
         ]
         assert token.balanceOf(issuer) == deploy_args[2]
         assert token.balanceOf(trader) == 0
@@ -994,64 +829,43 @@ class TestCancelOrder:
     # Cancel order: SELL
     # REVERT: Must be transferable.
     def test_error_5(self, users, exchange):
-        issuer = users['issuer']
-        agent = users['agent']
+        issuer = users["issuer"]
+        agent = users["agent"]
 
         # issue token
         deploy_args = [
-            'test_share',
-            'test_symbol',
-            2 ** 256 - 1,
-            2 ** 256 - 1,
-            2 ** 256 - 1,
-            '20200829',
-            '20200831',
-            '20191231',
-            2 ** 256 - 1
+            "test_share",
+            "test_symbol",
+            2**256 - 1,
+            2**256 - 1,
+            2**256 - 1,
+            "20200829",
+            "20200831",
+            "20191231",
+            2**256 - 1,
         ]
         token = deploy_share(users, deploy_args)
-        token.setTransferable(
-            True,
-            {'from': issuer}
-        )
-        token.setTradableExchange(
-            exchange.address,
-            {'from': issuer}
-        )
+        token.setTransferable(True, {"from": issuer})
+        token.setTradableExchange(exchange.address, {"from": issuer})
 
         # transfer to exchange contract
-        _amount = 2 ** 256 - 1
-        token.transfer(
-            exchange.address,
-            _amount,
-            {'from': issuer}
-        )
+        _amount = 2**256 - 1
+        token.transfer(exchange.address, _amount, {"from": issuer})
 
         # make SELL order
-        _amount = 2 ** 256 - 1
-        _price = 2 ** 256 - 1
+        _amount = 2**256 - 1
+        _price = 2**256 - 1
         exchange.createOrder(
-            token.address,
-            _amount,
-            _price,
-            False,
-            agent,
-            {'from': issuer}
+            token.address, _amount, _price, False, agent, {"from": issuer}
         )
 
         # set to not transferable
-        token.setTransferable(
-            False,
-            {'from': issuer}
-        )
+        token.setTransferable(False, {"from": issuer})
 
         # cancel order
         order_id = exchange.latestOrderId()
         with brownie.reverts(revert_msg="110402"):
-            exchange.cancelOrder(
-                order_id,
-                {'from': issuer}
-            )
+            exchange.cancelOrder(order_id, {"from": issuer})
 
         # assertion
         assert token.balanceOf(issuer) == 0
@@ -1070,34 +884,26 @@ class TestForceCancelOrder:
     # Normal_1
     # Force cancel order: BUY
     def test_normal_1(self, users, exchange):
-        issuer = users['issuer']
-        trader = users['trader']
-        agent = users['agent']
+        issuer = users["issuer"]
+        trader = users["trader"]
+        agent = users["agent"]
 
         # issue token
         deploy_args = init_args(exchange.address)
         token = deploy(users, deploy_args)
 
         # make order: BUY
-        _amount = 2 ** 256 - 1
-        _price = 2 ** 256 - 1
+        _amount = 2**256 - 1
+        _price = 2**256 - 1
         _isBuy = True
 
         exchange.createOrder(
-            token.address,
-            _amount,
-            _price,
-            _isBuy,
-            agent,
-            {'from': trader}
+            token.address, _amount, _price, _isBuy, agent, {"from": trader}
         )
 
         # force cancel order
         order_id = exchange.latestOrderId()
-        tx = exchange.forceCancelOrder(
-            order_id,
-            {'from': agent}
-        )
+        tx = exchange.forceCancelOrder(order_id, {"from": agent})
 
         # assertion
         assert exchange.getOrder(order_id) == [
@@ -1107,7 +913,7 @@ class TestForceCancelOrder:
             _price,
             _isBuy,
             agent.address,
-            True
+            True,
         ]
         assert token.balanceOf(issuer) == deploy_args[2]
         assert token.balanceOf(trader) == 0
@@ -1123,38 +929,26 @@ class TestForceCancelOrder:
     # Normal_2
     # Force cancel order: SELL
     def test_normal_2(self, users, exchange):
-        issuer = users['issuer']
-        agent = users['agent']
+        issuer = users["issuer"]
+        agent = users["agent"]
 
         # issue token
         deploy_args = init_args(exchange.address)
         token = deploy(users, deploy_args)
 
         # transfer to contract -> make order: SELL
-        _amount = 2 ** 256 - 1
-        _price = 2 ** 256 - 1
+        _amount = 2**256 - 1
+        _price = 2**256 - 1
         _isBuy = False
 
-        token.transfer(
-            exchange.address,
-            _amount,
-            {'from': issuer}
-        )
+        token.transfer(exchange.address, _amount, {"from": issuer})
         exchange.createOrder(
-            token.address,
-            _amount,
-            _price,
-            _isBuy,
-            agent,
-            {'from': issuer}
+            token.address, _amount, _price, _isBuy, agent, {"from": issuer}
         )
 
         # force cancel order
         order_id = exchange.latestOrderId()
-        tx = exchange.forceCancelOrder(
-            order_id,
-            {'from': agent}
-        )
+        tx = exchange.forceCancelOrder(order_id, {"from": agent})
 
         # assertion
         assert exchange.getOrder(order_id) == [
@@ -1164,7 +958,7 @@ class TestForceCancelOrder:
             _price,
             _isBuy,
             agent.address,
-            True
+            True,
         ]
         assert token.balanceOf(issuer) == deploy_args[2]
         assert exchange.commitmentOf(issuer, token.address) == 0
@@ -1184,39 +978,27 @@ class TestForceCancelOrder:
     # Error_1
     # REVERT: The orderId must be less than or equal to the latest order ID.
     def test_error_1(self, users, exchange):
-        issuer = users['issuer']
-        agent = users['agent']
+        issuer = users["issuer"]
+        agent = users["agent"]
 
         # issue token
         deploy_args = init_args(exchange.address)
         token = deploy(users, deploy_args)
 
         # transfer to contract -> make order: SELL
-        _amount = 2 ** 256 - 1
-        _price = 2 ** 256 - 1
+        _amount = 2**256 - 1
+        _price = 2**256 - 1
         _isBuy = False
 
-        token.transfer(
-            exchange.address,
-            _amount,
-            {'from': issuer}
-        )
+        token.transfer(exchange.address, _amount, {"from": issuer})
         exchange.createOrder(
-            token.address,
-            _amount,
-            _price,
-            _isBuy,
-            agent,
-            {'from': issuer}
+            token.address, _amount, _price, _isBuy, agent, {"from": issuer}
         )
 
         # cancel order
         latest_order_id = exchange.latestOrderId()
         with brownie.reverts(revert_msg="210201"):
-            exchange.forceCancelOrder(
-                latest_order_id + 1,
-                {'from': agent}
-            )
+            exchange.forceCancelOrder(latest_order_id + 1, {"from": agent})
 
         # assertion
         assert exchange.getOrder(latest_order_id) == [
@@ -1226,7 +1008,7 @@ class TestForceCancelOrder:
             _price,
             _isBuy,
             agent.address,
-            False
+            False,
         ]
         assert token.balanceOf(issuer) == deploy_args[2] - _amount
         assert exchange.commitmentOf(issuer, token.address) == _amount
@@ -1234,55 +1016,34 @@ class TestForceCancelOrder:
     # Error_2
     # REVERT: The remaining amount of the original order must be greater than zero.
     def test_error_2(self, users, exchange):
-        issuer = users['issuer']
-        trader = users['trader']
-        agent = users['agent']
+        issuer = users["issuer"]
+        trader = users["trader"]
+        agent = users["agent"]
 
         # issue token
         deploy_args = init_args(exchange.address)
         token = deploy(users, deploy_args)
 
         # make BUY order by trader
-        _amount = 2 ** 256 - 1
-        _price = 2 ** 256 - 1
+        _amount = 2**256 - 1
+        _price = 2**256 - 1
         exchange.createOrder(
-            token.address,
-            _amount,
-            _price,
-            True,
-            agent,
-            {'from': trader}
+            token.address, _amount, _price, True, agent, {"from": trader}
         )
 
         # take SELL order by issuer
         order_id = exchange.latestOrderId()
-        token.transfer(
-            exchange.address,
-            _amount,
-            {'from': issuer}
-        )
-        exchange.executeOrder(
-            order_id,
-            _amount,
-            False,
-            {'from': issuer}
-        )
+        token.transfer(exchange.address, _amount, {"from": issuer})
+        exchange.executeOrder(order_id, _amount, False, {"from": issuer})
 
         # confirm agreement by agent
         agreement_id = exchange.latestAgreementId(order_id)
-        exchange.confirmAgreement(
-            order_id,
-            agreement_id,
-            {'from': agent}
-        )
+        exchange.confirmAgreement(order_id, agreement_id, {"from": agent})
         assert exchange.getOrder(order_id)[2] == 0
 
         # cancel order
         with brownie.reverts(revert_msg="210202"):
-            exchange.forceCancelOrder(
-                order_id,
-                {'from': agent}
-            )
+            exchange.forceCancelOrder(order_id, {"from": agent})
 
         # assertion
         assert exchange.getOrder(order_id) == [
@@ -1292,7 +1053,7 @@ class TestForceCancelOrder:
             _price,
             True,
             agent.address,
-            False
+            False,
         ]
         assert token.balanceOf(issuer) == deploy_args[2] - _amount
         assert token.balanceOf(trader) == _amount
@@ -1300,36 +1061,28 @@ class TestForceCancelOrder:
     # Error_3
     # REVERT: The order to be cancelled must not have been cancelled.
     def test_error_3(self, users, exchange):
-        issuer = users['issuer']
-        trader = users['trader']
-        agent = users['agent']
+        issuer = users["issuer"]
+        trader = users["trader"]
+        agent = users["agent"]
 
         # issue token
         deploy_args = init_args(exchange.address)
         token = deploy(users, deploy_args)
 
         # make BUY order
-        _amount = 2 ** 256 - 1
-        _price = 2 ** 256 - 1
+        _amount = 2**256 - 1
+        _price = 2**256 - 1
         exchange.createOrder(
-            token.address,
-            _amount,
-            _price,
-            True,
-            agent,
-            {'from': trader}
+            token.address, _amount, _price, True, agent, {"from": trader}
         )
 
         # cancel order (1)
         order_id = exchange.latestOrderId()
-        exchange.cancelOrder(order_id, {'from': trader})
+        exchange.cancelOrder(order_id, {"from": trader})
 
         # cancel order (2)
         with brownie.reverts(revert_msg="210203"):
-            exchange.forceCancelOrder(
-                order_id,
-                {'from': agent}
-            )
+            exchange.forceCancelOrder(order_id, {"from": agent})
 
         # assertion
         assert exchange.getOrder(order_id) == [
@@ -1339,7 +1092,7 @@ class TestForceCancelOrder:
             _price,
             True,
             agent.address,
-            True
+            True,
         ]
         assert token.balanceOf(issuer) == deploy_args[2]
         assert token.balanceOf(trader) == 0
@@ -1347,33 +1100,25 @@ class TestForceCancelOrder:
     # Error_4
     # REVERT: msg.sender must be an agent.
     def test_error_4(self, users, exchange):
-        issuer = users['issuer']
-        trader = users['trader']
-        agent = users['agent']
+        issuer = users["issuer"]
+        trader = users["trader"]
+        agent = users["agent"]
 
         # issue token
         deploy_args = init_args(exchange.address)
         token = deploy(users, deploy_args)
 
         # make BUY order by trader
-        _amount = 2 ** 256 - 1
-        _price = 2 ** 256 - 1
+        _amount = 2**256 - 1
+        _price = 2**256 - 1
         exchange.createOrder(
-            token.address,
-            _amount,
-            _price,
-            True,
-            agent,
-            {'from': trader}
+            token.address, _amount, _price, True, agent, {"from": trader}
         )
 
         # cancel order
         order_id = exchange.latestOrderId()
         with brownie.reverts(revert_msg="210204"):
-            exchange.forceCancelOrder(
-                order_id,
-                {'from': trader}
-            )
+            exchange.forceCancelOrder(order_id, {"from": trader})
 
         # assertion
         assert exchange.getOrder(order_id) == [
@@ -1383,7 +1128,7 @@ class TestForceCancelOrder:
             _price,
             True,
             agent.address,
-            False
+            False,
         ]
         assert token.balanceOf(issuer) == deploy_args[2]
         assert token.balanceOf(trader) == 0
@@ -1392,64 +1137,43 @@ class TestForceCancelOrder:
     # Cancel order: SELL
     # REVERT: Must be transferable.
     def test_error_5(self, users, exchange):
-        issuer = users['issuer']
-        agent = users['agent']
+        issuer = users["issuer"]
+        agent = users["agent"]
 
         # issue token
         deploy_args = [
-            'test_share',
-            'test_symbol',
-            2 ** 256 - 1,
-            2 ** 256 - 1,
-            2 ** 256 - 1,
-            '20200829',
-            '20200831',
-            '20191231',
-            2 ** 256 - 1
+            "test_share",
+            "test_symbol",
+            2**256 - 1,
+            2**256 - 1,
+            2**256 - 1,
+            "20200829",
+            "20200831",
+            "20191231",
+            2**256 - 1,
         ]
         token = deploy_share(users, deploy_args)
-        token.setTransferable(
-            True,
-            {'from': issuer}
-        )
-        token.setTradableExchange(
-            exchange.address,
-            {'from': issuer}
-        )
+        token.setTransferable(True, {"from": issuer})
+        token.setTradableExchange(exchange.address, {"from": issuer})
 
         # transfer to exchange contract
-        _amount = 2 ** 256 - 1
-        token.transfer(
-            exchange.address,
-            _amount,
-            {'from': issuer}
-        )
+        _amount = 2**256 - 1
+        token.transfer(exchange.address, _amount, {"from": issuer})
 
         # make SELL order
-        _amount = 2 ** 256 - 1
-        _price = 2 ** 256 - 1
+        _amount = 2**256 - 1
+        _price = 2**256 - 1
         exchange.createOrder(
-            token.address,
-            _amount,
-            _price,
-            False,
-            agent,
-            {'from': issuer}
+            token.address, _amount, _price, False, agent, {"from": issuer}
         )
 
         # set to not transferable
-        token.setTransferable(
-            False,
-            {'from': issuer}
-        )
+        token.setTransferable(False, {"from": issuer})
 
         # cancel order
         order_id = exchange.latestOrderId()
         with brownie.reverts(revert_msg="110402"):
-            exchange.forceCancelOrder(
-                order_id,
-                {'from': agent}
-            )
+            exchange.forceCancelOrder(order_id, {"from": agent})
 
         # assertion
         assert token.balanceOf(issuer) == 0
@@ -1468,42 +1192,28 @@ class TestExecuteOrder:
     # Normal_1
     # Take order: BUY
     def test_normal_1(self, users, exchange):
-        issuer = users['issuer']
-        trader = users['trader']
-        agent = users['agent']
+        issuer = users["issuer"]
+        trader = users["trader"]
+        agent = users["agent"]
 
         # issue token
         deploy_args = init_args(exchange.address)
         token = deploy(users, deploy_args)
 
         # make SELL order by issuer
-        _make_amount = 2 ** 256 - 1
-        _price = 2 ** 256 - 1
+        _make_amount = 2**256 - 1
+        _price = 2**256 - 1
         _isBuy = False
 
-        token.transfer.transact(
-            exchange.address,
-            _make_amount,
-            {'from': issuer}
-        )
+        token.transfer.transact(exchange.address, _make_amount, {"from": issuer})
         exchange.createOrder.transact(
-            token.address,
-            _make_amount,
-            _price,
-            _isBuy,
-            agent,
-            {'from': issuer}
+            token.address, _make_amount, _price, _isBuy, agent, {"from": issuer}
         )
 
         # take BUY order by trader
-        _take_amount = 2 ** 256 - 1
+        _take_amount = 2**256 - 1
         order_id = exchange.latestOrderId()
-        exchange.executeOrder.transact(
-            order_id,
-            _take_amount,
-            True,
-            {'from': trader}
-        )
+        exchange.executeOrder.transact(order_id, _take_amount, True, {"from": trader})
 
         # assertion
         assert exchange.getOrder(order_id) == [
@@ -1513,7 +1223,7 @@ class TestExecuteOrder:
             _price,
             False,
             agent.address,
-            False
+            False,
         ]
         assert token.balanceOf(issuer) == deploy_args[2] - _make_amount
         assert token.balanceOf(trader) == 0
@@ -1524,50 +1234,36 @@ class TestExecuteOrder:
             _take_amount,
             _price,
             False,
-            False
+            False,
         ]
         assert exchange.lastPrice(token.address) == 0
 
     # Normal_2
     # Take order: SELL
     def test_normal_2(self, users, exchange):
-        issuer = users['issuer']
-        trader = users['trader']
-        agent = users['agent']
+        issuer = users["issuer"]
+        trader = users["trader"]
+        agent = users["agent"]
 
         # issue token
         deploy_args = init_args(exchange.address)
         token = deploy(users, deploy_args)
 
         # make BUY order by trader
-        _make_amount = 2 ** 256 - 1
-        _price = 2 ** 256 - 1
+        _make_amount = 2**256 - 1
+        _price = 2**256 - 1
         _isBuy = True
 
         exchange.createOrder.transact(
-            token.address,
-            _make_amount,
-            _price,
-            _isBuy,
-            agent,
-            {'from': trader}
+            token.address, _make_amount, _price, _isBuy, agent, {"from": trader}
         )
 
         # take SELL order by issuer
-        _take_amount = 2 ** 256 - 1
+        _take_amount = 2**256 - 1
 
         order_id = exchange.latestOrderId()
-        token.transfer.transact(
-            exchange.address,
-            _take_amount,
-            {'from': issuer}
-        )
-        exchange.executeOrder.transact(
-            order_id,
-            _take_amount,
-            False,
-            {'from': issuer}
-        )
+        token.transfer.transact(exchange.address, _take_amount, {"from": issuer})
+        exchange.executeOrder.transact(order_id, _take_amount, False, {"from": issuer})
 
         # assertion
         assert exchange.getOrder(order_id) == [
@@ -1577,7 +1273,7 @@ class TestExecuteOrder:
             _price,
             True,
             agent.address,
-            False
+            False,
         ]
         assert token.balanceOf(issuer) == deploy_args[2] - _take_amount
         assert token.balanceOf(trader) == 0
@@ -1588,7 +1284,7 @@ class TestExecuteOrder:
             _take_amount,
             _price,
             False,
-            False
+            False,
         ]
         assert exchange.lastPrice(token.address) == 0
 
@@ -1599,42 +1295,30 @@ class TestExecuteOrder:
     # Error_1
     # Order ID must be less than or equal to the latest order ID
     def test_error_1(self, users, exchange):
-        issuer = users['issuer']
-        trader = users['trader']
-        agent = users['agent']
+        issuer = users["issuer"]
+        trader = users["trader"]
+        agent = users["agent"]
 
         # issue token
         deploy_args = init_args(exchange.address)
         token = deploy(users, deploy_args)
 
         # transfer to contract -> make order: SELL
-        _make_amount = 2 ** 256 - 1
-        _price = 2 ** 256 - 1
+        _make_amount = 2**256 - 1
+        _price = 2**256 - 1
         _isBuy = False
 
-        token.transfer.transact(
-            exchange.address,
-            _make_amount,
-            {'from': issuer}
-        )
+        token.transfer.transact(exchange.address, _make_amount, {"from": issuer})
         exchange.createOrder.transact(
-            token.address,
-            _make_amount,
-            _price,
-            _isBuy,
-            agent,
-            {'from': issuer}
+            token.address, _make_amount, _price, _isBuy, agent, {"from": issuer}
         )
 
         # take BUY order by trader
-        _take_amount = 2 ** 256 - 1
+        _take_amount = 2**256 - 1
         order_id = exchange.latestOrderId()
         with brownie.reverts(revert_msg="210301"):
             exchange.executeOrder.transact(
-                order_id + 1,
-                _take_amount,
-                True,
-                {'from': trader}
+                order_id + 1, _take_amount, True, {"from": trader}
             )
 
         # assertion
@@ -1645,7 +1329,7 @@ class TestExecuteOrder:
             _price,
             False,
             agent.address,
-            False
+            False,
         ]
         assert token.balanceOf(issuer) == deploy_args[2] - _make_amount
         assert token.balanceOf(trader) == 0
@@ -1656,42 +1340,28 @@ class TestExecuteOrder:
     # Take order: BUY
     # Take amount must be greater than 0
     def test_error_2_1(self, users, exchange):
-        issuer = users['issuer']
-        trader = users['trader']
-        agent = users['agent']
+        issuer = users["issuer"]
+        trader = users["trader"]
+        agent = users["agent"]
 
         # issue token
         deploy_args = init_args(exchange.address)
         token = deploy(users, deploy_args)
 
         # transfer to contract -> make order: SELL
-        _make_amount = 2 ** 256 - 1
-        _price = 2 ** 256 - 1
+        _make_amount = 2**256 - 1
+        _price = 2**256 - 1
         _isBuy = False
 
-        token.transfer.transact(
-            exchange.address,
-            _make_amount,
-            {'from': issuer}
-        )
+        token.transfer.transact(exchange.address, _make_amount, {"from": issuer})
         exchange.createOrder.transact(
-            token.address,
-            _make_amount,
-            _price,
-            _isBuy,
-            agent,
-            {'from': issuer}
+            token.address, _make_amount, _price, _isBuy, agent, {"from": issuer}
         )
 
         # take BUY order by trader
         order_id = exchange.latestOrderId()
         with brownie.reverts(revert_msg="210302"):
-            exchange.executeOrder.transact(
-                order_id,
-                0,
-                True,
-                {'from': trader}
-            )
+            exchange.executeOrder.transact(order_id, 0, True, {"from": trader})
 
         # assertion
         assert exchange.getOrder(order_id) == [
@@ -1701,7 +1371,7 @@ class TestExecuteOrder:
             _price,
             False,
             agent.address,
-            False
+            False,
         ]
         assert token.balanceOf(issuer) == deploy_args[2] - _make_amount
         assert token.balanceOf(trader) == 0
@@ -1712,37 +1382,29 @@ class TestExecuteOrder:
     # Take order: BUY
     # The BUY/SELL type must be different from the original order
     def test_error_2_2(self, users, exchange):
-        issuer = users['issuer']
-        trader = users['trader']
-        agent = users['agent']
+        issuer = users["issuer"]
+        trader = users["trader"]
+        agent = users["agent"]
 
         # issue token
         deploy_args = init_args(exchange.address)
         token = deploy(users, deploy_args)
 
         # make BUY order by trader
-        _make_amount = 2 ** 256 - 1
-        _price = 2 ** 256 - 1
+        _make_amount = 2**256 - 1
+        _price = 2**256 - 1
         _isBuy = True
 
         exchange.createOrder.transact(
-            token.address,
-            _make_amount,
-            _price,
-            _isBuy,
-            agent,
-            {'from': issuer}
+            token.address, _make_amount, _price, _isBuy, agent, {"from": issuer}
         )
 
         # take BUY order by trader
-        _take_amount = 2 ** 256 - 1
+        _take_amount = 2**256 - 1
         order_id = exchange.latestOrderId()
         with brownie.reverts(revert_msg="210302"):
             exchange.executeOrder.transact(
-                order_id,
-                _take_amount,
-                True,
-                {'from': trader}
+                order_id, _take_amount, True, {"from": trader}
             )
 
         # assertion
@@ -1753,7 +1415,7 @@ class TestExecuteOrder:
             _price,
             True,
             agent.address,
-            False
+            False,
         ]
         assert token.balanceOf(issuer) == deploy_args[2]
         assert token.balanceOf(trader) == 0
@@ -1764,41 +1426,29 @@ class TestExecuteOrder:
     # Take order: BUY
     # The Maker and the taker must be the different
     def test_error_2_3(self, users, exchange):
-        issuer = users['issuer']
-        agent = users['agent']
+        issuer = users["issuer"]
+        agent = users["agent"]
 
         # issue token
         deploy_args = init_args(exchange.address)
         token = deploy(users, deploy_args)
 
         # make SELL order by issuer
-        _make_amount = 2 ** 256 - 1
-        _price = 2 ** 256 - 1
+        _make_amount = 2**256 - 1
+        _price = 2**256 - 1
         _isBuy = False
 
-        token.transfer.transact(
-            exchange.address,
-            _make_amount,
-            {'from': issuer}
-        )
+        token.transfer.transact(exchange.address, _make_amount, {"from": issuer})
         exchange.createOrder.transact(
-            token.address,
-            _make_amount,
-            _price,
-            _isBuy,
-            agent,
-            {'from': issuer}
+            token.address, _make_amount, _price, _isBuy, agent, {"from": issuer}
         )
 
         # take BUY order by trader
-        _take_amount = 2 ** 256 - 1
+        _take_amount = 2**256 - 1
         order_id = exchange.latestOrderId()
         with brownie.reverts(revert_msg="210302"):
             exchange.executeOrder.transact(
-                order_id,
-                _take_amount,
-                True,
-                {'from': issuer}
+                order_id, _take_amount, True, {"from": issuer}
             )
 
         # assertion
@@ -1809,7 +1459,7 @@ class TestExecuteOrder:
             _price,
             False,
             agent.address,
-            False
+            False,
         ]
         assert token.balanceOf(issuer) == deploy_args[2] - _make_amount
         assert exchange.commitmentOf(issuer, token.address) == _make_amount
@@ -1819,46 +1469,34 @@ class TestExecuteOrder:
     # Take order: BUY
     # Orders that have already been canceled cannot be taken
     def test_error_2_4(self, users, exchange):
-        issuer = users['issuer']
-        trader = users['trader']
-        agent = users['agent']
+        issuer = users["issuer"]
+        trader = users["trader"]
+        agent = users["agent"]
 
         # issue token
         deploy_args = init_args(exchange.address)
         token = deploy(users, deploy_args)
 
         # make SELL order by issuer
-        _make_amount = 2 ** 256 - 1
-        _price = 2 ** 256 - 1
+        _make_amount = 2**256 - 1
+        _price = 2**256 - 1
         _isBuy = False
 
-        token.transfer.transact(
-            exchange.address,
-            _make_amount,
-            {'from': issuer}
-        )
+        token.transfer.transact(exchange.address, _make_amount, {"from": issuer})
         exchange.createOrder.transact(
-            token.address,
-            _make_amount,
-            _price,
-            _isBuy,
-            agent,
-            {'from': issuer}
+            token.address, _make_amount, _price, _isBuy, agent, {"from": issuer}
         )
 
         # cancel order
         order_id = exchange.latestOrderId()
-        exchange.cancelOrder.transact(order_id, {'from': issuer})
+        exchange.cancelOrder.transact(order_id, {"from": issuer})
 
         # take BUY order by trader
-        _take_amount = 2 ** 256 - 1
+        _take_amount = 2**256 - 1
         order_id = exchange.latestOrderId()
         with brownie.reverts(revert_msg="210302"):
             exchange.executeOrder.transact(
-                order_id,
-                _take_amount,
-                True,
-                {'from': trader}
+                order_id, _take_amount, True, {"from": trader}
             )
 
         # assertion
@@ -1869,7 +1507,7 @@ class TestExecuteOrder:
             _price,
             False,
             agent.address,
-            True
+            True,
         ]
         assert token.balanceOf(issuer) == deploy_args[2]
         assert exchange.commitmentOf(issuer, token.address) == 0
@@ -1879,45 +1517,33 @@ class TestExecuteOrder:
     # Take order: BUY
     # Status must be True
     def test_error_2_5(self, users, exchange):
-        issuer = users['issuer']
-        trader = users['trader']
-        agent = users['agent']
+        issuer = users["issuer"]
+        trader = users["trader"]
+        agent = users["agent"]
 
         # issue token
         deploy_args = init_args(exchange.address)
         token = deploy(users, deploy_args)
 
         # make SELL order by issuer
-        _make_amount = 2 ** 256 - 1
-        _price = 2 ** 256 - 1
+        _make_amount = 2**256 - 1
+        _price = 2**256 - 1
         _isBuy = False
 
-        token.transfer.transact(
-            exchange.address,
-            _make_amount,
-            {'from': issuer}
-        )
+        token.transfer.transact(exchange.address, _make_amount, {"from": issuer})
         exchange.createOrder.transact(
-            token.address,
-            _make_amount,
-            _price,
-            _isBuy,
-            agent,
-            {'from': issuer}
+            token.address, _make_amount, _price, _isBuy, agent, {"from": issuer}
         )
 
         # change token status
-        token.setStatus.transact(False, {'from': issuer})
+        token.setStatus.transact(False, {"from": issuer})
 
         # take BUY order by trader
-        _take_amount = 2 ** 256 - 1
+        _take_amount = 2**256 - 1
         order_id = exchange.latestOrderId()
         with brownie.reverts(revert_msg="210302"):
             exchange.executeOrder.transact(
-                order_id,
-                _take_amount,
-                True,
-                {'from': trader}
+                order_id, _take_amount, True, {"from": trader}
             )
 
         # assertion
@@ -1928,7 +1554,7 @@ class TestExecuteOrder:
             _price,
             False,
             agent.address,
-            False
+            False,
         ]
         assert token.balanceOf(issuer) == deploy_args[2] - _make_amount
         assert exchange.commitmentOf(issuer, token.address) == _make_amount
@@ -1938,9 +1564,9 @@ class TestExecuteOrder:
     # Take order: BUY
     # The amount must be within the remaining amount of the make order
     def test_error_2_6(self, users, exchange):
-        issuer = users['issuer']
-        trader = users['trader']
-        agent = users['agent']
+        issuer = users["issuer"]
+        trader = users["trader"]
+        agent = users["agent"]
 
         # issue token
         deploy_args = init_args(exchange.address)
@@ -1948,21 +1574,12 @@ class TestExecuteOrder:
 
         # make SELL order by issuer
         _make_amount = 100
-        _price = 2 ** 256 - 1
+        _price = 2**256 - 1
         _isBuy = False
 
-        token.transfer.transact(
-            exchange.address,
-            _make_amount,
-            {'from': issuer}
-        )
+        token.transfer.transact(exchange.address, _make_amount, {"from": issuer})
         exchange.createOrder.transact(
-            token.address,
-            _make_amount,
-            _price,
-            _isBuy,
-            agent,
-            {'from': issuer}
+            token.address, _make_amount, _price, _isBuy, agent, {"from": issuer}
         )
 
         # take BUY order by trader
@@ -1970,10 +1587,7 @@ class TestExecuteOrder:
         order_id = exchange.latestOrderId()
         with brownie.reverts(revert_msg="210302"):
             exchange.executeOrder.transact(
-                order_id,
-                _take_amount,
-                True,
-                {'from': trader}
+                order_id, _take_amount, True, {"from": trader}
             )
 
         # assertion
@@ -1984,7 +1598,7 @@ class TestExecuteOrder:
             _price,
             False,
             agent.address,
-            False
+            False,
         ]
         assert token.balanceOf(issuer) == deploy_args[2] - _make_amount
         assert exchange.commitmentOf(issuer, token.address) == _make_amount
@@ -1994,41 +1608,27 @@ class TestExecuteOrder:
     # Take order: SELL
     # Take amount must be greater than 0
     def test_error_3_1(self, users, exchange):
-        issuer = users['issuer']
-        trader = users['trader']
-        agent = users['agent']
+        issuer = users["issuer"]
+        trader = users["trader"]
+        agent = users["agent"]
 
         # issue token
         deploy_args = init_args(exchange.address)
         token = deploy(users, deploy_args)
 
         # make BUY order by trader
-        _make_amount = 2 ** 256 - 1
-        _price = 2 ** 256 - 1
+        _make_amount = 2**256 - 1
+        _price = 2**256 - 1
         _isBuy = True
 
         exchange.createOrder.transact(
-            token.address,
-            _make_amount,
-            _price,
-            _isBuy,
-            agent,
-            {'from': trader}
+            token.address, _make_amount, _price, _isBuy, agent, {"from": trader}
         )
 
         # take SELL order by issuer
         order_id = exchange.latestOrderId()
-        token.transfer.transact(
-            exchange.address,
-            2 ** 256 - 1,
-            {'from': issuer}
-        )
-        exchange.executeOrder.transact(
-            order_id,
-            0,
-            False,
-            {'from': issuer}
-        )
+        token.transfer.transact(exchange.address, 2**256 - 1, {"from": issuer})
+        exchange.executeOrder.transact(order_id, 0, False, {"from": issuer})
 
         # assertion
         assert exchange.getOrder(order_id) == [
@@ -2038,7 +1638,7 @@ class TestExecuteOrder:
             _price,
             True,
             agent.address,
-            False
+            False,
         ]
         assert token.balanceOf(issuer) == deploy_args[2]
         assert token.balanceOf(trader) == 0
@@ -2049,42 +1649,28 @@ class TestExecuteOrder:
     # Take order: SELL
     # The BUY/SELL type must be different from the original order
     def test_error_3_2(self, users, exchange):
-        issuer = users['issuer']
-        trader = users['trader']
-        agent = users['agent']
+        issuer = users["issuer"]
+        trader = users["trader"]
+        agent = users["agent"]
 
         # issue token
         deploy_args = init_args(exchange.address)
         token = deploy(users, deploy_args)
 
         # transfer to contract -> make order: SELL
-        _make_amount = 2 ** 256 - 1
-        _price = 2 ** 256 - 1
+        _make_amount = 2**256 - 1
+        _price = 2**256 - 1
         _isBuy = False
 
-        token.transfer.transact(
-            exchange.address,
-            _make_amount,
-            {'from': issuer}
-        )
+        token.transfer.transact(exchange.address, _make_amount, {"from": issuer})
         exchange.createOrder.transact(
-            token.address,
-            _make_amount,
-            _price,
-            _isBuy,
-            agent,
-            {'from': issuer}
+            token.address, _make_amount, _price, _isBuy, agent, {"from": issuer}
         )
 
         # take order: SELL
-        _take_amount = 2 ** 256 - 1
+        _take_amount = 2**256 - 1
         order_id = exchange.latestOrderId()
-        exchange.executeOrder.transact(
-            order_id,
-            _take_amount,
-            False,
-            {'from': trader}
-        )
+        exchange.executeOrder.transact(order_id, _take_amount, False, {"from": trader})
 
         # assertion
         assert exchange.getOrder(order_id) == [
@@ -2094,7 +1680,7 @@ class TestExecuteOrder:
             _price,
             False,
             agent.address,
-            False
+            False,
         ]
         assert token.balanceOf(issuer) == deploy_args[2] - _make_amount
         assert token.balanceOf(trader) == 0
@@ -2105,43 +1691,29 @@ class TestExecuteOrder:
     # Take order: SELL
     # The Maker and the taker must be the different
     def test_error_3_3(self, users, exchange):
-        issuer = users['issuer']
-        trader = users['trader']
-        agent = users['agent']
+        issuer = users["issuer"]
+        trader = users["trader"]
+        agent = users["agent"]
 
         # issue token
         deploy_args = init_args(exchange.address)
         token = deploy(users, deploy_args)
 
         # make BUY order by trader
-        _make_amount = 2 ** 256 - 1
-        _price = 2 ** 256 - 1
+        _make_amount = 2**256 - 1
+        _price = 2**256 - 1
         _isBuy = True
 
         exchange.createOrder.transact(
-            token.address,
-            _make_amount,
-            _price,
-            _isBuy,
-            agent,
-            {'from': issuer}
+            token.address, _make_amount, _price, _isBuy, agent, {"from": issuer}
         )
 
         # take SELL order by issuer
-        _take_amount = 2 ** 256 - 1
+        _take_amount = 2**256 - 1
 
         order_id = exchange.latestOrderId()
-        token.transfer.transact(
-            exchange.address,
-            _take_amount,
-            {'from': issuer}
-        )
-        exchange.executeOrder.transact(
-            order_id,
-            _take_amount,
-            False,
-            {'from': issuer}
-        )
+        token.transfer.transact(exchange.address, _take_amount, {"from": issuer})
+        exchange.executeOrder.transact(order_id, _take_amount, False, {"from": issuer})
 
         # assertion
         assert exchange.getOrder(order_id) == [
@@ -2151,7 +1723,7 @@ class TestExecuteOrder:
             _price,
             True,
             agent.address,
-            False
+            False,
         ]
         assert token.balanceOf(issuer) == deploy_args[2]
         assert token.balanceOf(trader) == 0
@@ -2162,50 +1734,33 @@ class TestExecuteOrder:
     # Take order: SELL
     # Orders that have already been canceled cannot be taken
     def test_error_3_4(self, users, exchange):
-        issuer = users['issuer']
-        trader = users['trader']
-        agent = users['agent']
+        issuer = users["issuer"]
+        trader = users["trader"]
+        agent = users["agent"]
 
         # issue token
         deploy_args = init_args(exchange.address)
         token = deploy(users, deploy_args)
 
         # make BUY order by trader
-        _make_amount = 2 ** 256 - 1
-        _price = 2 ** 256 - 1
+        _make_amount = 2**256 - 1
+        _price = 2**256 - 1
         _isBuy = True
 
         exchange.createOrder.transact(
-            token.address,
-            _make_amount,
-            _price,
-            _isBuy,
-            agent,
-            {'from': trader}
+            token.address, _make_amount, _price, _isBuy, agent, {"from": trader}
         )
 
         # cancel order
         order_id = exchange.latestOrderId()
-        exchange.cancelOrder.transact(
-            order_id,
-            {'from': trader}
-        )
+        exchange.cancelOrder.transact(order_id, {"from": trader})
 
         # take SELL order by issuer
-        _take_amount = 2 ** 256 - 1
+        _take_amount = 2**256 - 1
 
         order_id = exchange.latestOrderId()
-        token.transfer.transact(
-            exchange.address,
-            _take_amount,
-            {'from': issuer}
-        )
-        exchange.executeOrder.transact(
-            order_id,
-            _take_amount,
-            False,
-            {'from': issuer}
-        )
+        token.transfer.transact(exchange.address, _take_amount, {"from": issuer})
+        exchange.executeOrder.transact(order_id, _take_amount, False, {"from": issuer})
 
         # Assert: orderbook
         assert exchange.getOrder(order_id) == [
@@ -2215,7 +1770,7 @@ class TestExecuteOrder:
             _price,
             True,
             agent.address,
-            True
+            True,
         ]
         assert token.balanceOf(issuer) == deploy_args[2]
         assert token.balanceOf(trader) == 0
@@ -2226,46 +1781,32 @@ class TestExecuteOrder:
     # Take order: SELL
     # Status must be True
     def test_error_3_5(self, users, exchange):
-        issuer = users['issuer']
-        trader = users['trader']
-        agent = users['agent']
+        issuer = users["issuer"]
+        trader = users["trader"]
+        agent = users["agent"]
 
         # issue token
         deploy_args = init_args(exchange.address)
         token = deploy(users, deploy_args)
 
         # make BUY order by trader
-        _make_amount = 2 ** 256 - 1
-        _price = 2 ** 256 - 1
+        _make_amount = 2**256 - 1
+        _price = 2**256 - 1
         _isBuy = True
 
         exchange.createOrder.transact(
-            token.address,
-            _make_amount,
-            _price,
-            _isBuy,
-            agent,
-            {'from': trader}
+            token.address, _make_amount, _price, _isBuy, agent, {"from": trader}
         )
 
         # change token status
-        token.setStatus.transact(False, {'from': issuer})
+        token.setStatus.transact(False, {"from": issuer})
 
         # take SELL order by issuer
-        _take_amount = 2 ** 256 - 1
+        _take_amount = 2**256 - 1
 
         order_id = exchange.latestOrderId()
-        token.transfer.transact(
-            exchange.address,
-            _take_amount,
-            {'from': issuer}
-        )
-        exchange.executeOrder.transact(
-            order_id,
-            _take_amount,
-            False,
-            {'from': issuer}
-        )
+        token.transfer.transact(exchange.address, _take_amount, {"from": issuer})
+        exchange.executeOrder.transact(order_id, _take_amount, False, {"from": issuer})
 
         # assertion
         assert exchange.getOrder(order_id) == [
@@ -2275,7 +1816,7 @@ class TestExecuteOrder:
             _price,
             True,
             agent.address,
-            False
+            False,
         ]
         assert token.balanceOf(issuer) == deploy_args[2]
         assert token.balanceOf(trader) == 0
@@ -2286,42 +1827,30 @@ class TestExecuteOrder:
     # Take order: SELL
     # The deposited balance must exceed the order amount
     def test_error_3_6(self, users, exchange):
-        issuer = users['issuer']
-        trader = users['trader']
-        agent = users['agent']
+        issuer = users["issuer"]
+        trader = users["trader"]
+        agent = users["agent"]
 
         # issue token
         deploy_args = init_args(exchange.address)
         token = deploy(users, deploy_args)
 
         # make BUY order by trader
-        _make_amount = 2 ** 256 - 1
-        _price = 2 ** 256 - 1
+        _make_amount = 2**256 - 1
+        _price = 2**256 - 1
         _isBuy = True
 
         exchange.createOrder.transact(
-            token.address,
-            _make_amount,
-            _price,
-            _isBuy,
-            agent,
-            {'from': trader}
+            token.address, _make_amount, _price, _isBuy, agent, {"from": trader}
         )
 
         # take SELL order by issuer
         _take_amount = 100
 
         order_id = exchange.latestOrderId()
-        token.transfer.transact(
-            exchange.address,
-            _take_amount,
-            {'from': issuer}
-        )
+        token.transfer.transact(exchange.address, _take_amount, {"from": issuer})
         exchange.executeOrder.transact(
-            order_id,
-            _take_amount + 1,
-            False,
-            {'from': issuer}
+            order_id, _take_amount + 1, False, {"from": issuer}
         )
 
         # assertion
@@ -2332,7 +1861,7 @@ class TestExecuteOrder:
             _price,
             True,
             agent.address,
-            False
+            False,
         ]
         assert token.balanceOf(issuer) == deploy_args[2]
         assert token.balanceOf(trader) == 0
@@ -2343,9 +1872,9 @@ class TestExecuteOrder:
     # Take order: SELL
     # The amount must be within the remaining amount of the make order
     def test_error_3_7(self, users, exchange):
-        issuer = users['issuer']
-        trader = users['trader']
-        agent = users['agent']
+        issuer = users["issuer"]
+        trader = users["trader"]
+        agent = users["agent"]
 
         # issue token
         deploy_args = init_args(exchange.address)
@@ -2353,33 +1882,19 @@ class TestExecuteOrder:
 
         # make BUY order by trader
         _make_amount = 100
-        _price = 2 ** 256 - 1
+        _price = 2**256 - 1
         _isBuy = True
 
         exchange.createOrder.transact(
-            token.address,
-            _make_amount,
-            _price,
-            _isBuy,
-            agent,
-            {'from': trader}
+            token.address, _make_amount, _price, _isBuy, agent, {"from": trader}
         )
 
         # take SELL order by issuer
         _take_amount = 101
 
         order_id = exchange.latestOrderId()
-        token.transfer.transact(
-            exchange.address,
-            _take_amount,
-            {'from': issuer}
-        )
-        exchange.executeOrder.transact(
-            order_id,
-            _take_amount,
-            False,
-            {'from': issuer}
-        )
+        token.transfer.transact(exchange.address, _take_amount, {"from": issuer})
+        exchange.executeOrder.transact(order_id, _take_amount, False, {"from": issuer})
 
         # assertion
         assert exchange.getOrder(order_id) == [
@@ -2389,7 +1904,7 @@ class TestExecuteOrder:
             _price,
             True,
             agent.address,
-            False
+            False,
         ]
         assert token.balanceOf(issuer) == deploy_args[2]
         assert token.balanceOf(trader) == 0
@@ -2400,69 +1915,48 @@ class TestExecuteOrder:
     # Take order: SELL
     # REVERT: Must be transferable.
     def test_error_3_8(self, users, exchange):
-        issuer = users['issuer']
-        trader = users['trader']
-        agent = users['agent']
+        issuer = users["issuer"]
+        trader = users["trader"]
+        agent = users["agent"]
 
         # issue token
         deploy_args = [
-            'test_share',
-            'test_symbol',
-            2 ** 256 - 1,
-            2 ** 256 - 1,
-            2 ** 256 - 1,
-            '20200829',
-            '20200831',
-            '20191231',
-            2 ** 256 - 1
+            "test_share",
+            "test_symbol",
+            2**256 - 1,
+            2**256 - 1,
+            2**256 - 1,
+            "20200829",
+            "20200831",
+            "20191231",
+            2**256 - 1,
         ]
         token = deploy_share(users, deploy_args)
 
-        token.setTransferable(
-            True,
-            {'from': issuer}
-        )
-        token.setTradableExchange(
-            exchange.address,
-            {'from': issuer}
-        )
+        token.setTransferable(True, {"from": issuer})
+        token.setTradableExchange(exchange.address, {"from": issuer})
 
         # make BUY order by trader
-        _make_amount = 2 ** 256 - 1
-        _price = 2 ** 256 - 1
+        _make_amount = 2**256 - 1
+        _price = 2**256 - 1
         _isBuy = True
 
         exchange.createOrder.transact(
-            token.address,
-            _make_amount,
-            _price,
-            _isBuy,
-            agent,
-            {'from': trader}
+            token.address, _make_amount, _price, _isBuy, agent, {"from": trader}
         )
 
         # transfer to exchange contract
-        _take_amount = 2 ** 256 - 1
+        _take_amount = 2**256 - 1
         order_id = exchange.latestOrderId()
-        token.transfer(
-            exchange.address,
-            _take_amount,
-            {'from': issuer}
-        )
+        token.transfer(exchange.address, _take_amount, {"from": issuer})
 
         # set to not transferable
-        token.setTransferable(
-            False,
-            {'from': issuer}
-        )
+        token.setTransferable(False, {"from": issuer})
 
         # take SELL
         with brownie.reverts(revert_msg="110402"):
             exchange.executeOrder.transact(
-                order_id,
-                _take_amount,
-                False,
-                {'from': trader}  # invalid msg.sender
+                order_id, _take_amount, False, {"from": trader}  # invalid msg.sender
             )
 
         # assertion
@@ -2485,50 +1979,32 @@ class TestConfirmAgreement:
     # Normal_1
     # Take order: BUY
     def test_normal_1(self, users, exchange):
-        issuer = users['issuer']
-        trader = users['trader']
-        agent = users['agent']
+        issuer = users["issuer"]
+        trader = users["trader"]
+        agent = users["agent"]
 
         # issue token
         deploy_args = init_args(exchange.address)
         token = deploy(users, deploy_args)
 
         # make SELL order by issuer
-        _make_amount = 2 ** 256 - 1
-        _price = 2 ** 256 - 1
+        _make_amount = 2**256 - 1
+        _price = 2**256 - 1
         _isBuy = False
 
-        token.transfer.transact(
-            exchange.address,
-            _make_amount,
-            {'from': issuer}
-        )
+        token.transfer.transact(exchange.address, _make_amount, {"from": issuer})
         exchange.createOrder.transact(
-            token.address,
-            _make_amount,
-            _price,
-            _isBuy,
-            agent,
-            {'from': issuer}
+            token.address, _make_amount, _price, _isBuy, agent, {"from": issuer}
         )
 
         # take BUY order by trader
-        _take_amount = 2 ** 256 - 1
+        _take_amount = 2**256 - 1
         order_id = exchange.latestOrderId()
-        exchange.executeOrder.transact(
-            order_id,
-            _take_amount,
-            True,
-            {'from': trader}
-        )
+        exchange.executeOrder.transact(order_id, _take_amount, True, {"from": trader})
 
         # confirm agreement
         agreement_id = exchange.latestAgreementId(order_id)
-        tx = exchange.confirmAgreement.transact(
-            order_id,
-            agreement_id,
-            {'from': agent}
-        )
+        tx = exchange.confirmAgreement.transact(order_id, agreement_id, {"from": agent})
 
         # assertion
         assert exchange.getOrder(order_id) == [
@@ -2538,7 +2014,7 @@ class TestConfirmAgreement:
             _price,
             False,
             agent.address,
-            False
+            False,
         ]
         assert token.balanceOf(issuer) == deploy_args[2] - _make_amount
         assert token.balanceOf(trader) == _take_amount
@@ -2548,7 +2024,7 @@ class TestConfirmAgreement:
             _take_amount,
             _price,
             False,
-            True
+            True,
         ]
         assert exchange.lastPrice(token.address) == _price
 
@@ -2569,51 +2045,33 @@ class TestConfirmAgreement:
     # Normal_2
     # Take order: SELL
     def test_normal_2(self, users, exchange):
-        issuer = users['issuer']
-        trader = users['trader']
-        agent = users['agent']
+        issuer = users["issuer"]
+        trader = users["trader"]
+        agent = users["agent"]
 
         # issue token
         deploy_args = init_args(exchange.address)
         token = deploy(users, deploy_args)
 
         # make BUY order by trader
-        _make_amount = 2 ** 256 - 1
-        _price = 2 ** 256 - 1
+        _make_amount = 2**256 - 1
+        _price = 2**256 - 1
         _isBuy = True
 
         exchange.createOrder.transact(
-            token.address,
-            _make_amount,
-            _price,
-            _isBuy,
-            agent,
-            {'from': trader}
+            token.address, _make_amount, _price, _isBuy, agent, {"from": trader}
         )
 
         # take SELL order by issuer
-        _take_amount = 2 ** 256 - 1
+        _take_amount = 2**256 - 1
 
         order_id = exchange.latestOrderId()
-        token.transfer.transact(
-            exchange.address,
-            _take_amount,
-            {'from': issuer}
-        )
-        exchange.executeOrder.transact(
-            order_id,
-            _take_amount,
-            False,
-            {'from': issuer}
-        )
+        token.transfer.transact(exchange.address, _take_amount, {"from": issuer})
+        exchange.executeOrder.transact(order_id, _take_amount, False, {"from": issuer})
 
         # confirm agreement
         agreement_id = exchange.latestAgreementId(order_id)
-        tx = exchange.confirmAgreement.transact(
-            order_id,
-            agreement_id,
-            {'from': agent}
-        )
+        tx = exchange.confirmAgreement.transact(order_id, agreement_id, {"from": agent})
 
         # assertion
         assert exchange.getOrder(order_id) == [
@@ -2623,7 +2081,7 @@ class TestConfirmAgreement:
             _price,
             True,
             agent.address,
-            False
+            False,
         ]
         assert token.balanceOf(issuer) == deploy_args[2] - _take_amount
         assert token.balanceOf(trader) == _make_amount
@@ -2633,7 +2091,7 @@ class TestConfirmAgreement:
             _take_amount,
             _price,
             False,
-            True
+            True,
         ]
         assert exchange.lastPrice(token.address) == _price
 
@@ -2658,50 +2116,34 @@ class TestConfirmAgreement:
     # Error_1
     # Order ID must be less than or equal to the latest order ID
     def test_error_1(self, users, exchange):
-        issuer = users['issuer']
-        trader = users['trader']
-        agent = users['agent']
+        issuer = users["issuer"]
+        trader = users["trader"]
+        agent = users["agent"]
 
         # issue token
         deploy_args = init_args(exchange.address)
         token = deploy(users, deploy_args)
 
         # make SELL order by issuer
-        _make_amount = 2 ** 256 - 1
-        _price = 2 ** 256 - 1
+        _make_amount = 2**256 - 1
+        _price = 2**256 - 1
         _isBuy = False
 
-        token.transfer.transact(
-            exchange.address,
-            _make_amount,
-            {'from': issuer}
-        )
+        token.transfer.transact(exchange.address, _make_amount, {"from": issuer})
         exchange.createOrder.transact(
-            token.address,
-            _make_amount,
-            _price,
-            _isBuy,
-            agent,
-            {'from': issuer}
+            token.address, _make_amount, _price, _isBuy, agent, {"from": issuer}
         )
 
         # take BUY order by trader
-        _take_amount = 2 ** 256 - 1
+        _take_amount = 2**256 - 1
         order_id = exchange.latestOrderId()
-        exchange.executeOrder.transact(
-            order_id,
-            _take_amount,
-            True,
-            {'from': trader}
-        )
+        exchange.executeOrder.transact(order_id, _take_amount, True, {"from": trader})
 
         # confirm agreement
         agreement_id = exchange.latestAgreementId(order_id)
         with brownie.reverts(revert_msg="210401"):
             exchange.confirmAgreement.transact(
-                order_id + 1,
-                agreement_id,
-                {'from': agent}
+                order_id + 1, agreement_id, {"from": agent}
             )
 
         # assertion
@@ -2712,7 +2154,7 @@ class TestConfirmAgreement:
             _price,
             False,
             agent.address,
-            False
+            False,
         ]
         assert token.balanceOf(issuer) == deploy_args[2] - _make_amount
         assert token.balanceOf(trader) == 0
@@ -2722,57 +2164,41 @@ class TestConfirmAgreement:
             _take_amount,
             _price,
             False,
-            False
+            False,
         ]
         assert exchange.lastPrice(token.address) == 0
 
     # Error_2
     # Agreement ID must be less than or equal to the latest agreement ID
     def test_error_2(self, users, exchange):
-        issuer = users['issuer']
-        trader = users['trader']
-        agent = users['agent']
+        issuer = users["issuer"]
+        trader = users["trader"]
+        agent = users["agent"]
 
         # issue token
         deploy_args = init_args(exchange.address)
         token = deploy(users, deploy_args)
 
         # make SELL order by issuer
-        _make_amount = 2 ** 256 - 1
-        _price = 2 ** 256 - 1
+        _make_amount = 2**256 - 1
+        _price = 2**256 - 1
         _isBuy = False
 
-        token.transfer.transact(
-            exchange.address,
-            _make_amount,
-            {'from': issuer}
-        )
+        token.transfer.transact(exchange.address, _make_amount, {"from": issuer})
         exchange.createOrder.transact(
-            token.address,
-            _make_amount,
-            _price,
-            _isBuy,
-            agent,
-            {'from': issuer}
+            token.address, _make_amount, _price, _isBuy, agent, {"from": issuer}
         )
 
         # take BUY order by trader
-        _take_amount = 2 ** 256 - 1
+        _take_amount = 2**256 - 1
         order_id = exchange.latestOrderId()
-        exchange.executeOrder.transact(
-            order_id,
-            _take_amount,
-            True,
-            {'from': trader}
-        )
+        exchange.executeOrder.transact(order_id, _take_amount, True, {"from": trader})
 
         # confirm agreement
         agreement_id = exchange.latestAgreementId(order_id)
         with brownie.reverts(revert_msg="210402"):
             exchange.confirmAgreement.transact(
-                order_id,
-                agreement_id + 1,
-                {'from': agent}
+                order_id, agreement_id + 1, {"from": agent}
             )
 
         # assertion
@@ -2783,7 +2209,7 @@ class TestConfirmAgreement:
             _price,
             False,
             agent.address,
-            False
+            False,
         ]
         assert token.balanceOf(issuer) == deploy_args[2] - _make_amount
         assert token.balanceOf(trader) == 0
@@ -2793,65 +2219,43 @@ class TestConfirmAgreement:
             _take_amount,
             _price,
             False,
-            False
+            False,
         ]
         assert exchange.lastPrice(token.address) == 0
 
     # Error_3
     # If it has already been confirmed, it cannot be confirmed
     def test_error_3(self, users, exchange):
-        issuer = users['issuer']
-        trader = users['trader']
-        agent = users['agent']
+        issuer = users["issuer"]
+        trader = users["trader"]
+        agent = users["agent"]
 
         # issue token
         deploy_args = init_args(exchange.address)
         token = deploy(users, deploy_args)
 
         # make SELL order by issuer
-        _make_amount = 2 ** 256 - 1
-        _price = 2 ** 256 - 1
+        _make_amount = 2**256 - 1
+        _price = 2**256 - 1
         _isBuy = False
 
-        token.transfer.transact(
-            exchange.address,
-            _make_amount,
-            {'from': issuer}
-        )
+        token.transfer.transact(exchange.address, _make_amount, {"from": issuer})
         exchange.createOrder.transact(
-            token.address,
-            _make_amount,
-            _price,
-            _isBuy,
-            agent,
-            {'from': issuer}
+            token.address, _make_amount, _price, _isBuy, agent, {"from": issuer}
         )
 
         # take BUY order by trader
-        _take_amount = 2 ** 256 - 1
+        _take_amount = 2**256 - 1
         order_id = exchange.latestOrderId()
-        exchange.executeOrder.transact(
-            order_id,
-            _take_amount,
-            True,
-            {'from': trader}
-        )
+        exchange.executeOrder.transact(order_id, _take_amount, True, {"from": trader})
 
         # confirm agreement (1)
         agreement_id = exchange.latestAgreementId(order_id)
-        exchange.confirmAgreement.transact(
-            order_id,
-            agreement_id,
-            {'from': agent}
-        )
+        exchange.confirmAgreement.transact(order_id, agreement_id, {"from": agent})
 
         # confirm agreement (2)
         with brownie.reverts(revert_msg="210403"):
-            exchange.confirmAgreement.transact(
-                order_id,
-                agreement_id,
-                {'from': agent}
-            )
+            exchange.confirmAgreement.transact(order_id, agreement_id, {"from": agent})
 
         # assertion
         assert exchange.getOrder(order_id) == [
@@ -2861,7 +2265,7 @@ class TestConfirmAgreement:
             _price,
             False,
             agent.address,
-            False
+            False,
         ]
         assert token.balanceOf(issuer) == deploy_args[2] - _make_amount
         assert token.balanceOf(trader) == _take_amount
@@ -2871,65 +2275,43 @@ class TestConfirmAgreement:
             _take_amount,
             _price,
             False,
-            True
+            True,
         ]
         assert exchange.lastPrice(token.address) == _price
 
     # Error_4
     # If it has already been cancelled, it cannot be confirmed
     def test_error_4(self, users, exchange):
-        issuer = users['issuer']
-        trader = users['trader']
-        agent = users['agent']
+        issuer = users["issuer"]
+        trader = users["trader"]
+        agent = users["agent"]
 
         # issue token
         deploy_args = init_args(exchange.address)
         token = deploy(users, deploy_args)
 
         # make SELL order by issuer
-        _make_amount = 2 ** 256 - 1
-        _price = 2 ** 256 - 1
+        _make_amount = 2**256 - 1
+        _price = 2**256 - 1
         _isBuy = False
 
-        token.transfer.transact(
-            exchange.address,
-            _make_amount,
-            {'from': issuer}
-        )
+        token.transfer.transact(exchange.address, _make_amount, {"from": issuer})
         exchange.createOrder.transact(
-            token.address,
-            _make_amount,
-            _price,
-            _isBuy,
-            agent,
-            {'from': issuer}
+            token.address, _make_amount, _price, _isBuy, agent, {"from": issuer}
         )
 
         # take BUY order by trader
-        _take_amount = 2 ** 256 - 1
+        _take_amount = 2**256 - 1
         order_id = exchange.latestOrderId()
-        exchange.executeOrder.transact(
-            order_id,
-            _take_amount,
-            True,
-            {'from': trader}
-        )
+        exchange.executeOrder.transact(order_id, _take_amount, True, {"from": trader})
 
         # cancel agreement
         agreement_id = exchange.latestAgreementId(order_id)
-        exchange.cancelAgreement.transact(
-            order_id,
-            agreement_id,
-            {'from': agent}
-        )
+        exchange.cancelAgreement.transact(order_id, agreement_id, {"from": agent})
 
         # confirm agreement
         with brownie.reverts(revert_msg="210403"):
-            exchange.confirmAgreement.transact(
-                order_id,
-                agreement_id,
-                {'from': agent}
-            )
+            exchange.confirmAgreement.transact(order_id, agreement_id, {"from": agent})
 
         # assertion
         assert exchange.getOrder(order_id) == [
@@ -2939,7 +2321,7 @@ class TestConfirmAgreement:
             _price,
             False,
             agent.address,
-            False
+            False,
         ]
         assert token.balanceOf(issuer) == 0
         assert token.balanceOf(trader) == 0
@@ -2949,57 +2331,41 @@ class TestConfirmAgreement:
             _take_amount,
             _price,
             True,
-            False
+            False,
         ]
         assert exchange.lastPrice(token.address) == 0
 
     # Error_5
     # The executor must be the agent specified in the make order
     def test_error_5(self, users, exchange):
-        issuer = users['issuer']
-        trader = users['trader']
-        agent = users['agent']
+        issuer = users["issuer"]
+        trader = users["trader"]
+        agent = users["agent"]
 
         # issue token
         deploy_args = init_args(exchange.address)
         token = deploy(users, deploy_args)
 
         # make SELL order by issuer
-        _make_amount = 2 ** 256 - 1
-        _price = 2 ** 256 - 1
+        _make_amount = 2**256 - 1
+        _price = 2**256 - 1
         _isBuy = False
 
-        token.transfer.transact(
-            exchange.address,
-            _make_amount,
-            {'from': issuer}
-        )
+        token.transfer.transact(exchange.address, _make_amount, {"from": issuer})
         exchange.createOrder.transact(
-            token.address,
-            _make_amount,
-            _price,
-            _isBuy,
-            agent,
-            {'from': issuer}
+            token.address, _make_amount, _price, _isBuy, agent, {"from": issuer}
         )
 
         # take BUY order by trader
-        _take_amount = 2 ** 256 - 1
+        _take_amount = 2**256 - 1
         order_id = exchange.latestOrderId()
-        exchange.executeOrder.transact(
-            order_id,
-            _take_amount,
-            True,
-            {'from': trader}
-        )
+        exchange.executeOrder.transact(order_id, _take_amount, True, {"from": trader})
 
         # confirm agreement
         agreement_id = exchange.latestAgreementId(order_id)
         with brownie.reverts(revert_msg="210402"):
             exchange.confirmAgreement.transact(
-                order_id,
-                agreement_id + 1,
-                {'from': users['user1']}
+                order_id, agreement_id + 1, {"from": users["user1"]}
             )
 
         # assertion
@@ -3010,7 +2376,7 @@ class TestConfirmAgreement:
             _price,
             False,
             agent.address,
-            False
+            False,
         ]
         assert token.balanceOf(issuer) == deploy_args[2] - _make_amount
         assert token.balanceOf(trader) == 0
@@ -3020,7 +2386,7 @@ class TestConfirmAgreement:
             _take_amount,
             _price,
             False,
-            False
+            False,
         ]
         assert exchange.lastPrice(token.address) == 0
 
@@ -3028,77 +2394,50 @@ class TestConfirmAgreement:
     # Take order: SELL
     # REVERT: Must be transferable.
     def test_error_6(self, users, exchange):
-        issuer = users['issuer']
-        trader = users['trader']
-        agent = users['agent']
+        issuer = users["issuer"]
+        trader = users["trader"]
+        agent = users["agent"]
 
         # issue token
         deploy_args = [
-            'test_share',
-            'test_symbol',
-            2 ** 256 - 1,
-            2 ** 256 - 1,
-            2 ** 256 - 1,
-            '20200829',
-            '20200831',
-            '20191231',
-            2 ** 256 - 1
+            "test_share",
+            "test_symbol",
+            2**256 - 1,
+            2**256 - 1,
+            2**256 - 1,
+            "20200829",
+            "20200831",
+            "20191231",
+            2**256 - 1,
         ]
         token = deploy_share(users, deploy_args)
 
-        token.setTransferable(
-            True,
-            {'from': issuer}
-        )
-        token.setTradableExchange(
-            exchange.address,
-            {'from': issuer}
-        )
+        token.setTransferable(True, {"from": issuer})
+        token.setTradableExchange(exchange.address, {"from": issuer})
 
         # make BUY order by trader
-        _make_amount = 2 ** 256 - 1
-        _price = 2 ** 256 - 1
+        _make_amount = 2**256 - 1
+        _price = 2**256 - 1
         _isBuy = True
 
         exchange.createOrder(
-            token.address,
-            _make_amount,
-            _price,
-            _isBuy,
-            agent,
-            {'from': trader}
+            token.address, _make_amount, _price, _isBuy, agent, {"from": trader}
         )
 
         # take SELL order by issuer
-        _take_amount = 2 ** 256 - 1
+        _take_amount = 2**256 - 1
 
         order_id = exchange.latestOrderId()
-        token.transfer.transact(
-            exchange.address,
-            _take_amount,
-            {'from': issuer}
-        )
-        exchange.executeOrder.transact(
-            order_id,
-            _take_amount,
-            False,
-            {'from': issuer}
-        )
+        token.transfer.transact(exchange.address, _take_amount, {"from": issuer})
+        exchange.executeOrder.transact(order_id, _take_amount, False, {"from": issuer})
 
         # set to not transferable
-        token.setTransferable(
-            False,
-            {'from': issuer}
-        )
+        token.setTransferable(False, {"from": issuer})
 
         # confirm agreement
         agreement_id = exchange.latestAgreementId(order_id)
         with brownie.reverts(revert_msg="110402"):
-            exchange.confirmAgreement.transact(
-                order_id,
-                agreement_id,
-                {'from': agent}
-            )
+            exchange.confirmAgreement.transact(order_id, agreement_id, {"from": agent})
 
         # assertion
         assert token.balanceOf(issuer) == deploy_args[3] - _take_amount
@@ -3120,50 +2459,32 @@ class TestCancelAgreement:
     # Normal_1
     # Make SELL & Take BUY
     def test_normal_1(self, users, exchange):
-        issuer = users['issuer']
-        trader = users['trader']
-        agent = users['agent']
+        issuer = users["issuer"]
+        trader = users["trader"]
+        agent = users["agent"]
 
         # issue token
         deploy_args = init_args(exchange.address)
         token = deploy(users, deploy_args)
 
         # make SELL order by issuer
-        _make_amount = 2 ** 256 - 1
-        _price = 2 ** 256 - 1
+        _make_amount = 2**256 - 1
+        _price = 2**256 - 1
         _isBuy = False
 
-        token.transfer.transact(
-            exchange.address,
-            _make_amount,
-            {'from': issuer}
-        )
+        token.transfer.transact(exchange.address, _make_amount, {"from": issuer})
         exchange.createOrder.transact(
-            token.address,
-            _make_amount,
-            _price,
-            _isBuy,
-            agent,
-            {'from': issuer}
+            token.address, _make_amount, _price, _isBuy, agent, {"from": issuer}
         )
 
         # take BUY order by trader
-        _take_amount = 2 ** 256 - 1
+        _take_amount = 2**256 - 1
         order_id = exchange.latestOrderId()
-        exchange.executeOrder.transact(
-            order_id,
-            _take_amount,
-            True,
-            {'from': trader}
-        )
+        exchange.executeOrder.transact(order_id, _take_amount, True, {"from": trader})
 
         # cancel agreement
         agreement_id = exchange.latestAgreementId(order_id)
-        tx = exchange.cancelAgreement.transact(
-            order_id,
-            agreement_id,
-            {'from': agent}
-        )
+        tx = exchange.cancelAgreement.transact(order_id, agreement_id, {"from": agent})
 
         # assertion
         assert exchange.getOrder(order_id) == [
@@ -3173,7 +2494,7 @@ class TestCancelAgreement:
             _price,
             False,
             agent.address,
-            False
+            False,
         ]
         assert token.balanceOf(issuer) == 0
         assert token.balanceOf(trader) == 0
@@ -3183,7 +2504,7 @@ class TestCancelAgreement:
             _take_amount,
             _price,
             True,
-            False
+            False,
         ]
         assert exchange.lastPrice(token.address) == 0
 
@@ -3199,51 +2520,33 @@ class TestCancelAgreement:
     # Normal_2
     # Make BUY & Take SELL
     def test_normal_2(self, users, exchange):
-        issuer = users['issuer']
-        trader = users['trader']
-        agent = users['agent']
+        issuer = users["issuer"]
+        trader = users["trader"]
+        agent = users["agent"]
 
         # issue token
         deploy_args = init_args(exchange.address)
         token = deploy(users, deploy_args)
 
         # make BUY order by trader
-        _make_amount = 2 ** 256 - 1
-        _price = 2 ** 256 - 1
+        _make_amount = 2**256 - 1
+        _price = 2**256 - 1
         _isBuy = True
 
         exchange.createOrder.transact(
-            token.address,
-            _make_amount,
-            _price,
-            _isBuy,
-            agent,
-            {'from': trader}
+            token.address, _make_amount, _price, _isBuy, agent, {"from": trader}
         )
 
         # take SELL order by issuer
-        _take_amount = 2 ** 256 - 1
+        _take_amount = 2**256 - 1
 
         order_id = exchange.latestOrderId()
-        token.transfer.transact(
-            exchange.address,
-            _take_amount,
-            {'from': issuer}
-        )
-        exchange.executeOrder.transact(
-            order_id,
-            _take_amount,
-            False,
-            {'from': issuer}
-        )
+        token.transfer.transact(exchange.address, _take_amount, {"from": issuer})
+        exchange.executeOrder.transact(order_id, _take_amount, False, {"from": issuer})
 
         # cancel agreement
         agreement_id = exchange.latestAgreementId(order_id)
-        tx = exchange.cancelAgreement.transact(
-            order_id,
-            agreement_id,
-            {'from': agent}
-        )
+        tx = exchange.cancelAgreement.transact(order_id, agreement_id, {"from": agent})
 
         # assertion
         assert exchange.getOrder(order_id) == [
@@ -3253,7 +2556,7 @@ class TestCancelAgreement:
             _price,
             True,
             agent.address,
-            False
+            False,
         ]
         assert token.balanceOf(issuer) == deploy_args[2]
         assert token.balanceOf(trader) == 0
@@ -3263,7 +2566,7 @@ class TestCancelAgreement:
             _take_amount,
             _price,
             True,
-            False
+            False,
         ]
         assert exchange.lastPrice(token.address) == 0
 
@@ -3283,50 +2586,34 @@ class TestCancelAgreement:
     # Error_1
     # Order ID must be less than or equal to the latest order ID
     def test_error_1(self, users, exchange):
-        issuer = users['issuer']
-        trader = users['trader']
-        agent = users['agent']
+        issuer = users["issuer"]
+        trader = users["trader"]
+        agent = users["agent"]
 
         # issue token
         deploy_args = init_args(exchange.address)
         token = deploy(users, deploy_args)
 
         # make SELL order by issuer
-        _make_amount = 2 ** 256 - 1
-        _price = 2 ** 256 - 1
+        _make_amount = 2**256 - 1
+        _price = 2**256 - 1
         _isBuy = False
 
-        token.transfer.transact(
-            exchange.address,
-            _make_amount,
-            {'from': issuer}
-        )
+        token.transfer.transact(exchange.address, _make_amount, {"from": issuer})
         exchange.createOrder.transact(
-            token.address,
-            _make_amount,
-            _price,
-            _isBuy,
-            agent,
-            {'from': issuer}
+            token.address, _make_amount, _price, _isBuy, agent, {"from": issuer}
         )
 
         # take BUY order by trader
-        _take_amount = 2 ** 256 - 1
+        _take_amount = 2**256 - 1
         order_id = exchange.latestOrderId()
-        exchange.executeOrder.transact(
-            order_id,
-            _take_amount,
-            True,
-            {'from': trader}
-        )
+        exchange.executeOrder.transact(order_id, _take_amount, True, {"from": trader})
 
         # cancel agreement
         agreement_id = exchange.latestAgreementId(order_id)
         with brownie.reverts(revert_msg="210501"):
             exchange.cancelAgreement.transact(
-                order_id + 1,
-                agreement_id,
-                {'from': agent}
+                order_id + 1, agreement_id, {"from": agent}
             )
 
         # assert
@@ -3337,7 +2624,7 @@ class TestCancelAgreement:
             _price,
             False,
             agent.address,
-            False
+            False,
         ]
         assert token.balanceOf(issuer) == deploy_args[2] - _make_amount
         assert token.balanceOf(trader) == 0
@@ -3347,57 +2634,41 @@ class TestCancelAgreement:
             _take_amount,
             _price,
             False,
-            False
+            False,
         ]
         assert exchange.lastPrice(token.address) == 0
 
     # Error_2
     # Agreement ID must be less than or equal to the latest agreement ID
     def test_error_2(self, users, exchange):
-        issuer = users['issuer']
-        trader = users['trader']
-        agent = users['agent']
+        issuer = users["issuer"]
+        trader = users["trader"]
+        agent = users["agent"]
 
         # issue token
         deploy_args = init_args(exchange.address)
         token = deploy(users, deploy_args)
 
         # make SELL order by issuer
-        _make_amount = 2 ** 256 - 1
-        _price = 2 ** 256 - 1
+        _make_amount = 2**256 - 1
+        _price = 2**256 - 1
         _isBuy = False
 
-        token.transfer.transact(
-            exchange.address,
-            _make_amount,
-            {'from': issuer}
-        )
+        token.transfer.transact(exchange.address, _make_amount, {"from": issuer})
         exchange.createOrder.transact(
-            token.address,
-            _make_amount,
-            _price,
-            _isBuy,
-            agent,
-            {'from': issuer}
+            token.address, _make_amount, _price, _isBuy, agent, {"from": issuer}
         )
 
         # take BUY order by trader
-        _take_amount = 2 ** 256 - 1
+        _take_amount = 2**256 - 1
         order_id = exchange.latestOrderId()
-        exchange.executeOrder.transact(
-            order_id,
-            _take_amount,
-            True,
-            {'from': trader}
-        )
+        exchange.executeOrder.transact(order_id, _take_amount, True, {"from": trader})
 
         # cancel agreement
         agreement_id = exchange.latestAgreementId(order_id)
         with brownie.reverts(revert_msg="210502"):
             exchange.cancelAgreement.transact(
-                order_id,
-                agreement_id + 1,
-                {'from': agent}
+                order_id, agreement_id + 1, {"from": agent}
             )
 
         # assert
@@ -3408,7 +2679,7 @@ class TestCancelAgreement:
             _price,
             False,
             agent.address,
-            False
+            False,
         ]
         assert token.balanceOf(issuer) == deploy_args[2] - _make_amount
         assert token.balanceOf(trader) == 0
@@ -3418,65 +2689,43 @@ class TestCancelAgreement:
             _take_amount,
             _price,
             False,
-            False
+            False,
         ]
         assert exchange.lastPrice(token.address) == 0
 
     # Error_3
     # If it has already been confirmed, it cannot be confirmed
     def test_error_3(self, users, exchange):
-        issuer = users['issuer']
-        trader = users['trader']
-        agent = users['agent']
+        issuer = users["issuer"]
+        trader = users["trader"]
+        agent = users["agent"]
 
         # issue token
         deploy_args = init_args(exchange.address)
         token = deploy(users, deploy_args)
 
         # make SELL order by issuer
-        _make_amount = 2 ** 256 - 1
-        _price = 2 ** 256 - 1
+        _make_amount = 2**256 - 1
+        _price = 2**256 - 1
         _isBuy = False
 
-        token.transfer.transact(
-            exchange.address,
-            _make_amount,
-            {'from': issuer}
-        )
+        token.transfer.transact(exchange.address, _make_amount, {"from": issuer})
         exchange.createOrder.transact(
-            token.address,
-            _make_amount,
-            _price,
-            _isBuy,
-            agent,
-            {'from': issuer}
+            token.address, _make_amount, _price, _isBuy, agent, {"from": issuer}
         )
 
         # take BUY order by trader
-        _take_amount = 2 ** 256 - 1
+        _take_amount = 2**256 - 1
         order_id = exchange.latestOrderId()
-        exchange.executeOrder.transact(
-            order_id,
-            _take_amount,
-            True,
-            {'from': trader}
-        )
+        exchange.executeOrder.transact(order_id, _take_amount, True, {"from": trader})
 
         # confirm agreement
         agreement_id = exchange.latestAgreementId(order_id)
-        exchange.confirmAgreement.transact(
-            order_id,
-            agreement_id,
-            {'from': agent}
-        )
+        exchange.confirmAgreement.transact(order_id, agreement_id, {"from": agent})
 
         # cancel agreement
         with brownie.reverts(revert_msg="210504"):
-            exchange.cancelAgreement.transact(
-                order_id,
-                agreement_id,
-                {'from': agent}
-            )
+            exchange.cancelAgreement.transact(order_id, agreement_id, {"from": agent})
 
         # assertion
         assert exchange.getOrder(order_id) == [
@@ -3486,7 +2735,7 @@ class TestCancelAgreement:
             _price,
             False,
             agent.address,
-            False
+            False,
         ]
         assert token.balanceOf(issuer) == deploy_args[2] - _make_amount
         assert token.balanceOf(trader) == _take_amount
@@ -3496,65 +2745,43 @@ class TestCancelAgreement:
             _take_amount,
             _price,
             False,
-            True
+            True,
         ]
         assert exchange.lastPrice(token.address) == _price
 
     # Error_4
     # If it has already been cancelled, it cannot be confirmed
     def test_error_4(self, users, exchange):
-        issuer = users['issuer']
-        trader = users['trader']
-        agent = users['agent']
+        issuer = users["issuer"]
+        trader = users["trader"]
+        agent = users["agent"]
 
         # issue token
         deploy_args = init_args(exchange.address)
         token = deploy(users, deploy_args)
 
         # make SELL order by issuer
-        _make_amount = 2 ** 256 - 1
-        _price = 2 ** 256 - 1
+        _make_amount = 2**256 - 1
+        _price = 2**256 - 1
         _isBuy = False
 
-        token.transfer.transact(
-            exchange.address,
-            _make_amount,
-            {'from': issuer}
-        )
+        token.transfer.transact(exchange.address, _make_amount, {"from": issuer})
         exchange.createOrder.transact(
-            token.address,
-            _make_amount,
-            _price,
-            _isBuy,
-            agent,
-            {'from': issuer}
+            token.address, _make_amount, _price, _isBuy, agent, {"from": issuer}
         )
 
         # take BUY order by trader
-        _take_amount = 2 ** 256 - 1
+        _take_amount = 2**256 - 1
         order_id = exchange.latestOrderId()
-        exchange.executeOrder.transact(
-            order_id,
-            _take_amount,
-            True,
-            {'from': trader}
-        )
+        exchange.executeOrder.transact(order_id, _take_amount, True, {"from": trader})
 
         # cancel agreement (1)
         agreement_id = exchange.latestAgreementId(order_id)
-        exchange.cancelAgreement.transact(
-            order_id,
-            agreement_id,
-            {'from': agent}
-        )
+        exchange.cancelAgreement.transact(order_id, agreement_id, {"from": agent})
 
         # cancel agreement (2)
         with brownie.reverts(revert_msg="210504"):
-            exchange.cancelAgreement.transact(
-                order_id,
-                agreement_id,
-                {'from': agent}
-            )
+            exchange.cancelAgreement.transact(order_id, agreement_id, {"from": agent})
 
         # assertion
         assert exchange.getOrder(order_id) == [
@@ -3564,7 +2791,7 @@ class TestCancelAgreement:
             _price,
             False,
             agent.address,
-            False
+            False,
         ]
         assert token.balanceOf(issuer) == 0
         assert token.balanceOf(trader) == 0
@@ -3574,57 +2801,41 @@ class TestCancelAgreement:
             _take_amount,
             _price,
             True,
-            False
+            False,
         ]
         assert exchange.lastPrice(token.address) == 0
 
     # Error_5
     # The executor must be the agent specified in the make order
     def test_error_5(self, users, exchange):
-        issuer = users['issuer']
-        trader = users['trader']
-        agent = users['agent']
+        issuer = users["issuer"]
+        trader = users["trader"]
+        agent = users["agent"]
 
         # issue token
         deploy_args = init_args(exchange.address)
         token = deploy(users, deploy_args)
 
         # make SELL order by issuer
-        _make_amount = 2 ** 256 - 1
-        _price = 2 ** 256 - 1
+        _make_amount = 2**256 - 1
+        _price = 2**256 - 1
         _isBuy = False
 
-        token.transfer.transact(
-            exchange.address,
-            _make_amount,
-            {'from': issuer}
-        )
+        token.transfer.transact(exchange.address, _make_amount, {"from": issuer})
         exchange.createOrder.transact(
-            token.address,
-            _make_amount,
-            _price,
-            _isBuy,
-            agent,
-            {'from': issuer}
+            token.address, _make_amount, _price, _isBuy, agent, {"from": issuer}
         )
 
         # take BUY order by trader
-        _take_amount = 2 ** 256 - 1
+        _take_amount = 2**256 - 1
         order_id = exchange.latestOrderId()
-        exchange.executeOrder.transact(
-            order_id,
-            _take_amount,
-            True,
-            {'from': trader}
-        )
+        exchange.executeOrder.transact(order_id, _take_amount, True, {"from": trader})
 
         # cancel agreement
         agreement_id = exchange.latestAgreementId(order_id)
         with brownie.reverts(revert_msg="210504"):
             exchange.cancelAgreement.transact(
-                order_id,
-                agreement_id,
-                {'from': users['user1']}
+                order_id, agreement_id, {"from": users["user1"]}
             )
 
         # assert
@@ -3635,7 +2846,7 @@ class TestCancelAgreement:
             _price,
             False,
             agent.address,
-            False
+            False,
         ]
         assert token.balanceOf(issuer) == deploy_args[2] - _make_amount
         assert token.balanceOf(trader) == 0
@@ -3645,7 +2856,7 @@ class TestCancelAgreement:
             _take_amount,
             _price,
             False,
-            False
+            False,
         ]
         assert exchange.lastPrice(token.address) == 0
 
@@ -3653,77 +2864,50 @@ class TestCancelAgreement:
     # Make BUY & Take SELL
     # REVERT: Must be transferable.
     def test_error_6(self, users, exchange):
-        issuer = users['issuer']
-        trader = users['trader']
-        agent = users['agent']
+        issuer = users["issuer"]
+        trader = users["trader"]
+        agent = users["agent"]
 
         # issue token
         deploy_args = [
-            'test_share',
-            'test_symbol',
-            2 ** 256 - 1,
-            2 ** 256 - 1,
-            2 ** 256 - 1,
-            '20200829',
-            '20200831',
-            '20191231',
-            2 ** 256 - 1
+            "test_share",
+            "test_symbol",
+            2**256 - 1,
+            2**256 - 1,
+            2**256 - 1,
+            "20200829",
+            "20200831",
+            "20191231",
+            2**256 - 1,
         ]
         token = deploy_share(users, deploy_args)
 
-        token.setTransferable(
-            True,
-            {'from': issuer}
-        )
-        token.setTradableExchange(
-            exchange.address,
-            {'from': issuer}
-        )
+        token.setTransferable(True, {"from": issuer})
+        token.setTradableExchange(exchange.address, {"from": issuer})
 
         # make BUY order by trader
-        _make_amount = 2 ** 256 - 1
-        _price = 2 ** 256 - 1
+        _make_amount = 2**256 - 1
+        _price = 2**256 - 1
         _isBuy = True
 
         exchange.createOrder(
-            token.address,
-            _make_amount,
-            _price,
-            _isBuy,
-            agent,
-            {'from': trader}
+            token.address, _make_amount, _price, _isBuy, agent, {"from": trader}
         )
 
         # take SELL order by issuer
-        _take_amount = 2 ** 256 - 1
+        _take_amount = 2**256 - 1
 
         order_id = exchange.latestOrderId()
-        token.transfer(
-            exchange.address,
-            _take_amount,
-            {'from': issuer}
-        )
-        exchange.executeOrder(
-            order_id,
-            _take_amount,
-            False,
-            {'from': issuer}
-        )
+        token.transfer(exchange.address, _take_amount, {"from": issuer})
+        exchange.executeOrder(order_id, _take_amount, False, {"from": issuer})
 
         # set to not transferable
-        token.setTransferable(
-            False,
-            {'from': issuer}
-        )
+        token.setTransferable(False, {"from": issuer})
 
         # cancel agreement
         agreement_id = exchange.latestAgreementId(order_id)
         with brownie.reverts(revert_msg="110402"):
-            exchange.cancelAgreement(
-                order_id,
-                agreement_id,
-                {'from': agent}
-            )
+            exchange.cancelAgreement(order_id, agreement_id, {"from": agent})
 
         # assertion
         assert token.balanceOf(issuer) == deploy_args[3] - _take_amount
@@ -3743,46 +2927,32 @@ class TestUpdateExchange:
     #######################################
 
     # Normal_1
-    def test_normal_1(self, users,
-                      exchange, exchange_storage, payment_gateway,
-                      IbetExchange):
-        issuer = users['issuer']
-        agent = users['agent']
-        admin = users['admin']
+    def test_normal_1(
+        self, users, exchange, exchange_storage, payment_gateway, IbetExchange
+    ):
+        issuer = users["issuer"]
+        agent = users["agent"]
+        admin = users["admin"]
 
         # issue token
         deploy_args = init_args(exchange.address)
         token = deploy(users, deploy_args)
 
         # transfer to contract -> make SELL order
-        _make_amount = 2 ** 256 - 1
-        _price = 2 ** 256 - 1
+        _make_amount = 2**256 - 1
+        _price = 2**256 - 1
         _isBuy = False
 
-        token.transfer.transact(
-            exchange.address,
-            _make_amount,
-            {'from': issuer}
-        )
+        token.transfer.transact(exchange.address, _make_amount, {"from": issuer})
         exchange.createOrder.transact(
-            token.address,
-            _make_amount,
-            _price,
-            _isBuy,
-            agent,
-            {'from': issuer}
+            token.address, _make_amount, _price, _isBuy, agent, {"from": issuer}
         )
 
         # deploy new exchange contract
         exchange_new = admin.deploy(
-            IbetExchange,
-            payment_gateway.address,
-            exchange_storage.address
+            IbetExchange, payment_gateway.address, exchange_storage.address
         )
-        exchange_storage.upgradeVersion.transact(
-            exchange_new.address,
-            {'from': admin}
-        )
+        exchange_storage.upgradeVersion.transact(exchange_new.address, {"from": admin})
 
         # assertion
         order_id = exchange_new.latestOrderId()
@@ -3793,7 +2963,7 @@ class TestUpdateExchange:
             _price,
             _isBuy,
             agent.address,
-            False
+            False,
         ]
         assert token.balanceOf(issuer) == deploy_args[2] - _make_amount
         assert exchange_new.balanceOf(issuer, token.address) == 0

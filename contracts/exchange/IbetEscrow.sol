@@ -1,21 +1,21 @@
 /**
-* Copyright BOOSTRY Co., Ltd.
-*
-* Licensed under the Apache License, Version 2.0 (the "License");
-* you may not use this file except in compliance with the License.
-*
-* You may obtain a copy of the License at
-* http://www.apache.org/licenses/LICENSE-2.0
-*
-* Unless required by applicable law or agreed to in writing,
-* software distributed under the License is distributed on an "AS IS" BASIS,
-* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-*
-* See the License for the specific language governing permissions and
-* limitations under the License.
-*
-* SPDX-License-Identifier: Apache-2.0
-*/
+ * Copyright BOOSTRY Co., Ltd.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ *
+ * You may obtain a copy of the License at
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *
+ * SPDX-License-Identifier: Apache-2.0
+ */
 pragma solidity ^0.8.0;
 
 import "OpenZeppelin/openzeppelin-contracts@4.9.3/contracts/utils/math/SafeMath.sol";
@@ -24,7 +24,6 @@ import "../access/Ownable.sol";
 import "../utils/Errors.sol";
 import "../../interfaces/IbetExchangeInterface.sol";
 import "../../interfaces/IbetStandardTokenInterface.sol";
-
 
 /// @title ibet Escrow
 contract IbetEscrow is Ownable, IbetExchangeInterface {
@@ -72,8 +71,7 @@ contract IbetEscrow is Ownable, IbetExchangeInterface {
 
     // [CONSTRUCTOR]
     /// @param _storageAddress EscrowStorageコントラクトアドレス
-    constructor(address _storageAddress)
-    {
+    constructor(address _storageAddress) {
         storageAddress = _storageAddress;
     }
 
@@ -82,21 +80,17 @@ contract IbetEscrow is Ownable, IbetExchangeInterface {
     // ---------------------------------------------------------------
 
     struct Escrow {
-        address token;  // トークンアドレス
-        address sender;  // 送信者
-        address recipient;  // 受信者
-        uint256 amount;  // 数量
-        address agent;  // エスクローエージェント
-        bool valid;  // 有効状態
+        address token; // トークンアドレス
+        address sender; // 送信者
+        address recipient; // 受信者
+        uint256 amount; // 数量
+        address agent; // エスクローエージェント
+        bool valid; // 有効状態
     }
 
     /// @notice 直近エスクローID取得
     /// @return 直近エスクローID
-    function latestEscrowId()
-        public
-        view
-        returns (uint256)
-    {
+    function latestEscrowId() public view returns (uint256) {
         return EscrowStorage(storageAddress).getLatestEscrowId();
     }
 
@@ -108,7 +102,9 @@ contract IbetEscrow is Ownable, IbetExchangeInterface {
     /// @return amount 数量
     /// @return agent エスクローエージェント
     /// @return valid 有効状態
-    function getEscrow(uint256 _escrowId)
+    function getEscrow(
+        uint256 _escrowId
+    )
         public
         view
         returns (
@@ -127,32 +123,22 @@ contract IbetEscrow is Ownable, IbetExchangeInterface {
     /// @param _account アカウントアドレス
     /// @param _token トークンアドレス
     /// @return 残高数量
-    function balanceOf(address _account, address _token)
-        public
-        view
-        override
-        returns (uint256)
-    {
-        return EscrowStorage(storageAddress).getBalance(
-            _account,
-            _token
-        );
+    function balanceOf(
+        address _account,
+        address _token
+    ) public view override returns (uint256) {
+        return EscrowStorage(storageAddress).getBalance(_account, _token);
     }
 
     /// @notice エスクロー中数量の参照
     /// @param _account アカウントアドレス
     /// @param _token トークンアドレス
     /// @return 残高数量
-    function commitmentOf(address _account, address _token)
-        public
-        view
-        override
-        returns (uint256)
-    {
-        return EscrowStorage(storageAddress).getCommitment(
-            _account,
-            _token
-        );
+    function commitmentOf(
+        address _account,
+        address _token
+    ) public view override returns (uint256) {
+        return EscrowStorage(storageAddress).getCommitment(_account, _token);
     }
 
     // ---------------------------------------------------------------
@@ -171,15 +157,9 @@ contract IbetEscrow is Ownable, IbetExchangeInterface {
         uint256 _amount,
         address _agent,
         string memory _data
-    )
-        public
-        returns (bool)
-    {
+    ) public returns (bool) {
         // チェック：数量がゼロより大きいこと
-        require(
-            _amount > 0,
-            ErrorCode.ERR_IbetEscrow_createEscrow_230001
-        );
+        require(_amount > 0, ErrorCode.ERR_IbetEscrow_createEscrow_230001);
 
         // チェック：数量が残高以下であること
         require(
@@ -194,7 +174,8 @@ contract IbetEscrow is Ownable, IbetExchangeInterface {
         );
 
         // 更新：エスクローIDをカウントアップ
-        uint256 _escrowId = EscrowStorage(storageAddress).getLatestEscrowId() + 1;
+        uint256 _escrowId = EscrowStorage(storageAddress).getLatestEscrowId() +
+            1;
         EscrowStorage(storageAddress).setLatestEscrowId(_escrowId);
 
         // 更新：エスクロー情報の挿入
@@ -238,10 +219,7 @@ contract IbetEscrow is Ownable, IbetExchangeInterface {
 
     /// @notice エスクロー取消
     /// @param _escrowId エスクローID
-    function cancelEscrow(uint256 _escrowId)
-        public
-        returns (bool)
-    {
+    function cancelEscrow(uint256 _escrowId) public returns (bool) {
         // チェック：エスクローIDが直近ID以下であること
         require(
             _escrowId <= EscrowStorage(storageAddress).getLatestEscrowId(),
@@ -316,10 +294,7 @@ contract IbetEscrow is Ownable, IbetExchangeInterface {
 
     /// @notice エスクロー完了
     /// @param _escrowId エスクローID
-    function finishEscrow(uint256 _escrowId)
-        public
-        returns (bool)
-    {
+    function finishEscrow(uint256 _escrowId) public returns (bool) {
         // チェック：エスクローIDが直近ID以下であること
         require(
             _escrowId <= EscrowStorage(storageAddress).getLatestEscrowId(),
@@ -400,11 +375,10 @@ contract IbetEscrow is Ownable, IbetExchangeInterface {
 
     /// @notice エスクロー一括完了
     /// @param _escrowIdList エスクローIDのリスト
-    function bulkFinishEscrow(uint256[] calldata _escrowIdList)
-        public
-        returns (bool success)
-    {
-        for(uint i = 0; i < _escrowIdList.length; i++) {
+    function bulkFinishEscrow(
+        uint256[] calldata _escrowIdList
+    ) public returns (bool success) {
+        for (uint i = 0; i < _escrowIdList.length; i++) {
             success = finishEscrow(_escrowIdList[i]);
         }
         return success;
@@ -414,17 +388,10 @@ contract IbetEscrow is Ownable, IbetExchangeInterface {
     /// @dev エスクローで拘束されているものは引き出しされない
     /// @param _token トークンアドレス
     /// @return 処理結果
-    function withdraw(address _token)
-        public
-        override
-        returns (bool)
-    {
+    function withdraw(address _token) public override returns (bool) {
         uint256 balance = balanceOf(msg.sender, _token);
 
-        require(
-            balance > 0,
-            ErrorCode.ERR_IbetEscrow_withdraw_230301
-        );
+        require(balance > 0, ErrorCode.ERR_IbetEscrow_withdraw_230301);
 
         // 更新処理：トークン引き出し（送信）
         IbetStandardTokenInterface(_token).transfer(msg.sender, balance);
@@ -439,10 +406,11 @@ contract IbetEscrow is Ownable, IbetExchangeInterface {
     /// @notice Deposit Handler：デポジット処理
     /// @param _from アカウントアドレス：残高を保有するアドレス
     /// @param _value デポジット数量
-    function tokenFallback(address _from, uint _value, bytes memory /*_data*/)
-        public
-        override
-    {
+    function tokenFallback(
+        address _from,
+        uint _value,
+        bytes memory /*_data*/
+    ) public override {
         EscrowStorage(storageAddress).setBalance(
             _from,
             msg.sender,
@@ -452,5 +420,4 @@ contract IbetEscrow is Ownable, IbetExchangeInterface {
         // イベント登録
         emit Deposited(msg.sender, _from);
     }
-
 }

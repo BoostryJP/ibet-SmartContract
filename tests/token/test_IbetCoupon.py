@@ -16,28 +16,36 @@ limitations under the License.
 
 SPDX-License-Identifier: Apache-2.0
 """
+
 import brownie
 import pytest
 
 
 def init_args(exchange_address):
-    name = 'test_coupon'
-    symbol = 'CPN'
+    name = "test_coupon"
+    symbol = "CPN"
     total_supply = 1000000
     tradable_exchange = exchange_address
-    details = 'some_details'
-    return_details = 'some_return_details'
-    memo = 'some_memo'
-    expiration_date = '20201231'
+    details = "some_details"
+    return_details = "some_return_details"
+    memo = "some_memo"
+    expiration_date = "20201231"
     transferable = True
-    contact_information = 'some_contact_information'
-    privacy_policy = 'some_privacy_policy'
+    contact_information = "some_contact_information"
+    privacy_policy = "some_privacy_policy"
 
     deploy_args = [
-        name, symbol, total_supply, tradable_exchange,
-        details, return_details,
-        memo, expiration_date, transferable,
-        contact_information, privacy_policy
+        name,
+        symbol,
+        total_supply,
+        tradable_exchange,
+        details,
+        return_details,
+        memo,
+        expiration_date,
+        transferable,
+        contact_information,
+        privacy_policy,
     ]
     return deploy_args
 
@@ -51,7 +59,7 @@ class TestDeploy:
 
     # Normal_1
     def test_normal_1(self, IbetCoupon, users, exchange):
-        issuer = users['issuer']
+        issuer = users["issuer"]
 
         # deploy
         deploy_args = init_args(exchange.address)
@@ -96,8 +104,8 @@ class TestTransfer:
     # Normal_1
     # Transfer to account address
     def test_normal_1(self, IbetCoupon, users, exchange):
-        _from = users['issuer']
-        _to = users['trader']
+        _from = users["issuer"]
+        _to = users["trader"]
         _value = 100
 
         # deploy
@@ -105,7 +113,7 @@ class TestTransfer:
         coupon = _from.deploy(IbetCoupon, *deploy_args)
 
         # transfer
-        tx = coupon.transfer.transact(_to, _value, {'from': _from})
+        tx = coupon.transfer.transact(_to, _value, {"from": _from})
 
         # assertion
         from_balance = coupon.balanceOf(_from)
@@ -120,7 +128,7 @@ class TestTransfer:
     # Normal_2
     # Transfer to contract address
     def test_normal_2(self, IbetCoupon, users, exchange):
-        _from = users['issuer']
+        _from = users["issuer"]
         _to = exchange.address
         _value = 100
 
@@ -129,7 +137,7 @@ class TestTransfer:
         coupon = _from.deploy(IbetCoupon, *deploy_args)
 
         # transfer
-        tx = coupon.transfer.transact(_to, _value, {'from': _from})
+        tx = coupon.transfer.transact(_to, _value, {"from": _from})
 
         # assertion
         from_balance = coupon.balanceOf(_from)
@@ -148,8 +156,8 @@ class TestTransfer:
     # Error_1
     # Insufficient balance
     def test_error_1(self, IbetCoupon, users, exchange):
-        _from = users['issuer']
-        _to = users['trader']
+        _from = users["issuer"]
+        _to = users["trader"]
 
         # deploy
         deploy_args = init_args(exchange.address)
@@ -158,7 +166,7 @@ class TestTransfer:
         # transfer
         _value = deploy_args[2] + 1
         with brownie.reverts(revert_msg="130101"):
-            coupon.transfer.transact(_to, _value, {'from': _from})
+            coupon.transfer.transact(_to, _value, {"from": _from})
 
         # assertion
         assert coupon.balanceOf(_from) == deploy_args[2]
@@ -167,40 +175,27 @@ class TestTransfer:
     # Error_2
     # Cannot access private functions
     def test_error_2(self, IbetCoupon, users, exchange):
-        _from = users['issuer']
-        _to = users['trader']
+        _from = users["issuer"]
+        _to = users["trader"]
 
         # deploy
         deploy_args = init_args(exchange.address)
         coupon = _from.deploy(IbetCoupon, *deploy_args)
 
         with pytest.raises(AttributeError):
-            coupon.isContract(
-                _to,
-                {'from': _from}
-            )
+            coupon.isContract(_to, {"from": _from})
 
         with pytest.raises(AttributeError):
-            coupon.transferToAddress.transact(
-                _to,
-                10,
-                'test_data',
-                {'from': _from}
-            )
+            coupon.transferToAddress.transact(_to, 10, "test_data", {"from": _from})
 
         with pytest.raises(AttributeError):
-            coupon.transferToContract.transact(
-                _to,
-                10,
-                'test_data',
-                {'from': _from}
-            )
+            coupon.transferToContract.transact(_to, 10, "test_data", {"from": _from})
 
     # Error_3
     # Not transferable token
     def test_error_3(self, IbetCoupon, users, exchange):
-        _from = users['issuer']
-        _to = users['trader']
+        _from = users["issuer"]
+        _to = users["trader"]
 
         # deploy
         deploy_args = init_args(exchange.address)
@@ -210,7 +205,7 @@ class TestTransfer:
         # transfer
         _value = 1
         with brownie.reverts(revert_msg="130102"):
-            coupon.transfer.transact(_to, _value, {'from': _from})
+            coupon.transfer.transact(_to, _value, {"from": _from})
 
         # assertion
         assert coupon.balanceOf(_from) == deploy_args[2]
@@ -219,28 +214,31 @@ class TestTransfer:
     # Error_4
     # Transfer to contract address
     # Not tradable exchange
-    def test_error_4(self, IbetCoupon, IbetExchange, users,
-                     exchange, exchange_storage, payment_gateway):
-        _issuer = users['issuer']
+    def test_error_4(
+        self,
+        IbetCoupon,
+        IbetExchange,
+        users,
+        exchange,
+        exchange_storage,
+        payment_gateway,
+    ):
+        _issuer = users["issuer"]
 
         # deploy
         deploy_args = init_args(exchange.address)
         coupon = _issuer.deploy(IbetCoupon, *deploy_args)
 
         # deploy (not tradable exchange)
-        not_tradable_exchange = users['admin'].deploy(
-            IbetExchange,
-            payment_gateway.address,
-            exchange_storage.address
+        not_tradable_exchange = users["admin"].deploy(
+            IbetExchange, payment_gateway.address, exchange_storage.address
         )
 
         # transfer
         _value = deploy_args[2]
         with brownie.reverts(revert_msg="130001"):
             coupon.transfer.transact(
-                not_tradable_exchange.address,
-                _value,
-                {'from': _issuer}
+                not_tradable_exchange.address, _value, {"from": _issuer}
             )
 
         # assertion
@@ -269,9 +267,7 @@ class TestBulkTransfer:
         to_address_list = [to_address]
         amount_list = [1]
         tx = coupon_contract.bulkTransfer.transact(
-            to_address_list,
-            amount_list,
-            {"from": from_address}
+            to_address_list, amount_list, {"from": from_address}
         )
 
         # assertion
@@ -301,9 +297,7 @@ class TestBulkTransfer:
             to_address_list.append(to_address)
             amount_list.append(1)
         tx = coupon_contract.bulkTransfer.transact(
-            to_address_list,
-            amount_list,
-            {"from": from_address}
+            to_address_list, amount_list, {"from": from_address}
         )
 
         # assertion
@@ -331,9 +325,7 @@ class TestBulkTransfer:
         to_address_list = [exchange.address]
         amount_list = [1]
         tx = coupon_contract.bulkTransfer.transact(
-            to_address_list,
-            amount_list,
-            {"from": from_address}
+            to_address_list, amount_list, {"from": from_address}
         )
 
         # assertion
@@ -353,28 +345,24 @@ class TestBulkTransfer:
     # Error_1
     # Over/Under the limit
     def test_error_1(self, IbetCoupon, users, exchange):
-        from_address = users['issuer']
-        to_address = users['trader']
+        from_address = users["issuer"]
+        to_address = users["trader"]
 
         # issue coupon token
         deploy_args = init_args(exchange.address)
-        deploy_args[2] = 2 ** 256 - 1
+        deploy_args[2] = 2**256 - 1
         coupon_contract = from_address.deploy(IbetCoupon, *deploy_args)
 
         # over the upper limit
         with brownie.reverts(revert_msg="Integer overflow"):
             coupon_contract.bulkTransfer.transact(
-                [to_address, to_address],
-                [2 ** 256 - 1, 1],
-                {'from': from_address}
+                [to_address, to_address], [2**256 - 1, 1], {"from": from_address}
             )
 
         # under the lower limit
         with pytest.raises(OverflowError):
             coupon_contract.bulkTransfer.transact(
-                [to_address],
-                [-1],
-                {'from': from_address}
+                [to_address], [-1], {"from": from_address}
             )
 
         # assertion
@@ -396,9 +384,7 @@ class TestBulkTransfer:
         # bulk transfer
         with brownie.reverts(revert_msg="130202"):
             coupon_contract.bulkTransfer.transact(
-                [to_address, to_address],
-                [deploy_args[2], 1],
-                {'from': from_address}
+                [to_address, to_address], [deploy_args[2], 1], {"from": from_address}
             )
 
         # assertion
@@ -421,9 +407,7 @@ class TestBulkTransfer:
         # bulk transfer
         with brownie.reverts(revert_msg="130203"):
             coupon_contract.bulkTransfer.transact(
-                [to_address],
-                [1],
-                {"from": from_address}
+                [to_address], [1], {"from": from_address}
             )
 
         # assertion
@@ -443,9 +427,9 @@ class TestTransferFrom:
     # Normal_1
     # Transfer to account address
     def test_normal_1(self, users, IbetCoupon, exchange):
-        issuer = users['issuer']
-        from_address = users['admin']
-        to_address = users['trader']
+        issuer = users["issuer"]
+        from_address = users["admin"]
+        to_address = users["trader"]
         value = 100
 
         # issue coupon token
@@ -453,16 +437,9 @@ class TestTransferFrom:
         coupon_contract = issuer.deploy(IbetCoupon, *deploy_args)
 
         # transfer to account address
-        coupon_contract.transfer.transact(
-            from_address,
-            value,
-            {'from': issuer}
-        )
+        coupon_contract.transfer.transact(from_address, value, {"from": issuer})
         tx = coupon_contract.transferFrom.transact(
-            from_address,
-            to_address,
-            value,
-            {'from': issuer}
+            from_address, to_address, value, {"from": issuer}
         )
 
         # assertion
@@ -480,8 +457,8 @@ class TestTransferFrom:
     # Normal_2
     # Transfer to contract address
     def test_normal_2(self, users, IbetCoupon, exchange):
-        issuer = users['issuer']
-        from_address = users['trader']
+        issuer = users["issuer"]
+        from_address = users["trader"]
         value = 100
 
         # issue coupon token
@@ -489,17 +466,10 @@ class TestTransferFrom:
         coupon_contract = issuer.deploy(IbetCoupon, *deploy_args)
 
         # transfer to contract address
-        coupon_contract.transfer.transact(
-            from_address,
-            value,
-            {'from': issuer}
-        )
+        coupon_contract.transfer.transact(from_address, value, {"from": issuer})
         to_address = exchange.address
         tx = coupon_contract.transferFrom.transact(
-            from_address,
-            to_address,
-            value,
-            {'from': issuer}
+            from_address, to_address, value, {"from": issuer}
         )
 
         # assertion
@@ -517,10 +487,10 @@ class TestTransferFrom:
     # Normal_3_1
     # Upper limit
     def test_normal_3_1(self, users, IbetCoupon, exchange):
-        issuer = users['issuer']
-        from_address = users['admin']
-        to_address = users['trader']
-        max_value = 2 ** 256 - 1
+        issuer = users["issuer"]
+        from_address = users["admin"]
+        to_address = users["trader"]
+        max_value = 2**256 - 1
 
         # issuer coupon token
         deploy_args = init_args(exchange.address)
@@ -528,16 +498,9 @@ class TestTransferFrom:
         coupon_contract = issuer.deploy(IbetCoupon, *deploy_args)
 
         # transfer
-        coupon_contract.transfer.transact(
-            from_address,
-            max_value,
-            {'from': issuer}
-        )
+        coupon_contract.transfer.transact(from_address, max_value, {"from": issuer})
         tx = coupon_contract.transferFrom.transact(
-            from_address,
-            to_address,
-            max_value,
-            {'from': issuer}
+            from_address, to_address, max_value, {"from": issuer}
         )
 
         # assertion
@@ -555,9 +518,9 @@ class TestTransferFrom:
     # Normal_3_2
     # Lower limit
     def test_normal_3_2(self, users, IbetCoupon, exchange):
-        issuer = users['issuer']
-        from_address = users['admin']
-        to_address = users['trader']
+        issuer = users["issuer"]
+        from_address = users["admin"]
+        to_address = users["trader"]
         min_value = 0
 
         # issue coupon token
@@ -566,16 +529,9 @@ class TestTransferFrom:
         coupon_contract = issuer.deploy(IbetCoupon, *deploy_args)
 
         # transfer
-        coupon_contract.transfer.transact(
-            from_address,
-            min_value,
-            {'from': issuer}
-        )
+        coupon_contract.transfer.transact(from_address, min_value, {"from": issuer})
         tx = coupon_contract.transferFrom.transact(
-            from_address,
-            to_address,
-            min_value,
-            {'from': issuer}
+            from_address, to_address, min_value, {"from": issuer}
         )
 
         # assertion
@@ -597,8 +553,8 @@ class TestTransferFrom:
     # Error_1
     # Insufficient balance
     def test_error_1(self, users, IbetCoupon, exchange):
-        issuer = users['issuer']
-        to_address = users['trader']
+        issuer = users["issuer"]
+        to_address = users["trader"]
 
         # issue coupon token
         deploy_args = init_args(exchange.address)
@@ -608,10 +564,7 @@ class TestTransferFrom:
         transfer_amount = 10000000000
         with brownie.reverts(revert_msg="130301"):
             coupon_contract.transferFrom.transact(
-                issuer,
-                to_address,
-                transfer_amount,
-                {'from': issuer}
+                issuer, to_address, transfer_amount, {"from": issuer}
             )
 
         # assertion
@@ -621,9 +574,9 @@ class TestTransferFrom:
     # Error_2
     # Unauthorized
     def test_error_2(self, users, IbetCoupon, exchange):
-        issuer = users['issuer']
-        admin = users['admin']
-        to_address = users['trader']
+        issuer = users["issuer"]
+        admin = users["admin"]
+        to_address = users["trader"]
         transfer_amount = 100
 
         # issue coupon token
@@ -636,7 +589,7 @@ class TestTransferFrom:
                 issuer,
                 to_address,
                 transfer_amount,
-                {'from': admin}  # unauthorized account
+                {"from": admin},  # unauthorized account
             )
 
         # assertion
@@ -653,7 +606,7 @@ class TestConsume:
 
     # Normal_1
     def test_normal_1(self, IbetCoupon, users, exchange):
-        _user = users['issuer']
+        _user = users["issuer"]
         _value = 1
 
         # issue token
@@ -661,7 +614,7 @@ class TestConsume:
         coupon = _user.deploy(IbetCoupon, *deploy_args)
 
         # consume
-        tx = coupon.consume.transact(_value, {'from': _user})
+        tx = coupon.consume.transact(_value, {"from": _user})
 
         # assertion
         balance = coupon.balanceOf(_user)
@@ -681,7 +634,7 @@ class TestConsume:
     # Error_1
     # Insufficient balance
     def test_error_1(self, IbetCoupon, users, exchange):
-        _issuer = users['issuer']
+        _issuer = users["issuer"]
 
         # issue token
         deploy_args = init_args(exchange.address)
@@ -690,7 +643,7 @@ class TestConsume:
         # consume
         with brownie.reverts(revert_msg="130401"):
             _value = deploy_args[2] + 1
-            coupon.consume.transact(_value, {'from': _issuer})
+            coupon.consume.transact(_value, {"from": _issuer})
 
         # assertion
         assert coupon.balanceOf(_issuer) == deploy_args[2]
@@ -706,7 +659,7 @@ class TestIssue:
 
     # Normal_1
     def test_normal_1(self, IbetCoupon, users, exchange):
-        _issuer = users['issuer']
+        _issuer = users["issuer"]
         _value = 1
 
         # issue token
@@ -714,7 +667,7 @@ class TestIssue:
         coupon = _issuer.deploy(IbetCoupon, *deploy_args)
 
         # additional issue
-        coupon.issue.transact(_value, {'from': _issuer})
+        coupon.issue.transact(_value, {"from": _issuer})
 
         # assertion
         balance = coupon.balanceOf(_issuer)
@@ -729,10 +682,10 @@ class TestIssue:
     # Error_1
     # Over maximum value
     def test_error_1(self, IbetCoupon, users, exchange):
-        _issuer = users['issuer']
-        _consumer = users['trader']
+        _issuer = users["issuer"]
+        _consumer = users["trader"]
         _transfer_quantity = 999999
-        _value = 2 ** 256 - 1
+        _value = 2**256 - 1
 
         # issue token
         deploy_args = init_args(exchange.address)
@@ -740,15 +693,12 @@ class TestIssue:
 
         # transfer
         coupon.transferFrom.transact(
-            _issuer,
-            _consumer,
-            _transfer_quantity,
-            {'from': _issuer}
+            _issuer, _consumer, _transfer_quantity, {"from": _issuer}
         )
 
         # additional issue
         with brownie.reverts(revert_msg="Integer overflow"):
-            coupon.issue.transact(_value, {'from': _issuer})  # 2**256 - 1 + 1
+            coupon.issue.transact(_value, {"from": _issuer})  # 2**256 - 1 + 1
 
         # assertion
         balance = coupon.balanceOf(_issuer)
@@ -759,8 +709,8 @@ class TestIssue:
     # Error_2
     # Unauthorized
     def test_error_2(self, IbetCoupon, users, exchange):
-        _issuer = users['issuer']
-        _other = users['trader']
+        _issuer = users["issuer"]
+        _other = users["trader"]
         _value = 1000
 
         # issue token
@@ -769,7 +719,7 @@ class TestIssue:
 
         # additional issue
         with brownie.reverts(revert_msg="500001"):
-            coupon.issue.transact(_value, {'from': _other})
+            coupon.issue.transact(_value, {"from": _other})
 
         # assertion
         balance = coupon.balanceOf(_issuer)
@@ -787,18 +737,18 @@ class TestSetDetails:
 
     # Normal_1
     def test_normal_1(self, IbetCoupon, users, exchange):
-        issuer = users['issuer']
+        issuer = users["issuer"]
 
         # issue token
         deploy_args = init_args(exchange.address)
         coupon = issuer.deploy(IbetCoupon, *deploy_args)
 
         # set details
-        coupon.setDetails.transact('updated details', {'from': issuer})
+        coupon.setDetails.transact("updated details", {"from": issuer})
 
         # assertion
         details = coupon.details()
-        assert details == 'updated details'
+        assert details == "updated details"
 
     #######################################
     # Error
@@ -807,8 +757,8 @@ class TestSetDetails:
     # Error_1
     # Unauthorized
     def test_error_1(self, IbetCoupon, users, exchange):
-        issuer = users['issuer']
-        other = users['trader']
+        issuer = users["issuer"]
+        other = users["trader"]
 
         # issue token
         deploy_args = init_args(exchange.address)
@@ -816,10 +766,10 @@ class TestSetDetails:
 
         # set details
         with brownie.reverts(revert_msg="500001"):
-            coupon.setDetails.transact('updated details', {'from': other})
+            coupon.setDetails.transact("updated details", {"from": other})
 
         details = coupon.details()
-        assert details == 'some_details'
+        assert details == "some_details"
 
 
 # TEST_setMemo
@@ -831,18 +781,18 @@ class TestSetMemo:
 
     # Normal_1
     def test_normal_1(self, IbetCoupon, users, exchange):
-        issuer = users['issuer']
+        issuer = users["issuer"]
 
         # issue token
         deploy_args = init_args(exchange.address)
         coupon = issuer.deploy(IbetCoupon, *deploy_args)
 
         # set memo
-        coupon.setMemo.transact('updated memo', {'from': issuer})
+        coupon.setMemo.transact("updated memo", {"from": issuer})
 
         # assertion
         details = coupon.memo()
-        assert details == 'updated memo'
+        assert details == "updated memo"
 
     #######################################
     # Error
@@ -851,8 +801,8 @@ class TestSetMemo:
     # Error_1
     # Unauthorized
     def test_error_1(self, IbetCoupon, users, exchange):
-        issuer = users['issuer']
-        other = users['trader']
+        issuer = users["issuer"]
+        other = users["trader"]
 
         # issue token
         deploy_args = init_args(exchange.address)
@@ -860,11 +810,11 @@ class TestSetMemo:
 
         # set memo
         with brownie.reverts(revert_msg="500001"):
-            coupon.setMemo.transact('updated memo', {'from': other})
+            coupon.setMemo.transact("updated memo", {"from": other})
 
         # assertion
         details = coupon.memo()
-        assert details == 'some_memo'
+        assert details == "some_memo"
 
 
 # TEST_balanceOf
@@ -876,7 +826,7 @@ class TestBalanceOf:
 
     # Normal_1
     def test_normal_1(self, IbetCoupon, users, exchange):
-        issuer = users['issuer']
+        issuer = users["issuer"]
 
         # issue token
         deploy_args = init_args(exchange.address)
@@ -898,7 +848,7 @@ class TestUsedOf:
 
     # Normal_1
     def test_normal_1(self, IbetCoupon, users, exchange):
-        _issuer = users['issuer']
+        _issuer = users["issuer"]
         _value = 1
 
         # issue token
@@ -906,7 +856,7 @@ class TestUsedOf:
         coupon = _issuer.deploy(IbetCoupon, *deploy_args)
 
         # consume
-        coupon.consume.transact(_value, {'from': _issuer})
+        coupon.consume.transact(_value, {"from": _issuer})
 
         # get used quantity
         used = coupon.usedOf(_issuer)
@@ -925,15 +875,15 @@ class TestSetImageUrl:
     # Normal_1
     # Set one url
     def test_normal_1(self, IbetCoupon, users, exchange):
-        issuer = users['issuer']
+        issuer = users["issuer"]
 
         # issue token
         deploy_args = init_args(exchange.address)
         coupon = issuer.deploy(IbetCoupon, *deploy_args)
 
         # set image url
-        image_url = 'https://some_image_url.com/image.png'
-        coupon.setImageURL.transact(0, image_url, {'from': issuer})
+        image_url = "https://some_image_url.com/image.png"
+        coupon.setImageURL.transact(0, image_url, {"from": issuer})
 
         # assertion
         image_url_0 = coupon.getImageURL(0)
@@ -942,19 +892,19 @@ class TestSetImageUrl:
     # Normal_2
     # Set multiple urls
     def test_normal_2(self, IbetCoupon, users, exchange):
-        issuer = users['issuer']
+        issuer = users["issuer"]
 
         # issue token
         deploy_args = init_args(exchange.address)
         coupon = issuer.deploy(IbetCoupon, *deploy_args)
 
-        image_url = 'https://some_image_url.com/image1.png'
+        image_url = "https://some_image_url.com/image1.png"
 
         # set image url (1)
-        coupon.setImageURL.transact(0, image_url, {'from': issuer})
+        coupon.setImageURL.transact(0, image_url, {"from": issuer})
 
         # set image url (2)
-        coupon.setImageURL.transact(1, image_url, {'from': issuer})
+        coupon.setImageURL.transact(1, image_url, {"from": issuer})
 
         # assertion
         image_url_0 = coupon.getImageURL(0)
@@ -965,20 +915,20 @@ class TestSetImageUrl:
     # Normal_3
     # Overwriting
     def test_normal_3(self, IbetCoupon, users, exchange):
-        issuer = users['issuer']
+        issuer = users["issuer"]
 
         # issue token
         deploy_args = init_args(exchange.address)
         coupon = issuer.deploy(IbetCoupon, *deploy_args)
 
-        image_url = 'https://some_image_url.com/image.png'
-        image_url_after = 'https://some_image_url.com/image_after.png'
+        image_url = "https://some_image_url.com/image.png"
+        image_url_after = "https://some_image_url.com/image_after.png"
 
         # set image url
-        coupon.setImageURL.transact(0, image_url, {'from': issuer})
+        coupon.setImageURL.transact(0, image_url, {"from": issuer})
 
         # overwrite image url
-        coupon.setImageURL.transact(0, image_url_after, {'from': issuer})
+        coupon.setImageURL.transact(0, image_url_after, {"from": issuer})
 
         # assertion
         image_url_0 = coupon.getImageURL(0)
@@ -991,21 +941,21 @@ class TestSetImageUrl:
     # Error_1
     # Unauthorized
     def test_error_1(self, IbetCoupon, users, exchange):
-        issuer = users['issuer']
-        other = users['admin']
+        issuer = users["issuer"]
+        other = users["admin"]
 
         # issue token
         deploy_args = init_args(exchange.address)
         coupon = issuer.deploy(IbetCoupon, *deploy_args)
 
         # set image url
-        image_url = 'https://some_image_url.com/image.png'
+        image_url = "https://some_image_url.com/image.png"
         with brownie.reverts(revert_msg="500001"):
-            coupon.setImageURL.transact(0, image_url, {'from': other})  # エラーになる
+            coupon.setImageURL.transact(0, image_url, {"from": other})  # エラーになる
 
         # assertion
         image_url_0 = coupon.getImageURL(0)
-        assert image_url_0 == ''
+        assert image_url_0 == ""
 
 
 # TEST_setStatus
@@ -1017,14 +967,14 @@ class TestSetStatus:
 
     # Normal_1
     def test_normal_1(self, IbetCoupon, users, exchange):
-        issuer = users['issuer']
+        issuer = users["issuer"]
 
         # issue token
         deploy_args = init_args(exchange.address)
         coupon = issuer.deploy(IbetCoupon, *deploy_args)
 
         # change status
-        coupon.setStatus.transact(False, {'from': issuer})
+        coupon.setStatus.transact(False, {"from": issuer})
 
         # assertion
         assert coupon.status() is False
@@ -1036,8 +986,8 @@ class TestSetStatus:
     # Error_1
     # Unauthorized
     def test_error_1(self, IbetCoupon, users, exchange):
-        issuer = users['issuer']
-        other = users['trader']
+        issuer = users["issuer"]
+        other = users["trader"]
 
         # issue token
         deploy_args = init_args(exchange.address)
@@ -1045,7 +995,7 @@ class TestSetStatus:
 
         # change status
         with brownie.reverts(revert_msg="500001"):
-            coupon.setStatus.transact(False, {'from': other})
+            coupon.setStatus.transact(False, {"from": other})
 
         # assertion
         assert coupon.status() is True
@@ -1060,17 +1010,14 @@ class TestSetTradableExchange:
 
     # Normal_1
     def test_normal_1(self, IbetCoupon, users, exchange):
-        issuer = users['issuer']
+        issuer = users["issuer"]
 
         # issue token
         deploy_args = init_args(exchange.address)
         coupon = issuer.deploy(IbetCoupon, *deploy_args)
 
         # change exchange contract
-        coupon.setTradableExchange.transact(
-            brownie.ZERO_ADDRESS,
-            {'from': issuer}
-        )
+        coupon.setTradableExchange.transact(brownie.ZERO_ADDRESS, {"from": issuer})
 
         # assertion
         assert coupon.tradableExchange() == brownie.ZERO_ADDRESS
@@ -1082,8 +1029,8 @@ class TestSetTradableExchange:
     # Error_1
     # Unauthorized
     def test_error_1(self, IbetCoupon, users, exchange):
-        issuer = users['issuer']
-        trader = users['trader']
+        issuer = users["issuer"]
+        trader = users["trader"]
 
         # issue token
         deploy_args = init_args(exchange.address)
@@ -1091,10 +1038,7 @@ class TestSetTradableExchange:
 
         # change exchange contract
         with brownie.reverts(revert_msg="500001"):
-            coupon.setTradableExchange.transact(
-                brownie.ZERO_ADDRESS,
-                {'from': trader}
-            )
+            coupon.setTradableExchange.transact(brownie.ZERO_ADDRESS, {"from": trader})
 
         # assertion
         assert coupon.tradableExchange() == exchange.address
@@ -1109,15 +1053,15 @@ class TestSetExpirationDate:
 
     # Normal_1
     def test_normal_1(self, IbetCoupon, users, exchange):
-        issuer = users['issuer']
-        after_expiration_date = 'after_expiration_date'
+        issuer = users["issuer"]
+        after_expiration_date = "after_expiration_date"
 
         # issue token
         deploy_args = init_args(exchange.address)
         coupon = issuer.deploy(IbetCoupon, *deploy_args)
 
         # set expiration date
-        coupon.setExpirationDate.transact(after_expiration_date, {'from': issuer})
+        coupon.setExpirationDate.transact(after_expiration_date, {"from": issuer})
 
         # assertion
         expiration_date = coupon.expirationDate()
@@ -1130,9 +1074,9 @@ class TestSetExpirationDate:
     # Error_1
     # Unauthorized
     def test_error_1(self, IbetCoupon, users, exchange):
-        issuer = users['issuer']
-        attacker = users['trader']
-        after_expiration_date = 'after_expiration_date'
+        issuer = users["issuer"]
+        attacker = users["trader"]
+        after_expiration_date = "after_expiration_date"
 
         # issue token
         deploy_args = init_args(exchange.address)
@@ -1140,10 +1084,7 @@ class TestSetExpirationDate:
 
         # set expiration date
         with brownie.reverts(revert_msg="500001"):
-            coupon.setExpirationDate.transact(
-                after_expiration_date,
-                {'from': attacker}
-            )
+            coupon.setExpirationDate.transact(after_expiration_date, {"from": attacker})
 
         # assertion
         expiration_date = coupon.expirationDate()
@@ -1159,14 +1100,14 @@ class TestSetTransferable:
 
     # Normal_1
     def test_normal_1(self, IbetCoupon, users, exchange):
-        issuer = users['issuer']
+        issuer = users["issuer"]
 
         # issue token
         deploy_args = init_args(exchange.address)
         coupon = issuer.deploy(IbetCoupon, *deploy_args)
 
         # set transferable
-        coupon.setTransferable.transact(False, {'from': issuer})
+        coupon.setTransferable.transact(False, {"from": issuer})
 
         # assertion
         transferable = coupon.transferable()
@@ -1179,8 +1120,8 @@ class TestSetTransferable:
     # Error_1
     # Unauthorized
     def test_error_1(self, IbetCoupon, users, exchange):
-        issuer = users['issuer']
-        attacker = users['trader']
+        issuer = users["issuer"]
+        attacker = users["trader"]
 
         # issue token
         deploy_args = init_args(exchange.address)
@@ -1188,7 +1129,7 @@ class TestSetTransferable:
 
         # set transferable
         with brownie.reverts(revert_msg="500001"):
-            coupon.setTransferable.transact(False, {'from': attacker})
+            coupon.setTransferable.transact(False, {"from": attacker})
 
         # assertion
         transferable = coupon.transferable()
@@ -1204,7 +1145,7 @@ class TestSetInitialOfferingStatus:
 
     # Normal_1
     def test_normal_1(self, IbetCoupon, users, exchange):
-        issuer = users['issuer']
+        issuer = users["issuer"]
 
         # issue token
         deploy_args = init_args(exchange.address)
@@ -1212,7 +1153,7 @@ class TestSetInitialOfferingStatus:
         assert coupon.initialOfferingStatus() is False
 
         # change initial offering status
-        coupon.setInitialOfferingStatus.transact(True, {'from': issuer})
+        coupon.setInitialOfferingStatus.transact(True, {"from": issuer})
         assert coupon.initialOfferingStatus() is True
 
     #######################################
@@ -1222,8 +1163,8 @@ class TestSetInitialOfferingStatus:
     # Error_1
     # Unauthorized
     def test_error_1(self, IbetCoupon, users, exchange):
-        issuer = users['issuer']
-        unauthorized_user = users['user1']
+        issuer = users["issuer"]
+        unauthorized_user = users["user1"]
 
         # issue token
         deploy_args = init_args(exchange.address)
@@ -1232,7 +1173,7 @@ class TestSetInitialOfferingStatus:
 
         # change initial offering status
         with brownie.reverts(revert_msg="500001"):
-            coupon.setInitialOfferingStatus.transact(True, {'from': unauthorized_user})
+            coupon.setInitialOfferingStatus.transact(True, {"from": unauthorized_user})
         assert coupon.initialOfferingStatus() is False
 
 
@@ -1246,32 +1187,32 @@ class TestApplyForOffering:
     # Normal_1
     # Default value
     def test_normal_1(self, IbetCoupon, users, exchange):
-        issuer = users['issuer']
-        trader = users['trader']
+        issuer = users["issuer"]
+        trader = users["trader"]
 
         # issue token
         deploy_args = init_args(exchange.address)
         coupon = issuer.deploy(IbetCoupon, *deploy_args)
-        coupon.setInitialOfferingStatus.transact(True, {'from': issuer})
+        coupon.setInitialOfferingStatus.transact(True, {"from": issuer})
 
         # assertion
-        assert coupon.applications(trader) == ''
+        assert coupon.applications(trader) == ""
 
     # Normal_2
     def test_normal_2(self, IbetCoupon, users, exchange):
-        issuer = users['issuer']
-        trader = users['trader']
+        issuer = users["issuer"]
+        trader = users["trader"]
 
         # issue token
         deploy_args = init_args(exchange.address)
         coupon = issuer.deploy(IbetCoupon, *deploy_args)
-        coupon.setInitialOfferingStatus.transact(True, {'from': issuer})
+        coupon.setInitialOfferingStatus.transact(True, {"from": issuer})
 
         # apply for
-        tx = coupon.applyForOffering.transact('abcdefgh', {'from': trader})
+        tx = coupon.applyForOffering.transact("abcdefgh", {"from": trader})
 
         # assertion
-        assert coupon.applications(trader) == 'abcdefgh'
+        assert coupon.applications(trader) == "abcdefgh"
 
         assert tx.events["ApplyFor"]["accountAddress"] == trader
 
@@ -1282,8 +1223,8 @@ class TestApplyForOffering:
     # Error_1
     # Offering status is False
     def test_error_1(self, IbetCoupon, users, exchange):
-        issuer = users['issuer']
-        trader = users['trader']
+        issuer = users["issuer"]
+        trader = users["trader"]
 
         # issue token
         deploy_args = init_args(exchange.address)
@@ -1291,10 +1232,10 @@ class TestApplyForOffering:
 
         # apply for
         with brownie.reverts(revert_msg="130501"):
-            coupon.applyForOffering.transact('abcdefgh', {'from': trader})
+            coupon.applyForOffering.transact("abcdefgh", {"from": trader})
 
         # assertion
-        assert coupon.applications(trader) == ''
+        assert coupon.applications(trader) == ""
 
 
 # TEST_setReturnDetails
@@ -1306,18 +1247,15 @@ class TestSetReturnDetails:
 
     # Normal_1
     def test_normal_1(self, IbetCoupon, users, exchange):
-        issuer = users['issuer']
-        after_return_details = 'after_return_details'
+        issuer = users["issuer"]
+        after_return_details = "after_return_details"
 
         # issue token
         deploy_args = init_args(exchange.address)
         coupon = issuer.deploy(IbetCoupon, *deploy_args)
 
         # set return details
-        coupon.setReturnDetails.transact(
-            after_return_details,
-            {'from': issuer}
-        )
+        coupon.setReturnDetails.transact(after_return_details, {"from": issuer})
 
         # assertion
         return_details = coupon.returnDetails()
@@ -1330,9 +1268,9 @@ class TestSetReturnDetails:
     # Error_1
     # Unauthorized
     def test_error_1(self, IbetCoupon, users, exchange):
-        issuer = users['issuer']
-        attacker = users['trader']
-        after_return_details = 'after_return_details'
+        issuer = users["issuer"]
+        attacker = users["trader"]
+        after_return_details = "after_return_details"
 
         # issue token
         deploy_args = init_args(exchange.address)
@@ -1340,10 +1278,7 @@ class TestSetReturnDetails:
 
         # set return details
         with brownie.reverts(revert_msg="500001"):
-            coupon.setReturnDetails.transact(
-                after_return_details,
-                {'from': attacker}
-            )
+            coupon.setReturnDetails.transact(after_return_details, {"from": attacker})
 
         # assertion
         return_details = coupon.returnDetails()
@@ -1359,7 +1294,7 @@ class TestSetContactInformation:
 
     # Normal_1
     def test_normal_1(self, IbetCoupon, users, exchange):
-        issuer = users['issuer']
+        issuer = users["issuer"]
 
         # issue token
         deploy_args = init_args(exchange.address)
@@ -1367,13 +1302,12 @@ class TestSetContactInformation:
 
         # set contact information
         coupon.setContactInformation.transact(
-            'updated contact information',
-            {'from': issuer}
+            "updated contact information", {"from": issuer}
         )
 
         # assertion
         contact_information = coupon.contactInformation()
-        assert contact_information == 'updated contact information'
+        assert contact_information == "updated contact information"
 
     #######################################
     # Error
@@ -1382,8 +1316,8 @@ class TestSetContactInformation:
     # Error_1
     # Unauthorized
     def test_error_1(self, IbetCoupon, users, exchange):
-        issuer = users['issuer']
-        other = users['trader']
+        issuer = users["issuer"]
+        other = users["trader"]
 
         # issue token
         deploy_args = init_args(exchange.address)
@@ -1392,13 +1326,12 @@ class TestSetContactInformation:
         # set contact information
         with brownie.reverts(revert_msg="500001"):
             coupon.setContactInformation.transact(
-                'updated contact information',
-                {'from': other}
+                "updated contact information", {"from": other}
             )
 
         # assertion
         contact_information = coupon.contactInformation()
-        assert contact_information == 'some_contact_information'
+        assert contact_information == "some_contact_information"
 
 
 # TEST_setPrivacyPolicy
@@ -1410,21 +1343,18 @@ class TestSetPrivacyPolicy:
 
     # Normal_1
     def test_normal_1(self, IbetCoupon, users, exchange):
-        issuer = users['issuer']
+        issuer = users["issuer"]
 
         # issue token
         deploy_args = init_args(exchange.address)
         coupon = issuer.deploy(IbetCoupon, *deploy_args)
 
         # set privacy policy
-        coupon.setPrivacyPolicy.transact(
-            'updated privacy policy',
-            {'from': issuer}
-        )
+        coupon.setPrivacyPolicy.transact("updated privacy policy", {"from": issuer})
 
         # assertion
         privacy_policy = coupon.privacyPolicy()
-        assert privacy_policy == 'updated privacy policy'
+        assert privacy_policy == "updated privacy policy"
 
     #######################################
     # Error
@@ -1433,8 +1363,8 @@ class TestSetPrivacyPolicy:
     # Error_1
     # Unauthorized
     def test_error_1(self, IbetCoupon, users, exchange):
-        issuer = users['issuer']
-        other = users['trader']
+        issuer = users["issuer"]
+        other = users["trader"]
 
         # issue token
         deploy_args = init_args(exchange.address)
@@ -1442,11 +1372,8 @@ class TestSetPrivacyPolicy:
 
         # set privacy policy
         with brownie.reverts(revert_msg="500001"):
-            coupon.setPrivacyPolicy.transact(
-                'updated privacy policy',
-                {'from': other}
-            )
+            coupon.setPrivacyPolicy.transact("updated privacy policy", {"from": other})
 
         # assertion
         privacy_policy = coupon.privacyPolicy()
-        assert privacy_policy == 'some_privacy_policy'
+        assert privacy_policy == "some_privacy_policy"

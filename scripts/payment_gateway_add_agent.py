@@ -29,11 +29,11 @@ SPDX-License-Identifier: Apache-2.0
 #     収納代行業者のアカウントアドレス。
 
 import os
-
 import sys
-from brownie import accounts, project, network, web3
 
-p = project.load('.', name="ibet_smart_contract")
+from brownie import accounts, network, project, web3
+
+p = project.load(".", name="ibet_smart_contract")
 p.load_config()
 from brownie.project.ibet_smart_contract import PaymentGateway
 
@@ -49,10 +49,7 @@ def main():
 
     # Add agent
     payment_gateway = PaymentGateway.at(contract_address)
-    payment_gateway.addAgent.transact(
-        agent_address,
-        {'from': deployer}
-    )
+    payment_gateway.addAgent.transact(agent_address, {"from": deployer})
 
     agent_available = payment_gateway.getAgent(agent_address)
     print(f"Processing result: {agent_available}")
@@ -62,30 +59,26 @@ def set_up_deployer():
     """Deployerの設定"""
 
     # 環境設定の読み込み
-    APP_ENV = os.environ.get('APP_ENV') or 'local'
-    ETH_ACCOUNT_PASSWORD = os.environ.get('ETH_ACCOUNT_PASSWORD') or 'password'
-    REFER_ACCOUNT = os.environ.get('REFER_ACCOUNT') or 'GETH'
+    APP_ENV = os.environ.get("APP_ENV") or "local"
+    ETH_ACCOUNT_PASSWORD = os.environ.get("ETH_ACCOUNT_PASSWORD") or "password"
+    REFER_ACCOUNT = os.environ.get("REFER_ACCOUNT") or "GETH"
 
-    if APP_ENV == 'local':
-        network_id = 'local_network'
+    if APP_ENV == "local":
+        network_id = "local_network"
     else:
-        network_id = 'main_network'
+        network_id = "main_network"
     network.connect(network_id)
 
     # アカウント設定
-    if REFER_ACCOUNT == 'GETH':
+    if REFER_ACCOUNT == "GETH":
         deployer = accounts[0]
-        web3.geth.personal.unlock_account(
-            deployer.address,
-            ETH_ACCOUNT_PASSWORD,
-            1000
-        )
+        web3.geth.personal.unlock_account(deployer.address, ETH_ACCOUNT_PASSWORD, 1000)
     else:
         # NOTE: パスワード入力待ちあり
-        deployer = accounts.load('deploy_user')
+        deployer = accounts.load("deploy_user")
 
     return deployer
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

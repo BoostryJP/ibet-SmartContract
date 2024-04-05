@@ -31,7 +31,7 @@ def main():
             output = {
                 "abi": contract_json["abi"],
                 "bytecode": contract_json["bytecode"],
-                "deployedBytecode": contract_json["deployedBytecode"]
+                "deployedBytecode": contract_json["deployedBytecode"],
             }
             with open(f"output/{file}", "w") as f:
                 json.dump(output, f, indent=2)
@@ -40,12 +40,10 @@ def main():
     file_list = os.listdir("build/interfaces")
     for file in file_list:
         contract_json = json.load(open(f"build/interfaces/{file}", "r"))
-        output = {
-            "abi": contract_json["abi"]
-        }
+        output = {"abi": contract_json["abi"]}
         with open(f"output/{file}", "w") as f:
             json.dump(output, f, indent=2)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

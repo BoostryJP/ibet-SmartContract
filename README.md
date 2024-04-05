@@ -55,7 +55,7 @@ English | [日本語](README_JA.md)
 Install eth-brownie as a python package.
 
 ```bash
-$ pip install -r requirements.txt
+$ make install
 ```
 
 Install openzeppelin-contracts.

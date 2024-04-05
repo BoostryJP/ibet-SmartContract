@@ -20,7 +20,6 @@ SPDX-License-Identifier: Apache-2.0
 import pytest
 from eth_utils import to_checksum_address
 
-
 """
 TEST_取引参加者登録（register）
 """
@@ -28,14 +27,14 @@ TEST_取引参加者登録（register）
 
 # 正常系1: 新規登録
 def test_register_normal_1(ExchangeRegulatorService, users):
-    admin = users['admin']
-    participant = users['trader']
+    admin = users["admin"]
+    participant = users["trader"]
 
     # ExchangeRegulatorServiceコントラクト作成
     exchange_regulator_service = admin.deploy(ExchangeRegulatorService)
 
     # 取引参加者リストに登録
-    exchange_regulator_service.register.transact(participant, False, {'from': admin})
+    exchange_regulator_service.register.transact(participant, False, {"from": admin})
 
     # Whitelist情報の参照
     whitelist = exchange_regulator_service.getWhitelist(participant)
@@ -47,17 +46,17 @@ def test_register_normal_1(ExchangeRegulatorService, users):
 
 # 正常系2: 変更登録
 def test_register_normal_2(ExchangeRegulatorService, users):
-    admin = users['admin']
-    participant = users['trader']
+    admin = users["admin"]
+    participant = users["trader"]
 
     # ExchangeRegulatorServiceコントラクト作成
     exchange_regulator_service = admin.deploy(ExchangeRegulatorService)
 
     # 取引参加者リストに登録：１回目
-    exchange_regulator_service.register.transact(participant, False, {'from': admin})
+    exchange_regulator_service.register.transact(participant, False, {"from": admin})
 
     # 取引参加者リストに登録：２回目
-    exchange_regulator_service.register.transact(participant, True, {'from': admin})
+    exchange_regulator_service.register.transact(participant, True, {"from": admin})
 
     # Whitelist情報の参照
     whitelist = exchange_regulator_service.getWhitelist(participant)
@@ -69,27 +68,31 @@ def test_register_normal_2(ExchangeRegulatorService, users):
 
 # エラー系1: 権限なしアカウントからの登録
 def test_register_error_1(ExchangeRegulatorService, users):
-    admin = users['admin']
-    participant = users['trader']
+    admin = users["admin"]
+    participant = users["trader"]
 
     # ExchangeRegulatorServiceコントラクト作成
     exchange_regulator_service = admin.deploy(ExchangeRegulatorService)
 
     # 取引参加者リストに登録：権限なしアカウントからの登録 -> 登録不可
     try:
-        exchange_regulator_service.register.transact(participant, False, {'from': participant})
+        exchange_regulator_service.register.transact(
+            participant, False, {"from": participant}
+        )
     except ValueError:
         pass
 
     # Whitelist情報の参照
     whitelist = exchange_regulator_service.getWhitelist(participant)
-    assert whitelist[0] == to_checksum_address("0x0000000000000000000000000000000000000000")
+    assert whitelist[0] == to_checksum_address(
+        "0x0000000000000000000000000000000000000000"
+    )
     assert whitelist[1] == False
 
 
 # エラー系2: コントラクトアドレスの登録
 def test_register_error_2(ExchangeRegulatorService, users, membership_exchange):
-    admin = users['admin']
+    admin = users["admin"]
     sample_contract = membership_exchange.address
 
     # ExchangeRegulatorServiceコントラクト作成
@@ -98,21 +101,25 @@ def test_register_error_2(ExchangeRegulatorService, users, membership_exchange):
     # 取引参加者リストに登録：コントラクトアドレスの登録 -> 登録不可
     # NOTE:コントラクトアドレスとして、membership_exchangeのアドレスを登録する
     try:
-        exchange_regulator_service.register.transact(sample_contract, False, {'from': admin})
+        exchange_regulator_service.register.transact(
+            sample_contract, False, {"from": admin}
+        )
     except ValueError:
         pass
 
     # Whitelist情報の参照
     whitelist = exchange_regulator_service.getWhitelist(sample_contract)
 
-    assert whitelist[0] == to_checksum_address("0x0000000000000000000000000000000000000000")
+    assert whitelist[0] == to_checksum_address(
+        "0x0000000000000000000000000000000000000000"
+    )
     assert whitelist[1] == False
 
 
 # エラー系3: 入力値の型誤り
 def test_register_error_3(ExchangeRegulatorService, users):
-    admin = users['admin']
-    participant = users['trader']
+    admin = users["admin"]
+    participant = users["trader"]
 
     # ExchangeRegulatorServiceコントラクト作成
     exchange_regulator_service = admin.deploy(ExchangeRegulatorService)
@@ -121,11 +128,13 @@ def test_register_error_3(ExchangeRegulatorService, users):
 
     # アカウントアドレスの型誤り
     with pytest.raises(ValueError):
-        exchange_regulator_service.register.transact(1234, False, {'from': admin})
+        exchange_regulator_service.register.transact(1234, False, {"from": admin})
 
     # ロック状態の型誤り
     with pytest.raises(ValueError):
-        exchange_regulator_service.register.transact(participant, 'True', {'from': admin})
+        exchange_regulator_service.register.transact(
+            participant, "True", {"from": admin}
+        )
 
 
 """
@@ -135,14 +144,14 @@ TEST_取引参加者参照（getWhitelist）
 
 # 正常系1: 取引参加者参照（データあり）
 def test_getWhitelist_normal_1(ExchangeRegulatorService, users):
-    admin = users['admin']
-    participant = users['trader']
+    admin = users["admin"]
+    participant = users["trader"]
 
     # ExchangeRegulatorServiceコントラクト作成
     exchange_regulator_service = admin.deploy(ExchangeRegulatorService)
 
     # 取引参加者リストに登録
-    exchange_regulator_service.register.transact(participant, False, {'from': admin})
+    exchange_regulator_service.register.transact(participant, False, {"from": admin})
 
     # Whitelist情報の参照
     whitelist = exchange_regulator_service.getWhitelist(participant)
@@ -154,8 +163,8 @@ def test_getWhitelist_normal_1(ExchangeRegulatorService, users):
 
 # 正常系2: 取引参加者参照（データなし）
 def test_getWhitelist_normal_2(ExchangeRegulatorService, users):
-    admin = users['admin']
-    participant = '0x0000000000000000000000000000000000000000'
+    admin = users["admin"]
+    participant = "0x0000000000000000000000000000000000000000"
 
     # ExchangeRegulatorServiceコントラクト作成
     exchange_regulator_service = admin.deploy(ExchangeRegulatorService)
@@ -170,7 +179,7 @@ def test_getWhitelist_normal_2(ExchangeRegulatorService, users):
 
 # エラー系1: 入力値の型誤り
 def test_getWhitelist_error_1(ExchangeRegulatorService, users):
-    admin = users['admin']
+    admin = users["admin"]
 
     # ExchangeRegulatorServiceコントラクト作成
     exchange_regulator_service = admin.deploy(ExchangeRegulatorService)
@@ -187,14 +196,14 @@ TEST_取引可否チェック（check）
 
 # 正常系1: 取引可否チェック（取引可）
 def test_check_normal_1(ExchangeRegulatorService, users):
-    admin = users['admin']
-    participant = users['trader']
+    admin = users["admin"]
+    participant = users["trader"]
 
     # ExchangeRegulatorServiceコントラクト作成
     exchange_regulator_service = admin.deploy(ExchangeRegulatorService)
 
     # 取引参加者リストに登録
-    exchange_regulator_service.register.transact(participant, False, {'from': admin})
+    exchange_regulator_service.register.transact(participant, False, {"from": admin})
 
     # 取引可否チェック
     result = exchange_regulator_service.check(participant)
@@ -205,14 +214,16 @@ def test_check_normal_1(ExchangeRegulatorService, users):
 
 # 正常系2: 取引可否チェック（取引不可：ロック状態）
 def test_check_normal_2(ExchangeRegulatorService, users):
-    admin = users['admin']
-    participant = users['trader']
+    admin = users["admin"]
+    participant = users["trader"]
 
     # ExchangeRegulatorServiceコントラクト作成
     exchange_regulator_service = admin.deploy(ExchangeRegulatorService)
 
     # 取引参加者リストに登録
-    exchange_regulator_service.register.transact(participant, True, {'from': admin})  # Trueで登録（ロック状態）
+    exchange_regulator_service.register.transact(
+        participant, True, {"from": admin}
+    )  # Trueで登録（ロック状態）
 
     # 取引可否チェック：取引不可（アカウントロック）
     result = exchange_regulator_service.check(participant)
@@ -223,8 +234,8 @@ def test_check_normal_2(ExchangeRegulatorService, users):
 
 # 正常系3: 取引可否チェック（取引不可：アカウント未登録）
 def test_check_normal_3(ExchangeRegulatorService, users):
-    admin = users['admin']
-    participant = users['trader']
+    admin = users["admin"]
+    participant = users["trader"]
 
     # ExchangeRegulatorServiceコントラクト作成
     exchange_regulator_service = admin.deploy(ExchangeRegulatorService)
@@ -238,7 +249,7 @@ def test_check_normal_3(ExchangeRegulatorService, users):
 
 # エラー系1: 入力値の型誤り
 def test_check_error_1(ExchangeRegulatorService, users):
-    admin = users['admin']
+    admin = users["admin"]
 
     # ExchangeRegulatorServiceコントラクト作成
     exchange_regulator_service = admin.deploy(ExchangeRegulatorService)

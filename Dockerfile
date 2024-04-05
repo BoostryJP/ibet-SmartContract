@@ -47,13 +47,15 @@ RUN addgroup -g 1000 apl \
  && echo 'export PATH=$PATH:$HOME/.local/bin' >> ~apl/.bash_profile
 
 # Python requirements
-USER apl
-COPY requirements.txt /app/requirements.txt
-RUN pip install --upgrade pip setuptools \
- && pip install -r /app/requirements.txt --no-build-isolation \
- && rm -f /app/requirements.txt
+RUN python -m pip install poetry==1.7.1 && python -m poetry config virtualenvs.create false
+COPY pyproject.toml /app/pyproject.toml
+COPY poetry.lock /app/poetry.lock
+RUN python -m poetry install --no-root --directory /app/ \
+  && rm -f /app/pyproject.toml \
+  && rm -f /app/poetry.lock
 
 # app deploy
+USER apl
 COPY --chown=apl:apl LICENSE /app/ibet-SmartContract/
 RUN mkdir -p /app/ibet-SmartContract/tools/
 COPY --chown=apl:apl tools/ /app/ibet-SmartContract/tools/

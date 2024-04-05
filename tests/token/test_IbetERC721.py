@@ -16,6 +16,7 @@ limitations under the License.
 
 SPDX-License-Identifier: Apache-2.0
 """
+
 import brownie
 
 
@@ -57,7 +58,6 @@ class TestSafeMint:
         assert token.name() == "IbetERC721"
         assert token.balanceOf(issuer.address) == 1
         assert token.ownerOf(123) == issuer.address
-
 
     ##########################################################
     # Error
