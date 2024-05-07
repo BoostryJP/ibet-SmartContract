@@ -7,7 +7,7 @@ license = "Apache License, Version 2.0"
 
 [tool.poetry.dependencies]
 python = "~3.11.0"
-eth-brownie = {git = "https://github.com/BoostryJP/brownie"}
+eth-brownie = "~1.20.3"
 
 [tool.poetry.group.dev.dependencies]
 pre-commit = "^3.7.0"
