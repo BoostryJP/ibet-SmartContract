@@ -7,6 +7,7 @@ install:
 
 update:
 	poetry update
+	npm update
 
 format: isort black prettier
 
