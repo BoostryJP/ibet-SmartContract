@@ -16,10 +16,11 @@ limitations under the License.
 
 SPDX-License-Identifier: Apache-2.0
 """
+
 import brownie
 
-encrypted_message = 'encrypted_message'
-encrypted_message_after = 'encrypted_message_after'
+encrypted_message = "encrypted_message"
+encrypted_message_after = "encrypted_message_after"
 
 
 # TEST_register
@@ -31,15 +32,11 @@ class TestRegister:
 
     # Normal_1
     def test_normal_1(self, users, personal_info):
-        account = users['trader']
-        link = users['issuer']
+        account = users["trader"]
+        link = users["issuer"]
 
         # register
-        tx = personal_info.register.transact(
-            link,
-            encrypted_message,
-            {'from': account}
-        )
+        tx = personal_info.register.transact(link, encrypted_message, {"from": account})
 
         # assertion
         registered_personal_info = personal_info.personal_info(account, link)
@@ -50,27 +47,23 @@ class TestRegister:
         is_registered = personal_info.isRegistered(account, link)
         assert is_registered is True
 
-        assert tx.events['Register']['account_address'] == account.address
-        assert tx.events['Register']['link_address'] == link.address
+        assert tx.events["Register"]["account_address"] == account.address
+        assert tx.events["Register"]["link_address"] == link.address
 
     # Normal_2
     # Update
     def test_normal_2(self, users, personal_info):
-        account = users['trader']
-        link = users['issuer']
+        account = users["trader"]
+        link = users["issuer"]
 
         # register 1
         personal_info.register.transact(
-            link.address,
-            encrypted_message,
-            {'from': account}
+            link.address, encrypted_message, {"from": account}
         )
 
         # register 2
         personal_info.register.transact(
-            link,
-            encrypted_message_after,
-            {'from': account}
+            link, encrypted_message_after, {"from": account}
         )
 
         # assertion
@@ -93,8 +86,8 @@ class TestIsRegistered:
     # Normal_1
     # Default value
     def test_normal_1(self, users, personal_info):
-        account = users['trader']
-        link = users['issuer']
+        account = users["trader"]
+        link = users["issuer"]
 
         # assertion
         is_registered = personal_info.isRegistered(account, link)
@@ -102,15 +95,11 @@ class TestIsRegistered:
 
     # Normal_2
     def test_normal_2(self, users, personal_info):
-        account = users['trader']
-        link = users['issuer']
+        account = users["trader"]
+        link = users["issuer"]
 
         # register
-        personal_info.register.transact(
-            link,
-            encrypted_message,
-            {'from': account}
-        )
+        personal_info.register.transact(link, encrypted_message, {"from": account})
 
         # assertion
         is_registered = personal_info.isRegistered(account, link)
@@ -126,21 +115,15 @@ class TestModify:
 
     # Normal_1
     def test_normal_1(self, users, personal_info):
-        account = users['trader']
-        link = users['issuer']
+        account = users["trader"]
+        link = users["issuer"]
 
         # register
-        personal_info.register.transact(
-            link,
-            encrypted_message,
-            {'from': account}
-        )
+        personal_info.register.transact(link, encrypted_message, {"from": account})
 
         # modify
         tx = personal_info.modify.transact(
-            account,
-            encrypted_message_after,
-            {'from': link}
+            account, encrypted_message_after, {"from": link}
         )
 
         # assertion
@@ -149,8 +132,8 @@ class TestModify:
         assert modified_personal_info[1] == link
         assert modified_personal_info[2] == encrypted_message_after
 
-        assert tx.events['Modify']['account_address'] == account.address
-        assert tx.events['Modify']['link_address'] == link.address
+        assert tx.events["Modify"]["account_address"] == account.address
+        assert tx.events["Modify"]["link_address"] == link.address
 
     #######################################
     # Error
@@ -159,22 +142,20 @@ class TestModify:
     # Error_1
     # Not registered
     def test_error_1(self, users, personal_info):
-        account = users['trader']
-        link = users['issuer']
+        account = users["trader"]
+        link = users["issuer"]
 
         # modify
         with brownie.reverts(revert_msg="400001"):
             personal_info.modify.transact(
-                account,
-                encrypted_message_after,
-                {'from': link}
+                account, encrypted_message_after, {"from": link}
             )
 
         # assertion
         actual_personal_info = personal_info.personal_info(account, link)
         assert actual_personal_info[0] == brownie.ZERO_ADDRESS
         assert actual_personal_info[1] == brownie.ZERO_ADDRESS
-        assert actual_personal_info[2] == ''
+        assert actual_personal_info[2] == ""
 
         is_registered = personal_info.isRegistered(account, link)
         assert is_registered is False
@@ -182,23 +163,17 @@ class TestModify:
     # Error_2
     # Not authorized
     def test_error_2(self, users, personal_info):
-        account = users['trader']
-        link = users['issuer']
-        modifier = users['admin']
+        account = users["trader"]
+        link = users["issuer"]
+        modifier = users["admin"]
 
         # register
-        personal_info.register.transact(
-            link,
-            encrypted_message,
-            {'from': account}
-        )
+        personal_info.register.transact(link, encrypted_message, {"from": account})
 
         # modify
         with brownie.reverts(revert_msg="400001"):
             personal_info.modify.transact(
-                account,
-                encrypted_message_after,
-                {'from': modifier}
+                account, encrypted_message_after, {"from": modifier}
             )
 
         # assertion
@@ -217,14 +192,12 @@ class TestForceRegister:
 
     # Normal_1
     def test_normal_1(self, users, personal_info):
-        account = users['trader']
-        link = users['issuer']
+        account = users["trader"]
+        link = users["issuer"]
 
         # register
         tx = personal_info.forceRegister.transact(
-            account.address,
-            encrypted_message,
-            {'from': link}
+            account.address, encrypted_message, {"from": link}
         )
 
         # assertion
@@ -236,27 +209,23 @@ class TestForceRegister:
         is_registered = personal_info.isRegistered(account, link)
         assert is_registered is True
 
-        assert tx.events['Register']['account_address'] == account.address
-        assert tx.events['Register']['link_address'] == link.address
+        assert tx.events["Register"]["account_address"] == account.address
+        assert tx.events["Register"]["link_address"] == link.address
 
     # Normal_2
     # Update
     def test_normal_2(self, users, personal_info):
-        account = users['trader']
-        link = users['issuer']
+        account = users["trader"]
+        link = users["issuer"]
 
         # register 1
         personal_info.forceRegister.transact(
-            account.address,
-            encrypted_message,
-            {'from': link}
+            account.address, encrypted_message, {"from": link}
         )
 
         # register 2
         personal_info.forceRegister.transact(
-            account.address,
-            encrypted_message_after,
-            {'from': link}
+            account.address, encrypted_message_after, {"from": link}
         )
 
         # assertion

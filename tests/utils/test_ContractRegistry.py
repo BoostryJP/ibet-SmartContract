@@ -16,16 +16,16 @@ limitations under the License.
 
 SPDX-License-Identifier: Apache-2.0
 """
+
 import brownie
 
-
 deploy_args = [
-    'test_share',  # name
-    'test_symbol',  # symbol
+    "test_share",  # name
+    "test_symbol",  # symbol
     100000,  # total supply
     brownie.ZERO_ADDRESS,  # tradable exchange
-    'test_contact_information',
-    'test_privacy_policy'
+    "test_contact_information",
+    "test_privacy_policy",
 ]
 
 
@@ -35,33 +35,31 @@ class TestRegister:
     #######################################
     # Normal
     #######################################
-    
+
     # Normal_1
     def test_normal_1(self, users, ContractRegistry, IbetStandardToken):
-        admin = users['admin']
-        issuer = users['issuer']
-    
+        admin = users["admin"]
+        issuer = users["issuer"]
+
         # deploy
         contract_registry = admin.deploy(ContractRegistry)
-    
+
         # issue token
         token = issuer.deploy(IbetStandardToken, *deploy_args)
 
         # register
         tx = contract_registry.register.transact(
-            token.address,
-            'IbetStandardToken',
-            {'from': issuer}
+            token.address, "IbetStandardToken", {"from": issuer}
         )
 
         # assertion
         assert contract_registry.getRegistry(token.address) == (
-            'IbetStandardToken',
-            issuer.address
+            "IbetStandardToken",
+            issuer.address,
         )
 
         assert tx.events["Registered"]["contractAddress"] == token.address
-        assert tx.events["Registered"]["contractType"] == 'IbetStandardToken'
+        assert tx.events["Registered"]["contractType"] == "IbetStandardToken"
         assert tx.events["Registered"]["contractOwner"] == issuer.address
 
     #######################################
@@ -71,7 +69,7 @@ class TestRegister:
     # Error_1
     # Need to set the address of contract.
     def test_error_1(self, users, ContractRegistry):
-        admin = users['admin']
+        admin = users["admin"]
 
         # deploy
         contract_registry = admin.deploy(ContractRegistry)
@@ -79,16 +77,14 @@ class TestRegister:
         # register to list
         with brownie.reverts(revert_msg="600001"):
             contract_registry.register.transact(
-                brownie.ZERO_ADDRESS,
-                'IbetStandardToken',
-                {'from': users["user1"]}
+                brownie.ZERO_ADDRESS, "IbetStandardToken", {"from": users["user1"]}
             )
 
     # Error_2
     # The msg.sender must be the owner of the contract.
     def test_error_2(self, users, ContractRegistry, IbetStandardToken):
-        admin = users['admin']
-        issuer = users['issuer']
+        admin = users["admin"]
+        issuer = users["issuer"]
 
         # deploy
         contract_registry = admin.deploy(ContractRegistry)
@@ -99,9 +95,7 @@ class TestRegister:
         # register to list
         with brownie.reverts(revert_msg="600002"):
             contract_registry.register.transact(
-                token.address,
-                'IbetStandardToken',
-                {'from': users["user1"]}
+                token.address, "IbetStandardToken", {"from": users["user1"]}
             )
 
 
@@ -114,8 +108,8 @@ class TestGetRegistry:
 
     # Normal_1
     def test_normal_1(self, users, ContractRegistry, IbetStandardToken):
-        admin = users['admin']
-        issuer = users['issuer']
+        admin = users["admin"]
+        issuer = users["issuer"]
 
         # deploy
         contract_registry = admin.deploy(ContractRegistry)
@@ -125,13 +119,11 @@ class TestGetRegistry:
 
         # register to list
         contract_registry.register.transact(
-            token.address,
-            'IbetStandardToken',
-            {'from': issuer}
+            token.address, "IbetStandardToken", {"from": issuer}
         )
 
         # assertion
         assert contract_registry.getRegistry(token.address) == (
-            'IbetStandardToken',
-            issuer.address
+            "IbetStandardToken",
+            issuer.address,
         )

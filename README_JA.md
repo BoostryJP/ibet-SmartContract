@@ -5,7 +5,7 @@
 # ibet Smart Contract
 
 <p>
-  <img alt="Version" src="https://img.shields.io/badge/version-24.3-blue.svg?cacheSeconds=2592000" />
+  <img alt="Version" src="https://img.shields.io/badge/version-24.6-blue.svg?cacheSeconds=2592000" />
   <img alt="License: Apache--2.0" src="https://img.shields.io/badge/License-Apache--2.0-yellow.svg" />
 </p>
 
@@ -20,6 +20,8 @@
 ## 依存
 - [Python3](https://www.python.org/downloads/)
   - バージョン 3.11
+- [Node.js](https://nodejs.org/en/download/)
+  - バージョン 20
 - [Solidity](https://docs.soliditylang.org/)
   - スマートコントラクトの実装には Solidity を利用しています。
   - 現在、私たちは v0.8.23 を利用しています。
@@ -52,12 +54,17 @@
 
 eth-brownie をインストールします。
 ```bash
-$ pip install -r requirements.txt
+$ make install
 ```
 
 openzeppelin-contractsをインストールします。
 ```bash
 $ brownie pm install OpenZeppelin/openzeppelin-contracts@4.9.3
+```
+
+hardhatをインストールします。
+```bash
+$ npm install
 ```
 
 ## コントラクトのコンパイル

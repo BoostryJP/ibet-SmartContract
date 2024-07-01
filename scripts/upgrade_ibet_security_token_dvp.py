@@ -25,7 +25,7 @@ from brownie import accounts, network, project, web3
 
 p = project.load(".", name="ibet_smart_contract")
 p.load_config()
-from brownie.project.ibet_smart_contract import ExchangeStorage, IbetExchange
+from brownie.project.ibet_smart_contract import DVPStorage, IbetSecurityTokenDVP
 
 
 def main():
@@ -42,8 +42,8 @@ def main():
     args = parser.parse_args()
 
     # Deploy & Upgrade
-    old_exchange = args.arg1
-    upgrade_exchange(old_address=old_exchange, deployer=deployer)
+    old_dvp = args.arg1
+    upgrade_dvp(old_address=old_dvp, deployer=deployer)
 
 
 def set_up_deployer():
@@ -71,24 +71,21 @@ def set_up_deployer():
     return deployer
 
 
-def upgrade_exchange(old_address, deployer):
-    old_exchange = IbetExchange.at(old_address)
+def upgrade_dvp(old_address, deployer):
+    old_dvp = IbetSecurityTokenDVP.at(old_address)
 
     # Storage
-    exchange_storage_address = old_exchange.storageAddress({"from": deployer})
-    exchange_storage = ExchangeStorage.at(exchange_storage_address)
+    dvp_storage_address = old_dvp.storageAddress({"from": deployer})
+    dvp_storage = DVPStorage.at(dvp_storage_address)
 
-    # Deploy new IbetExchange
-    deploy_args = [
-        old_exchange.paymentGatewayAddress({"from": deployer}),
-        exchange_storage_address,
-    ]
-    exchange = deployer.deploy(IbetExchange, *deploy_args)
+    # Deploy new IbetSecurityTokenDVP
+    deploy_args = [dvp_storage_address]
+    dvp = deployer.deploy(IbetSecurityTokenDVP, *deploy_args)
 
     # Upgrade Version
-    exchange_storage.upgradeVersion(exchange.address, {"from": deployer})
+    dvp_storage.upgradeVersion(dvp.address, {"from": deployer})
 
-    return exchange
+    return dvp
 
 
 if __name__ == "__main__":

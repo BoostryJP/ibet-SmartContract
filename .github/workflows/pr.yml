@@ -1,0 +1,37 @@
+name: Pull Request Check
+on: [pull_request]
+
+jobs:
+  lint-black:
+    name: "Lint check (black)"
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: psf/black@stable
+  lint-prettier:
+    name: "Lint check (prettier)"
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Use Node.js 20
+        uses: actions/setup-node@v3
+        with:
+          node-version: 20
+      - run: npm install
+      - run: npx prettier --check --plugin=prettier-plugin-solidity contracts/**/*.sol interfaces/**/*.sol sandbox/**/*.sol
+  unit-test:
+    name: "Unit tests"
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    steps:
+      - uses: actions/checkout@v4
+      - name: Change owner of output directory
+        run: |
+          sudo chown -R runner:docker /home/runner/work/ibet-SmartContract/ibet-SmartContract/output
+          sudo chmod 777 /home/runner/work/ibet-SmartContract/ibet-SmartContract/output
+      - name: UnitTest
+        run: docker compose run sc-unit-test
+      - uses: actions/upload-artifact@v4
+        with:
+          name: contract-json
+          path: output

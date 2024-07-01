@@ -1,21 +1,21 @@
 /**
-* Copyright BOOSTRY Co., Ltd.
-*
-* Licensed under the Apache License, Version 2.0 (the "License");
-* you may not use this file except in compliance with the License.
-*
-* You may obtain a copy of the License at
-* http://www.apache.org/licenses/LICENSE-2.0
-*
-* Unless required by applicable law or agreed to in writing,
-* software distributed under the License is distributed on an "AS IS" BASIS,
-* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-*
-* See the License for the specific language governing permissions and
-* limitations under the License.
-*
-* SPDX-License-Identifier: Apache-2.0
-*/
+ * Copyright BOOSTRY Co., Ltd.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ *
+ * You may obtain a copy of the License at
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *
+ * SPDX-License-Identifier: Apache-2.0
+ */
 
 pragma solidity ^0.8.0;
 pragma experimental ABIEncoderV2;
@@ -29,7 +29,6 @@ import "./PaymentGateway.sol";
 import "./PersonalInfo.sol";
 import "../interfaces/RegulatorService.sol";
 import "../interfaces/ContractReceiver.sol";
-
 
 /// @title ibet OTC DEX
 contract IbetOTCExchange is Ownable, ContractReceiver, OTCExchangeStorageModel {
@@ -125,8 +124,7 @@ contract IbetOTCExchange is Ownable, ContractReceiver, OTCExchangeStorageModel {
         address _personalInfoAddress,
         address _storageAddress,
         address _regulatorServiceAddress
-    )
-    {
+    ) {
         paymentGatewayAddress = _paymentGatewayAddress;
         personalInfoAddress = _personalInfoAddress;
         storageAddress = _storageAddress;
@@ -146,7 +144,9 @@ contract IbetOTCExchange is Ownable, ContractReceiver, OTCExchangeStorageModel {
     /// @return _price 注文単価
     /// @return _agent 決済業者のアドレス
     /// @return _canceled キャンセル済み状態
-    function getOrder(uint256 _orderId)
+    function getOrder(
+        uint256 _orderId
+    )
         public
         view
         returns (
@@ -159,16 +159,18 @@ contract IbetOTCExchange is Ownable, ContractReceiver, OTCExchangeStorageModel {
             bool _canceled
         )
     {
-        OTCExchangeStorageModel.OTCOrder memory _order = OTCExchangeStorage(storageAddress).getOrder(_orderId);
+        OTCExchangeStorageModel.OTCOrder memory _order = OTCExchangeStorage(
+            storageAddress
+        ).getOrder(_orderId);
 
         return (
-           _order.owner,
-           _order.counterpart,
-           _order.token,
-           _order.amount,
-           _order.price,
-           _order.agent,
-           _order.canceled
+            _order.owner,
+            _order.counterpart,
+            _order.token,
+            _order.amount,
+            _order.price,
+            _order.agent,
+            _order.canceled
         );
     }
 
@@ -191,23 +193,18 @@ contract IbetOTCExchange is Ownable, ContractReceiver, OTCExchangeStorageModel {
         uint256 _price,
         address _agent,
         bool _canceled
-    )
-        private
-        returns (bool)
-    {
-        OTCExchangeStorageModel.OTCOrder memory _order = OTCExchangeStorageModel.mappingOTCOrder(
-            _owner,
-            _counterpart,
-            _token,
-            _amount,
-            _price,
-            _agent,
-            _canceled
-        );
-        OTCExchangeStorage(storageAddress).setOrder(
-            _orderId,
-            _order
-        );
+    ) private returns (bool) {
+        OTCExchangeStorageModel.OTCOrder memory _order = OTCExchangeStorageModel
+            .mappingOTCOrder(
+                _owner,
+                _counterpart,
+                _token,
+                _amount,
+                _price,
+                _agent,
+                _canceled
+            );
+        OTCExchangeStorage(storageAddress).setOrder(_orderId, _order);
         return true;
     }
 
@@ -220,7 +217,10 @@ contract IbetOTCExchange is Ownable, ContractReceiver, OTCExchangeStorageModel {
     /// @return _canceled キャンセル済み状態
     /// @return _paid 支払済状態
     /// @return _expiry 有効期限
-    function getAgreement(uint256 _orderId, uint256 _agreementId)
+    function getAgreement(
+        uint256 _orderId,
+        uint256 _agreementId
+    )
         public
         view
         returns (
@@ -232,14 +232,18 @@ contract IbetOTCExchange is Ownable, ContractReceiver, OTCExchangeStorageModel {
             uint256 _expiry
         )
     {
-        OTCExchangeStorageModel.OTCAgreement memory _agreement = OTCExchangeStorage(storageAddress).getAgreement(_orderId, _agreementId);
+        OTCExchangeStorageModel.OTCAgreement
+            memory _agreement = OTCExchangeStorage(storageAddress).getAgreement(
+                _orderId,
+                _agreementId
+            );
         return (
-           _agreement.counterpart,
-           _agreement.amount,
-           _agreement.price,
-           _agreement.canceled,
-           _agreement.paid,
-           _agreement.expiry
+            _agreement.counterpart,
+            _agreement.amount,
+            _agreement.price,
+            _agreement.canceled,
+            _agreement.paid,
+            _agreement.expiry
         );
     }
 
@@ -262,18 +266,16 @@ contract IbetOTCExchange is Ownable, ContractReceiver, OTCExchangeStorageModel {
         bool _canceled,
         bool _paid,
         uint256 _expiry
-    )
-        private
-        returns (bool)
-    {
-        OTCExchangeStorageModel.OTCAgreement memory _agreement = OTCExchangeStorageModel.mappingOTCAgreement(
-            _counterpart,
-            _amount,
-            _price,
-            _canceled,
-            _paid,
-            _expiry
-         );
+    ) private returns (bool) {
+        OTCExchangeStorageModel.OTCAgreement
+            memory _agreement = OTCExchangeStorageModel.mappingOTCAgreement(
+                _counterpart,
+                _amount,
+                _price,
+                _canceled,
+                _paid,
+                _expiry
+            );
         OTCExchangeStorage(storageAddress).setAgreement(
             _orderId,
             _agreementId,
@@ -284,21 +286,14 @@ contract IbetOTCExchange is Ownable, ContractReceiver, OTCExchangeStorageModel {
 
     /// @notice 直近注文ID取得
     /// @return 直近注文ID
-    function latestOrderId()
-        public
-        view
-        returns (uint256)
-    {
+    function latestOrderId() public view returns (uint256) {
         return OTCExchangeStorage(storageAddress).getLatestOrderId();
     }
 
     /// @notice 直近注文ID更新
     /// @param _value 更新後の直近注文ID
     /// @return 処理結果
-    function setLatestOrderId(uint256 _value)
-        private
-        returns (bool)
-    {
+    function setLatestOrderId(uint256 _value) private returns (bool) {
         OTCExchangeStorage(storageAddress).setLatestOrderId(_value);
         return true;
     }
@@ -306,23 +301,23 @@ contract IbetOTCExchange is Ownable, ContractReceiver, OTCExchangeStorageModel {
     /// @notice 直近約定ID取得
     /// @param _orderId 注文ID
     /// @return 直近約定ID
-    function latestAgreementId(uint256 _orderId)
-        public
-        view
-        returns (uint256)
-    {
-        return OTCExchangeStorage(storageAddress).getLatestAgreementId(_orderId);
+    function latestAgreementId(uint256 _orderId) public view returns (uint256) {
+        return
+            OTCExchangeStorage(storageAddress).getLatestAgreementId(_orderId);
     }
 
     /// @notice 直近約定ID更新
     /// @param _orderId 注文ID
     /// @param _value 更新後の直近約定ID
     /// @return 処理結果
-    function setLatestAgreementId(uint256 _orderId, uint256 _value)
-        private
-        returns (bool)
-    {
-        OTCExchangeStorage(storageAddress).setLatestAgreementId(_orderId, _value);
+    function setLatestAgreementId(
+        uint256 _orderId,
+        uint256 _value
+    ) private returns (bool) {
+        OTCExchangeStorage(storageAddress).setLatestAgreementId(
+            _orderId,
+            _value
+        );
         return true;
     }
 
@@ -330,15 +325,11 @@ contract IbetOTCExchange is Ownable, ContractReceiver, OTCExchangeStorageModel {
     /// @param _account アカウントアドレス
     /// @param _token トークンアドレス
     /// @return 残高数量
-    function balanceOf(address _account, address _token)
-        public
-        view
-        returns (uint256)
-    {
-        return OTCExchangeStorage(storageAddress).getBalance(
-            _account,
-            _token
-        );
+    function balanceOf(
+        address _account,
+        address _token
+    ) public view returns (uint256) {
+        return OTCExchangeStorage(storageAddress).getBalance(_account, _token);
     }
 
     /// @notice 残高数量更新
@@ -346,30 +337,29 @@ contract IbetOTCExchange is Ownable, ContractReceiver, OTCExchangeStorageModel {
     /// @param _token トークンアドレス
     /// @param _value 更新後の残高数量
     /// @return 処理結果
-    function setBalance(address _account, address _token, uint256 _value)
-        private
-        returns (bool)
-    {
-        return OTCExchangeStorage(storageAddress).setBalance(
-            _account,
-            _token,
-            _value
-        );
+    function setBalance(
+        address _account,
+        address _token,
+        uint256 _value
+    ) private returns (bool) {
+        return
+            OTCExchangeStorage(storageAddress).setBalance(
+                _account,
+                _token,
+                _value
+            );
     }
 
     /// @notice 拘束数量参照
     /// @param _account アカウントアドレス
     /// @param _token トークンアドレス
     /// @return 拘束数量
-    function commitmentOf(address _account, address _token)
-        public
-        view
-        returns (uint256)
-    {
-        return OTCExchangeStorage(storageAddress).getCommitment(
-            _account,
-            _token
-        );
+    function commitmentOf(
+        address _account,
+        address _token
+    ) public view returns (uint256) {
+        return
+            OTCExchangeStorage(storageAddress).getCommitment(_account, _token);
     }
 
     /// @notice 拘束数量更新
@@ -377,10 +367,11 @@ contract IbetOTCExchange is Ownable, ContractReceiver, OTCExchangeStorageModel {
     /// @param _token トークンアドレス
     /// @param _value 更新後の拘束数量
     /// @return 処理結果
-    function setCommitment(address _account, address _token, uint256 _value)
-        private
-        returns (bool)
-    {
+    function setCommitment(
+        address _account,
+        address _token,
+        uint256 _value
+    ) private returns (bool) {
         OTCExchangeStorage(storageAddress).setCommitment(
             _account,
             _token,
@@ -406,14 +397,18 @@ contract IbetOTCExchange is Ownable, ContractReceiver, OTCExchangeStorageModel {
         uint256 _amount,
         uint256 _price,
         address _agent
-    )
-        public
-        returns (bool)
-    {
+    ) public returns (bool) {
         // <CHK>
         //  取引参加者チェック
         if (regulatorServiceAddress != address(0)) {
-            require(RegulatorService(regulatorServiceAddress).check(msg.sender) == 0 || RegulatorService(regulatorServiceAddress).check(_counterpart) == 0);
+            require(
+                RegulatorService(regulatorServiceAddress).check(msg.sender) ==
+                    0 ||
+                    RegulatorService(regulatorServiceAddress).check(
+                        _counterpart
+                    ) ==
+                    0
+            );
         }
 
         // <CHK>
@@ -426,7 +421,11 @@ contract IbetOTCExchange is Ownable, ContractReceiver, OTCExchangeStorageModel {
         if (
             _amount == 0 ||
             balanceOf(msg.sender, _token) < _amount ||
-            PersonalInfo(personalInfoAddress).isRegistered(msg.sender, Ownable(_token).owner()) == false ||
+            PersonalInfo(personalInfoAddress).isRegistered(
+                msg.sender,
+                Ownable(_token).owner()
+            ) ==
+            false ||
             IbetStandardTokenInterface(_token).status() == false ||
             validateAgent(_agent) == false
         ) {
@@ -481,16 +480,15 @@ contract IbetOTCExchange is Ownable, ContractReceiver, OTCExchangeStorageModel {
     /// @notice 注文キャンセル
     /// @param _orderId 注文ID
     /// @return 処理結果
-    function cancelOrder(uint256 _orderId)
-        public
-        returns (bool)
-    {
+    function cancelOrder(uint256 _orderId) public returns (bool) {
         // <CHK>
         //  指定した注文番号が、直近の注文ID以上の場合
         //   -> REVERT
         require(_orderId <= latestOrderId());
 
-        OTCExchangeStorageModel.OTCOrder memory order = OTCExchangeStorage(storageAddress).getOrder(_orderId);
+        OTCExchangeStorageModel.OTCOrder memory order = OTCExchangeStorage(
+            storageAddress
+        ).getOrder(_orderId);
 
         // <CHK>
         //  1) 元注文の残注文数量が0の場合
@@ -519,7 +517,7 @@ contract IbetOTCExchange is Ownable, ContractReceiver, OTCExchangeStorageModel {
         );
 
         // 更新処理: キャンセル済みフラグをキャンセル済み（True）に更新
-         OTCExchangeStorage(storageAddress).setOrderCanceled(_orderId, true);
+        OTCExchangeStorage(storageAddress).setOrderCanceled(_orderId, true);
 
         // イベント登録: 注文キャンセル
         emit CancelOrder(
@@ -539,22 +537,25 @@ contract IbetOTCExchange is Ownable, ContractReceiver, OTCExchangeStorageModel {
     /// @dev 約定数量 = 注文数量
     /// @param _orderId 注文ID
     /// @return 処理結果
-    function executeOrder(uint256 _orderId)
-        public
-        returns (bool)
-    {
+    function executeOrder(uint256 _orderId) public returns (bool) {
         // <CHK>
         //  指定した注文IDが直近の注文IDを超えている場合
         require(_orderId <= latestOrderId());
 
-        OTCExchangeStorageModel.OTCOrder memory order = OTCExchangeStorage(storageAddress).getOrder(_orderId);
+        OTCExchangeStorageModel.OTCOrder memory order = OTCExchangeStorage(
+            storageAddress
+        ).getOrder(_orderId);
 
         // <CHK>
         //  取引参加者チェック
         if (regulatorServiceAddress != address(0)) {
             require(
-                RegulatorService(regulatorServiceAddress).check(msg.sender) == 0 ||
-                RegulatorService(regulatorServiceAddress).check(order.owner) == 0
+                RegulatorService(regulatorServiceAddress).check(msg.sender) ==
+                    0 ||
+                    RegulatorService(regulatorServiceAddress).check(
+                        order.owner
+                    ) ==
+                    0
             );
         }
 
@@ -562,8 +563,8 @@ contract IbetOTCExchange is Ownable, ContractReceiver, OTCExchangeStorageModel {
         //  取引関係者限定
         require(
             order.owner == msg.sender ||
-            order.counterpart == msg.sender ||
-            order.agent == msg.sender
+                order.counterpart == msg.sender ||
+                order.agent == msg.sender
         );
 
         // <CHK>
@@ -577,7 +578,11 @@ contract IbetOTCExchange is Ownable, ContractReceiver, OTCExchangeStorageModel {
         if (
             msg.sender == order.owner ||
             order.canceled == true ||
-            PersonalInfo(personalInfoAddress).isRegistered(msg.sender,Ownable(order.token).owner()) == false ||
+            PersonalInfo(personalInfoAddress).isRegistered(
+                msg.sender,
+                Ownable(order.token).owner()
+            ) ==
+            false ||
             isContract(msg.sender) == true ||
             IbetStandardTokenInterface(order.token).status() == false ||
             order.amount == 0
@@ -601,9 +606,9 @@ contract IbetOTCExchange is Ownable, ContractReceiver, OTCExchangeStorageModel {
         );
 
         // 更新処理: 元注文の数量を0にする
-         OTCExchangeStorage(storageAddress).setOrderAmount(_orderId, 0);
-           
-         // イベント登録: 約定
+        OTCExchangeStorage(storageAddress).setOrderAmount(_orderId, 0);
+
+        // イベント登録: 約定
         emit Agree(
             order.token,
             _orderId,
@@ -622,10 +627,10 @@ contract IbetOTCExchange is Ownable, ContractReceiver, OTCExchangeStorageModel {
     /// @param _orderId 注文ID
     /// @param _agreementId 約定ID
     /// @return 処理結果
-    function confirmAgreement(uint256 _orderId, uint256 _agreementId)
-        public
-        returns (bool)
-    {
+    function confirmAgreement(
+        uint256 _orderId,
+        uint256 _agreementId
+    ) public returns (bool) {
         // <CHK>
         //  1) 指定した注文番号が、直近の注文ID以上の場合
         //  2) 指定した約定IDが、直近の約定ID以上の場合
@@ -633,9 +638,15 @@ contract IbetOTCExchange is Ownable, ContractReceiver, OTCExchangeStorageModel {
         require(_orderId <= latestOrderId());
         require(_agreementId <= latestAgreementId(_orderId));
 
-        OTCExchangeStorageModel.OTCOrder memory order = OTCExchangeStorage(storageAddress).getOrder(_orderId);
+        OTCExchangeStorageModel.OTCOrder memory order = OTCExchangeStorage(
+            storageAddress
+        ).getOrder(_orderId);
 
-        OTCExchangeStorageModel.OTCAgreement memory agreement = OTCExchangeStorage(storageAddress).getAgreement(_orderId, _agreementId);
+        OTCExchangeStorageModel.OTCAgreement
+            memory agreement = OTCExchangeStorage(storageAddress).getAgreement(
+                _orderId,
+                _agreementId
+            );
 
         // <CHK>
         //  1) すでに決済承認済み（支払い済み）の場合
@@ -653,7 +664,11 @@ contract IbetOTCExchange is Ownable, ContractReceiver, OTCExchangeStorageModel {
         }
 
         // 更新処理: 支払い済みフラグを支払い済み（True）に更新する
-        OTCExchangeStorage(storageAddress).setAgreementPaid(_orderId, _agreementId, true);
+        OTCExchangeStorage(storageAddress).setAgreementPaid(
+            _orderId,
+            _agreementId,
+            true
+        );
 
         // 更新処理: 注文者（売り手）から突合相手（買い手）へと資産移転を行う
         setCommitment(
@@ -685,10 +700,10 @@ contract IbetOTCExchange is Ownable, ContractReceiver, OTCExchangeStorageModel {
     /// @param _orderId 注文ID
     /// @param _agreementId 約定ID
     /// @return 処理結果
-    function cancelAgreement(uint256 _orderId, uint256 _agreementId)
-        public
-        returns (bool)
-    {
+    function cancelAgreement(
+        uint256 _orderId,
+        uint256 _agreementId
+    ) public returns (bool) {
         // <CHK>
         //  1) 指定した注文番号が、直近の注文ID以上の場合
         //  2) 指定した約定IDが、直近の約定ID以上の場合
@@ -696,9 +711,15 @@ contract IbetOTCExchange is Ownable, ContractReceiver, OTCExchangeStorageModel {
         require(_orderId <= latestOrderId());
         require(_agreementId <= latestAgreementId(_orderId));
 
-        OTCExchangeStorageModel.OTCOrder memory order = OTCExchangeStorage(storageAddress).getOrder(_orderId);
+        OTCExchangeStorageModel.OTCOrder memory order = OTCExchangeStorage(
+            storageAddress
+        ).getOrder(_orderId);
 
-        OTCExchangeStorageModel.OTCAgreement memory agreement = OTCExchangeStorage(storageAddress).getAgreement(_orderId, _agreementId);
+        OTCExchangeStorageModel.OTCAgreement
+            memory agreement = OTCExchangeStorage(storageAddress).getAgreement(
+                _orderId,
+                _agreementId
+            );
 
         if (agreement.expiry <= block.timestamp) {
             // 約定明細の有効期限を超過している場合
@@ -736,10 +757,17 @@ contract IbetOTCExchange is Ownable, ContractReceiver, OTCExchangeStorageModel {
         }
 
         // 更新処理: キャンセル済みフラグをキャンセル（True）に更新する
-         OTCExchangeStorage(storageAddress).setAgreementCanceled( _orderId, _agreementId, true);
+        OTCExchangeStorage(storageAddress).setAgreementCanceled(
+            _orderId,
+            _agreementId,
+            true
+        );
 
         // 更新処理：元注文の数量を戻す
-        OTCExchangeStorage(storageAddress).setOrderAmount(_orderId, order.amount.add(agreement.amount));
+        OTCExchangeStorage(storageAddress).setOrderAmount(
+            _orderId,
+            order.amount.add(agreement.amount)
+        );
 
         // イベント登録: 決済NG
         emit SettlementNG(
@@ -760,16 +788,15 @@ contract IbetOTCExchange is Ownable, ContractReceiver, OTCExchangeStorageModel {
     /// @dev 未売却の預かりに対してのみ引き出しをおこなう。約定済、注文中の預かり（commitments）の引き出しはおこなわない。
     /// @param _token トークンアドレス
     /// @return 処理結果
-    function withdrawAll(address _token)
-        public
-        returns (bool)
-    {
+    function withdrawAll(address _token) public returns (bool) {
         uint256 balance = balanceOf(msg.sender, _token);
 
         // <CHK>
         //  1) 残高がゼロの場合、REVERT
         //  2) 取扱ステータスがFalseの場合
-        if (balance == 0 || IbetStandardTokenInterface(_token).status() == false) {
+        if (
+            balance == 0 || IbetStandardTokenInterface(_token).status() == false
+        ) {
             revert();
         }
 
@@ -786,25 +813,18 @@ contract IbetOTCExchange is Ownable, ContractReceiver, OTCExchangeStorageModel {
     /// @notice Deposit Handler：デポジット処理
     /// @param _from アカウントアドレス：残高を保有するアドレス
     /// @param _value デポジット数量
-    function tokenFallback(address _from, uint256 _value, bytes memory /*_data*/)
-        public
-        override
-    {
-        setBalance(
-            _from,
-            msg.sender,
-            balanceOf(_from, msg.sender).add(_value)
-        );
+    function tokenFallback(
+        address _from,
+        uint256 _value,
+        bytes memory /*_data*/
+    ) public override {
+        setBalance(_from, msg.sender, balanceOf(_from, msg.sender).add(_value));
     }
 
     /// @notice アドレスがコントラクトアドレスであるかを判定
     /// @param _addr アドレス
     /// @return is_contract 判定結果
-    function isContract(address _addr)
-        private
-        view
-        returns (bool is_contract)
-    {
+    function isContract(address _addr) private view returns (bool is_contract) {
         uint256 length;
         assembly {
             length := extcodesize(_addr)
@@ -815,11 +835,7 @@ contract IbetOTCExchange is Ownable, ContractReceiver, OTCExchangeStorageModel {
     /// @notice Agentアドレスが有効なものであることをチェックする
     /// @param _addr アドレス
     /// @return 有効状態
-    function validateAgent(address _addr)
-        private
-        view
-        returns (bool)
-    {
+    function validateAgent(address _addr) private view returns (bool) {
         return PaymentGateway(paymentGatewayAddress).getAgent(_addr);
     }
 }

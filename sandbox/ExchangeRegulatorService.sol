@@ -1,32 +1,30 @@
 /**
-* Copyright BOOSTRY Co., Ltd.
-*
-* Licensed under the Apache License, Version 2.0 (the "License");
-* you may not use this file except in compliance with the License.
-*
-* You may obtain a copy of the License at
-* http://www.apache.org/licenses/LICENSE-2.0
-*
-* Unless required by applicable law or agreed to in writing,
-* software distributed under the License is distributed on an "AS IS" BASIS,
-* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-*
-* See the License for the specific language governing permissions and
-* limitations under the License.
-*
-* SPDX-License-Identifier: Apache-2.0
-*/
+ * Copyright BOOSTRY Co., Ltd.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ *
+ * You may obtain a copy of the License at
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *
+ * SPDX-License-Identifier: Apache-2.0
+ */
 
 pragma solidity ^0.8.0;
 
 import "./Ownable.sol";
 import "../interfaces/RegulatorService.sol";
 
-
 /// @title Exchangeの取引参加者制限サービス
 /// @dev Exchangeの取引参加者制限
 contract ExchangeRegulatorService is RegulatorService, Ownable {
-
     // 取引参加者の登録情報
     struct Participant {
         address participant; // 取引参加者EOAアドレス
@@ -34,13 +32,13 @@ contract ExchangeRegulatorService is RegulatorService, Ownable {
     }
 
     // Check success code
-    uint8 constant private CHECK_SUCCESS = 0;
+    uint8 private constant CHECK_SUCCESS = 0;
 
     // Check error reason : アカウントロック
-    uint8 constant private CHECK_LOCKED = 1;
+    uint8 private constant CHECK_LOCKED = 1;
 
     // Check error reason : アカウント未登録
-    uint8 constant private CHECK_NOT_REGISTERD = 2;
+    uint8 private constant CHECK_NOT_REGISTERD = 2;
 
     // 購入可能者情報
     // whitelist[participantAddress]
@@ -52,16 +50,12 @@ contract ExchangeRegulatorService is RegulatorService, Ownable {
     /// @dev コントラクトアドレス判定
     /// @param _address アドレス
     /// @return 判定結果
-    function isContract(address _address)
-        private
-        view
-        returns (bool)
-    {
+    function isContract(address _address) private view returns (bool) {
         uint length;
         assembly {
             length := extcodesize(_address)
         }
-        return (length>0);
+        return (length > 0);
     }
 
     /// @dev EOAアドレスチェック
@@ -75,11 +69,10 @@ contract ExchangeRegulatorService is RegulatorService, Ownable {
     /// @dev コントラクトオーナーのみ実行可能
     /// @param _participant 取引参加者のEOAアドレス
     /// @param _locked ロック状態
-    function register(address _participant, bool _locked)
-        public
-        onlyOwner()
-        onlyEOA(_participant)
-    {
+    function register(
+        address _participant,
+        bool _locked
+    ) public onlyOwner onlyEOA(_participant) {
         whitelist[_participant].participant = _participant;
         whitelist[_participant].locked = _locked;
         emit Register(_participant, _locked);
@@ -89,11 +82,9 @@ contract ExchangeRegulatorService is RegulatorService, Ownable {
     /// @param _participant 取引参加者のEOAアドレス
     /// @return participant 取引参加者のEOAアドレス
     /// @return locked ロック状態
-    function getWhitelist(address _participant)
-        public
-        view
-        returns (address participant, bool locked)
-    {
+    function getWhitelist(
+        address _participant
+    ) public view returns (address participant, bool locked) {
         participant = whitelist[_participant].participant;
         locked = whitelist[_participant].locked;
     }
@@ -101,12 +92,7 @@ contract ExchangeRegulatorService is RegulatorService, Ownable {
     /// @notice 取引可否チェック
     /// @param _participant 取引参加者のアドレス（EOA）
     /// @return チェック結果
-    function check(address _participant)
-        public
-        view
-        override
-        returns (uint8)
-    {
+    function check(address _participant) public view override returns (uint8) {
         if (whitelist[_participant].locked) {
             return CHECK_LOCKED;
         }
@@ -117,5 +103,4 @@ contract ExchangeRegulatorService is RegulatorService, Ownable {
 
         return CHECK_SUCCESS;
     }
-
 }

@@ -16,32 +16,30 @@ limitations under the License.
 
 SPDX-License-Identifier: Apache-2.0
 """
+
 import argparse
 import os
 import sys
 
 import brownie
-from brownie import (
-    accounts,
-    project,
-    network,
-    web3
-)
+from brownie import accounts, network, project, web3
 
-p = project.load('.', name="ibet_smart_contract")
+p = project.load(".", name="ibet_smart_contract")
 p.load_config()
 
 from brownie.project.ibet_smart_contract import (
+    DVPStorage,
     E2EMessaging,
-    TokenList,
-    PersonalInfo,
-    PaymentGateway,
-    ExchangeStorage,
-    IbetExchange,
     EscrowStorage,
+    ExchangeStorage,
+    FreezeLog,
     IbetEscrow,
+    IbetExchange,
+    IbetSecurityTokenDVP,
     IbetSecurityTokenEscrow,
-    FreezeLog
+    PaymentGateway,
+    PersonalInfo,
+    TokenList,
 )
 
 
@@ -68,47 +66,34 @@ def main():
         # Exchange Storage
         exchange_storage = deployer.deploy(ExchangeStorage)
         # IbetExchange
-        deploy_args = [
-            payment_gateway_address,
-            exchange_storage.address
-        ]
-        exchange = deployer.deploy(
-            IbetExchange,
-            *deploy_args
-        )
+        deploy_args = [payment_gateway_address, exchange_storage.address]
+        exchange = deployer.deploy(IbetExchange, *deploy_args)
         # Upgrade Version
-        exchange_storage.upgradeVersion(
-            exchange.address,
-            {'from': deployer}
-        )
+        exchange_storage.upgradeVersion(exchange.address, {"from": deployer})
     elif contract_type == "IbetEscrow":
         # Escrow Storage
         escrow_storage = deployer.deploy(EscrowStorage)
         # IbetEscrow
         deploy_args = [escrow_storage.address]
-        escrow = deployer.deploy(
-            IbetEscrow,
-            *deploy_args
-        )
+        escrow = deployer.deploy(IbetEscrow, *deploy_args)
         # Upgrade Version
-        escrow_storage.upgradeVersion(
-            escrow.address,
-            {'from': deployer}
-        )
+        escrow_storage.upgradeVersion(escrow.address, {"from": deployer})
     elif contract_type == "IbetSecurityTokenEscrow":
         # Escrow Storage
         escrow_storage = deployer.deploy(EscrowStorage)
         # IbetSecurityTokenEscrow
         deploy_args = [escrow_storage.address]
-        escrow = deployer.deploy(
-            IbetSecurityTokenEscrow,
-            *deploy_args
-        )
+        escrow = deployer.deploy(IbetSecurityTokenEscrow, *deploy_args)
         # Upgrade Version
-        escrow_storage.upgradeVersion(
-            escrow.address,
-            {'from': deployer}
-        )
+        escrow_storage.upgradeVersion(escrow.address, {"from": deployer})
+    elif contract_type == "IbetSecurityTokenDVP":
+        # DVP Storage
+        dvp_storage = deployer.deploy(DVPStorage)
+        # IbetSecurityTokenDVP
+        deploy_args = [dvp_storage.address]
+        dvp = deployer.deploy(IbetSecurityTokenDVP, *deploy_args)
+        # Upgrade Version
+        dvp_storage.upgradeVersion(dvp.address, {"from": deployer})
     elif contract_type == "FreezeLog":
         deployer.deploy(FreezeLog)
 
@@ -117,27 +102,23 @@ def set_up_deployer():
     """Deployerの設定"""
 
     # 環境設定の読み込み
-    APP_ENV = os.environ.get('APP_ENV') or 'local'
-    ETH_ACCOUNT_PASSWORD = os.environ.get('ETH_ACCOUNT_PASSWORD') or 'password'
-    REFER_ACCOUNT = os.environ.get('REFER_ACCOUNT') or 'GETH'
+    APP_ENV = os.environ.get("APP_ENV") or "local"
+    ETH_ACCOUNT_PASSWORD = os.environ.get("ETH_ACCOUNT_PASSWORD") or "password"
+    REFER_ACCOUNT = os.environ.get("REFER_ACCOUNT") or "GETH"
 
-    if APP_ENV == 'local':
-        network_id = 'local_network'
+    if APP_ENV == "local":
+        network_id = "local_network"
     else:
-        network_id = 'main_network'
+        network_id = "main_network"
     network.connect(network_id)
 
     # アカウント設定
-    if REFER_ACCOUNT == 'GETH':
+    if REFER_ACCOUNT == "GETH":
         deployer = accounts[0]
-        web3.geth.personal.unlock_account(
-            deployer.address,
-            ETH_ACCOUNT_PASSWORD,
-            1000
-        )
+        web3.geth.personal.unlock_account(deployer.address, ETH_ACCOUNT_PASSWORD, 1000)
     else:
         # NOTE: パスワード入力待ちあり
-        deployer = accounts.load('deploy_user')
+        deployer = accounts.load("deploy_user")
 
     return deployer
 
@@ -146,14 +127,11 @@ def parse_args():
     """引数の読み込み"""
 
     parser = argparse.ArgumentParser()
-    parser.add_argument(
-        "arg1",
-        help="Contract Type"
-    )
+    parser.add_argument("arg1", help="Contract Type")
     parser.add_argument(
         "--payment_gateway",
         help="Deployed Payment Gateway Contract",
-        default=brownie.ZERO_ADDRESS
+        default=brownie.ZERO_ADDRESS,
     )
 
     if len(sys.argv) <= 1:
@@ -170,18 +148,16 @@ def parse_args():
         "IbetExchange",
         "IbetEscrow",
         "IbetSecurityTokenEscrow",
-        "FreezeLog"
+        "IbetSecurityTokenDVP",
+        "FreezeLog",
     ]
     if _args.arg1 not in deployable_contracts:
         parser.error(f"This is a contract that cannot be deployed. : {_args.arg1}")
 
-    args = {
-        "contract_type": _args.arg1,
-        "payment_gateway": _args.payment_gateway
-    }
+    args = {"contract_type": _args.arg1, "payment_gateway": _args.payment_gateway}
 
     return args
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

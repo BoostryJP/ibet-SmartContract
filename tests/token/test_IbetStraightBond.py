@@ -16,23 +16,24 @@ limitations under the License.
 
 SPDX-License-Identifier: Apache-2.0
 """
+
 import brownie
-import pytest
 import brownie_utils
+import pytest
 
 
 def init_args():
-    name = 'test_bond'
-    symbol = 'BND'
-    total_supply = 2 ** 256 - 1
-    face_value = 2 ** 256 - 1
-    face_value_currency = 'JPY'
-    redemption_date = '20191231'
-    redemption_value = 2 ** 256 - 1
-    redemption_value_currency = 'JPY'
-    return_date = '20191231'
-    return_amount = 'some_return'
-    purpose = 'some_purpose'
+    name = "test_bond"
+    symbol = "BND"
+    total_supply = 2**256 - 1
+    face_value = 2**256 - 1
+    face_value_currency = "JPY"
+    redemption_date = "20191231"
+    redemption_value = 2**256 - 1
+    redemption_value_currency = "JPY"
+    return_date = "20191231"
+    return_amount = "some_return"
+    purpose = "some_purpose"
 
     deploy_args = [
         name,
@@ -45,7 +46,7 @@ def init_args():
         redemption_value_currency,
         return_date,
         return_amount,
-        purpose
+        purpose,
     ]
     return deploy_args
 
@@ -53,17 +54,17 @@ def init_args():
 def issue_transferable_bond_token(issuer, exchange_address, personal_info_address):
     from brownie import IbetStraightBond
 
-    name = 'test_bond'
-    symbol = 'BND'
+    name = "test_bond"
+    symbol = "BND"
     total_supply = 10000
     face_value = 10000
-    face_value_currency = 'JPY'
-    redemption_date = '20191231'
+    face_value_currency = "JPY"
+    redemption_date = "20191231"
     redemption_value = 100
-    redemption_value_currency = 'JPY'
-    return_date = '20191231'
-    return_amount = 'some_return'
-    purpose = 'some_purpose'
+    redemption_value_currency = "JPY"
+    return_date = "20191231"
+    return_amount = "some_return"
+    purpose = "some_purpose"
 
     deploy_args = [
         name,
@@ -76,13 +77,13 @@ def issue_transferable_bond_token(issuer, exchange_address, personal_info_addres
         redemption_value_currency,
         return_date,
         return_amount,
-        purpose
+        purpose,
     ]
 
     bond_token = brownie_utils.force_deploy(issuer, IbetStraightBond, *deploy_args)
-    bond_token.setTradableExchange.transact(exchange_address, {'from': issuer})
-    bond_token.setPersonalInfoAddress.transact(personal_info_address, {'from': issuer})
-    bond_token.setTransferable.transact(True, {'from': issuer})
+    bond_token.setTradableExchange.transact(exchange_address, {"from": issuer})
+    bond_token.setPersonalInfoAddress.transact(personal_info_address, {"from": issuer})
+    bond_token.setTransferable.transact(True, {"from": issuer})
     return bond_token, deploy_args
 
 
@@ -91,12 +92,10 @@ class TestDeploy:
 
     # Normal_1
     def test_normal_1(self, users, IbetStraightBond):
-        issuer = users['issuer']
+        issuer = users["issuer"]
         deploy_args = init_args()
         bond_contract = brownie_utils.force_deploy(
-            issuer,
-            IbetStraightBond,
-            *deploy_args
+            issuer, IbetStraightBond, *deploy_args
         )
 
         # assertion
@@ -116,6 +115,7 @@ class TestDeploy:
         balance = bond_contract.balanceOf(issuer)
         is_redeemed = bond_contract.isRedeemed()
         status = bond_contract.status()
+        requirePersonalInfoRegistered = bond_contract.requirePersonalInfoRegistered()
 
         assert owner_address == issuer
         assert name == deploy_args[0]
@@ -133,6 +133,7 @@ class TestDeploy:
         assert balance == total_supply
         assert is_redeemed == False
         assert status == True
+        assert requirePersonalInfoRegistered == True
 
 
 # TEST_transfer
@@ -142,9 +143,10 @@ class TestTransfer:
     # Normal
     #######################################
 
-    # Normal_1
+    # Normal_1_1
     # Transfer to EOA
-    def test_normal_1(self, users, personal_info):
+    # - requirePersonalInfoRegistered = true
+    def test_normal_1_1(self, users, personal_info):
         issuer = users["issuer"]
         from_address = issuer
         to_address = users["trader"]
@@ -154,21 +156,49 @@ class TestTransfer:
         bond_token, deploy_args = issue_transferable_bond_token(
             issuer=issuer,
             exchange_address=brownie.ZERO_ADDRESS,
-            personal_info_address=personal_info.address
+            personal_info_address=personal_info.address,
         )
 
         # register personal info of to_address
         personal_info.register.transact(
-            from_address.address,
-            "encrypted_message",
-            {'from': to_address}
+            from_address.address, "encrypted_message", {"from": to_address}
         )
 
         # transfer
         tx = bond_token.transfer.transact(
-            to_address.address,
-            transfer_amount,
-            {"from": issuer}
+            to_address.address, transfer_amount, {"from": issuer}
+        )
+
+        # assertion
+        assert bond_token.balanceOf(issuer) == deploy_args[3] - transfer_amount
+        assert bond_token.balanceOf(to_address) == transfer_amount
+
+        assert tx.events["Transfer"]["from"] == from_address
+        assert tx.events["Transfer"]["to"] == to_address
+        assert tx.events["Transfer"]["value"] == transfer_amount
+
+    # Normal_1_2
+    # Transfer to EOA
+    # - requirePersonalInfoRegistered = false
+    def test_normal_1_2(self, users, personal_info):
+        issuer = users["issuer"]
+        from_address = issuer
+        to_address = users["trader"]
+        transfer_amount = 100
+
+        # issue token
+        bond_token, deploy_args = issue_transferable_bond_token(
+            issuer=issuer,
+            exchange_address=brownie.ZERO_ADDRESS,
+            personal_info_address=personal_info.address,
+        )
+
+        # set requirePersonalInfoRegistered to False
+        bond_token.setRequirePersonalInfoRegistered.transact(False, {"from": issuer})
+
+        # transfer
+        tx = bond_token.transfer.transact(
+            to_address.address, transfer_amount, {"from": issuer}
         )
 
         # assertion
@@ -190,15 +220,13 @@ class TestTransfer:
         bond_token, deploy_args = issue_transferable_bond_token(
             issuer=issuer,
             exchange_address=exchange.address,
-            personal_info_address=personal_info.address
+            personal_info_address=personal_info.address,
         )
 
         # transfer
         to_address = exchange.address
         tx = bond_token.transfer.transact(
-            to_address,
-            transfer_amount,
-            {"from": from_address}
+            to_address, transfer_amount, {"from": from_address}
         )
 
         # assertion
@@ -224,23 +252,19 @@ class TestTransfer:
         bond_token, deploy_args = issue_transferable_bond_token(
             issuer=issuer,
             exchange_address=brownie.ZERO_ADDRESS,
-            personal_info_address=personal_info.address
+            personal_info_address=personal_info.address,
         )
 
         # register personal info of to_address
         personal_info.register.transact(
-            from_address.address,
-            "encrypted_message",
-            {'from': to_address}
+            from_address.address, "encrypted_message", {"from": to_address}
         )
 
         # transfer
         transfer_amount = deploy_args[3] + 1
         with brownie.reverts(revert_msg="120401"):
             bond_token.transfer.transact(
-                to_address.address,
-                transfer_amount,
-                {"from": issuer}
+                to_address.address, transfer_amount, {"from": issuer}
             )
 
         # assertion
@@ -259,7 +283,7 @@ class TestTransfer:
         bond_token, deploy_args = issue_transferable_bond_token(
             issuer=issuer,
             exchange_address=brownie.ZERO_ADDRESS,
-            personal_info_address=brownie.ZERO_ADDRESS
+            personal_info_address=brownie.ZERO_ADDRESS,
         )
 
         with pytest.raises(AttributeError):
@@ -267,18 +291,12 @@ class TestTransfer:
 
         with pytest.raises(AttributeError):
             bond_token.transferToAddress.transact(
-                to_address,
-                transfer_amount,
-                "test_data",
-                {"from": from_address}
+                to_address, transfer_amount, "test_data", {"from": from_address}
             )
 
         with pytest.raises(AttributeError):
             bond_token.transferToContract.transact(
-                to_address,
-                transfer_amount,
-                "test_data",
-                {"from": from_address}
+                to_address, transfer_amount, "test_data", {"from": from_address}
             )
 
     # Error_3
@@ -293,18 +311,11 @@ class TestTransfer:
         bond_token = brownie_utils.force_deploy(issuer, IbetStraightBond, *deploy_args)
 
         # set to not transferable
-        bond_token.setTransferable(
-            False,
-            {"from": issuer}
-        )
+        bond_token.setTransferable(False, {"from": issuer})
 
         # transfer
         with brownie.reverts(revert_msg="120402"):
-            bond_token.transfer.transact(
-                to_address,
-                transfer_amount,
-                {"from": issuer}
-            )
+            bond_token.transfer.transact(to_address, transfer_amount, {"from": issuer})
 
         # assertion
         from_balance = bond_token.balanceOf(issuer)
@@ -315,23 +326,19 @@ class TestTransfer:
     # Error_4
     # Transfer to non-tradable exchange
     def test_error_4(self, users, exchange):
-        issuer = users['issuer']
+        issuer = users["issuer"]
         transfer_amount = 100
 
         # issue token
         bond_token, deploy_args = issue_transferable_bond_token(
             issuer=issuer,
             exchange_address=brownie.ZERO_ADDRESS,
-            personal_info_address=brownie.ZERO_ADDRESS
+            personal_info_address=brownie.ZERO_ADDRESS,
         )
 
         # transfer
         with brownie.reverts(revert_msg="120301"):
-            bond_token.transfer.transact(
-                exchange,
-                transfer_amount,
-                {"from": issuer}
-            )
+            bond_token.transfer.transact(exchange, transfer_amount, {"from": issuer})
 
         assert bond_token.balanceOf(issuer) == deploy_args[3]
         assert bond_token.balanceOf(exchange) == 0
@@ -347,15 +354,13 @@ class TestTransfer:
         bond_token, deploy_args = issue_transferable_bond_token(
             issuer=issuer,
             exchange_address=brownie.ZERO_ADDRESS,
-            personal_info_address=personal_info.address
+            personal_info_address=personal_info.address,
         )
 
         # transfer
         with brownie.reverts(revert_msg="120202"):
             bond_token.transfer.transact(
-                to_address.address,
-                transfer_amount,
-                {"from": issuer}
+                to_address.address, transfer_amount, {"from": issuer}
             )
 
         # assertion
@@ -381,23 +386,19 @@ class TestBulkTransfer:
         bond_token, deploy_args = issue_transferable_bond_token(
             issuer=issuer,
             exchange_address=brownie.ZERO_ADDRESS,
-            personal_info_address=personal_info.address
+            personal_info_address=personal_info.address,
         )
 
         # register personal info (to_address)
         personal_info.register.transact(
-            from_address.address,
-            "encrypted_message",
-            {"from": to_address}
+            from_address.address, "encrypted_message", {"from": to_address}
         )
 
         # bulk transfer
         to_address_list = [to_address]
         amount_list = [1]
         bond_token.bulkTransfer.transact(
-            to_address_list,
-            amount_list,
-            {"from": from_address}
+            to_address_list, amount_list, {"from": from_address}
         )
 
         # assertion
@@ -406,9 +407,10 @@ class TestBulkTransfer:
         assert from_balance == deploy_args[3] - 1
         assert to_balance == 1
 
-    # Normal_2
+    # Normal_2_1
     # Bulk transfer to account address (multiple data)
-    def test_normal_2(self, users, personal_info):
+    # - requirePersonalInfoRegistered = true
+    def test_normal_2_1(self, users, personal_info):
         issuer = users["issuer"]
         from_address = issuer
         to_address = users["trader"]
@@ -417,14 +419,12 @@ class TestBulkTransfer:
         bond_token, deploy_args = issue_transferable_bond_token(
             issuer=issuer,
             exchange_address=brownie.ZERO_ADDRESS,
-            personal_info_address=personal_info.address
+            personal_info_address=personal_info.address,
         )
 
         # register personal info (to_address)
         personal_info.register.transact(
-            from_address.address,
-            "encrypted_message",
-            {"from": to_address}
+            from_address.address, "encrypted_message", {"from": to_address}
         )
 
         # bulk transfer
@@ -435,9 +435,42 @@ class TestBulkTransfer:
             amount_list.append(1)
 
         bond_token.bulkTransfer.transact(
-            to_address_list,
-            amount_list,
-            {"from": from_address}
+            to_address_list, amount_list, {"from": from_address}
+        )
+
+        # assertion
+        from_balance = bond_token.balanceOf(from_address)
+        to_balance = bond_token.balanceOf(to_address)
+        assert from_balance == deploy_args[3] - 100
+        assert to_balance == 100
+
+    # Normal_2_2
+    # Bulk transfer to account address (multiple data)
+    # - requirePersonalInfoRegistered = false
+    def test_normal_2_2(self, users, personal_info):
+        issuer = users["issuer"]
+        from_address = issuer
+        to_address = users["trader"]
+
+        # issue token
+        bond_token, deploy_args = issue_transferable_bond_token(
+            issuer=issuer,
+            exchange_address=brownie.ZERO_ADDRESS,
+            personal_info_address=personal_info.address,
+        )
+
+        # set requirePersonalInfoRegistered to False
+        bond_token.setRequirePersonalInfoRegistered.transact(False, {"from": issuer})
+
+        # bulk transfer
+        to_address_list = []
+        amount_list = []
+        for i in range(100):
+            to_address_list.append(to_address)
+            amount_list.append(1)
+
+        bond_token.bulkTransfer.transact(
+            to_address_list, amount_list, {"from": from_address}
         )
 
         # assertion
@@ -456,16 +489,14 @@ class TestBulkTransfer:
         bond_token, deploy_args = issue_transferable_bond_token(
             issuer=issuer,
             exchange_address=exchange.address,
-            personal_info_address=personal_info.address
+            personal_info_address=personal_info.address,
         )
 
         # bulk transfer
         to_address_list = [exchange.address]
         amount_list = [1]
         bond_token.bulkTransfer.transact(
-            to_address_list,
-            amount_list,
-            {"from": from_address}
+            to_address_list, amount_list, {"from": from_address}
         )
 
         # assertion
@@ -481,30 +512,26 @@ class TestBulkTransfer:
     # Error_1
     # Insufficient balance
     def test_error_1(self, users, personal_info):
-        issuer = users['issuer']
+        issuer = users["issuer"]
         from_address = issuer
-        to_address = users['trader']
+        to_address = users["trader"]
 
         # issue token
         bond_token, deploy_args = issue_transferable_bond_token(
             issuer=issuer,
             exchange_address=brownie.ZERO_ADDRESS,
-            personal_info_address=personal_info.address
+            personal_info_address=personal_info.address,
         )
 
         # register personal info (to_address)
         personal_info.register.transact(
-            from_address,
-            "encrypted_message",
-            {"from": to_address}
+            from_address, "encrypted_message", {"from": to_address}
         )
 
         # bulk transfer
         with brownie.reverts(revert_msg="120502"):
             bond_token.bulkTransfer.transact(
-                [to_address, to_address],
-                [deploy_args[3], 1],
-                {'from': issuer}
+                [to_address, to_address], [deploy_args[3], 1], {"from": issuer}
             )
 
         # assertion
@@ -522,27 +549,18 @@ class TestBulkTransfer:
         bond_token, deploy_args = issue_transferable_bond_token(
             issuer=issuer,
             exchange_address=brownie.ZERO_ADDRESS,
-            personal_info_address=personal_info.address
+            personal_info_address=personal_info.address,
         )
-        bond_token.setTransferable.transact(
-            False,
-            {"from": issuer}
-        )
+        bond_token.setTransferable.transact(False, {"from": issuer})
 
         # register personal info (to_address)
         personal_info.register.transact(
-            from_address,
-            "encrypted_message",
-            {"from": to_address}
+            from_address, "encrypted_message", {"from": to_address}
         )
 
         # bulk transfer
         with brownie.reverts(revert_msg="120503"):
-            bond_token.bulkTransfer.transact(
-                [to_address],
-                [1],
-                {"from": issuer}
-            )
+            bond_token.bulkTransfer.transact([to_address], [1], {"from": issuer})
 
         # assertion
         from_balance = bond_token.balanceOf(issuer)
@@ -560,16 +578,12 @@ class TestBulkTransfer:
         bond_token, deploy_args = issue_transferable_bond_token(
             issuer=issuer,
             exchange_address=brownie.ZERO_ADDRESS,
-            personal_info_address=personal_info.address
+            personal_info_address=personal_info.address,
         )
 
         # bulk transfer
         with brownie.reverts(revert_msg="120202"):
-            bond_token.bulkTransfer.transact(
-                [to_address],
-                [1],
-                {'from': issuer}
-            )
+            bond_token.bulkTransfer.transact([to_address], [1], {"from": issuer})
 
         # assertion
         from_balance = bond_token.balanceOf(issuer)
@@ -587,24 +601,21 @@ class TestTransferFrom:
 
     # Normal_1
     def test_normal_1(self, users, personal_info):
-        issuer = users['issuer']
+        issuer = users["issuer"]
         from_address = issuer
-        to_address = users['user1']
+        to_address = users["user1"]
         value = 100
 
         # issue token
         bond_token, deploy_args = issue_transferable_bond_token(
             issuer=issuer,
             exchange_address=brownie.ZERO_ADDRESS,
-            personal_info_address=personal_info.address
+            personal_info_address=personal_info.address,
         )
 
         # forced transfer
         bond_token.transferFrom.transact(
-            from_address,
-            to_address,
-            value,
-            {'from': issuer}
+            from_address, to_address, value, {"from": issuer}
         )
 
         # assertion
@@ -618,24 +629,21 @@ class TestTransferFrom:
     # Error_1
     # Insufficient balance
     def test_error_1(self, users, personal_info):
-        issuer = users['issuer']
+        issuer = users["issuer"]
         from_address = issuer
-        to_address = users['user1']
+        to_address = users["user1"]
 
         # issue token
         bond_token, deploy_args = issue_transferable_bond_token(
             issuer=issuer,
             exchange_address=brownie.ZERO_ADDRESS,
-            personal_info_address=personal_info.address
+            personal_info_address=personal_info.address,
         )
 
         # forced transfer
         with brownie.reverts(revert_msg="120601"):
             bond_token.transferFrom.transact(
-                from_address,
-                to_address,
-                deploy_args[3] + 1,
-                {'from': issuer}
+                from_address, to_address, deploy_args[3] + 1, {"from": issuer}
             )
 
         # assertion
@@ -645,24 +653,21 @@ class TestTransferFrom:
     # Error_2
     # Not authorized
     def test_error_2(self, users, personal_info):
-        issuer = users['issuer']
+        issuer = users["issuer"]
         from_address = issuer
-        to_address = users['user1']
+        to_address = users["user1"]
 
         # issue token
         bond_token, deploy_args = issue_transferable_bond_token(
             issuer=issuer,
             exchange_address=brownie.ZERO_ADDRESS,
-            personal_info_address=personal_info.address
+            personal_info_address=personal_info.address,
         )
 
         # forced transfer
         with brownie.reverts(revert_msg="500001"):
             bond_token.transferFrom.transact(
-                from_address,
-                to_address,
-                deploy_args[3] + 1,
-                {'from': to_address}
+                from_address, to_address, deploy_args[3] + 1, {"from": to_address}
             )
 
         # assertion
@@ -679,7 +684,7 @@ class TestBalanceOf:
 
     # Normal_1
     def test_normal_1(self, users, IbetStraightBond):
-        issuer = users['issuer']
+        issuer = users["issuer"]
 
         # issue token
         deploy_args = init_args()
@@ -699,17 +704,14 @@ class TestSetTradableExchange:
 
     # Normal_1
     def test_normal_1(self, users, IbetStraightBond):
-        issuer = users['issuer']
+        issuer = users["issuer"]
 
         # issue token
         deploy_args = init_args()
         bond_token = brownie_utils.force_deploy(issuer, IbetStraightBond, *deploy_args)
 
         # change exchange contract
-        bond_token.setTradableExchange.transact(
-            brownie.ETH_ADDRESS,
-            {'from': issuer}
-        )
+        bond_token.setTradableExchange.transact(brownie.ETH_ADDRESS, {"from": issuer})
 
         # assertion
         assert bond_token.tradableExchange() == brownie.ETH_ADDRESS
@@ -721,7 +723,7 @@ class TestSetTradableExchange:
     # Error_1
     # Not authorized
     def test_error_1(self, users, IbetStraightBond):
-        issuer = users['issuer']
+        issuer = users["issuer"]
 
         # issue token
         deploy_args = init_args()
@@ -730,8 +732,7 @@ class TestSetTradableExchange:
         # change exchange contract
         with brownie.reverts(revert_msg="500001"):
             bond_token.setTradableExchange.transact(
-                brownie.ETH_ADDRESS,
-                {'from': users['user1']}
+                brownie.ETH_ADDRESS, {"from": users["user1"]}
             )
 
         # assertion
@@ -747,7 +748,7 @@ class TestSetPersonalInfoAddress:
 
     # Normal_1
     def test_normal_1(self, users, IbetStraightBond):
-        issuer = users['issuer']
+        issuer = users["issuer"]
 
         # issue token
         deploy_args = init_args()
@@ -755,8 +756,7 @@ class TestSetPersonalInfoAddress:
 
         # update contract
         bond_token.setPersonalInfoAddress.transact(
-            brownie.ETH_ADDRESS,
-            {'from': issuer}
+            brownie.ETH_ADDRESS, {"from": issuer}
         )
 
         # assertion
@@ -769,7 +769,7 @@ class TestSetPersonalInfoAddress:
     # Error_1
     # Not authorized
     def test_error_1(self, users, IbetStraightBond):
-        issuer = users['issuer']
+        issuer = users["issuer"]
 
         # issue token
         deploy_args = init_args()
@@ -778,12 +778,55 @@ class TestSetPersonalInfoAddress:
         # update contract
         with brownie.reverts(revert_msg="500001"):
             bond_token.setPersonalInfoAddress.transact(
-                brownie.ETH_ADDRESS,
-                {'from': users['user1']}
+                brownie.ETH_ADDRESS, {"from": users["user1"]}
             )
 
         # assertion
         assert bond_token.personalInfoAddress() == brownie.ZERO_ADDRESS
+
+
+# TEST_setRequirePersonalInfoRegistered
+class TestSetRequirePersonalInfoRegistered:
+
+    #######################################
+    # Normal
+    #######################################
+
+    # Normal_1
+    def test_normal_1(self, users, IbetStraightBond):
+        issuer = users["issuer"]
+
+        # issue token
+        deploy_args = init_args()
+        bond_token = issuer.deploy(IbetStraightBond, *deploy_args)
+
+        # update contract
+        bond_token.setRequirePersonalInfoRegistered.transact(False, {"from": issuer})
+
+        # assertion
+        assert bond_token.requirePersonalInfoRegistered() == False
+
+    #######################################
+    # Error
+    #######################################
+
+    # Error_1
+    # Not authorized
+    def test_error_1(self, users, IbetStraightBond):
+        issuer = users["issuer"]
+
+        # issue token
+        deploy_args = init_args()
+        bond_token = issuer.deploy(IbetStraightBond, *deploy_args)
+
+        # update contract
+        with brownie.reverts(revert_msg="500001"):
+            bond_token.setRequirePersonalInfoRegistered.transact(
+                False, {"from": users["user1"]}
+            )
+
+        # assertion
+        assert bond_token.requirePersonalInfoRegistered() == True
 
 
 # TEST_setContactInformation
@@ -795,7 +838,7 @@ class TestSetContactInformation:
 
     # 正常系1: 発行（デプロイ） -> 修正
     def test_normal_1(self, users, IbetStraightBond):
-        issuer = users['issuer']
+        issuer = users["issuer"]
 
         # issue token
         deploy_args = init_args()
@@ -803,13 +846,12 @@ class TestSetContactInformation:
 
         # update
         bond_token.setContactInformation.transact(
-            'updated contact information',
-            {'from': issuer}
+            "updated contact information", {"from": issuer}
         )
 
         # assertion
         contact_information = bond_token.contactInformation()
-        assert contact_information == 'updated contact information'
+        assert contact_information == "updated contact information"
 
     #######################################
     # Error
@@ -818,7 +860,7 @@ class TestSetContactInformation:
     # Error_1
     # Not authorized
     def test_error_1(self, users, IbetStraightBond):
-        issuer = users['issuer']
+        issuer = users["issuer"]
 
         # issue token
         deploy_args = init_args()
@@ -827,13 +869,12 @@ class TestSetContactInformation:
         # update
         with brownie.reverts(revert_msg="500001"):
             bond_token.setContactInformation.transact(
-                'updated contact information',
-                {'from': users['user1']}
+                "updated contact information", {"from": users["user1"]}
             )
 
         # assertion
         contact_information = bond_token.contactInformation()
-        assert contact_information == ''
+        assert contact_information == ""
 
 
 # TEST_setPrivacyPolicy
@@ -845,21 +886,18 @@ class TestSetPrivacyPolicy:
 
     # Normal_1
     def test_normal_1(self, users, IbetStraightBond):
-        issuer = users['issuer']
+        issuer = users["issuer"]
 
         # issue token
         deploy_args = init_args()
         bond_token = brownie_utils.force_deploy(issuer, IbetStraightBond, *deploy_args)
 
         # update
-        bond_token.setPrivacyPolicy.transact(
-            'updated privacy policy',
-            {'from': issuer}
-        )
+        bond_token.setPrivacyPolicy.transact("updated privacy policy", {"from": issuer})
 
         # assertion
         privacy_policy = bond_token.privacyPolicy()
-        assert privacy_policy == 'updated privacy policy'
+        assert privacy_policy == "updated privacy policy"
 
     #######################################
     # Error
@@ -868,7 +906,7 @@ class TestSetPrivacyPolicy:
     # Error_1
     # Not authorized
     def test_error_1(self, users, IbetStraightBond):
-        issuer = users['issuer']
+        issuer = users["issuer"]
 
         # issue token
         deploy_args = init_args()
@@ -877,13 +915,12 @@ class TestSetPrivacyPolicy:
         # update
         with brownie.reverts(revert_msg="500001"):
             bond_token.setPrivacyPolicy.transact(
-                'updated privacy policy',
-                {'from': users['user1']}
+                "updated privacy policy", {"from": users["user1"]}
             )
 
         # assertion
         privacy_policy = bond_token.privacyPolicy()
-        assert privacy_policy == ''
+        assert privacy_policy == ""
 
 
 # TEST_setMemo
@@ -895,21 +932,18 @@ class TestSetMemo:
 
     # Normal_1
     def test_normal_1(self, users, IbetStraightBond):
-        issuer = users['issuer']
+        issuer = users["issuer"]
 
         # issue token
         deploy_args = init_args()
         bond_token = brownie_utils.force_deploy(issuer, IbetStraightBond, *deploy_args)
 
         # set memo
-        bond_token.setMemo.transact(
-            'updated memo',
-            {'from': issuer}
-        )
+        bond_token.setMemo.transact("updated memo", {"from": issuer})
 
         # assertion
         memo = bond_token.memo()
-        assert memo == 'updated memo'
+        assert memo == "updated memo"
 
     #######################################
     # Error
@@ -918,7 +952,7 @@ class TestSetMemo:
     # Error_1
     # Not authorized
     def test_error_1(self, users, IbetStraightBond):
-        issuer = users['issuer']
+        issuer = users["issuer"]
 
         # issue token
         deploy_args = init_args()
@@ -926,13 +960,10 @@ class TestSetMemo:
 
         # set memo
         with brownie.reverts(revert_msg="500001"):
-            bond_token.setMemo.transact(
-                'updated memo',
-                {'from': users['user1']}
-            )
+            bond_token.setMemo.transact("updated memo", {"from": users["user1"]})
 
         memo = bond_token.memo()
-        assert memo == ''
+        assert memo == ""
 
 
 # TEST_setInterestRate
@@ -944,17 +975,14 @@ class TestSetInterestRate:
 
     # Normal_1
     def test_setInterestRate_normal_1(self, users, IbetStraightBond):
-        issuer = users['issuer']
+        issuer = users["issuer"]
 
         # issue token
         deploy_args = init_args()
         bond_token = brownie_utils.force_deploy(issuer, IbetStraightBond, *deploy_args)
 
         # update
-        bond_token.setInterestRate.transact(
-            123,
-            {'from': issuer}
-        )
+        bond_token.setInterestRate.transact(123, {"from": issuer})
 
         # assertion
         interest_rate = bond_token.interestRate()
@@ -967,7 +995,7 @@ class TestSetInterestRate:
     # Error_1
     # Not authorized
     def test_setInterestRate_error_2(self, users, IbetStraightBond):
-        issuer = users['issuer']
+        issuer = users["issuer"]
 
         # issue token
         deploy_args = init_args()
@@ -975,10 +1003,7 @@ class TestSetInterestRate:
 
         # update
         with brownie.reverts(revert_msg="500001"):
-            bond_token.setInterestRate.transact(
-                123,
-                {'from': users['user1']}
-            )
+            bond_token.setInterestRate.transact(123, {"from": users["user1"]})
 
         # assertion
         interest_rate = bond_token.interestRate()
@@ -994,7 +1019,7 @@ class TestSetInterestPaymentDate:
 
     # Normal_1
     def test_normal_1(self, users, IbetStraightBond):
-        issuer = users['issuer']
+        issuer = users["issuer"]
 
         # issue token
         deploy_args = init_args()
@@ -1003,12 +1028,15 @@ class TestSetInterestPaymentDate:
         # update
         bond_token.setInterestPaymentDate.transact(
             '{"interestPaymentDate1":"0331","interestPaymentDate2":"0930"}',
-            {'from': issuer}
+            {"from": issuer},
         )
 
         # assertion
         interest_payment_date = bond_token.interestPaymentDate()
-        assert interest_payment_date == '{"interestPaymentDate1":"0331","interestPaymentDate2":"0930"}'
+        assert (
+            interest_payment_date
+            == '{"interestPaymentDate1":"0331","interestPaymentDate2":"0930"}'
+        )
 
     #######################################
     # Error
@@ -1016,7 +1044,7 @@ class TestSetInterestPaymentDate:
 
     # Not authorized
     def test_error_1(self, users, IbetStraightBond):
-        issuer = users['issuer']
+        issuer = users["issuer"]
 
         # issue token
         deploy_args = init_args()
@@ -1026,12 +1054,12 @@ class TestSetInterestPaymentDate:
         with brownie.reverts(revert_msg="500001"):
             bond_token.setInterestPaymentDate.transact(
                 '{"interestPaymentDate1":"0331","interestPaymentDate2":"0930"}',
-                {'from': users['user1']}
+                {"from": users["user1"]},
             )
 
         # assertion
         interest_payment_date = bond_token.interestPaymentDate()
-        assert interest_payment_date == ''
+        assert interest_payment_date == ""
 
 
 # TEST_setTransferable
@@ -1043,14 +1071,14 @@ class TestSetTransferable:
 
     # Normal_1
     def test_normal_1(self, users, IbetStraightBond):
-        issuer = users['issuer']
+        issuer = users["issuer"]
 
         # issue token
         deploy_args = init_args()
         bond_token = brownie_utils.force_deploy(issuer, IbetStraightBond, *deploy_args)
 
         # update
-        bond_token.setTransferable.transact(True, {'from': issuer})
+        bond_token.setTransferable.transact(True, {"from": issuer})
 
         # assertion
         assert bond_token.transferable() is True
@@ -1062,7 +1090,7 @@ class TestSetTransferable:
     # Error_1
     # Not authorized
     def test_error_1(self, users, IbetStraightBond):
-        issuer = users['issuer']
+        issuer = users["issuer"]
 
         # issue token
         deploy_args = init_args()
@@ -1070,7 +1098,7 @@ class TestSetTransferable:
 
         # update
         with brownie.reverts(revert_msg="500001"):
-            bond_token.setTransferable.transact(True, {'from': users['user1']})
+            bond_token.setTransferable.transact(True, {"from": users["user1"]})
 
         # assertion
         assert bond_token.transferable() is False
@@ -1085,14 +1113,14 @@ class TestSetStatus:
 
     # Normal_1
     def test_normal_1(self, users, IbetStraightBond):
-        issuer = users['issuer']
+        issuer = users["issuer"]
 
         # issue token
         deploy_args = init_args()
         bond_token = brownie_utils.force_deploy(issuer, IbetStraightBond, *deploy_args)
 
         # update
-        bond_token.setStatus(False, {'from': issuer})
+        bond_token.setStatus(False, {"from": issuer})
 
         # assertion
         assert bond_token.status() is False
@@ -1104,7 +1132,7 @@ class TestSetStatus:
     # Error_1
     # Not authorized
     def test_error_1(self, users, IbetStraightBond):
-        issuer = users['issuer']
+        issuer = users["issuer"]
 
         # issue token
         deploy_args = init_args()
@@ -1112,7 +1140,7 @@ class TestSetStatus:
 
         # change exchange contract
         with brownie.reverts(revert_msg="500001"):
-            bond_token.setStatus(False, {'from': users['user1']})
+            bond_token.setStatus(False, {"from": users["user1"]})
 
 
 # TEST_changeOfferingStatus
@@ -1124,14 +1152,14 @@ class TestChangeOfferingStatus:
 
     # Normal_1
     def test_normal_1(self, users, IbetStraightBond):
-        issuer = users['issuer']
+        issuer = users["issuer"]
 
         # issue token
         deploy_args = init_args()
         bond_token = brownie_utils.force_deploy(issuer, IbetStraightBond, *deploy_args)
 
         # update
-        bond_token.changeOfferingStatus(True, {'from': issuer})
+        bond_token.changeOfferingStatus(True, {"from": issuer})
 
         # assertion
         assert bond_token.status() is True
@@ -1143,7 +1171,7 @@ class TestChangeOfferingStatus:
     # Error_1
     # Not authorized
     def test_error_1(self, users, IbetStraightBond):
-        issuer = users['issuer']
+        issuer = users["issuer"]
 
         # issue token
         deploy_args = init_args()
@@ -1151,7 +1179,7 @@ class TestChangeOfferingStatus:
 
         # change exchange contract
         with brownie.reverts(revert_msg="500001"):
-            bond_token.changeOfferingStatus(True, {'from': users['user1']})
+            bond_token.changeOfferingStatus(True, {"from": users["user1"]})
 
 
 # TEST_applyForOffering
@@ -1164,98 +1192,113 @@ class TestApplyForOffering:
     # Normal_1
     # Default value
     def test_normal_1(self, users, personal_info):
-        issuer = users['issuer']
+        issuer = users["issuer"]
 
         # issue token
         bond_token, deploy_args = issue_transferable_bond_token(
             issuer=issuer,
             exchange_address=brownie.ZERO_ADDRESS,
-            personal_info_address=personal_info.address
+            personal_info_address=personal_info.address,
         )
 
         # assertion
         application = bond_token.applicationsForOffering(brownie.ETH_ADDRESS)
         assert application[0] == 0
         assert application[1] == 0
-        assert application[2] == ''
+        assert application[2] == ""
 
-    # Normal_2
-    def test_normal_2(self, users, personal_info):
-        issuer = users['issuer']
-        applicant = users['user1']
+    # Normal_2_1
+    # Apply for offering
+    # - requirePersonalInfoRegistered = true
+    def test_normal_2_1(self, users, personal_info):
+        issuer = users["issuer"]
+        applicant = users["user1"]
 
         # issue token
         bond_token, deploy_args = issue_transferable_bond_token(
             issuer=issuer,
             exchange_address=brownie.ZERO_ADDRESS,
-            personal_info_address=personal_info.address
+            personal_info_address=personal_info.address,
         )
 
         # update offering status
-        bond_token.changeOfferingStatus.transact(True, {'from': issuer})
+        bond_token.changeOfferingStatus.transact(True, {"from": issuer})
 
         # register personal info of applicant
         personal_info.register.transact(
-            issuer,
-            "encrypted_message",
-            {'from': applicant}
+            issuer, "encrypted_message", {"from": applicant}
         )
 
         # apply for offering
-        bond_token.applyForOffering.transact(
-            10,
-            'abcdefgh',
-            {'from': applicant}
-        )
+        bond_token.applyForOffering.transact(10, "abcdefgh", {"from": applicant})
 
         # assertion
         application = bond_token.applicationsForOffering(applicant)
         assert application[0] == 10
         assert application[1] == 0
-        assert application[2] == 'abcdefgh'
+        assert application[2] == "abcdefgh"
 
-    # Normal_3
-    # Multiple applications
-    def test_normal_3(self, users, personal_info):
-        issuer = users['issuer']
-        applicant = users['user1']
+    # Normal_2_2
+    # Apply for offering
+    # - requirePersonalInfoRegistered = false
+    def test_normal_2_2(self, users, personal_info):
+        issuer = users["issuer"]
+        applicant = users["user1"]
 
         # issue token
         bond_token, deploy_args = issue_transferable_bond_token(
             issuer=issuer,
             exchange_address=brownie.ZERO_ADDRESS,
-            personal_info_address=personal_info.address
+            personal_info_address=personal_info.address,
         )
 
         # update offering status
-        bond_token.changeOfferingStatus.transact(True, {'from': issuer})
+        bond_token.changeOfferingStatus.transact(True, {"from": issuer})
+
+        # set requirePersonalInfoRegistered to False
+        bond_token.setRequirePersonalInfoRegistered.transact(False, {"from": issuer})
+
+        # apply for offering
+        bond_token.applyForOffering.transact(10, "abcdefgh", {"from": applicant})
+
+        # assertion
+        application = bond_token.applicationsForOffering(applicant)
+        assert application[0] == 10
+        assert application[1] == 0
+        assert application[2] == "abcdefgh"
+
+    # Normal_3
+    # Multiple applications
+    def test_normal_3(self, users, personal_info):
+        issuer = users["issuer"]
+        applicant = users["user1"]
+
+        # issue token
+        bond_token, deploy_args = issue_transferable_bond_token(
+            issuer=issuer,
+            exchange_address=brownie.ZERO_ADDRESS,
+            personal_info_address=personal_info.address,
+        )
+
+        # update offering status
+        bond_token.changeOfferingStatus.transact(True, {"from": issuer})
 
         # register personal info of applicant
         personal_info.register.transact(
-            issuer,
-            "encrypted_message",
-            {'from': applicant}
+            issuer, "encrypted_message", {"from": applicant}
         )
 
         # apply for offering (1)
-        bond_token.applyForOffering.transact(
-            10,
-            'abcdefgh',
-            {'from': applicant}
-        )
+        bond_token.applyForOffering.transact(10, "abcdefgh", {"from": applicant})
 
         # apply for offering (2)
-        bond_token.applyForOffering.transact(
-            20,
-            'vwxyz',
-            {'from': applicant}
-        )
+        bond_token.applyForOffering.transact(20, "vwxyz", {"from": applicant})
 
         # assertion
         application = bond_token.applicationsForOffering(applicant)
         assert application[0] == 20
         assert application[1] == 0
-        assert application[2] == 'vwxyz'
+        assert application[2] == "vwxyz"
 
     #######################################
     # Error
@@ -1264,59 +1307,51 @@ class TestApplyForOffering:
     # Error_1
     # The offering status must be true.
     def test_error_1(self, users, personal_info):
-        issuer = users['issuer']
-        applicant = users['user1']
+        issuer = users["issuer"]
+        applicant = users["user1"]
 
         # issue token
         bond_token, deploy_args = issue_transferable_bond_token(
             issuer=issuer,
             exchange_address=brownie.ZERO_ADDRESS,
-            personal_info_address=personal_info.address
+            personal_info_address=personal_info.address,
         )
 
         # apply for offering
         with brownie.reverts(revert_msg="121001"):
-            bond_token.applyForOffering.transact(
-                10,
-                'abcdefgh',
-                {'from': applicant}
-            )
+            bond_token.applyForOffering.transact(10, "abcdefgh", {"from": applicant})
 
         # assertion
         application = bond_token.applicationsForOffering(applicant)
         assert application[0] == 0
         assert application[1] == 0
-        assert application[2] == ''
+        assert application[2] == ""
 
     # Error_2
     # Applicant need to register personal information.
     def test_error_2(self, users, personal_info):
-        issuer = users['issuer']
-        applicant = users['user1']
+        issuer = users["issuer"]
+        applicant = users["user1"]
 
         # issue token
         bond_token, deploy_args = issue_transferable_bond_token(
             issuer=issuer,
             exchange_address=brownie.ZERO_ADDRESS,
-            personal_info_address=personal_info.address
+            personal_info_address=personal_info.address,
         )
 
         # update offering status
-        bond_token.changeOfferingStatus.transact(True, {'from': issuer})
+        bond_token.changeOfferingStatus.transact(True, {"from": issuer})
 
         # apply for offering
         with brownie.reverts(revert_msg="121002"):
-            bond_token.applyForOffering.transact(
-                10,
-                'abcdefgh',
-                {'from': applicant}
-            )
+            bond_token.applyForOffering.transact(10, "abcdefgh", {"from": applicant})
 
         # assertion
         application = bond_token.applicationsForOffering(applicant)
         assert application[0] == 0
         assert application[1] == 0
-        assert application[2] == ''
+        assert application[2] == ""
 
 
 # TEST_allot
@@ -1328,45 +1363,35 @@ class TestAllot:
 
     # Normal_1
     def test_normal_1(self, users, personal_info):
-        issuer = users['issuer']
-        applicant = users['user1']
+        issuer = users["issuer"]
+        applicant = users["user1"]
 
         # issue token
         bond_token, deploy_args = issue_transferable_bond_token(
             issuer=issuer,
             exchange_address=brownie.ZERO_ADDRESS,
-            personal_info_address=personal_info.address
+            personal_info_address=personal_info.address,
         )
 
         # update offering status
-        bond_token.changeOfferingStatus.transact(True, {'from': issuer})
+        bond_token.changeOfferingStatus.transact(True, {"from": issuer})
 
         # register personal info of applicant
         personal_info.register.transact(
-            issuer,
-            "encrypted_message",
-            {'from': applicant}
+            issuer, "encrypted_message", {"from": applicant}
         )
 
         # apply for offering
-        bond_token.applyForOffering.transact(
-            10,
-            'abcdefgh',
-            {'from': applicant}
-        )
+        bond_token.applyForOffering.transact(10, "abcdefgh", {"from": applicant})
 
         # allot
-        bond_token.allot.transact(
-            applicant,
-            5,
-            {'from': issuer}
-        )
+        bond_token.allot.transact(applicant, 5, {"from": issuer})
 
         # assertion
         application = bond_token.applicationsForOffering(applicant)
         assert application[0] == 10
         assert application[1] == 5
-        assert application[2] == 'abcdefgh'
+        assert application[2] == "abcdefgh"
 
     #######################################
     # Error
@@ -1375,28 +1400,28 @@ class TestAllot:
     # Error_1
     # Not authorized
     def test_error_1(self, users, personal_info):
-        issuer = users['issuer']
-        applicant = users['user1']
+        issuer = users["issuer"]
+        applicant = users["user1"]
 
         # issue token
         bond_token, deploy_args = issue_transferable_bond_token(
             issuer=issuer,
             exchange_address=brownie.ZERO_ADDRESS,
-            personal_info_address=personal_info.address
+            personal_info_address=personal_info.address,
         )
 
         # update offering status
-        bond_token.changeOfferingStatus.transact(True, {'from': issuer})
+        bond_token.changeOfferingStatus.transact(True, {"from": issuer})
 
         # allot
         with brownie.reverts(revert_msg="500001"):
-            bond_token.allot.transact(applicant, 5, {'from': applicant})
+            bond_token.allot.transact(applicant, 5, {"from": applicant})
 
         # assertion
         application = bond_token.applicationsForOffering(applicant)
         assert application[0] == 0
         assert application[1] == 0
-        assert application[2] == ''
+        assert application[2] == ""
 
 
 # TEST_changeToRedeemed
@@ -1408,14 +1433,14 @@ class TestChangeToRedeemed:
 
     # Normal_1
     def test_redeem_normal_1(self, users, IbetStraightBond):
-        issuer = users['issuer']
+        issuer = users["issuer"]
 
         # issue token
         deploy_args = init_args()
         bond_token = brownie_utils.force_deploy(issuer, IbetStraightBond, *deploy_args)
 
         # redeem
-        bond_token.changeToRedeemed.transact({'from': issuer})
+        bond_token.changeToRedeemed.transact({"from": issuer})
 
         # assertion
         is_redeemed = bond_token.isRedeemed()
@@ -1428,7 +1453,7 @@ class TestChangeToRedeemed:
     # Error_1
     # Not authorized
     def test_redeem_error_1(self, users, IbetStraightBond):
-        issuer = users['issuer']
+        issuer = users["issuer"]
 
         # issue token
         deploy_args = init_args()
@@ -1436,7 +1461,7 @@ class TestChangeToRedeemed:
 
         # redeem
         with brownie.reverts(revert_msg="500001"):
-            bond_token.changeToRedeemed.transact({'from': users['user1']})
+            bond_token.changeToRedeemed.transact({"from": users["user1"]})
 
         # assertion
         is_redeemed = bond_token.isRedeemed()
@@ -1453,9 +1478,9 @@ class TestLock:
     # Normal_1
     # Lock assets to lock address
     def test_normal_1(self, users, IbetStraightBond):
-        issuer = users['issuer']
-        user = users['user1']
-        lock_eoa = users['user2']
+        issuer = users["issuer"]
+        user = users["user1"]
+        lock_eoa = users["user2"]
 
         # issue token
         deploy_args = init_args()
@@ -1465,10 +1490,14 @@ class TestLock:
         lock_amount = 10
 
         # transfer to account
-        bond_token.transferFrom.transact(issuer, user, transfer_amount, {'from': issuer})
+        bond_token.transferFrom.transact(
+            issuer, user, transfer_amount, {"from": issuer}
+        )
 
         # lock
-        tx = bond_token.lock.transact(lock_eoa, lock_amount, "some_extra_data", {'from': user})
+        tx = bond_token.lock.transact(
+            lock_eoa, lock_amount, "some_extra_data", {"from": user}
+        )
 
         # assertion
         assert bond_token.balanceOf(user) == transfer_amount - lock_amount
@@ -1486,9 +1515,9 @@ class TestLock:
     # Error_1
     # Insufficient balance
     def test_error_1(self, users, IbetStraightBond):
-        issuer = users['issuer']
-        user = users['user1']
-        lock_eoa = users['user2']
+        issuer = users["issuer"]
+        user = users["user1"]
+        lock_eoa = users["user2"]
 
         # issue token
         deploy_args = init_args()
@@ -1498,11 +1527,15 @@ class TestLock:
         lock_amount = 40
 
         # transfer to account
-        bond_token.transferFrom.transact(issuer, user, transfer_amount, {'from': issuer})
+        bond_token.transferFrom.transact(
+            issuer, user, transfer_amount, {"from": issuer}
+        )
 
         # lock
         with brownie.reverts(revert_msg="120002"):
-            bond_token.lock.transact(lock_eoa, lock_amount, "some_extra_data", {'from': user})
+            bond_token.lock.transact(
+                lock_eoa, lock_amount, "some_extra_data", {"from": user}
+            )
 
         # assertion
         assert bond_token.balanceOf(user) == transfer_amount
@@ -1518,10 +1551,10 @@ class TestUnlock:
 
     # Normal_1
     def test_normal_1(self, users, IbetStraightBond):
-        issuer = users['issuer']
-        user1 = users['user1']
-        user2 = users['user2']
-        lock_eoa = users['agent']
+        issuer = users["issuer"]
+        user1 = users["user1"]
+        user2 = users["user2"]
+        lock_eoa = users["agent"]
 
         # issue token
         deploy_args = init_args()
@@ -1532,13 +1565,17 @@ class TestUnlock:
         unlock_amount = 10
 
         # transfer to account
-        bond_token.transferFrom.transact(issuer, user1, transfer_amount, {'from': issuer})
+        bond_token.transferFrom.transact(
+            issuer, user1, transfer_amount, {"from": issuer}
+        )
 
         # lock
-        bond_token.lock.transact(lock_eoa, lock_amount, "lock_message", {'from': user1})
+        bond_token.lock.transact(lock_eoa, lock_amount, "lock_message", {"from": user1})
 
         # unlock
-        tx = bond_token.unlock.transact(user1, user2, unlock_amount, "unlock_message", {'from': lock_eoa})
+        tx = bond_token.unlock.transact(
+            user1, user2, unlock_amount, "unlock_message", {"from": lock_eoa}
+        )
 
         # assertion
         assert bond_token.balanceOf(user1) == transfer_amount - lock_amount
@@ -1558,10 +1595,10 @@ class TestUnlock:
     # Error_1
     # Cannot unlock a quantity that exceeds the lock quantity
     def test_error_1(self, users, IbetStraightBond):
-        issuer = users['issuer']
-        user1 = users['user1']
-        user2 = users['user2']
-        lock_eoa = users['agent']
+        issuer = users["issuer"]
+        user1 = users["user1"]
+        user2 = users["user2"]
+        lock_eoa = users["agent"]
 
         # issue token
         deploy_args = init_args()
@@ -1572,14 +1609,18 @@ class TestUnlock:
         unlock_amount = 11
 
         # transfer to account
-        bond_token.transferFrom.transact(issuer, user1, transfer_amount, {'from': issuer})
+        bond_token.transferFrom.transact(
+            issuer, user1, transfer_amount, {"from": issuer}
+        )
 
         # lock
-        bond_token.lock.transact(lock_eoa, lock_amount, "lock_message", {'from': user1})
+        bond_token.lock.transact(lock_eoa, lock_amount, "lock_message", {"from": user1})
 
         # unlock
         with brownie.reverts(revert_msg="120102"):
-            bond_token.unlock.transact(user1, user2, unlock_amount, "unlock_message", {'from': lock_eoa})
+            bond_token.unlock.transact(
+                user1, user2, unlock_amount, "unlock_message", {"from": lock_eoa}
+            )
 
         # assertion
         assert bond_token.balanceOf(user1) == transfer_amount - lock_amount
@@ -1596,10 +1637,10 @@ class TestForceUnlock:
 
     # Normal_1
     def test_normal_1(self, users, IbetStraightBond):
-        issuer = users['issuer']
-        user1 = users['user1']
-        user2 = users['user2']
-        lock_eoa = users['agent']
+        issuer = users["issuer"]
+        user1 = users["user1"]
+        user2 = users["user2"]
+        lock_eoa = users["agent"]
 
         # issue token
         deploy_args = init_args()
@@ -1610,13 +1651,17 @@ class TestForceUnlock:
         unlock_amount = 10
 
         # transfer to account
-        bond_token.transferFrom.transact(issuer, user1, transfer_amount, {'from': issuer})
+        bond_token.transferFrom.transact(
+            issuer, user1, transfer_amount, {"from": issuer}
+        )
 
         # lock
-        bond_token.lock.transact(lock_eoa, lock_amount, "lock_message", {'from': user1})
+        bond_token.lock.transact(lock_eoa, lock_amount, "lock_message", {"from": user1})
 
         # forceUnlock
-        tx = bond_token.forceUnlock.transact(lock_eoa, user1, user2, unlock_amount, "unlock_message", {'from': issuer})
+        tx = bond_token.forceUnlock.transact(
+            lock_eoa, user1, user2, unlock_amount, "unlock_message", {"from": issuer}
+        )
 
         # assertion
         assert bond_token.balanceOf(user1) == transfer_amount - lock_amount
@@ -1636,10 +1681,10 @@ class TestForceUnlock:
     # Error_1
     # Cannot unlock a quantity that exceeds the lock quantity
     def test_error_1(self, users, IbetStraightBond):
-        issuer = users['issuer']
-        user1 = users['user1']
-        user2 = users['user2']
-        lock_eoa = users['agent']
+        issuer = users["issuer"]
+        user1 = users["user1"]
+        user2 = users["user2"]
+        lock_eoa = users["agent"]
 
         # issue token
         deploy_args = init_args()
@@ -1650,14 +1695,23 @@ class TestForceUnlock:
         unlock_amount = 11
 
         # transfer to account
-        bond_token.transferFrom.transact(issuer, user1, transfer_amount, {'from': issuer})
+        bond_token.transferFrom.transact(
+            issuer, user1, transfer_amount, {"from": issuer}
+        )
 
         # lock
-        bond_token.lock.transact(lock_eoa, lock_amount, "lock_message", {'from': user1})
+        bond_token.lock.transact(lock_eoa, lock_amount, "lock_message", {"from": user1})
 
         # unlock
         with brownie.reverts(revert_msg="121201"):
-            bond_token.forceUnlock.transact(lock_eoa, user1, user2, unlock_amount, "unlock_message", {'from': issuer})
+            bond_token.forceUnlock.transact(
+                lock_eoa,
+                user1,
+                user2,
+                unlock_amount,
+                "unlock_message",
+                {"from": issuer},
+            )
 
         # assertion
         assert bond_token.balanceOf(user1) == transfer_amount - lock_amount
@@ -1667,10 +1721,10 @@ class TestForceUnlock:
     # Error_2
     # Tx from not authorized account
     def test_error_2(self, users, IbetStraightBond):
-        issuer = users['issuer']
-        user1 = users['user1']
-        user2 = users['user2']
-        lock_eoa = users['agent']
+        issuer = users["issuer"]
+        user1 = users["user1"]
+        user2 = users["user2"]
+        lock_eoa = users["agent"]
 
         # issue token
         deploy_args = init_args()
@@ -1680,14 +1734,18 @@ class TestForceUnlock:
         lock_amount = 10
 
         # transfer to account
-        bond_token.transferFrom.transact(issuer, user1, transfer_amount, {'from': issuer})
+        bond_token.transferFrom.transact(
+            issuer, user1, transfer_amount, {"from": issuer}
+        )
 
         # lock
-        bond_token.lock.transact(lock_eoa, lock_amount, "lock_message", {'from': user1})
+        bond_token.lock.transact(lock_eoa, lock_amount, "lock_message", {"from": user1})
 
         # unlock
         with brownie.reverts(revert_msg="500001"):
-            bond_token.forceUnlock.transact(lock_eoa, user1, user2, lock_amount, "unlock_message", {'from': user2})
+            bond_token.forceUnlock.transact(
+                lock_eoa, user1, user2, lock_amount, "unlock_message", {"from": user2}
+            )
 
         # assertion
         assert bond_token.balanceOf(user1) == transfer_amount - lock_amount
@@ -1705,7 +1763,7 @@ class TestIssueFrom:
     # Normal_1
     # Issue from issuer address
     def test_normal_1(self, users, IbetStraightBond):
-        issuer = users['issuer']
+        issuer = users["issuer"]
         issue_amount = 10
 
         # issue token
@@ -1715,10 +1773,7 @@ class TestIssueFrom:
 
         # issue from issuer address
         bond_token.issueFrom.transact(
-            issuer,
-            brownie.ZERO_ADDRESS,
-            issue_amount,
-            {'from': issuer}
+            issuer, brownie.ZERO_ADDRESS, issue_amount, {"from": issuer}
         )
 
         # assertion
@@ -1728,7 +1783,7 @@ class TestIssueFrom:
     # Normal_2
     # Issue from EOA
     def test_normal_2(self, users, IbetStraightBond):
-        issuer = users['issuer']
+        issuer = users["issuer"]
         issue_amount = 10
 
         # issue token
@@ -1738,10 +1793,7 @@ class TestIssueFrom:
 
         # issue from EOA
         bond_token.issueFrom.transact(
-            brownie.ETH_ADDRESS,
-            brownie.ZERO_ADDRESS,
-            issue_amount,
-            {'from': issuer}
+            brownie.ETH_ADDRESS, brownie.ZERO_ADDRESS, issue_amount, {"from": issuer}
         )
 
         # assertion
@@ -1752,8 +1804,8 @@ class TestIssueFrom:
     # Normal_3
     # Issue from locked address
     def test_normal_3(self, users, IbetStraightBond):
-        issuer = users['issuer']
-        lock_address = users['user1']
+        issuer = users["issuer"]
+        lock_address = users["user1"]
         lock_amount = 10
         issue_amount = 10
 
@@ -1763,14 +1815,13 @@ class TestIssueFrom:
         bond_token = brownie_utils.force_deploy(issuer, IbetStraightBond, *deploy_args)
 
         # lock
-        bond_token.lock.transact(lock_address, lock_amount, "lock_message", {'from': issuer})
+        bond_token.lock.transact(
+            lock_address, lock_amount, "lock_message", {"from": issuer}
+        )
 
         # issue from lock address
         bond_token.issueFrom.transact(
-            issuer,
-            lock_address,
-            issue_amount,
-            {'from': issuer}
+            issuer, lock_address, issue_amount, {"from": issuer}
         )
 
         # assertion
@@ -1786,7 +1837,7 @@ class TestIssueFrom:
     # Over the limit
     # issuer address
     def test_error_1_1(self, users, IbetStraightBond):
-        issuer = users['issuer']
+        issuer = users["issuer"]
 
         # issue token
         deploy_args = init_args()
@@ -1795,19 +1846,16 @@ class TestIssueFrom:
         # issue from issuer address
         with brownie.reverts(revert_msg=""):
             bond_token.issueFrom.transact(
-                issuer,
-                brownie.ZERO_ADDRESS,
-                1,
-                {'from': issuer}
+                issuer, brownie.ZERO_ADDRESS, 1, {"from": issuer}
             )
 
     # Error_1_2
     # Over the limit
     # locked address
     def test_error_1_2(self, users, IbetStraightBond):
-        issuer = users['issuer']
-        lock_address = users['user1']
-        lock_amount = 2 ** 256 - 1
+        issuer = users["issuer"]
+        lock_address = users["user1"]
+        lock_amount = 2**256 - 1
         issue_amount = 1
 
         # issue token
@@ -1815,15 +1863,14 @@ class TestIssueFrom:
         bond_token = brownie_utils.force_deploy(issuer, IbetStraightBond, *deploy_args)
 
         # lock
-        bond_token.lock.transact(lock_address, lock_amount, "lock_message", {'from': issuer})
+        bond_token.lock.transact(
+            lock_address, lock_amount, "lock_message", {"from": issuer}
+        )
 
         # issue from lock address
         with brownie.reverts(revert_msg=""):
             bond_token.issueFrom.transact(
-                issuer,
-                lock_address,
-                issue_amount,
-                {'from': issuer}
+                issuer, lock_address, issue_amount, {"from": issuer}
             )
 
         # assertion
@@ -1833,7 +1880,7 @@ class TestIssueFrom:
     # Error_2
     # Not authorized
     def test_error_2(self, users, IbetStraightBond):
-        issuer = users['issuer']
+        issuer = users["issuer"]
 
         # issue token
         deploy_args = init_args()
@@ -1842,10 +1889,7 @@ class TestIssueFrom:
         # issue from not authorized user
         with brownie.reverts(revert_msg="500001"):
             bond_token.issueFrom.transact(
-                issuer,
-                brownie.ZERO_ADDRESS,
-                1,
-                {'from': users['user1']}
+                issuer, brownie.ZERO_ADDRESS, 1, {"from": users["user1"]}
             )
 
 
@@ -1858,14 +1902,14 @@ class TestSetFaceValue:
 
     # Normal_1
     def test_normal_1(self, users, IbetStraightBond):
-        issuer = users['issuer']
+        issuer = users["issuer"]
 
         # issue token
         deploy_args = init_args()
         bond_token = brownie_utils.force_deploy(issuer, IbetStraightBond, *deploy_args)
 
         # update
-        bond_token.setFaceValue(10001, {'from': issuer})
+        bond_token.setFaceValue(10001, {"from": issuer})
 
         # assertion
         assert bond_token.faceValue() == 10001
@@ -1877,7 +1921,7 @@ class TestSetFaceValue:
     # Error_1
     # Not authorized
     def test_error_1(self, users, IbetStraightBond):
-        issuer = users['issuer']
+        issuer = users["issuer"]
 
         # issue token
         deploy_args = init_args()
@@ -1885,7 +1929,7 @@ class TestSetFaceValue:
 
         # update
         with brownie.reverts(revert_msg="500001"):
-            bond_token.setFaceValue(10001, {'from': users['user1']})
+            bond_token.setFaceValue(10001, {"from": users["user1"]})
 
         assert bond_token.faceValue() == deploy_args[3]
 
@@ -1900,7 +1944,7 @@ class TestRedeemFrom:
     # Normal_1
     # Redeem from issuer address
     def test_normal_1(self, users, IbetStraightBond):
-        issuer = users['issuer']
+        issuer = users["issuer"]
         redeem_amount = 10
 
         # issue token
@@ -1910,10 +1954,7 @@ class TestRedeemFrom:
 
         # redeem
         bond_token.redeemFrom.transact(
-            issuer,
-            brownie.ZERO_ADDRESS,
-            redeem_amount,
-            {'from': issuer}
+            issuer, brownie.ZERO_ADDRESS, redeem_amount, {"from": issuer}
         )
 
         # assertion
@@ -1925,8 +1966,8 @@ class TestRedeemFrom:
     # Normal_2
     # Redeem from EOA
     def test_normal_2(self, users, IbetStraightBond):
-        issuer = users['issuer']
-        user = users['user1']
+        issuer = users["issuer"]
+        user = users["user1"]
         transfer_amount = 20
         redeem_amount = 10
 
@@ -1937,18 +1978,12 @@ class TestRedeemFrom:
 
         # transfer to user
         bond_token.transferFrom.transact(
-            issuer,
-            user,
-            transfer_amount,
-            {'from': issuer}
+            issuer, user, transfer_amount, {"from": issuer}
         )
 
         # redeem
         bond_token.redeemFrom.transact(
-            user,
-            brownie.ZERO_ADDRESS,
-            redeem_amount,
-            {'from': issuer}
+            user, brownie.ZERO_ADDRESS, redeem_amount, {"from": issuer}
         )
 
         # assertion
@@ -1959,8 +1994,8 @@ class TestRedeemFrom:
     # Normal_3
     # Redeem from locked address
     def test_normal_3(self, users, IbetStraightBond):
-        issuer = users['issuer']
-        lock_address = users['user1']
+        issuer = users["issuer"]
+        lock_address = users["user1"]
         lock_amount = 20
         redeem_amount = 10
 
@@ -1971,18 +2006,12 @@ class TestRedeemFrom:
 
         # lock
         bond_token.lock.transact(
-            lock_address,
-            lock_amount,
-            "lock_message",
-            {'from': issuer}
+            lock_address, lock_amount, "lock_message", {"from": issuer}
         )
 
         # redeem from lock address
         bond_token.redeemFrom.transact(
-            issuer,
-            lock_address,
-            redeem_amount,
-            {'from': issuer}
+            issuer, lock_address, redeem_amount, {"from": issuer}
         )
 
         # assertion
@@ -1997,7 +2026,7 @@ class TestRedeemFrom:
     # Error_1
     # Exceeds balance
     def test_error_1(self, users, IbetStraightBond):
-        issuer = users['issuer']
+        issuer = users["issuer"]
         redeem_amount = 101
 
         # issue token
@@ -2008,10 +2037,7 @@ class TestRedeemFrom:
         # redeem
         with brownie.reverts(revert_msg="121102"):
             bond_token.redeemFrom.transact(
-                issuer,
-                brownie.ZERO_ADDRESS,
-                redeem_amount,
-                {'from': issuer}
+                issuer, brownie.ZERO_ADDRESS, redeem_amount, {"from": issuer}
             )
 
         # assertion
@@ -2021,8 +2047,8 @@ class TestRedeemFrom:
     # Error_2
     # Exceeds locked quantity
     def test_error_2(self, users, IbetStraightBond):
-        issuer = users['issuer']
-        lock_address = users['user1']
+        issuer = users["issuer"]
+        lock_address = users["user1"]
         lock_amount = 20
         redeem_amount = 21
 
@@ -2033,19 +2059,13 @@ class TestRedeemFrom:
 
         # lock
         bond_token.lock.transact(
-            lock_address,
-            lock_amount,
-            "lock_message",
-            {'from': issuer}
+            lock_address, lock_amount, "lock_message", {"from": issuer}
         )
 
         # redeem from lock address
         with brownie.reverts(revert_msg="121101"):
             bond_token.redeemFrom.transact(
-                issuer,
-                lock_address,
-                redeem_amount,
-                {'from': issuer}
+                issuer, lock_address, redeem_amount, {"from": issuer}
             )
 
         # assertion
@@ -2056,7 +2076,7 @@ class TestRedeemFrom:
     # Error_3
     # Not authorized
     def test_error_3(self, users, IbetStraightBond):
-        issuer = users['issuer']
+        issuer = users["issuer"]
         redeem_amount = 100
 
         # issue token
@@ -2067,10 +2087,7 @@ class TestRedeemFrom:
         # redeem
         with brownie.reverts(revert_msg="500001"):
             bond_token.redeemFrom.transact(
-                issuer,
-                brownie.ZERO_ADDRESS,
-                redeem_amount,
-                {'from': users['user1']}
+                issuer, brownie.ZERO_ADDRESS, redeem_amount, {"from": users["user1"]}
             )
 
         # assertion
@@ -2087,14 +2104,14 @@ class TestSetRedemptionValue:
 
     # Normal_1
     def test_normal_1(self, users, IbetStraightBond):
-        issuer = users['issuer']
+        issuer = users["issuer"]
 
         # issue token
         deploy_args = init_args()
         bond_token = brownie_utils.force_deploy(issuer, IbetStraightBond, *deploy_args)
 
         # update
-        bond_token.setRedemptionValue(10000, {'from': issuer})
+        bond_token.setRedemptionValue(10000, {"from": issuer})
 
         # assertion
         assert bond_token.redemptionValue() == 10000
@@ -2106,7 +2123,7 @@ class TestSetRedemptionValue:
     # Error_1
     # Not authorized
     def test_error_1(self, users, IbetStraightBond):
-        issuer = users['issuer']
+        issuer = users["issuer"]
 
         # issue token
         deploy_args = init_args()
@@ -2114,7 +2131,7 @@ class TestSetRedemptionValue:
 
         # update
         with brownie.reverts(revert_msg="500001"):
-            bond_token.setRedemptionValue(10000, {'from': users['user1']})
+            bond_token.setRedemptionValue(10000, {"from": users["user1"]})
 
         # assertion
         assert bond_token.redemptionValue() == deploy_args[6]
@@ -2136,7 +2153,7 @@ class TestSetTransferApprovalRequired:
         bond_token, deploy_args = issue_transferable_bond_token(
             issuer=issuer,
             exchange_address=brownie.ZERO_ADDRESS,
-            personal_info_address=brownie.ZERO_ADDRESS
+            personal_info_address=brownie.ZERO_ADDRESS,
         )
 
         # assertion
@@ -2150,14 +2167,11 @@ class TestSetTransferApprovalRequired:
         bond_token, deploy_args = issue_transferable_bond_token(
             issuer=issuer,
             exchange_address=brownie.ZERO_ADDRESS,
-            personal_info_address=brownie.ZERO_ADDRESS
+            personal_info_address=brownie.ZERO_ADDRESS,
         )
 
         # update
-        tx = bond_token.setTransferApprovalRequired(
-            True,
-            {"from": issuer}
-        )
+        tx = bond_token.setTransferApprovalRequired(True, {"from": issuer})
 
         # assertion
         assert bond_token.transferApprovalRequired() == True
@@ -2176,15 +2190,12 @@ class TestSetTransferApprovalRequired:
         bond_token, deploy_args = issue_transferable_bond_token(
             issuer=issuer,
             exchange_address=brownie.ZERO_ADDRESS,
-            personal_info_address=personal_info.address
+            personal_info_address=personal_info.address,
         )
 
         # set required to True
         with brownie.reverts(revert_msg="500001"):
-            bond_token.setTransferApprovalRequired(
-                True,
-                {"from": users["user1"]}
-            )
+            bond_token.setTransferApprovalRequired(True, {"from": users["user1"]})
 
         # assertion
         assert bond_token.transferApprovalRequired() == False
@@ -2199,7 +2210,7 @@ class TestSetFaceValueCurrency:
 
     # Normal_1
     def test_normal_1(self, users, IbetStraightBond):
-        issuer = users['issuer']
+        issuer = users["issuer"]
 
         # issue token
         deploy_args = init_args()
@@ -2209,7 +2220,7 @@ class TestSetFaceValueCurrency:
         assert bond_token.faceValueCurrency() == "JPY"
 
         # update
-        bond_token.setFaceValueCurrency("USD", {'from': issuer})
+        bond_token.setFaceValueCurrency("USD", {"from": issuer})
 
         # assertion
         assert bond_token.faceValueCurrency() == "USD"
@@ -2221,7 +2232,7 @@ class TestSetFaceValueCurrency:
     # Error_1
     # Not authorized
     def test_error_1(self, users, IbetStraightBond):
-        issuer = users['issuer']
+        issuer = users["issuer"]
 
         # issue token
         deploy_args = init_args()
@@ -2229,7 +2240,7 @@ class TestSetFaceValueCurrency:
 
         # update
         with brownie.reverts(revert_msg="500001"):
-            bond_token.setFaceValueCurrency("USD", {'from': users['user1']})
+            bond_token.setFaceValueCurrency("USD", {"from": users["user1"]})
 
         assert bond_token.faceValueCurrency() == "JPY"
 
@@ -2243,7 +2254,7 @@ class TestSetInterestPaymentCurrency:
 
     # Normal_1
     def test_normal_1(self, users, IbetStraightBond):
-        issuer = users['issuer']
+        issuer = users["issuer"]
 
         # issue token
         deploy_args = init_args()
@@ -2253,7 +2264,7 @@ class TestSetInterestPaymentCurrency:
         assert bond_token.interestPaymentCurrency() == ""
 
         # update
-        bond_token.setInterestPaymentCurrency("JPY", {'from': issuer})
+        bond_token.setInterestPaymentCurrency("JPY", {"from": issuer})
 
         # assertion
         assert bond_token.interestPaymentCurrency() == "JPY"
@@ -2265,7 +2276,7 @@ class TestSetInterestPaymentCurrency:
     # Error_1
     # Not authorized
     def test_error_1(self, users, IbetStraightBond):
-        issuer = users['issuer']
+        issuer = users["issuer"]
 
         # issue token
         deploy_args = init_args()
@@ -2273,7 +2284,7 @@ class TestSetInterestPaymentCurrency:
 
         # update
         with brownie.reverts(revert_msg="500001"):
-            bond_token.setInterestPaymentCurrency("USD", {'from': users['user1']})
+            bond_token.setInterestPaymentCurrency("USD", {"from": users["user1"]})
 
         assert bond_token.interestPaymentCurrency() == ""
 
@@ -2287,7 +2298,7 @@ class TestSetRedemptionValueCurrency:
 
     # Normal_1
     def test_normal_1(self, users, IbetStraightBond):
-        issuer = users['issuer']
+        issuer = users["issuer"]
 
         # issue token
         deploy_args = init_args()
@@ -2297,7 +2308,7 @@ class TestSetRedemptionValueCurrency:
         assert bond_token.redemptionValueCurrency() == "JPY"
 
         # update
-        bond_token.setRedemptionValueCurrency("USD", {'from': issuer})
+        bond_token.setRedemptionValueCurrency("USD", {"from": issuer})
 
         # assertion
         assert bond_token.redemptionValueCurrency() == "USD"
@@ -2309,7 +2320,7 @@ class TestSetRedemptionValueCurrency:
     # Error_1
     # Not authorized
     def test_error_1(self, users, IbetStraightBond):
-        issuer = users['issuer']
+        issuer = users["issuer"]
 
         # issue token
         deploy_args = init_args()
@@ -2317,7 +2328,7 @@ class TestSetRedemptionValueCurrency:
 
         # update
         with brownie.reverts(revert_msg="500001"):
-            bond_token.setRedemptionValueCurrency("USD", {'from': users['user1']})
+            bond_token.setRedemptionValueCurrency("USD", {"from": users["user1"]})
 
         assert bond_token.redemptionValueCurrency() == "JPY"
 
@@ -2331,7 +2342,7 @@ class TestSetBaseFXRate:
 
     # Normal_1
     def test_normal_1(self, users, IbetStraightBond):
-        issuer = users['issuer']
+        issuer = users["issuer"]
 
         # issue token
         deploy_args = init_args()
@@ -2341,7 +2352,7 @@ class TestSetBaseFXRate:
         assert bond_token.baseFXRate() == ""
 
         # update
-        bond_token.setBaseFXRate("123.456", {'from': issuer})
+        bond_token.setBaseFXRate("123.456", {"from": issuer})
 
         # assertion
         assert bond_token.baseFXRate() == "123.456"
@@ -2353,7 +2364,7 @@ class TestSetBaseFXRate:
     # Error_1
     # Not authorized
     def test_error_1(self, users, IbetStraightBond):
-        issuer = users['issuer']
+        issuer = users["issuer"]
 
         # issue token
         deploy_args = init_args()
@@ -2361,7 +2372,7 @@ class TestSetBaseFXRate:
 
         # update
         with brownie.reverts(revert_msg="500001"):
-            bond_token.setBaseFXRate("123.456", {'from': users['user1']})
+            bond_token.setBaseFXRate("123.456", {"from": users["user1"]})
 
         assert bond_token.baseFXRate() == ""
 
@@ -2384,26 +2395,16 @@ class TestApplyForTransfer:
         bond_token, deploy_args = issue_transferable_bond_token(
             issuer=issuer,
             exchange_address=brownie.ZERO_ADDRESS,
-            personal_info_address=personal_info.address
+            personal_info_address=personal_info.address,
         )
-        bond_token.setTransferApprovalRequired(
-            True,
-            {"from": issuer}
-        )
+        bond_token.setTransferApprovalRequired(True, {"from": issuer})
 
         # register personal information (to_address)
-        personal_info.register(
-            issuer,
-            "encrypted_message",
-            {"from": to_address}
-        )
+        personal_info.register(issuer, "encrypted_message", {"from": to_address})
 
         # apply for transfer
         tx = bond_token.applyForTransfer(
-            to_address,
-            transfer_amount,
-            transfer_data,
-            {"from": issuer}
+            to_address, transfer_amount, transfer_data, {"from": issuer}
         )
 
         # assertion
@@ -2414,7 +2415,7 @@ class TestApplyForTransfer:
             issuer,
             to_address,
             transfer_amount,
-            True
+            True,
         )
 
         assert tx.events["ApplyForTransfer"]["index"] == 0
@@ -2435,27 +2436,17 @@ class TestApplyForTransfer:
         bond_token, deploy_args = issue_transferable_bond_token(
             issuer=issuer,
             exchange_address=brownie.ZERO_ADDRESS,
-            personal_info_address=personal_info.address
+            personal_info_address=personal_info.address,
         )
-        bond_token.setTransferApprovalRequired(
-            True,
-            {"from": issuer}
-        )
+        bond_token.setTransferApprovalRequired(True, {"from": issuer})
 
         # register personal information (to_address)
-        personal_info.register(
-            issuer,
-            "encrypted_message",
-            {"from": to_address}
-        )
+        personal_info.register(issuer, "encrypted_message", {"from": to_address})
 
         # apply for transfer
         for i in range(2):
             bond_token.applyForTransfer(
-                to_address,
-                transfer_amount,
-                transfer_data,
-                {"from": issuer}
+                to_address, transfer_amount, transfer_data, {"from": issuer}
             )
 
         # assertion
@@ -2467,7 +2458,7 @@ class TestApplyForTransfer:
                 issuer,
                 to_address,
                 transfer_amount,
-                True
+                True,
             )
 
     # Normal_3
@@ -2483,19 +2474,13 @@ class TestApplyForTransfer:
         bond_token, deploy_args = issue_transferable_bond_token(
             issuer=issuer,
             exchange_address=brownie.ZERO_ADDRESS,
-            personal_info_address=personal_info.address
+            personal_info_address=personal_info.address,
         )
-        bond_token.setTransferApprovalRequired(
-            True,
-            {"from": issuer}
-        )
+        bond_token.setTransferApprovalRequired(True, {"from": issuer})
 
         # apply for transfer
         bond_token.applyForTransfer(
-            to_address,
-            transfer_amount,
-            transfer_data,
-            {"from": issuer}
+            to_address, transfer_amount, transfer_data, {"from": issuer}
         )
 
         # assertion
@@ -2505,8 +2490,49 @@ class TestApplyForTransfer:
             issuer,
             to_address,
             transfer_amount,
-            True
+            True,
         )
+
+    # Normal_4
+    # requirePersonalInfoRegistered = false
+    def test_normal_4(self, users, personal_info):
+        issuer = users["issuer"]
+        to_address = users["user1"]
+        transfer_amount = 100
+        transfer_data = "test_data"
+
+        # issue token
+        bond_token, deploy_args = issue_transferable_bond_token(
+            issuer=issuer,
+            exchange_address=brownie.ZERO_ADDRESS,
+            personal_info_address=personal_info.address,
+        )
+        bond_token.setTransferApprovalRequired(True, {"from": issuer})
+
+        # set requirePersonalInfoRegistered to False
+        bond_token.setRequirePersonalInfoRegistered.transact(False, {"from": issuer})
+
+        # apply for transfer
+        tx = bond_token.applyForTransfer(
+            to_address, transfer_amount, transfer_data, {"from": issuer}
+        )
+
+        # assertion
+        assert bond_token.balances(issuer) == deploy_args[3] - transfer_amount
+        assert bond_token.balances(to_address) == 0
+        assert bond_token.pendingTransfer(issuer) == transfer_amount
+        assert bond_token.applicationsForTransfer(0) == (
+            issuer,
+            to_address,
+            transfer_amount,
+            True,
+        )
+
+        assert tx.events["ApplyForTransfer"]["index"] == 0
+        assert tx.events["ApplyForTransfer"]["from"] == issuer
+        assert tx.events["ApplyForTransfer"]["to"] == to_address
+        assert tx.events["ApplyForTransfer"]["value"] == transfer_amount
+        assert tx.events["ApplyForTransfer"]["data"] == transfer_data
 
     #######################################
     # Error
@@ -2524,16 +2550,13 @@ class TestApplyForTransfer:
         bond_token, deploy_args = issue_transferable_bond_token(
             issuer=issuer,
             exchange_address=brownie.ZERO_ADDRESS,
-            personal_info_address=brownie.ZERO_ADDRESS
+            personal_info_address=brownie.ZERO_ADDRESS,
         )
 
         # apply for transfer
         with brownie.reverts(revert_msg="120701"):
             bond_token.applyForTransfer(
-                to_address,
-                transfer_amount,
-                transfer_data,
-                {"from": issuer}
+                to_address, transfer_amount, transfer_data, {"from": issuer}
             )
 
         # assertion
@@ -2553,24 +2576,15 @@ class TestApplyForTransfer:
         bond_token, deploy_args = issue_transferable_bond_token(
             issuer=issuer,
             exchange_address=brownie.ZERO_ADDRESS,
-            personal_info_address=brownie.ZERO_ADDRESS
+            personal_info_address=brownie.ZERO_ADDRESS,
         )
-        bond_token.setTransferApprovalRequired(
-            True,
-            {"from": issuer}
-        )
-        bond_token.setTransferable(
-            False,
-            {"from": issuer}
-        )
+        bond_token.setTransferApprovalRequired(True, {"from": issuer})
+        bond_token.setTransferable(False, {"from": issuer})
 
         # apply for transfer
         with brownie.reverts(revert_msg="120701"):
             bond_token.applyForTransfer(
-                to_address,
-                transfer_amount,
-                transfer_data,
-                {"from": issuer}
+                to_address, transfer_amount, transfer_data, {"from": issuer}
             )
 
         # assertion
@@ -2589,20 +2603,14 @@ class TestApplyForTransfer:
         bond_token, deploy_args = issue_transferable_bond_token(
             issuer=issuer,
             exchange_address=brownie.ZERO_ADDRESS,
-            personal_info_address=brownie.ZERO_ADDRESS
+            personal_info_address=brownie.ZERO_ADDRESS,
         )
-        bond_token.setTransferApprovalRequired(
-            True,
-            {"from": issuer}
-        )
+        bond_token.setTransferApprovalRequired(True, {"from": issuer})
 
         # apply for transfer
         with brownie.reverts(revert_msg="120701"):
             bond_token.applyForTransfer(
-                to_address,
-                deploy_args[3] + 1,
-                transfer_data,
-                {"from": issuer}
+                to_address, deploy_args[3] + 1, transfer_data, {"from": issuer}
             )
 
         # assertion
@@ -2622,20 +2630,14 @@ class TestApplyForTransfer:
         bond_token, deploy_args = issue_transferable_bond_token(
             issuer=issuer,
             exchange_address=brownie.ZERO_ADDRESS,
-            personal_info_address=personal_info.address
+            personal_info_address=personal_info.address,
         )
-        bond_token.setTransferApprovalRequired(
-            True,
-            {"from": issuer}
-        )
+        bond_token.setTransferApprovalRequired(True, {"from": issuer})
 
         # apply for transfer
         with brownie.reverts(revert_msg="120702"):
             bond_token.applyForTransfer(
-                to_address,
-                transfer_amount,
-                transfer_data,
-                {"from": issuer}
+                to_address, transfer_amount, transfer_data, {"from": issuer}
             )
 
         # assertion
@@ -2663,40 +2665,21 @@ class TestCancelTransfer:
         bond_token, deploy_args = issue_transferable_bond_token(
             issuer=issuer,
             exchange_address=brownie.ZERO_ADDRESS,
-            personal_info_address=personal_info.address
+            personal_info_address=personal_info.address,
         )
-        bond_token.transferFrom(
-            issuer,
-            user1,
-            transfer_amount,
-            {"from": issuer}
-        )
-        bond_token.setTransferApprovalRequired(
-            True,
-            {"from": issuer}
-        )
+        bond_token.transferFrom(issuer, user1, transfer_amount, {"from": issuer})
+        bond_token.setTransferApprovalRequired(True, {"from": issuer})
 
         # register personal information (to_address)
-        personal_info.register(
-            issuer,
-            "encrypted_message",
-            {"from": user2}
-        )
+        personal_info.register(issuer, "encrypted_message", {"from": user2})
 
         # apply for transfer
         bond_token.applyForTransfer(
-            user2,
-            transfer_amount,
-            "test_data",
-            {"from": user1}  # from user1 to user2
+            user2, transfer_amount, "test_data", {"from": user1}  # from user1 to user2
         )
 
         # cancel transfer (from applicant)
-        tx = bond_token.cancelTransfer(
-            0,
-            "test_data",
-            {"from": user1}
-        )
+        tx = bond_token.cancelTransfer(0, "test_data", {"from": user1})
 
         # assertion
         assert bond_token.balances(issuer) == deploy_args[3] - transfer_amount
@@ -2706,7 +2689,7 @@ class TestCancelTransfer:
             user1,
             user2,
             transfer_amount,
-            False
+            False,
         )
 
         assert tx.events["CancelTransfer"]["index"] == 0
@@ -2726,40 +2709,21 @@ class TestCancelTransfer:
         bond_token, deploy_args = issue_transferable_bond_token(
             issuer=issuer,
             exchange_address=brownie.ZERO_ADDRESS,
-            personal_info_address=personal_info.address
+            personal_info_address=personal_info.address,
         )
-        bond_token.transferFrom(
-            issuer,
-            user1,
-            transfer_amount,
-            {"from": issuer}
-        )
-        bond_token.setTransferApprovalRequired(
-            True,
-            {"from": issuer}
-        )
+        bond_token.transferFrom(issuer, user1, transfer_amount, {"from": issuer})
+        bond_token.setTransferApprovalRequired(True, {"from": issuer})
 
         # register personal information (to_address)
-        personal_info.register(
-            issuer,
-            "encrypted_message",
-            {"from": user2}
-        )
+        personal_info.register(issuer, "encrypted_message", {"from": user2})
 
         # apply for transfer
         bond_token.applyForTransfer(
-            user2,
-            transfer_amount,
-            "test_data",
-            {"from": user1}  # from user1 to user2
+            user2, transfer_amount, "test_data", {"from": user1}  # from user1 to user2
         )
 
         # cancel transfer (from issuer)
-        tx = bond_token.cancelTransfer(
-            0,
-            "test_data",
-            {"from": issuer}
-        )
+        tx = bond_token.cancelTransfer(0, "test_data", {"from": issuer})
 
         # assertion
         assert bond_token.balances(issuer) == deploy_args[3] - transfer_amount
@@ -2769,7 +2733,7 @@ class TestCancelTransfer:
             user1,
             user2,
             transfer_amount,
-            False
+            False,
         )
 
         assert tx.events["CancelTransfer"]["index"] == 0
@@ -2793,41 +2757,22 @@ class TestCancelTransfer:
         bond_token, deploy_args = issue_transferable_bond_token(
             issuer=issuer,
             exchange_address=brownie.ZERO_ADDRESS,
-            personal_info_address=personal_info.address
+            personal_info_address=personal_info.address,
         )
-        bond_token.transferFrom(
-            issuer,
-            user1,
-            transfer_amount,
-            {"from": issuer}
-        )
-        bond_token.setTransferApprovalRequired(
-            True,
-            {"from": issuer}
-        )
+        bond_token.transferFrom(issuer, user1, transfer_amount, {"from": issuer})
+        bond_token.setTransferApprovalRequired(True, {"from": issuer})
 
         # register personal information (to_address)
-        personal_info.register(
-            issuer,
-            "encrypted_message",
-            {"from": user2}
-        )
+        personal_info.register(issuer, "encrypted_message", {"from": user2})
 
         # apply for transfer
         bond_token.applyForTransfer(
-            user2,
-            transfer_amount,
-            "test_data",
-            {"from": user1}  # from user1 to user2
+            user2, transfer_amount, "test_data", {"from": user1}  # from user1 to user2
         )
 
         # cancel transfer (from issuer)
         with brownie.reverts(revert_msg="120801"):
-            bond_token.cancelTransfer(
-                0,
-                "test_data",
-                {"from": user2}
-            )
+            bond_token.cancelTransfer(0, "test_data", {"from": user2})
 
         # assertion
         assert bond_token.balances(issuer) == deploy_args[3] - transfer_amount
@@ -2837,7 +2782,7 @@ class TestCancelTransfer:
             user1,
             user2,
             transfer_amount,
-            True
+            True,
         )
 
     # Error_2
@@ -2852,48 +2797,25 @@ class TestCancelTransfer:
         bond_token, deploy_args = issue_transferable_bond_token(
             issuer=issuer,
             exchange_address=brownie.ZERO_ADDRESS,
-            personal_info_address=personal_info.address
+            personal_info_address=personal_info.address,
         )
-        bond_token.transferFrom(
-            issuer,
-            user1,
-            transfer_amount,
-            {"from": issuer}
-        )
-        bond_token.setTransferApprovalRequired(
-            True,
-            {"from": issuer}
-        )
+        bond_token.transferFrom(issuer, user1, transfer_amount, {"from": issuer})
+        bond_token.setTransferApprovalRequired(True, {"from": issuer})
 
         # register personal information (to_address)
-        personal_info.register(
-            issuer,
-            "encrypted_message",
-            {"from": user2}
-        )
+        personal_info.register(issuer, "encrypted_message", {"from": user2})
 
         # apply for transfer
         bond_token.applyForTransfer(
-            user2,
-            transfer_amount,
-            "test_data",
-            {"from": user1}  # from user1 to user2
+            user2, transfer_amount, "test_data", {"from": user1}  # from user1 to user2
         )
 
         # cancel transfer (1)
-        bond_token.cancelTransfer(
-            0,
-            "test_data",
-            {"from": user1}
-        )
+        bond_token.cancelTransfer(0, "test_data", {"from": user1})
 
         # cancel transfer (2)
         with brownie.reverts(revert_msg="120802"):
-            bond_token.cancelTransfer(
-                0,
-                "test_data",
-                {"from": user1}
-            )
+            bond_token.cancelTransfer(0, "test_data", {"from": user1})
 
         # assertion
         assert bond_token.balances(issuer) == deploy_args[3] - transfer_amount
@@ -2903,7 +2825,7 @@ class TestCancelTransfer:
             user1,
             user2,
             transfer_amount,
-            False
+            False,
         )
 
 
@@ -2924,34 +2846,23 @@ class TestApproveTransfer:
         bond_token, deploy_args = issue_transferable_bond_token(
             issuer=issuer,
             exchange_address=brownie.ZERO_ADDRESS,
-            personal_info_address=personal_info.address
+            personal_info_address=personal_info.address,
         )
-        bond_token.setTransferApprovalRequired(
-            True,
-            {"from": issuer}
-        )
+        bond_token.setTransferApprovalRequired(True, {"from": issuer})
 
         # register personal information (to_address)
-        personal_info.register(
-            issuer,
-            "encrypted_message",
-            {"from": user1}
-        )
+        personal_info.register(issuer, "encrypted_message", {"from": user1})
 
         # apply for transfer
         bond_token.applyForTransfer(
             user1,
             transfer_amount,
             "test_data",
-            {"from": issuer}  # from issuer to user1
+            {"from": issuer},  # from issuer to user1
         )
 
         # approve transfer
-        tx = bond_token.approveTransfer(
-            0,
-            "test_data",
-            {"from": issuer}
-        )
+        tx = bond_token.approveTransfer(0, "test_data", {"from": issuer})
 
         # assertion
         assert bond_token.balances(issuer) == deploy_args[3] - transfer_amount
@@ -2961,7 +2872,7 @@ class TestApproveTransfer:
             issuer,
             user1,
             transfer_amount,
-            False
+            False,
         )
 
         assert tx.events["ApproveTransfer"]["index"] == 0
@@ -2988,35 +2899,24 @@ class TestApproveTransfer:
         bond_token, deploy_args = issue_transferable_bond_token(
             issuer=issuer,
             exchange_address=brownie.ZERO_ADDRESS,
-            personal_info_address=personal_info.address
+            personal_info_address=personal_info.address,
         )
-        bond_token.setTransferApprovalRequired(
-            True,
-            {"from": issuer}
-        )
+        bond_token.setTransferApprovalRequired(True, {"from": issuer})
 
         # register personal information (to_address)
-        personal_info.register(
-            issuer,
-            "encrypted_message",
-            {"from": user1}
-        )
+        personal_info.register(issuer, "encrypted_message", {"from": user1})
 
         # apply for transfer
         bond_token.applyForTransfer(
             user1,
             transfer_amount,
             "test_data",
-            {"from": issuer}  # from issuer to user1
+            {"from": issuer},  # from issuer to user1
         )
 
         # approve transfer
         with brownie.reverts(revert_msg="500001"):
-            bond_token.approveTransfer(
-                0,
-                "test_data",
-                {"from": user1}
-            )
+            bond_token.approveTransfer(0, "test_data", {"from": user1})
 
         # assertion
         assert bond_token.balances(issuer) == deploy_args[3] - transfer_amount
@@ -3026,7 +2926,7 @@ class TestApproveTransfer:
             issuer,
             user1,
             transfer_amount,
-            True
+            True,
         )
 
     # Error_2
@@ -3040,39 +2940,25 @@ class TestApproveTransfer:
         bond_token, deploy_args = issue_transferable_bond_token(
             issuer=issuer,
             exchange_address=brownie.ZERO_ADDRESS,
-            personal_info_address=personal_info.address
+            personal_info_address=personal_info.address,
         )
-        bond_token.setTransferApprovalRequired(
-            True,
-            {"from": issuer}
-        )
+        bond_token.setTransferApprovalRequired(True, {"from": issuer})
 
         # register personal information (to_address)
-        personal_info.register(
-            issuer,
-            "encrypted_message",
-            {"from": user1}
-        )
+        personal_info.register(issuer, "encrypted_message", {"from": user1})
 
         # apply for transfer
         bond_token.applyForTransfer(
             user1,
             transfer_amount,
             "test_data",
-            {"from": issuer}  # from issuer to user1
+            {"from": issuer},  # from issuer to user1
         )
 
         # approve transfer
-        bond_token.setTransferable(
-            False,
-            {"from": issuer}
-        )
+        bond_token.setTransferable(False, {"from": issuer})
         with brownie.reverts(revert_msg="120901"):
-            bond_token.approveTransfer(
-                0,
-                "test_data",
-                {"from": issuer}
-            )
+            bond_token.approveTransfer(0, "test_data", {"from": issuer})
 
         # assertion
         assert bond_token.balances(issuer) == deploy_args[3] - transfer_amount
@@ -3082,7 +2968,7 @@ class TestApproveTransfer:
             issuer,
             user1,
             transfer_amount,
-            True
+            True,
         )
 
     # Error_3
@@ -3096,42 +2982,27 @@ class TestApproveTransfer:
         bond_token, deploy_args = issue_transferable_bond_token(
             issuer=issuer,
             exchange_address=brownie.ZERO_ADDRESS,
-            personal_info_address=personal_info.address
+            personal_info_address=personal_info.address,
         )
-        bond_token.setTransferApprovalRequired(
-            True,
-            {"from": issuer}
-        )
+        bond_token.setTransferApprovalRequired(True, {"from": issuer})
 
         # register personal information (to_address)
-        personal_info.register(
-            issuer,
-            "encrypted_message",
-            {"from": user1}
-        )
+        personal_info.register(issuer, "encrypted_message", {"from": user1})
 
         # apply for transfer
         bond_token.applyForTransfer(
             user1,
             transfer_amount,
             "test_data",
-            {"from": issuer}  # from issuer to user1
+            {"from": issuer},  # from issuer to user1
         )
 
         # approve transfer (1)
-        bond_token.approveTransfer(
-            0,
-            "test_data",
-            {"from": issuer}
-        )
+        bond_token.approveTransfer(0, "test_data", {"from": issuer})
 
         # approve transfer (2)
         with brownie.reverts(revert_msg="120902"):
-            bond_token.approveTransfer(
-                0,
-                "test_data",
-                {"from": issuer}
-            )
+            bond_token.approveTransfer(0, "test_data", {"from": issuer})
 
         # assertion
         assert bond_token.balances(issuer) == deploy_args[3] - transfer_amount
@@ -3141,5 +3012,5 @@ class TestApproveTransfer:
             issuer,
             user1,
             transfer_amount,
-            False
+            False,
         )

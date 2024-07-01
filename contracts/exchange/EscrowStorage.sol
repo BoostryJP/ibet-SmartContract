@@ -1,32 +1,30 @@
 /**
-* Copyright BOOSTRY Co., Ltd.
-*
-* Licensed under the Apache License, Version 2.0 (the "License");
-* you may not use this file except in compliance with the License.
-*
-* You may obtain a copy of the License at
-* http://www.apache.org/licenses/LICENSE-2.0
-*
-* Unless required by applicable law or agreed to in writing,
-* software distributed under the License is distributed on an "AS IS" BASIS,
-* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-*
-* See the License for the specific language governing permissions and
-* limitations under the License.
-*
-* SPDX-License-Identifier: Apache-2.0
-*/
+ * Copyright BOOSTRY Co., Ltd.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ *
+ * You may obtain a copy of the License at
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *
+ * SPDX-License-Identifier: Apache-2.0
+ */
 
 pragma solidity ^0.8.0;
 
 import "../access/Ownable.sol";
 import "../utils/Errors.sol";
 
-
 /// @title Escrowコントラクトのステートを永続化するためのEternalStorage
 /// @dev Storageのアクセスは認可したEscrowコントラクトに限定する
 contract EscrowStorage is Ownable {
-
     constructor() {}
 
     // -------------------------------------------------------------------
@@ -39,16 +37,16 @@ contract EscrowStorage is Ownable {
     /// @notice Escrowコントラクトのバージョン更新
     /// @dev コントラクトオーナーのみ実行が可能
     /// @param _newVersion 新しいEscrowコントラクトのアドレス
-    function upgradeVersion(address _newVersion)
-        public
-        onlyOwner()
-    {
+    function upgradeVersion(address _newVersion) public onlyOwner {
         latestVersion = _newVersion;
     }
 
     /// @dev 実行者が最新バージョンのEscrowアドレスであることをチェック
     modifier onlyLatestVersion() {
-       require(msg.sender == latestVersion, ErrorCode.ERR_EscrowStorage_onlyLatestVersion_220001);
+        require(
+            msg.sender == latestVersion,
+            ErrorCode.ERR_EscrowStorage_onlyLatestVersion_220001
+        );
         _;
     }
 
@@ -66,11 +64,11 @@ contract EscrowStorage is Ownable {
     /// @param _token トークンアドレス
     /// @param _value 更新後の残高数量
     /// @return 処理結果
-    function setBalance(address _account, address _token, uint256 _value)
-        public
-        onlyLatestVersion()
-        returns (bool)
-    {
+    function setBalance(
+        address _account,
+        address _token,
+        uint256 _value
+    ) public onlyLatestVersion returns (bool) {
         balances[_account][_token] = _value;
         return true;
     }
@@ -79,11 +77,10 @@ contract EscrowStorage is Ownable {
     /// @param _account アドレス
     /// @param _token トークンアドレス
     /// @return 残高数量
-    function getBalance(address _account, address _token)
-        public
-        view
-        returns (uint256)
-    {
+    function getBalance(
+        address _account,
+        address _token
+    ) public view returns (uint256) {
         return balances[_account][_token];
     }
 
@@ -101,11 +98,11 @@ contract EscrowStorage is Ownable {
     /// @param _token トークンアドレス
     /// @param _value 更新後の数量
     /// @return 処理結果
-    function setCommitment(address _account, address _token, uint256 _value)
-        public
-        onlyLatestVersion()
-        returns (bool)
-    {
+    function setCommitment(
+        address _account,
+        address _token,
+        uint256 _value
+    ) public onlyLatestVersion returns (bool) {
         commitments[_account][_token] = _value;
         return true;
     }
@@ -114,11 +111,10 @@ contract EscrowStorage is Ownable {
     /// @param _account アドレス
     /// @param _token トークンアドレス
     /// @return 拘束数量
-    function getCommitment(address _account, address _token)
-        public
-        view
-        returns (uint256)
-    {
+    function getCommitment(
+        address _account,
+        address _token
+    ) public view returns (uint256) {
         return commitments[_account][_token];
     }
 
@@ -127,12 +123,12 @@ contract EscrowStorage is Ownable {
     // -------------------------------------------------------------------
 
     struct Escrow {
-        address token;  // トークンアドレス
-        address sender;  // 送信者
-        address recipient;  // 受信者
-        uint256 amount;  // 数量
-        address agent;  // エスクローエージェント
-        bool valid;  // 有効状態
+        address token; // トークンアドレス
+        address sender; // 送信者
+        address recipient; // 受信者
+        uint256 amount; // 数量
+        address agent; // エスクローエージェント
+        bool valid; // 有効状態
     }
 
     /// エスクロー情報
@@ -145,20 +141,15 @@ contract EscrowStorage is Ownable {
     /// @notice 直近エスクローIDの更新
     /// @dev 最新バージョンのExchangeコントラクトのみ実行が可能
     /// @param _latestEscrowId 直近エスクローID
-    function setLatestEscrowId(uint256 _latestEscrowId)
-        public
-        onlyLatestVersion()
-    {
+    function setLatestEscrowId(
+        uint256 _latestEscrowId
+    ) public onlyLatestVersion {
         latestEscrowId = _latestEscrowId;
     }
 
     /// @notice 直近エスクローIDの参照
     /// @return 直近エスクローID
-    function getLatestEscrowId()
-        public
-        view
-        returns(uint256)
-    {
+    function getLatestEscrowId() public view returns (uint256) {
         return latestEscrowId;
     }
 
@@ -178,10 +169,7 @@ contract EscrowStorage is Ownable {
         uint256 _amount,
         address _agent,
         bool _valid
-    )
-        public
-        onlyLatestVersion()
-    {
+    ) public onlyLatestVersion {
         escrow[_escrowId].token = _token;
         escrow[_escrowId].sender = _sender;
         escrow[_escrowId].recipient = _recipient;
@@ -203,7 +191,7 @@ contract EscrowStorage is Ownable {
     )
         public
         view
-        returns(
+        returns (
             address token,
             address sender,
             address recipient,
@@ -253,10 +241,7 @@ contract EscrowStorage is Ownable {
         bool _valid,
         bool _escrowFinished,
         bool _approved
-    )
-        public
-        onlyLatestVersion()
-    {
+    ) public onlyLatestVersion {
         applicationsForTransfer[_escrowId].token = _token;
         applicationsForTransfer[_escrowId].applicationData = _applicationData;
         applicationsForTransfer[_escrowId].approvalData = _approvalData;
@@ -278,7 +263,7 @@ contract EscrowStorage is Ownable {
     )
         public
         view
-        returns(
+        returns (
             address token,
             string memory applicationData,
             string memory approvalData,
@@ -296,5 +281,4 @@ contract EscrowStorage is Ownable {
             applicationsForTransfer[_escrowId].approved
         );
     }
-
 }

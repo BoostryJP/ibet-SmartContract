@@ -1,21 +1,21 @@
 /**
-* Copyright BOOSTRY Co., Ltd.
-*
-* Licensed under the Apache License, Version 2.0 (the "License");
-* you may not use this file except in compliance with the License.
-*
-* You may obtain a copy of the License at
-* http://www.apache.org/licenses/LICENSE-2.0
-*
-* Unless required by applicable law or agreed to in writing,
-* software distributed under the License is distributed on an "AS IS" BASIS,
-* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-*
-* See the License for the specific language governing permissions and
-* limitations under the License.
-*
-* SPDX-License-Identifier: Apache-2.0
-*/
+ * Copyright BOOSTRY Co., Ltd.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ *
+ * You may obtain a copy of the License at
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *
+ * SPDX-License-Identifier: Apache-2.0
+ */
 
 pragma solidity ^0.8.0;
 pragma experimental ABIEncoderV2;
@@ -23,11 +23,9 @@ pragma experimental ABIEncoderV2;
 import "./Ownable.sol";
 import "./OTCExchangeStorageModel.sol";
 
-
 /// @title Exchangeコントラクトの取引情報を永続化するためのEternalStorage
 /// @dev Storageのアクセスは認可したExchangeコントラクト限定
 contract OTCExchangeStorage is Ownable, OTCExchangeStorageModel {
-
     constructor() {}
 
     // -------------------------------------------------------------------
@@ -40,10 +38,7 @@ contract OTCExchangeStorage is Ownable, OTCExchangeStorageModel {
     /// @notice Exchangeコントラクトのバージョン更新
     /// @dev コントラクトオーナーのみ実行が可能
     /// @param _newVersion 新しいExchangeコントラクトのアドレス
-    function upgradeVersion(address _newVersion)
-        public
-        onlyOwner()
-    {
+    function upgradeVersion(address _newVersion) public onlyOwner {
         latestVersion = _newVersion;
     }
 
@@ -67,11 +62,11 @@ contract OTCExchangeStorage is Ownable, OTCExchangeStorageModel {
     /// @param _token トークンアドレス
     /// @param _value 更新後の残高数量
     /// @return 処理結果
-    function setBalance(address _account, address _token, uint256 _value)
-        public
-        onlyLatestVersion()
-        returns (bool)
-    {
+    function setBalance(
+        address _account,
+        address _token,
+        uint256 _value
+    ) public onlyLatestVersion returns (bool) {
         balances[_account][_token] = _value;
         return true;
     }
@@ -80,11 +75,10 @@ contract OTCExchangeStorage is Ownable, OTCExchangeStorageModel {
     /// @param _account アドレス
     /// @param _token トークンアドレス
     /// @return 残高数量
-    function getBalance(address _account, address _token)
-        public
-        view
-        returns (uint256)
-    {
+    function getBalance(
+        address _account,
+        address _token
+    ) public view returns (uint256) {
         return balances[_account][_token];
     }
 
@@ -101,10 +95,11 @@ contract OTCExchangeStorage is Ownable, OTCExchangeStorageModel {
     /// @param _account アドレス
     /// @param _token トークンアドレス
     /// @param _value 更新後の残高数量
-    function setCommitment(address _account, address _token, uint256 _value)
-        public
-        onlyLatestVersion()
-    {
+    function setCommitment(
+        address _account,
+        address _token,
+        uint256 _value
+    ) public onlyLatestVersion {
         commitments[_account][_token] = _value;
     }
 
@@ -112,11 +107,10 @@ contract OTCExchangeStorage is Ownable, OTCExchangeStorageModel {
     /// @param _account アドレス
     /// @param _token トークンアドレス
     /// @return 拘束数量
-    function getCommitment(address _account, address _token)
-        public
-        view
-        returns (uint256)
-    {
+    function getCommitment(
+        address _account,
+        address _token
+    ) public view returns (uint256) {
         return commitments[_account][_token];
     }
 
@@ -132,10 +126,10 @@ contract OTCExchangeStorage is Ownable, OTCExchangeStorageModel {
     /// @dev 最新バージョンのExchangeコントラクトのみ実行が可能
     /// @param _orderId 注文ID
     /// @param _order 注文情報
-    function setOrder(uint256 _orderId, OTCExchangeStorageModel.OTCOrder memory _order)
-        public
-        onlyLatestVersion()
-    {
+    function setOrder(
+        uint256 _orderId,
+        OTCExchangeStorageModel.OTCOrder memory _order
+    ) public onlyLatestVersion {
         orderBook[_orderId] = _order;
     }
 
@@ -143,10 +137,10 @@ contract OTCExchangeStorage is Ownable, OTCExchangeStorageModel {
     /// @dev 最新バージョンのExchangeコントラクトのみ実行が可能
     /// @param _orderId 注文ID
     /// @param _owner 取引実行者（売り手）EOAアドレス
-    function setOrderOwner(uint256 _orderId, address _owner)
-        public
-        onlyLatestVersion()
-    {
+    function setOrderOwner(
+        uint256 _orderId,
+        address _owner
+    ) public onlyLatestVersion {
         orderBook[_orderId].owner = _owner;
     }
 
@@ -154,10 +148,10 @@ contract OTCExchangeStorage is Ownable, OTCExchangeStorageModel {
     /// @dev 最新バージョンのExchangeコントラクトのみ実行が可能
     /// @param _orderId 注文ID
     /// @param _counterpart 買い手EOAアドレス
-    function setOrderCounterpart(uint256 _orderId, address _counterpart)
-        public
-        onlyLatestVersion()
-    {
+    function setOrderCounterpart(
+        uint256 _orderId,
+        address _counterpart
+    ) public onlyLatestVersion {
         orderBook[_orderId].counterpart = _counterpart;
     }
 
@@ -165,10 +159,10 @@ contract OTCExchangeStorage is Ownable, OTCExchangeStorageModel {
     /// @dev 最新バージョンのExchangeコントラクトのみ実行が可能
     /// @param _orderId 注文ID
     /// @param _token トークンアドレス
-    function setOrderToken(uint256 _orderId, address _token)
-        public
-        onlyLatestVersion()
-    {
+    function setOrderToken(
+        uint256 _orderId,
+        address _token
+    ) public onlyLatestVersion {
         orderBook[_orderId].token = _token;
     }
 
@@ -176,10 +170,10 @@ contract OTCExchangeStorage is Ownable, OTCExchangeStorageModel {
     /// @dev 最新バージョンのExchangeコントラクトのみ実行が可能
     /// @param _orderId 注文ID
     /// @param _amount 注文数量
-    function setOrderAmount(uint256 _orderId, uint256 _amount)
-        public
-        onlyLatestVersion()
-    {
+    function setOrderAmount(
+        uint256 _orderId,
+        uint256 _amount
+    ) public onlyLatestVersion {
         orderBook[_orderId].amount = _amount;
     }
 
@@ -187,10 +181,10 @@ contract OTCExchangeStorage is Ownable, OTCExchangeStorageModel {
     /// @dev 最新バージョンのExchangeコントラクトのみ実行が可能
     /// @param _orderId 注文ID
     /// @param _price 注文単価
-    function setOrderPrice(uint256 _orderId, uint256 _price)
-        public
-        onlyLatestVersion()
-    {
+    function setOrderPrice(
+        uint256 _orderId,
+        uint256 _price
+    ) public onlyLatestVersion {
         orderBook[_orderId].price = _price;
     }
 
@@ -198,10 +192,10 @@ contract OTCExchangeStorage is Ownable, OTCExchangeStorageModel {
     /// @dev 最新バージョンのExchangeコントラクトのみ実行が可能
     /// @param _orderId 注文ID
     /// @param _agent 決済業者のEOAアドレス
-    function setOrderAgent(uint256 _orderId, address _agent)
-        public
-        onlyLatestVersion()
-    {
+    function setOrderAgent(
+        uint256 _orderId,
+        address _agent
+    ) public onlyLatestVersion {
         orderBook[_orderId].agent = _agent;
     }
 
@@ -209,98 +203,70 @@ contract OTCExchangeStorage is Ownable, OTCExchangeStorageModel {
     /// @dev 最新バージョンのExchangeコントラクトのみ実行が可能
     /// @param _orderId 注文ID
     /// @param _canceled キャンセル済み状態
-    function setOrderCanceled(uint256 _orderId, bool _canceled)
-        public
-        onlyLatestVersion()
-    {
+    function setOrderCanceled(
+        uint256 _orderId,
+        bool _canceled
+    ) public onlyLatestVersion {
         orderBook[_orderId].canceled = _canceled;
     }
 
     /// @notice 注文情報の参照
     /// @param _orderId 注文ID
     /// @return 注文情報
-    function getOrder(uint256 _orderId)
-        public
-        view
-        returns (OTCExchangeStorageModel.OTCOrder memory)
-    {
+    function getOrder(
+        uint256 _orderId
+    ) public view returns (OTCExchangeStorageModel.OTCOrder memory) {
         return orderBook[_orderId];
     }
 
     /// @notice 注文情報の参照（取引実行者EOAアドレス）
     /// @param _orderId 注文ID
     /// @return 取引実行者EOAアドレス
-    function getOrderOwner(uint256 _orderId)
-        public
-        view
-        returns(address)
-    {
+    function getOrderOwner(uint256 _orderId) public view returns (address) {
         return orderBook[_orderId].owner;
     }
 
     /// @notice 注文情報の参照（買い手EOAアドレス）
     /// @param _orderId 注文ID
     /// @return 買い手EOAアドレス
-    function getOrderCounterpart(uint256 _orderId)
-        public
-        view
-        returns(address)
-    {
+    function getOrderCounterpart(
+        uint256 _orderId
+    ) public view returns (address) {
         return orderBook[_orderId].counterpart;
     }
 
     /// @notice 注文情報の参照（トークンアドレス）
     /// @param _orderId 注文ID
     /// @return トークンアドレス
-    function getOrderToken(uint256 _orderId)
-        public
-        view
-        returns(address)
-    {
+    function getOrderToken(uint256 _orderId) public view returns (address) {
         return orderBook[_orderId].token;
     }
 
     /// @notice 注文情報の参照（注文数量）
     /// @param _orderId 注文ID
     /// @return 注文数量
-    function getOrderAmount(uint256 _orderId)
-        public
-        view
-        returns(uint256)
-    {
+    function getOrderAmount(uint256 _orderId) public view returns (uint256) {
         return orderBook[_orderId].amount;
     }
 
     /// @notice 注文情報の参照（注文単価）
     /// @param _orderId 注文ID
     /// @return 注文単価
-    function getOrderPrice(uint256 _orderId)
-        public
-        view
-        returns(uint256)
-    {
+    function getOrderPrice(uint256 _orderId) public view returns (uint256) {
         return orderBook[_orderId].price;
     }
 
     /// @notice 注文情報の参照（決済業者のEOAアドレス）
     /// @param _orderId 注文ID
     /// @return 決済業者のEOAアドレス
-    function getOrderAgent(uint256 _orderId)
-        public
-        view
-        returns(address)
-    {
+    function getOrderAgent(uint256 _orderId) public view returns (address) {
         return orderBook[_orderId].agent;
     }
 
     /// @notice 注文情報の参照（キャンセル済み状態）
     /// @param _orderId 注文ID
     /// @return キャンセル済み状態
-    function getOrderCanceled(uint256 _orderId)
-        public
-        view
-        returns(bool)
-    {
+    function getOrderCanceled(uint256 _orderId) public view returns (bool) {
         return orderBook[_orderId].canceled;
     }
 
@@ -314,20 +280,13 @@ contract OTCExchangeStorage is Ownable, OTCExchangeStorageModel {
     /// @notice 直近注文IDの更新
     /// @dev 最新バージョンのExchangeコントラクトのみ実行が可能
     /// @param _latestOrderId 直近注文ID
-    function setLatestOrderId(uint256 _latestOrderId)
-        public
-        onlyLatestVersion()
-    {
+    function setLatestOrderId(uint256 _latestOrderId) public onlyLatestVersion {
         latestOrderId = _latestOrderId;
     }
 
     /// @notice 直近注文IDの参照
     /// @return 直近注文ID
-    function getLatestOrderId()
-        public
-        view
-        returns (uint256)
-    {
+    function getLatestOrderId() public view returns (uint256) {
         return latestOrderId;
     }
 
@@ -337,7 +296,8 @@ contract OTCExchangeStorage is Ownable, OTCExchangeStorageModel {
 
     // 約定情報
     // orderId => agreementId => Agreement
-    mapping(uint256 => mapping(uint256 => OTCExchangeStorageModel.OTCAgreement)) public agreements;
+    mapping(uint256 => mapping(uint256 => OTCExchangeStorageModel.OTCAgreement))
+        public agreements;
 
     /// @notice 約定情報の更新
     /// @dev 最新バージョンのExchangeコントラクトのみ実行が可能
@@ -345,12 +305,10 @@ contract OTCExchangeStorage is Ownable, OTCExchangeStorageModel {
     /// @param _agreementId 約定ID
     /// @param _agreement 約定情報
     function setAgreement(
-        uint256 _orderId, uint256 _agreementId,
+        uint256 _orderId,
+        uint256 _agreementId,
         OTCExchangeStorageModel.OTCAgreement memory _agreement
-    )
-        public
-        onlyLatestVersion()
-    {
+    ) public onlyLatestVersion {
         agreements[_orderId][_agreementId] = _agreement;
     }
 
@@ -363,10 +321,7 @@ contract OTCExchangeStorage is Ownable, OTCExchangeStorageModel {
         uint256 _orderId,
         uint256 _agreementId,
         address _counterpart
-    )
-        public
-        onlyLatestVersion()
-    {
+    ) public onlyLatestVersion {
         agreements[_orderId][_agreementId].counterpart = _counterpart;
     }
 
@@ -379,10 +334,7 @@ contract OTCExchangeStorage is Ownable, OTCExchangeStorageModel {
         uint256 _orderId,
         uint256 _agreementId,
         uint256 _amount
-    )
-        public
-        onlyLatestVersion()
-    {
+    ) public onlyLatestVersion {
         agreements[_orderId][_agreementId].amount = _amount;
     }
 
@@ -395,10 +347,7 @@ contract OTCExchangeStorage is Ownable, OTCExchangeStorageModel {
         uint256 _orderId,
         uint256 _agreementId,
         uint256 _price
-    )
-        public
-        onlyLatestVersion()
-    {
+    ) public onlyLatestVersion {
         agreements[_orderId][_agreementId].price = _price;
     }
 
@@ -411,10 +360,7 @@ contract OTCExchangeStorage is Ownable, OTCExchangeStorageModel {
         uint256 _orderId,
         uint256 _agreementId,
         bool _canceled
-    )
-        public
-        onlyLatestVersion()
-    {
+    ) public onlyLatestVersion {
         agreements[_orderId][_agreementId].canceled = _canceled;
     }
 
@@ -427,10 +373,7 @@ contract OTCExchangeStorage is Ownable, OTCExchangeStorageModel {
         uint256 _orderId,
         uint256 _agreementId,
         bool _paid
-    )
-        public
-        onlyLatestVersion()
-    {
+    ) public onlyLatestVersion {
         agreements[_orderId][_agreementId].paid = _paid;
     }
 
@@ -443,10 +386,7 @@ contract OTCExchangeStorage is Ownable, OTCExchangeStorageModel {
         uint256 _orderId,
         uint256 _agreementId,
         uint256 _expiry
-    )
-        public
-        onlyLatestVersion()
-    {
+    ) public onlyLatestVersion {
         agreements[_orderId][_agreementId].expiry = _expiry;
     }
 
@@ -454,11 +394,10 @@ contract OTCExchangeStorage is Ownable, OTCExchangeStorageModel {
     /// @param _orderId 注文ID
     /// @param _agreementId 約定ID
     /// @return 約定情報
-    function getAgreement(uint256 _orderId, uint256 _agreementId)
-        public
-        view
-        returns (OTCExchangeStorageModel.OTCAgreement memory)
-    {
+    function getAgreement(
+        uint256 _orderId,
+        uint256 _agreementId
+    ) public view returns (OTCExchangeStorageModel.OTCAgreement memory) {
         return agreements[_orderId][_agreementId];
     }
 
@@ -466,11 +405,10 @@ contract OTCExchangeStorage is Ownable, OTCExchangeStorageModel {
     /// @param _orderId 注文ID
     /// @param _agreementId 約定ID
     /// @return 約定相手EOAアドレス
-    function getAgreementCounterpart(uint256 _orderId, uint256 _agreementId)
-        public
-        view
-        returns(address)
-    {
+    function getAgreementCounterpart(
+        uint256 _orderId,
+        uint256 _agreementId
+    ) public view returns (address) {
         return agreements[_orderId][_agreementId].counterpart;
     }
 
@@ -478,11 +416,10 @@ contract OTCExchangeStorage is Ownable, OTCExchangeStorageModel {
     /// @param _orderId 注文ID
     /// @param _agreementId 約定ID
     /// @return 約定数量
-    function getAgreementAmount(uint256 _orderId, uint256 _agreementId)
-        public
-        view
-        returns(uint256)
-    {
+    function getAgreementAmount(
+        uint256 _orderId,
+        uint256 _agreementId
+    ) public view returns (uint256) {
         return agreements[_orderId][_agreementId].amount;
     }
 
@@ -490,11 +427,10 @@ contract OTCExchangeStorage is Ownable, OTCExchangeStorageModel {
     /// @param _orderId 注文ID
     /// @param _agreementId 約定ID
     /// @return 約定単価
-    function getAgreementPrice(uint256 _orderId, uint256 _agreementId)
-        public
-        view
-        returns(uint256)
-    {
+    function getAgreementPrice(
+        uint256 _orderId,
+        uint256 _agreementId
+    ) public view returns (uint256) {
         return agreements[_orderId][_agreementId].price;
     }
 
@@ -502,11 +438,10 @@ contract OTCExchangeStorage is Ownable, OTCExchangeStorageModel {
     /// @param _orderId 注文ID
     /// @param _agreementId 約定ID
     /// @return キャンセル済み状態
-    function getAgreementCanceled(uint256 _orderId, uint256 _agreementId)
-        public
-        view
-        returns(bool)
-    {
+    function getAgreementCanceled(
+        uint256 _orderId,
+        uint256 _agreementId
+    ) public view returns (bool) {
         return agreements[_orderId][_agreementId].canceled;
     }
 
@@ -514,11 +449,10 @@ contract OTCExchangeStorage is Ownable, OTCExchangeStorageModel {
     /// @param _orderId 注文ID
     /// @param _agreementId 約定ID
     /// @return 支払済状態
-    function getAgreementPaid(uint256 _orderId, uint256 _agreementId)
-        public
-        view
-        returns(bool)
-    {
+    function getAgreementPaid(
+        uint256 _orderId,
+        uint256 _agreementId
+    ) public view returns (bool) {
         return agreements[_orderId][_agreementId].paid;
     }
 
@@ -526,11 +460,10 @@ contract OTCExchangeStorage is Ownable, OTCExchangeStorageModel {
     /// @param _orderId 注文ID
     /// @param _agreementId 約定ID
     /// @return 有効期限
-    function getAgreementExpiry(uint256 _orderId, uint256 _agreementId)
-        public
-        view
-        returns(uint256)
-    {
+    function getAgreementExpiry(
+        uint256 _orderId,
+        uint256 _agreementId
+    ) public view returns (uint256) {
         return agreements[_orderId][_agreementId].expiry;
     }
 
@@ -546,22 +479,19 @@ contract OTCExchangeStorage is Ownable, OTCExchangeStorageModel {
     /// @dev 最新バージョンのExchangeコントラクトのみ実行が可能
     /// @param _orderId 注文ID
     /// @param _latestAgreementId 直近約定ID
-    function setLatestAgreementId(uint256 _orderId, uint256 _latestAgreementId)
-        public
-        onlyLatestVersion()
-    {
+    function setLatestAgreementId(
+        uint256 _orderId,
+        uint256 _latestAgreementId
+    ) public onlyLatestVersion {
         latestAgreementIds[_orderId] = _latestAgreementId;
     }
 
     /// @notice 直近約定IDの参照
     /// @param _orderId 注文ID
     /// @return 直近約定ID
-    function getLatestAgreementId(uint256 _orderId)
-        public
-        view
-        returns (uint256)
-    {
+    function getLatestAgreementId(
+        uint256 _orderId
+    ) public view returns (uint256) {
         return latestAgreementIds[_orderId];
     }
-
 }

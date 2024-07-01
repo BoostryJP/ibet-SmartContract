@@ -11,7 +11,7 @@ COPY hardhat.config.js /hardhat
 WORKDIR /hardhat
 
 # Install hardhat
-RUN npm install --save-dev hardhat
+RUN npm install --only=dev
 
 # Run hardhat node
 CMD ["npx", "hardhat", "--config", "./hardhat.config.js", "node"]
