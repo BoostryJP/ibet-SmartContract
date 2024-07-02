@@ -522,7 +522,7 @@ contract IbetShare is Ownable, IbetSecurityTokenInterface {
         if (
             _fromList.length != _toList.length ||
             _fromList.length != _valueList.length
-        ) revert(ErrorCode.ERR_IbetShare_bulkTransferFrom_121501);
+        ) revert(ErrorCode.ERR_IbetShare_bulkTransferFrom_111501);
         // 強制移転（一括）
         for (uint256 i = 0; i < _fromList.length; i++) {
             transferFrom(_fromList[i], _toList[i], _valueList[i]);

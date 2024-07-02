@@ -72,7 +72,7 @@ library ErrorCode {
     // IbetShare_bulkRedeemFrom
     string constant ERR_IbetShare_bulkRedeemFrom_111401 = "111401";
     // IbetShare_bulkTransferFrom
-    string constant ERR_IbetShare_bulkTransferFrom_121501 = "111501";
+    string constant ERR_IbetShare_bulkTransferFrom_111501 = "111501";
 
     // 12XXXX
     // IbetStraightBond_lock
