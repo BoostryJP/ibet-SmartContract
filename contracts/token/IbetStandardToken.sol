@@ -103,7 +103,7 @@ contract IbetStandardToken is Ownable, IbetStandardTokenInterface {
         return true;
     }
 
-    /// @notice トークンの移転
+    /// @notice 移転
     /// @param _to 宛先アドレス
     /// @param _value 移転数量
     /// @return success 処理結果
@@ -123,47 +123,13 @@ contract IbetStandardToken is Ownable, IbetStandardTokenInterface {
         }
     }
 
-    /// @notice 強制移転
-    /// @dev オーナーのみ実行可能
-    /// @param _from 移転元アドレス
-    /// @param _to 移転先アドレス
-    /// @param _value 移転数量
-    /// @return 処理結果
-    function transferFrom(
-        address _from,
-        address _to,
-        uint _value
-    ) public override onlyOwner returns (bool) {
-        //  数量が送信元アドレス（from）の残高を超えている場合、エラーを返す
-        if (balanceOf(_from) < _value)
-            revert(ErrorCode.ERR_IbetStandardToken_transferFrom_150301);
-
-        bytes memory empty;
-        if (isContract(_to)) {
-            // 送信先アドレスがコントラクトアドレスの場合
-            balances[_from] = balanceOf(_from).sub(_value);
-            balances[_to] = balanceOf(_to).add(_value);
-            ContractReceiver receiver = ContractReceiver(_to);
-            receiver.tokenFallback(msg.sender, _value, empty);
-        } else {
-            // 送信先アドレスがアカウントアドレスの場合
-            balances[_from] = balanceOf(_from).sub(_value);
-            balances[_to] = balanceOf(_to).add(_value);
-        }
-
-        // イベント登録
-        emit Transfer(_from, _to, _value);
-
-        return true;
-    }
-
-    /// @notice トークンの一括移転
+    /// @notice 移転（一括）
     /// @param _toList 宛先アドレスのリスト
     /// @param _valueList 移転数量のリスト
     /// @return success 処理結果
     function bulkTransfer(
-        address[] memory _toList,
-        uint[] memory _valueList
+        address[] calldata _toList,
+        uint[] calldata _valueList
     ) public override returns (bool success) {
         // <CHK>
         // リスト長が等しくない場合、エラーを返す
@@ -193,6 +159,64 @@ contract IbetStandardToken is Ownable, IbetStandardTokenInterface {
             }
         }
         return success;
+    }
+
+    /// @notice 強制移転
+    /// @dev オーナーのみ実行可能
+    /// @param _from 移転元アドレス
+    /// @param _to 移転先アドレス
+    /// @param _value 移転数量
+    /// @return success 処理結果
+    function transferFrom(
+        address _from,
+        address _to,
+        uint _value
+    ) public override onlyOwner returns (bool success) {
+        //  数量が送信元アドレス（from）の残高を超えている場合、エラーを返す
+        if (balanceOf(_from) < _value)
+            revert(ErrorCode.ERR_IbetStandardToken_transferFrom_150301);
+
+        bytes memory empty;
+        if (isContract(_to)) {
+            // 送信先アドレスがコントラクトアドレスの場合
+            balances[_from] = balanceOf(_from).sub(_value);
+            balances[_to] = balanceOf(_to).add(_value);
+            ContractReceiver receiver = ContractReceiver(_to);
+            receiver.tokenFallback(msg.sender, _value, empty);
+        } else {
+            // 送信先アドレスがアカウントアドレスの場合
+            balances[_from] = balanceOf(_from).sub(_value);
+            balances[_to] = balanceOf(_to).add(_value);
+        }
+
+        // イベント登録
+        emit Transfer(_from, _to, _value);
+
+        return true;
+    }
+
+    /// @notice 強制移転（一括）
+    /// @dev オーナーのみ実行可能
+    /// @param _fromList 移転元アドレスのリスト
+    /// @param _toList 移転先アドレスのリスト
+    /// @param _valueList 移転数量のリスト
+    /// @return success 処理結果
+    function bulkTransferFrom(
+        address[] calldata _fromList,
+        address[] calldata _toList,
+        uint[] calldata _valueList
+    ) public override onlyOwner returns (bool success) {
+        // <CHK>
+        // 全てのリスト長が等しくない場合、エラーを返す
+        if (
+            _fromList.length != _toList.length ||
+            _fromList.length != _valueList.length
+        ) revert(ErrorCode.ERR_IbetStandardToken_bulkTransferFrom_150401);
+        // 強制移転（一括）
+        for (uint256 i = 0; i < _fromList.length; i++) {
+            transferFrom(_fromList[i], _toList[i], _valueList[i]);
+        }
+        return true;
     }
 
     /// @notice 残高の参照

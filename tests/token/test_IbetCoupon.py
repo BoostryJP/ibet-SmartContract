@@ -597,6 +597,113 @@ class TestTransferFrom:
         assert coupon_contract.balanceOf(to_address) == 0
 
 
+# TEST_bulkTransferFrom
+class TestBulkTransferFrom:
+
+    #######################################
+    # Normal
+    #######################################
+
+    # Normal_1
+    def test_normal_1(self, users, IbetCoupon, exchange):
+        issuer = users["issuer"]
+        to_address_1 = users["user1"]
+        to_address_2 = users["user2"]
+        value = 100
+
+        # issue token
+        deploy_args = init_args(exchange.address)
+        coupon_token = issuer.deploy(IbetCoupon, *deploy_args)
+
+        # bulk forced transfer
+        #   issuer -> to_address_1 -> to_address_2
+        coupon_token.bulkTransferFrom.transact(
+            [issuer, to_address_1],
+            [to_address_1, to_address_2],
+            [value, value],
+            {"from": issuer},
+        )
+
+        # assertion
+        assert coupon_token.balanceOf(issuer) == deploy_args[2] - value
+        assert coupon_token.balanceOf(to_address_1) == 0
+        assert coupon_token.balanceOf(to_address_2) == value
+
+    #######################################
+    # Error
+    #######################################
+
+    # Error_1
+    # Not authorized
+    # -> revert: 500001
+    def test_error_1(self, users, IbetCoupon, exchange):
+        issuer = users["issuer"]
+        to_address = users["user1"]
+
+        # issue token
+        deploy_args = init_args(exchange.address)
+        coupon_token = issuer.deploy(IbetCoupon, *deploy_args)
+
+        # bulk forced transfer
+        with brownie.reverts(revert_msg="500001"):
+            coupon_token.bulkTransferFrom.transact(
+                [issuer], [to_address], [10, 10], {"from": to_address}
+            )
+
+        # assertion
+        assert coupon_token.balanceOf(issuer) == deploy_args[2]
+        assert coupon_token.balanceOf(to_address) == 0
+
+    # Error_2
+    # Some list lengths are unequal.
+    # -> revert: 130601
+    def test_error_2(self, users, IbetCoupon, exchange):
+        issuer = users["issuer"]
+        to_address_1 = users["user1"]
+
+        # issue token
+        deploy_args = init_args(exchange.address)
+        coupon_token = issuer.deploy(IbetCoupon, *deploy_args)
+
+        # bulk forced transfer
+        with brownie.reverts(revert_msg="130601"):
+            coupon_token.bulkTransferFrom.transact(
+                [issuer, issuer], [to_address_1], [10, 10], {"from": issuer}
+            )
+
+        # assertion
+        assert coupon_token.balanceOf(issuer) == deploy_args[2]
+        assert coupon_token.balanceOf(to_address_1) == 0
+
+    # Error_3
+    # Insufficient balance
+    # -> revert: 130301
+    def test_error_3(self, users, IbetCoupon, exchange):
+        issuer = users["issuer"]
+        to_address_1 = users["user1"]
+        to_address_2 = users["user2"]
+
+        # issue token
+        deploy_args = init_args(exchange.address)
+        coupon_token = issuer.deploy(IbetCoupon, *deploy_args)
+
+        # bulk forced transfer
+        #   issuer -> to_address_1
+        #   to_address_2 -> to_address_1
+        with brownie.reverts(revert_msg="130301"):
+            coupon_token.bulkTransferFrom.transact(
+                [issuer, to_address_2],
+                [to_address_1, to_address_1],
+                [10, 10],
+                {"from": issuer},
+            )
+
+        # assertion
+        assert coupon_token.balanceOf(issuer) == deploy_args[2]
+        assert coupon_token.balanceOf(to_address_1) == 0
+        assert coupon_token.balanceOf(to_address_2) == 0
+
+
 # TEST_consume
 class TestConsume:
 
