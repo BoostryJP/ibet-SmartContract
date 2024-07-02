@@ -144,7 +144,7 @@ contract IbetMembership is Ownable, IbetStandardTokenInterface {
         return true;
     }
 
-    /// @notice トークンの移転
+    /// @notice 移転
     /// @param _to 宛先アドレス
     /// @param _value 移転数量
     /// @return 処理結果
@@ -168,13 +168,13 @@ contract IbetMembership is Ownable, IbetStandardTokenInterface {
         }
     }
 
-    /// @notice トークンの一括移転
+    /// @notice 移転（一括）
     /// @param _toList 宛先アドレスのリスト
     /// @param _valueList 移転数量のリスト
     /// @return success 処理結果
     function bulkTransfer(
-        address[] memory _toList,
-        uint[] memory _valueList
+        address[] calldata _toList,
+        uint[] calldata _valueList
     ) public override returns (bool success) {
         // <CHK>
         // リスト長が等しくない場合、エラーを返す
@@ -220,12 +220,12 @@ contract IbetMembership is Ownable, IbetStandardTokenInterface {
     /// @param _from 移転元アドレス
     /// @param _to 移転先アドレス
     /// @param _value 移転数量
-    /// @return 処理結果
+    /// @return success 処理結果
     function transferFrom(
         address _from,
         address _to,
         uint _value
-    ) public override onlyOwner returns (bool) {
+    ) public override onlyOwner returns (bool success) {
         //  数量が送信元アドレス（from）の残高を超えている場合、エラーを返す
         if (balanceOf(_from) < _value)
             revert(ErrorCode.ERR_IbetMembership_transferFrom_140301);
@@ -246,6 +246,30 @@ contract IbetMembership is Ownable, IbetStandardTokenInterface {
         // イベント登録
         emit Transfer(_from, _to, _value);
 
+        return true;
+    }
+
+    /// @notice 強制移転（一括）
+    /// @dev オーナーのみ実行可能
+    /// @param _fromList 移転元アドレスのリスト
+    /// @param _toList 移転先アドレスのリスト
+    /// @param _valueList 移転数量のリスト
+    /// @return success 処理結果
+    function bulkTransferFrom(
+        address[] calldata _fromList,
+        address[] calldata _toList,
+        uint[] calldata _valueList
+    ) public override onlyOwner returns (bool success) {
+        // <CHK>
+        // 全てのリスト長が等しくない場合、エラーを返す
+        if (
+            _fromList.length != _toList.length ||
+            _fromList.length != _valueList.length
+        ) revert(ErrorCode.ERR_IbetMembership_bulkTransferFrom_140501);
+        // 強制移転（一括）
+        for (uint256 i = 0; i < _fromList.length; i++) {
+            transferFrom(_fromList[i], _toList[i], _valueList[i]);
+        }
         return true;
     }
 

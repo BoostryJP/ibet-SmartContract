@@ -67,6 +67,12 @@ library ErrorCode {
     string constant ERR_IbetShare_redeemFrom_111102 = "111102";
     // IbetShare_forceUnlock
     string constant ERR_IbetShare_forceUnlock_111201 = "111201";
+    // IbetShare_bulkIssueFrom
+    string constant ERR_IbetShare_bulkIssueFrom_111301 = "111301";
+    // IbetShare_bulkRedeemFrom
+    string constant ERR_IbetShare_bulkRedeemFrom_111401 = "111401";
+    // IbetShare_bulkTransferFrom
+    string constant ERR_IbetShare_bulkTransferFrom_121501 = "111501";
 
     // 12XXXX
     // IbetStraightBond_lock
@@ -106,6 +112,12 @@ library ErrorCode {
     string constant ERR_IbetStraightBond_redeemFrom_121102 = "121102";
     // IbetStraightBond_forceUnlock
     string constant ERR_IbetStraightBond_forceUnlock_121201 = "121201";
+    // IbetStraightBond_bulkIssueFrom
+    string constant ERR_IbetStraightBond_bulkIssueFrom_121301 = "121301";
+    // IbetStraightBond_bulkRedeemFrom
+    string constant ERR_IbetStraightBond_bulkRedeemFrom_121401 = "121401";
+    // IbetStraightBond_bulkTransferFrom
+    string constant ERR_IbetStraightBond_bulkTransferFrom_121501 = "121501";
 
     // 13XXXX
     // IbetCoupon_transferToContract
@@ -123,6 +135,8 @@ library ErrorCode {
     string constant ERR_IbetCoupon_consume_130401 = "130401";
     // IbetCoupon_applyForOffering
     string constant ERR_IbetCoupon_applyForOffering_130501 = "130501";
+    // IbetCoupon_bulkTransferFrom
+    string constant ERR_IbetCoupon_bulkTransferFrom_130601 = "130601";
 
     // 14XXXX
     // IbetMembership_transferToContract
@@ -138,6 +152,8 @@ library ErrorCode {
     string constant ERR_IbetMembership_transferFrom_140301 = "140301";
     // IbetMembership_applyForOffering
     string constant ERR_IbetMembership_applyForOffering_140401 = "140401";
+    // IbetMembership_bulkTransferFrom
+    string constant ERR_IbetMembership_bulkTransferFrom_140501 = "140501";
 
     // 15XXXX
     // IbetStandardToken_transferToContract
@@ -149,6 +165,8 @@ library ErrorCode {
     string constant ERR_IbetStandardToken_bulkTransfer_150202 = "150202";
     // IbetStandardToken_transferFrom
     string constant ERR_IbetStandardToken_transferFrom_150301 = "150301";
+    // IbetStandardToken_bulkTransferFrom
+    string constant ERR_IbetStandardToken_bulkTransferFrom_150401 = "150401";
 
     // 20XXXX
     // ExchangeStorage_onlyLatestVersion

@@ -251,7 +251,17 @@ abstract contract IbetSecurityTokenInterface is IbetStandardTokenInterface {
         uint256 _amount
     ) public virtual;
 
-    /// @notice 償却
+    /// @notice 追加発行（一括）
+    /// @param _targetAddressList 追加発行対象の残高を保有するアドレスのリスト
+    /// @param _lockAddressList 資産ロック先アドレスのリスト
+    /// @param _amounts 追加発行数量のリスト
+    function bulkIssueFrom(
+        address[] calldata _targetAddressList,
+        address[] calldata _lockAddressList,
+        uint256[] calldata _amounts
+    ) public virtual;
+
+    /// @notice 償却/消却
     /// @param _targetAddress 償却対象の残高を保有するアドレス
     /// @param _lockAddress 資産ロック先アドレス
     /// @param _amount 償却数量
@@ -259,6 +269,16 @@ abstract contract IbetSecurityTokenInterface is IbetStandardTokenInterface {
         address _targetAddress,
         address _lockAddress,
         uint256 _amount
+    ) public virtual;
+
+    /// @notice 償却/消却（一括）
+    /// @param _targetAddressList 償却対象の残高を保有するアドレスのリスト
+    /// @param _lockAddressList 資産ロック先アドレスのリスト
+    /// @param _amounts 償却数量のリスト
+    function bulkRedeemFrom(
+        address[] calldata _targetAddressList,
+        address[] calldata _lockAddressList,
+        uint256[] calldata _amounts
     ) public virtual;
 
     /// Event: 追加発行
@@ -269,7 +289,7 @@ abstract contract IbetSecurityTokenInterface is IbetStandardTokenInterface {
         uint256 amount
     );
 
-    /// Event: 償却
+    /// Event: 償却/消却
     event Redeem(
         address indexed from,
         address indexed targetAddress,

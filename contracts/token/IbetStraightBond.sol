@@ -172,7 +172,7 @@ contract IbetStraightBond is Ownable, IbetSecurityTokenInterface {
         return true;
     }
 
-    /// @notice トークンの移転
+    /// @notice 移転
     /// @param _to 宛先アドレス
     /// @param _value 移転数量
     /// @return success 処理結果
@@ -198,13 +198,13 @@ contract IbetStraightBond is Ownable, IbetSecurityTokenInterface {
         }
     }
 
-    /// @notice トークンの一括移転
+    /// @notice 移転（一括）
     /// @param _toList 宛先アドレスのリスト
     /// @param _valueList 移転数量のリスト
     /// @return success 処理結果
     function bulkTransfer(
-        address[] memory _toList,
-        uint[] memory _valueList
+        address[] calldata _toList,
+        uint[] calldata _valueList
     ) public override returns (bool success) {
         // <CHK>
         // リスト長が等しくない場合、エラーを返す
@@ -278,6 +278,30 @@ contract IbetStraightBond is Ownable, IbetSecurityTokenInterface {
         // イベント登録
         emit Transfer(_from, _to, _value);
 
+        return true;
+    }
+
+    /// @notice 強制移転（一括）
+    /// @dev オーナーのみ実行可能
+    /// @param _fromList 移転元アドレスのリスト
+    /// @param _toList 移転先アドレスのリスト
+    /// @param _valueList 移転数量のリスト
+    /// @return success 処理結果
+    function bulkTransferFrom(
+        address[] calldata _fromList,
+        address[] calldata _toList,
+        uint[] calldata _valueList
+    ) public override onlyOwner returns (bool success) {
+        // <CHK>
+        // 全てのリスト長が等しくない場合、エラーを返す
+        if (
+            _fromList.length != _toList.length ||
+            _fromList.length != _valueList.length
+        ) revert(ErrorCode.ERR_IbetStraightBond_bulkTransferFrom_121501);
+        // 強制移転（一括）
+        for (uint256 i = 0; i < _fromList.length; i++) {
+            transferFrom(_fromList[i], _toList[i], _valueList[i]);
+        }
         return true;
     }
 
@@ -731,7 +755,7 @@ contract IbetStraightBond is Ownable, IbetSecurityTokenInterface {
     /// @notice 追加発行
     /// @dev オーナーのみ実行可能
     /// @param _targetAddress 追加発行対象の残高を保有するアドレス
-    /// @param _lockAddress 資産ロック先アドレス
+    /// @param _lockAddress 資産ロック先アドレス: ロック残高に追加する場合に指定。ゼロアドレスの場合はEOA残高に追加。
     /// @param _amount 追加発行数量
     function issueFrom(
         address _targetAddress,
@@ -759,11 +783,35 @@ contract IbetStraightBond is Ownable, IbetSecurityTokenInterface {
         emit Issue(msg.sender, _targetAddress, _lockAddress, _amount);
     }
 
+    /// @notice 追加発行（一括）
+    /// @dev 指定したアドレスの残高に対して、追加発行を行う
+    /// @dev 発行体のみ実行可能
+    /// @param _targetAddressList 追加発行対象の残高を保有するアドレスのリスト
+    /// @param _lockAddressList 資産ロック先アドレスのリスト: ロック残高に追加する場合に指定。ゼロアドレスの場合はEOA残高に追加。
+    /// @param _amounts 追加発行数量のリスト
+    function bulkIssueFrom(
+        address[] calldata _targetAddressList,
+        address[] calldata _lockAddressList,
+        uint256[] calldata _amounts
+    ) public override onlyOwner {
+        // <CHK>
+        // 全てのリスト長が等しくない場合、エラーを返す
+        if (
+            _targetAddressList.length != _lockAddressList.length ||
+            _targetAddressList.length != _amounts.length
+        ) revert(ErrorCode.ERR_IbetStraightBond_bulkIssueFrom_121301);
+
+        // 追加発行（一括）
+        for (uint256 i = 0; i < _targetAddressList.length; i++) {
+            issueFrom(_targetAddressList[i], _lockAddressList[i], _amounts[i]);
+        }
+    }
+
     /// @notice 償却
     /// @dev 特定のアドレスの残高に対して、発行数量の削減を行う
     /// @dev 発行体のみ実行可能
     /// @param _targetAddress 償却対象の残高を保有するアドレス
-    /// @param _lockAddress 資産ロック先アドレス
+    /// @param _lockAddress 資産ロック先アドレス: ロック残高から償却する場合に指定。ゼロアドレスの場合はEOA残高より償却。
     /// @param _amount 償却数量
     function redeemFrom(
         address _targetAddress,
@@ -795,6 +843,30 @@ contract IbetStraightBond is Ownable, IbetSecurityTokenInterface {
 
         // イベント登録
         emit Redeem(msg.sender, _targetAddress, _lockAddress, _amount);
+    }
+
+    /// @notice 償却（一括）
+    /// @dev 指定したアドレスの残高に対して、数量の削減を行う
+    /// @dev 発行体のみ実行可能
+    /// @param _targetAddressList 償却対象の残高を保有するアドレスのリスト
+    /// @param _lockAddressList 資産ロック先アドレスのリスト: ロック残高から償却する場合に指定。ゼロアドレスの場合はEOA残高より償却。
+    /// @param _amounts 償却数量のリスト
+    function bulkRedeemFrom(
+        address[] calldata _targetAddressList,
+        address[] calldata _lockAddressList,
+        uint256[] calldata _amounts
+    ) public override onlyOwner {
+        // <CHK>
+        // 全てのリスト長が等しくない場合、エラーを返す
+        if (
+            _targetAddressList.length != _lockAddressList.length ||
+            _targetAddressList.length != _amounts.length
+        ) revert(ErrorCode.ERR_IbetStraightBond_bulkRedeemFrom_121401);
+
+        // 償却（一括）
+        for (uint256 i = 0; i < _targetAddressList.length; i++) {
+            redeemFrom(_targetAddressList[i], _lockAddressList[i], _amounts[i]);
+        }
     }
 
     /// @notice 償還状態に変更

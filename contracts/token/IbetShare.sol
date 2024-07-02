@@ -398,7 +398,7 @@ contract IbetShare is Ownable, IbetSecurityTokenInterface {
         return true;
     }
 
-    /// @notice トークンの移転
+    /// @notice 移転
     /// @param _to 宛先アドレス
     /// @param _value 移転数量
     /// @return 処理結果
@@ -421,13 +421,13 @@ contract IbetShare is Ownable, IbetSecurityTokenInterface {
         }
     }
 
-    /// @notice トークンの一括移転
+    /// @notice 移転（一括）
     /// @param _toList 宛先アドレスのリスト
     /// @param _valueList 移転数量のリスト
     /// @return success 処理結果
     function bulkTransfer(
-        address[] memory _toList,
-        uint[] memory _valueList
+        address[] calldata _toList,
+        uint[] calldata _valueList
     ) public override returns (bool success) {
         // <CHK>
         // 移転時の発行体承諾が必要な場合、エラーを返す
@@ -503,6 +503,30 @@ contract IbetShare is Ownable, IbetSecurityTokenInterface {
 
         // イベント登録
         emit Transfer(_from, _to, _value);
+        return true;
+    }
+
+    /// @notice 強制移転（一括）
+    /// @dev オーナーのみ実行可能
+    /// @param _fromList 移転元アドレスのリスト
+    /// @param _toList 移転先アドレスのリスト
+    /// @param _valueList 移転数量のリスト
+    /// @return success 処理結果
+    function bulkTransferFrom(
+        address[] calldata _fromList,
+        address[] calldata _toList,
+        uint[] calldata _valueList
+    ) public override onlyOwner returns (bool success) {
+        // <CHK>
+        // 全てのリスト長が等しくない場合、エラーを返す
+        if (
+            _fromList.length != _toList.length ||
+            _fromList.length != _valueList.length
+        ) revert(ErrorCode.ERR_IbetShare_bulkTransferFrom_121501);
+        // 強制移転（一括）
+        for (uint256 i = 0; i < _fromList.length; i++) {
+            transferFrom(_fromList[i], _toList[i], _valueList[i]);
+        }
         return true;
     }
 
@@ -692,71 +716,119 @@ contract IbetShare is Ownable, IbetSecurityTokenInterface {
     /// @notice 追加発行
     /// @dev 特定のアドレスの残高に対して、追加発行を行う
     /// @dev 発行体のみ実行可能
-    /// @param _target_address 追加発行対象の残高を保有するアドレス
-    /// @param _locked_address （任意）資産ロックアドレス
+    /// @param _targetAddress 追加発行対象の残高を保有するアドレス
+    /// @param _lockAddress 資産ロック先アドレス: ロック残高に追加する場合に指定。ゼロアドレスの場合はEOA残高に追加。
     /// @param _amount 追加発行数量
     function issueFrom(
-        address _target_address,
-        address _locked_address,
+        address _targetAddress,
+        address _lockAddress,
         uint256 _amount
     ) public override onlyOwner {
-        // locked_addressを指定した場合：ロック資産に対して追加発行を行う
-        // locked_addressを指定しない場合：アカウントアドレスの残高に対して追加発行を行う
-        if (_locked_address != address(0)) {
+        // lockedAddress を指定した場合：ロック資産に対して追加発行を行う
+        // lockedAddress を指定しない場合：アカウントアドレスの残高に対して追加発行を行う
+        if (_lockAddress != address(0)) {
             // ロック資産の更新
-            locked[_locked_address][_target_address] = lockedOf(
-                _locked_address,
-                _target_address
+            locked[_lockAddress][_targetAddress] = lockedOf(
+                _lockAddress,
+                _targetAddress
             ).add(_amount);
             // 総発行数量の更新
             totalSupply = totalSupply.add(_amount);
         } else {
             // アカウント残高の更新
-            balances[_target_address] = balanceOf(_target_address).add(_amount);
+            balances[_targetAddress] = balanceOf(_targetAddress).add(_amount);
             // 総発行数量の更新
             totalSupply = totalSupply.add(_amount);
         }
 
         // イベント登録
-        emit Issue(msg.sender, _target_address, _locked_address, _amount);
+        emit Issue(msg.sender, _targetAddress, _lockAddress, _amount);
     }
 
-    /// @notice 償却
-    /// @dev 特定のアドレスの残高に対して、発行数量の削減を行う
+    /// @notice 追加発行（一括）
+    /// @dev 指定したアドレスの残高に対して、追加発行を行う
     /// @dev 発行体のみ実行可能
-    /// @param _target_address 減資対象の残高を保有するアドレス
-    /// @param _locked_address （任意）資産ロックアドレス
-    /// @param _amount 削減数量
+    /// @param _targetAddressList 追加発行対象の残高を保有するアドレスのリスト
+    /// @param _lockAddressList 資産ロック先アドレスのリスト: ロック残高に追加する場合に指定。ゼロアドレスの場合はEOA残高に追加。
+    /// @param _amounts 追加発行数量のリスト
+    function bulkIssueFrom(
+        address[] calldata _targetAddressList,
+        address[] calldata _lockAddressList,
+        uint256[] calldata _amounts
+    ) public override onlyOwner {
+        // <CHK>
+        // 全てのリスト長が等しくない場合、エラーを返す
+        if (
+            _targetAddressList.length != _lockAddressList.length ||
+            _targetAddressList.length != _amounts.length
+        ) revert(ErrorCode.ERR_IbetShare_bulkIssueFrom_111301);
+
+        // 追加発行（一括）
+        for (uint256 i = 0; i < _targetAddressList.length; i++) {
+            issueFrom(_targetAddressList[i], _lockAddressList[i], _amounts[i]);
+        }
+    }
+
+    /// @notice 消却
+    /// @dev 特定のアドレスの残高に対して、数量の削減を行う
+    /// @dev 発行体のみ実行可能
+    /// @param _targetAddress 償却対象の残高を保有するアドレス
+    /// @param _lockAddress 資産ロック先アドレス: ロック残高から消却する場合に指定。ゼロアドレスの場合はEOA残高より消却。
+    /// @param _amount 償却数量
     function redeemFrom(
-        address _target_address,
-        address _locked_address,
+        address _targetAddress,
+        address _lockAddress,
         uint256 _amount
     ) public override onlyOwner {
         // locked_addressを指定した場合：ロック資産から減資を行う
         // locked_addressを指定しない場合：アカウントアドレスの残高から減資を行う
-        if (_locked_address != address(0)) {
+        if (_lockAddress != address(0)) {
             // 減資数量が対象アドレスのロック数量を上回っている場合はエラー
-            if (lockedOf(_locked_address, _target_address) < _amount)
+            if (lockedOf(_lockAddress, _targetAddress) < _amount)
                 revert(ErrorCode.ERR_IbetShare_redeemFrom_111101);
             // ロック資産の更新
-            locked[_locked_address][_target_address] = lockedOf(
-                _locked_address,
-                _target_address
+            locked[_lockAddress][_targetAddress] = lockedOf(
+                _lockAddress,
+                _targetAddress
             ).sub(_amount);
             // 総発行数量の更新
             totalSupply = totalSupply.sub(_amount);
         } else {
             // 減資数量が対象アドレスの残高数量を上回っている場合はエラーを返す
-            if (balances[_target_address] < _amount)
+            if (balances[_targetAddress] < _amount)
                 revert(ErrorCode.ERR_IbetShare_redeemFrom_111102);
             // アカウント残高の更新
-            balances[_target_address] = balanceOf(_target_address).sub(_amount);
+            balances[_targetAddress] = balanceOf(_targetAddress).sub(_amount);
             // 総発行数量の更新
             totalSupply = totalSupply.sub(_amount);
         }
 
         // イベント登録
-        emit Redeem(msg.sender, _target_address, _locked_address, _amount);
+        emit Redeem(msg.sender, _targetAddress, _lockAddress, _amount);
+    }
+
+    /// @notice 消却（一括）
+    /// @dev 指定したアドレスの残高に対して、数量の削減を行う
+    /// @dev 発行体のみ実行可能
+    /// @param _targetAddressList 消却対象の残高を保有するアドレスのリスト
+    /// @param _lockAddressList 資産ロック先アドレスのリスト: ロック残高から消却する場合に指定。ゼロアドレスの場合はEOA残高より消却。
+    /// @param _amounts 消却数量のリスト
+    function bulkRedeemFrom(
+        address[] calldata _targetAddressList,
+        address[] calldata _lockAddressList,
+        uint256[] calldata _amounts
+    ) public override onlyOwner {
+        // <CHK>
+        // 全てのリスト長が等しくない場合、エラーを返す
+        if (
+            _targetAddressList.length != _lockAddressList.length ||
+            _targetAddressList.length != _amounts.length
+        ) revert(ErrorCode.ERR_IbetShare_bulkRedeemFrom_111401);
+
+        // 消却（一括）
+        for (uint256 i = 0; i < _targetAddressList.length; i++) {
+            redeemFrom(_targetAddressList[i], _lockAddressList[i], _amounts[i]);
+        }
     }
 
     /// @notice 消却状態に変更

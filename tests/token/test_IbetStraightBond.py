@@ -675,6 +675,125 @@ class TestTransferFrom:
         assert bond_token.balanceOf(to_address) == 0
 
 
+# TEST_bulkTransferFrom
+class TestBulkTransferFrom:
+
+    #######################################
+    # Normal
+    #######################################
+
+    # Normal_1
+    def test_normal_1(self, users, personal_info):
+        issuer = users["issuer"]
+        to_address_1 = users["user1"]
+        to_address_2 = users["user2"]
+        value = 100
+
+        # issue token
+        bond_token, deploy_args = issue_transferable_bond_token(
+            issuer=issuer,
+            exchange_address=brownie.ZERO_ADDRESS,
+            personal_info_address=personal_info.address,
+        )
+
+        # bulk forced transfer
+        #   issuer -> to_address_1 -> to_address_2
+        bond_token.bulkTransferFrom.transact(
+            [issuer, to_address_1],
+            [to_address_1, to_address_2],
+            [value, value],
+            {"from": issuer},
+        )
+
+        # assertion
+        assert bond_token.balanceOf(issuer) == deploy_args[3] - value
+        assert bond_token.balanceOf(to_address_1) == 0
+        assert bond_token.balanceOf(to_address_2) == value
+
+    #######################################
+    # Error
+    #######################################
+
+    # Error_1
+    # Not authorized
+    # -> revert: 500001
+    def test_error_1(self, users, personal_info):
+        issuer = users["issuer"]
+        to_address = users["user1"]
+
+        # issue token
+        bond_token, deploy_args = issue_transferable_bond_token(
+            issuer=issuer,
+            exchange_address=brownie.ZERO_ADDRESS,
+            personal_info_address=personal_info.address,
+        )
+
+        # bulk forced transfer
+        with brownie.reverts(revert_msg="500001"):
+            bond_token.bulkTransferFrom.transact(
+                [issuer], [to_address], [10, 10], {"from": to_address}
+            )
+
+        # assertion
+        assert bond_token.balanceOf(issuer) == deploy_args[3]
+        assert bond_token.balanceOf(to_address) == 0
+
+    # Error_2
+    # Some list lengths are unequal.
+    # -> revert: 121501
+    def test_error_2(self, users, personal_info):
+        issuer = users["issuer"]
+        to_address_1 = users["user1"]
+
+        # issue token
+        bond_token, deploy_args = issue_transferable_bond_token(
+            issuer=issuer,
+            exchange_address=brownie.ZERO_ADDRESS,
+            personal_info_address=personal_info.address,
+        )
+
+        # bulk forced transfer
+        with brownie.reverts(revert_msg="121501"):
+            bond_token.bulkTransferFrom.transact(
+                [issuer, issuer], [to_address_1], [10, 10], {"from": issuer}
+            )
+
+        # assertion
+        assert bond_token.balanceOf(issuer) == deploy_args[3]
+        assert bond_token.balanceOf(to_address_1) == 0
+
+    # Error_3
+    # Insufficient balance
+    # -> revert: 120601
+    def test_error_3(self, users, personal_info):
+        issuer = users["issuer"]
+        to_address_1 = users["user1"]
+        to_address_2 = users["user2"]
+
+        # issue token
+        bond_token, deploy_args = issue_transferable_bond_token(
+            issuer=issuer,
+            exchange_address=brownie.ZERO_ADDRESS,
+            personal_info_address=personal_info.address,
+        )
+
+        # bulk forced transfer
+        #   issuer -> to_address_1
+        #   to_address_2 -> to_address_1
+        with brownie.reverts(revert_msg="120601"):
+            bond_token.bulkTransferFrom.transact(
+                [issuer, to_address_2],
+                [to_address_1, to_address_1],
+                [10, 10],
+                {"from": issuer},
+            )
+
+        # assertion
+        assert bond_token.balanceOf(issuer) == deploy_args[3]
+        assert bond_token.balanceOf(to_address_1) == 0
+        assert bond_token.balanceOf(to_address_2) == 0
+
+
 # TEST_balanceOf
 class TestBalanceOf:
 
@@ -1893,6 +2012,176 @@ class TestIssueFrom:
             )
 
 
+# TEST_bulkIssueFrom
+class TestBulkIssueFrom:
+
+    #######################################
+    # Normal
+    #######################################
+
+    # Normal_1
+    # Bulk issue from EOA
+    def test_normal_1(self, users, IbetStraightBond):
+        issuer = users["issuer"]
+        issue_amount = 10
+
+        # issue token
+        deploy_args = init_args()
+        deploy_args[2] = 1000
+        bond_token = issuer.deploy(IbetStraightBond, *deploy_args)
+
+        # bulk issue
+        bond_token.bulkIssueFrom.transact(
+            [issuer, brownie.ETH_ADDRESS],
+            [brownie.ZERO_ADDRESS, brownie.ZERO_ADDRESS],
+            [issue_amount, issue_amount],
+            {"from": issuer},
+        )
+
+        # assertion
+        assert bond_token.totalSupply() == deploy_args[2] + issue_amount * 2
+        assert bond_token.balanceOf(issuer) == deploy_args[2] + issue_amount
+        assert bond_token.balanceOf(brownie.ETH_ADDRESS) == issue_amount
+
+    # Normal_2
+    # Issue from locked address
+    def test_normal_2(self, users, IbetStraightBond):
+        issuer = users["issuer"]
+        lock_address = users["user1"]
+        lock_amount = 10
+        issue_amount = 10
+
+        # issue token
+        deploy_args = init_args()
+        deploy_args[2] = 1000
+        bond_token = issuer.deploy(IbetStraightBond, *deploy_args)
+
+        # lock
+        bond_token.lock.transact(
+            lock_address, lock_amount, "lock_message", {"from": issuer}
+        )
+
+        # bulkIssue from lock address
+        bond_token.bulkIssueFrom.transact(
+            [issuer, brownie.ETH_ADDRESS],
+            [lock_address, lock_address],
+            [issue_amount, issue_amount],
+            {"from": issuer},
+        )
+
+        # assertion
+        assert bond_token.totalSupply() == deploy_args[2] + issue_amount * 2
+
+        assert bond_token.balanceOf(issuer) == deploy_args[2] - lock_amount
+        assert bond_token.balanceOf(brownie.ETH_ADDRESS) == 0
+
+        assert bond_token.lockedOf(lock_address, issuer) == lock_amount + issue_amount
+        assert bond_token.lockedOf(lock_address, brownie.ETH_ADDRESS) == issue_amount
+
+    #######################################
+    # Error
+    #######################################
+
+    # Error_1_1
+    # Over the limit
+    # The balance quantity of some EOA exceeds the upper limit of integer.
+    def test_error_1_1(self, users, IbetStraightBond):
+        issuer = users["issuer"]
+
+        # issue token
+        deploy_args = init_args()
+        bond_token = issuer.deploy(IbetStraightBond, *deploy_args)
+
+        # bulk issue
+        with brownie.reverts(revert_msg="Integer overflow"):
+            bond_token.bulkIssueFrom.transact(
+                [brownie.ETH_ADDRESS, issuer],
+                [brownie.ZERO_ADDRESS, brownie.ZERO_ADDRESS],
+                [1, 1],
+                {"from": issuer},
+            )
+
+        # assertion
+        assert bond_token.balanceOf(issuer) == deploy_args[2]
+        assert bond_token.balanceOf(brownie.ETH_ADDRESS) == 0
+
+    # Error_1_2
+    # Over the limit
+    # The locked quantity of some EOA exceeds the upper limit of integer.
+    def test_error_1_2(self, users, IbetStraightBond):
+        issuer = users["issuer"]
+        lock_address = users["user1"]
+        lock_amount = 2**256 - 1
+        issue_amount = 1
+
+        # issue token
+        deploy_args = init_args()
+        bond_token = issuer.deploy(IbetStraightBond, *deploy_args)
+
+        # lock
+        bond_token.lock.transact(
+            lock_address, lock_amount, "lock_message", {"from": issuer}
+        )
+
+        # bulk issue
+        with brownie.reverts(revert_msg="Integer overflow"):
+            bond_token.bulkIssueFrom.transact(
+                [brownie.ETH_ADDRESS, issuer],
+                [brownie.ZERO_ADDRESS, lock_address],
+                [issue_amount, issue_amount],
+                {"from": issuer},
+            )
+
+        # assertion
+        assert bond_token.balanceOf(issuer) == deploy_args[2] - lock_amount
+        assert bond_token.balanceOf(brownie.ETH_ADDRESS) == 0
+
+        assert bond_token.lockedOf(lock_address, issuer) == lock_amount
+        assert bond_token.lockedOf(lock_address, brownie.ETH_ADDRESS) == 0
+
+    # Error_2
+    # Not authorized
+    # -> revert: 500001
+    def test_error_2(self, users, IbetStraightBond):
+        issuer = users["issuer"]
+
+        # issue token
+        deploy_args = init_args()
+        bond_token = issuer.deploy(IbetStraightBond, *deploy_args)
+
+        # issue from not authorized user
+        with brownie.reverts(revert_msg="500001"):
+            bond_token.bulkIssueFrom.transact(
+                [issuer], [brownie.ZERO_ADDRESS], [1], {"from": users["user1"]}
+            )
+
+    # Error_3
+    # Some list lengths are unequal.
+    # -> revert: 111301
+    def test_error_3(self, users, IbetStraightBond):
+        issuer = users["issuer"]
+        issue_amount = 10
+
+        # issue token
+        deploy_args = init_args()
+        deploy_args[2] = 1000
+        bond_token = issuer.deploy(IbetStraightBond, *deploy_args)
+
+        # bulk issue
+        with brownie.reverts(revert_msg="121301"):
+            bond_token.bulkIssueFrom.transact(
+                [issuer, brownie.ETH_ADDRESS],
+                [brownie.ZERO_ADDRESS],
+                [issue_amount],
+                {"from": issuer},
+            )
+
+        # assertion
+        assert bond_token.totalSupply() == deploy_args[2]
+        assert bond_token.balanceOf(issuer) == deploy_args[2]
+        assert bond_token.balanceOf(brownie.ETH_ADDRESS) == 0
+
+
 # TEST_setFaceValue
 class TestSetFaceValue:
 
@@ -2088,6 +2377,241 @@ class TestRedeemFrom:
         with brownie.reverts(revert_msg="500001"):
             bond_token.redeemFrom.transact(
                 issuer, brownie.ZERO_ADDRESS, redeem_amount, {"from": users["user1"]}
+            )
+
+        # assertion
+        assert bond_token.totalSupply() == deploy_args[2]
+        assert bond_token.balanceOf(issuer) == deploy_args[2]
+
+
+# TEST_bulkRedeemFrom
+class TestBulkRedeemFrom:
+
+    #######################################
+    # Normal
+    #######################################
+
+    # Normal_1
+    # Redeem from EOA
+    def test_normal_1(self, users, IbetStraightBond):
+        issuer = users["issuer"]
+        transfer_amount = 20
+        redeem_amount = 10
+
+        # issue token
+        deploy_args = init_args()
+        bond_token = issuer.deploy(IbetStraightBond, *deploy_args)
+
+        # transfer token to other EOA
+        bond_token.transferFrom.transact(
+            issuer, brownie.ETH_ADDRESS, transfer_amount, {"from": issuer}
+        )
+
+        # bulk redeem
+        bond_token.bulkRedeemFrom.transact(
+            [issuer, brownie.ETH_ADDRESS],
+            [brownie.ZERO_ADDRESS, brownie.ZERO_ADDRESS],
+            [redeem_amount, redeem_amount],
+            {"from": issuer},
+        )
+
+        # assertion
+        assert bond_token.totalSupply() == deploy_args[2] - redeem_amount * 2
+        assert (
+            bond_token.balanceOf(issuer)
+            == deploy_args[2] - transfer_amount - redeem_amount
+        )
+        assert (
+            bond_token.balanceOf(brownie.ETH_ADDRESS) == transfer_amount - redeem_amount
+        )
+
+    # Normal_2
+    # Redeem from locked address
+    def test_normal_2(self, users, IbetStraightBond):
+        issuer = users["issuer"]
+        lock_address = users["user1"]
+        transfer_amount = 30
+        lock_amount = 20
+        redeem_amount = 10
+
+        # issue token
+        deploy_args = init_args()
+        deploy_args[2] = 1000
+        bond_token = issuer.deploy(IbetStraightBond, *deploy_args)
+
+        # transfer token to other EOA
+        bond_token.transferFrom.transact(
+            issuer, brownie.ETH_ADDRESS, transfer_amount, {"from": issuer}
+        )
+
+        # lock
+        bond_token.lock.transact(
+            lock_address, lock_amount, "lock_message", {"from": issuer}
+        )
+        bond_token.lock.transact(
+            lock_address, lock_amount, "lock_message", {"from": brownie.ETH_ADDRESS}
+        )
+
+        # bulk redeem from lock address
+        bond_token.bulkRedeemFrom.transact(
+            [issuer, brownie.ETH_ADDRESS],
+            [lock_address, lock_address],
+            [redeem_amount, redeem_amount],
+            {"from": issuer},
+        )
+
+        # assertion
+        assert bond_token.totalSupply() == deploy_args[2] - redeem_amount * 2
+
+        assert (
+            bond_token.balanceOf(issuer)
+            == deploy_args[2] - transfer_amount - lock_amount
+        )
+        assert (
+            bond_token.balanceOf(brownie.ETH_ADDRESS) == transfer_amount - lock_amount
+        )
+
+        assert bond_token.lockedOf(lock_address, issuer) == lock_amount - redeem_amount
+        assert (
+            bond_token.lockedOf(lock_address, brownie.ETH_ADDRESS)
+            == lock_amount - redeem_amount
+        )
+
+    #######################################
+    # Error
+    #######################################
+
+    # Error_1
+    # Some list lengths are unequal.
+    # -> revert: 111401
+    def test_error_1(self, users, IbetStraightBond):
+        issuer = users["issuer"]
+        transfer_amount = 20
+        redeem_amount = 10
+
+        # issue token
+        deploy_args = init_args()
+        bond_token = issuer.deploy(IbetStraightBond, *deploy_args)
+
+        # transfer token to other EOA
+        bond_token.transferFrom.transact(
+            issuer, brownie.ETH_ADDRESS, transfer_amount, {"from": issuer}
+        )
+
+        # bulk redeem
+        with brownie.reverts(revert_msg="121401"):
+            bond_token.bulkRedeemFrom.transact(
+                [issuer, brownie.ETH_ADDRESS],
+                [brownie.ZERO_ADDRESS],
+                [redeem_amount],
+                {"from": issuer},
+            )
+
+        # assertion
+        assert bond_token.totalSupply() == deploy_args[2]
+        assert bond_token.balanceOf(issuer) == deploy_args[2] - transfer_amount
+        assert bond_token.balanceOf(brownie.ETH_ADDRESS) == transfer_amount
+
+    # Error_2_1
+    # Exceeds balance
+    # -> revert: 111102
+    def test_error_2_1(self, users, IbetStraightBond):
+        issuer = users["issuer"]
+        transfer_amount = 90
+        redeem_amount = 11
+
+        # issue token
+        deploy_args = init_args()
+        deploy_args[2] = 100
+        bond_token = issuer.deploy(IbetStraightBond, *deploy_args)
+
+        # transfer token to other EOA
+        bond_token.transferFrom.transact(
+            issuer, brownie.ETH_ADDRESS, transfer_amount, {"from": issuer}
+        )
+
+        # redeem
+        with brownie.reverts(revert_msg="121102"):
+            bond_token.bulkRedeemFrom.transact(
+                [brownie.ETH_ADDRESS, issuer],
+                [brownie.ZERO_ADDRESS, brownie.ZERO_ADDRESS],
+                [redeem_amount, redeem_amount],
+                {"from": issuer},
+            )
+
+        # assertion
+        assert bond_token.totalSupply() == deploy_args[2]
+        assert bond_token.balanceOf(issuer) == deploy_args[2] - transfer_amount
+        assert bond_token.balanceOf(brownie.ETH_ADDRESS) == transfer_amount
+
+    # Error_2_2
+    # Exceeds locked quantity
+    # revert: 111101
+    def test_error_2_2(self, users, IbetStraightBond):
+        issuer = users["issuer"]
+        lock_address = users["user1"]
+        transfer_amount = 80
+        lock_amount = 20
+
+        # issue token
+        deploy_args = init_args()
+        deploy_args[2] = 1000
+        bond_token = issuer.deploy(IbetStraightBond, *deploy_args)
+
+        # transfer token to other EOA
+        bond_token.transferFrom.transact(
+            issuer, brownie.ETH_ADDRESS, transfer_amount, {"from": issuer}
+        )
+
+        # lock
+        bond_token.lock.transact(
+            lock_address, lock_amount, "lock_message", {"from": issuer}
+        )
+        bond_token.lock.transact(
+            lock_address, lock_amount, "lock_message", {"from": brownie.ETH_ADDRESS}
+        )
+
+        # redeem from lock address
+        with brownie.reverts(revert_msg="121101"):
+            bond_token.bulkRedeemFrom.transact(
+                [brownie.ETH_ADDRESS, issuer],
+                [lock_address, lock_address],
+                [20, 21],
+                {"from": issuer},
+            )
+
+        # assertion
+        assert bond_token.totalSupply() == deploy_args[2]
+
+        assert (
+            bond_token.balanceOf(issuer)
+            == deploy_args[2] - transfer_amount - lock_amount
+        )
+        assert (
+            bond_token.balanceOf(brownie.ETH_ADDRESS) == transfer_amount - lock_amount
+        )
+
+        assert bond_token.lockedOf(lock_address, issuer) == lock_amount
+        assert bond_token.lockedOf(lock_address, brownie.ETH_ADDRESS) == lock_amount
+
+    # Error_3
+    # Not authorized
+    # -> revert: 500001
+    def test_error_3(self, users, IbetStraightBond):
+        issuer = users["issuer"]
+        redeem_amount = 100
+
+        # issue token
+        deploy_args = init_args()
+        bond_token = issuer.deploy(IbetStraightBond, *deploy_args)
+
+        # redeem
+        with brownie.reverts(revert_msg="500001"):
+            bond_token.bulkRedeemFrom.transact(
+                [issuer],
+                [brownie.ZERO_ADDRESS],
+                [redeem_amount],
+                {"from": users["user1"]},
             )
 
         # assertion

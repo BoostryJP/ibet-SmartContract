@@ -70,7 +70,7 @@ abstract contract IbetStandardTokenInterface {
      * 移転関連機能
      */
 
-    /// @notice トークンの移転
+    /// @notice 移転
     /// @dev 発行体のみ実行可能
     /// @param _to 宛先アドレス
     /// @param _value 移転数量
@@ -91,13 +91,24 @@ abstract contract IbetStandardTokenInterface {
         uint256 _value
     ) public virtual returns (bool success);
 
-    /// @notice トークンの一括移転
+    /// @notice 移転（一括）
     /// @param _toList 宛先アドレスのリスト
     /// @param _valueList 移転数量のリスト
     /// @return success 処理結果
     function bulkTransfer(
-        address[] memory _toList,
-        uint[] memory _valueList
+        address[] calldata _toList,
+        uint[] calldata _valueList
+    ) public virtual returns (bool success);
+
+    /// @notice 強制移転（一括）
+    /// @param _fromList 移転元アドレスのリスト
+    /// @param _toList 移転先アドレスのリスト
+    /// @param _valueList 移転数量のリスト
+    /// @return success 処理結果
+    function bulkTransferFrom(
+        address[] calldata _fromList,
+        address[] calldata _toList,
+        uint256[] calldata _valueList
     ) public virtual returns (bool success);
 
     /// Event: 移転
