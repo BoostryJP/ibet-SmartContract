@@ -139,6 +139,24 @@ Developers will receive error msg as code, and each error code is described belo
 |------------|----------------------------------------------------|-----------------|
 | **111201** | Unlock amount is greater than locked amount.       | -               |
 
+#### bulkIssueFrom (1113XX)
+
+| Code       | Situation                                                                      | Possible causes | 
+|------------|--------------------------------------------------------------------------------|-----------------|
+| **111301** | The length of the target address, the lock address and the amount don't match. | -               |
+
+#### bulkRedeemFrom (1114XX)
+
+| Code       | Situation                                                                      | Possible causes | 
+|------------|--------------------------------------------------------------------------------|-----------------|
+| **111401** | The length of the target address, the lock address and the amount don't match. | -               |
+
+#### bulkTransferFrom (1115XX)
+
+| Code       | Situation                                   | Possible causes | 
+|------------|---------------------------------------------|-----------------|
+| **111501** | The From, To and Value lengths don't match. | -               |
+
 ### IbetStraightBond (12XXXX)
 
 #### lock (1200XX)
@@ -230,6 +248,24 @@ Developers will receive error msg as code, and each error code is described belo
 |------------|----------------------------------------------------|-----------------|
 | **121201** | Unlock amount is greater than locked amount.       | -               |
 
+#### bulkIssueFrom (1213XX)
+
+| Code       | Situation                                                                      | Possible causes | 
+|------------|--------------------------------------------------------------------------------|-----------------|
+| **121301** | The length of the target address, the lock address and the amount don't match. | -               |
+
+#### bulkRedeemFrom (1214XX)
+
+| Code       | Situation                                                                      | Possible causes | 
+|------------|--------------------------------------------------------------------------------|-----------------|
+| **121401** | The length of the target address, the lock address and the amount don't match. | -               |
+
+#### bulkTransferFrom (1215XX)
+
+| Code       | Situation                                   | Possible causes | 
+|------------|---------------------------------------------|-----------------|
+| **121501** | The From, To and Value lengths don't match. | -               |
+
 ### IbetCoupon (13XXXX)
 
 #### transferToContract (1300XX)
@@ -272,6 +308,12 @@ Developers will receive error msg as code, and each error code is described belo
 | **130501** | Offering is stopped.                                                    | -               |
 | **130502** | Personal information of message sender isn't registered to token owner. |                 |
 
+#### bulkTransferFrom (1306XX)
+
+| Code       | Situation                                   | Possible causes | 
+|------------|---------------------------------------------|-----------------|
+| **130601** | The From, To and Value lengths don't match. | -               |
+
 ### IbetMembership (14XXXX)
 
 #### transferToContract (1400XX)
@@ -308,6 +350,12 @@ Developers will receive error msg as code, and each error code is described belo
 | **140401** | Offering is stopped.                                                    | -               |
 | **140402** | Personal information of message sender isn't registered to token owner. |                 |
 
+#### bulkTransferFrom (1405XX)
+
+| Code       | Situation                                   | Possible causes | 
+|------------|---------------------------------------------|-----------------|
+| **140501** | The From, To and Value lengths don't match. | -               |
+
 ### IbetStandardToken (15XXXX)
 
 #### transferToContract (1500XX)
@@ -334,6 +382,12 @@ Developers will receive error msg as code, and each error code is described belo
 | Code       | Situation                                             | Possible causes | 
 |------------|-------------------------------------------------------|-----------------|
 | **150301** | Transfer amount is greater than from address balance. | -               |
+
+#### bulkTransferFrom (1504XX)
+
+| Code       | Situation                                   | Possible causes | 
+|------------|---------------------------------------------|-----------------|
+| **150401** | The From, To and Value lengths don't match. | -               |
 
 ### ExchangeStorage (20XXXX)
 
