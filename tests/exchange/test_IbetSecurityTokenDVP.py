@@ -2866,6 +2866,110 @@ class TestAbortDelivery:
         assert st_dvp.commitmentOf(_issuer, token.address) == _delivery_amount
 
 
+# TEST_withdrawPartial
+class TestWithdrawPartial:
+
+    #######################################
+    # Normal
+    #######################################
+
+    # Normal_1
+    def test_normal_1(self, users, st_dvp):
+        _issuer = users["issuer"]
+        _value = 2**256 - 1
+
+        # issue token
+        deploy_args = init_args()
+        token = deploy(users, deploy_args=deploy_args, tradable_exchange=st_dvp.address)
+
+        # transfer to DVP contract
+        token.transfer(st_dvp.address, _value, {"from": _issuer})
+
+        # withdraw
+        tx = st_dvp.withdrawPartial(token.address, 2**256 - 1, {"from": _issuer})
+
+        # assertion
+        assert token.balanceOf(_issuer) == deploy_args[2]
+        assert st_dvp.balanceOf(_issuer, token.address) == 0
+
+        assert tx.events["Withdrawn"]["token"] == token.address
+        assert tx.events["Withdrawn"]["account"] == _issuer
+
+    #######################################
+    # Error
+    #######################################
+
+    # Error_1
+    # Insufficient balance
+    def test_error_1(self, users, st_dvp):
+        _issuer = users["issuer"]
+
+        # issue token
+        deploy_args = init_args()
+        token = deploy(users, deploy_args=deploy_args, tradable_exchange=st_dvp.address)
+
+        # transfer to DVP contract
+        token.transfer(st_dvp.address, 10, {"from": _issuer})
+
+        # withdraw
+        with brownie.reverts(revert_msg="260501"):
+            st_dvp.withdrawPartial(token.address, 11, {"from": _issuer})
+
+        # assertion
+        assert token.balanceOf(_issuer) == deploy_args[2] - 10
+        assert st_dvp.balanceOf(_issuer, token.address) == 10
+
+    # Error_2
+    # Storage is not writable.
+    def test_error_2(self, users, st_dvp, st_dvp_storage):
+        _admin = users["admin"]
+        _issuer = users["issuer"]
+        _value = 100
+
+        # issue token
+        deploy_args = init_args()
+        token = deploy(users, deploy_args=deploy_args, tradable_exchange=st_dvp.address)
+
+        # transfer to DVP contract
+        token.transfer(st_dvp.address, _value, {"from": _issuer})
+
+        # update storage
+        st_dvp_storage.upgradeVersion(brownie.ZERO_ADDRESS, {"from": _admin})
+
+        # withdraw
+        with brownie.reverts(revert_msg=""):
+            st_dvp.withdrawPartial(token.address, 10, {"from": _issuer})
+
+        # assertion
+        assert token.balanceOf(_issuer) == deploy_args[2] - _value
+        assert st_dvp.balanceOf(_issuer, token.address) == _value
+
+    # Error_3
+    # Must be transferable.
+    def test_error_3(self, users, st_dvp):
+        _issuer = users["issuer"]
+        _value = 2**256 - 1
+
+        # issue token
+        deploy_args = init_args()
+        token = deploy(users, deploy_args=deploy_args, tradable_exchange=st_dvp.address)
+
+        # transfer to DVP contract
+        token.transfer(st_dvp.address, _value, {"from": _issuer})
+
+        # set to not transferable
+        token.setTransferable(False, {"from": _issuer})
+
+        # withdraw
+        with brownie.reverts(revert_msg="110402"):
+            st_dvp.withdrawPartial(token.address, 10, {"from": _issuer})
+
+        # assertion
+        assert token.balanceOf(_issuer) == 0
+        assert token.balanceOf(st_dvp.address) == deploy_args[3]
+        assert st_dvp.balanceOf(_issuer, token.address) == deploy_args[3]
+
+
 # TEST_withdraw
 class TestWithdraw:
 

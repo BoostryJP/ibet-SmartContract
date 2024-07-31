@@ -588,6 +588,36 @@ contract IbetSecurityTokenDVP is Ownable, IbetExchangeInterface {
         return success;
     }
 
+    /// @notice 部分的に残高を引き出しする
+    /// @dev 決済で拘束されているものは引き出しされない
+    /// @param _token トークンアドレス
+    /// @param _value 引き出し数量
+    /// @return 処理結果
+    function withdrawPartial(
+        address _token,
+        uint _value
+    ) public returns (bool) {
+        uint256 balance = balanceOf(msg.sender, _token);
+
+        require(
+            balance >= _value,
+            ErrorCode.ERR_IbetSecurityTokenDVP_withdraw_260501
+        );
+
+        // 更新処理：トークン引き出し（送信）
+        IbetSecurityTokenInterface(_token).transfer(msg.sender, _value);
+        DVPStorage(storageAddress).setBalance(
+            msg.sender,
+            _token,
+            balanceOf(msg.sender, _token).sub(_value)
+        );
+
+        // イベント登録
+        emit Withdrawn(_token, msg.sender);
+
+        return true;
+    }
+
     /// @notice 全ての残高を引き出しする
     /// @dev 決済で拘束されているものは引き出しされない
     /// @param _token トークンアドレス
