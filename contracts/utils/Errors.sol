@@ -287,6 +287,8 @@ library ErrorCode {
     string constant ERR_IbetSecurityTokenDVP_abortDelivery_260404 = "260404";
     // IbetSecurityTokenDVP_withdraw
     string constant ERR_IbetSecurityTokenDVP_withdraw_260501 = "260501";
+    // IbetSecurityTokenDVP_withdrawPartial
+    string constant ERR_IbetSecurityTokenDVP_withdrawPartial_260601 = "260601";
 
     // 30XXXX
     // PaymentGateway_register
