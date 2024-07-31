@@ -601,7 +601,7 @@ contract IbetSecurityTokenDVP is Ownable, IbetExchangeInterface {
 
         require(
             balance >= _value,
-            ErrorCode.ERR_IbetSecurityTokenDVP_withdraw_260501
+            ErrorCode.ERR_IbetSecurityTokenDVP_withdrawPartial_260601
         );
 
         // 更新処理：トークン引き出し（送信）

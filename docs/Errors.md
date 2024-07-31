@@ -585,6 +585,11 @@ Developers will receive error msg as code, and each error code is described belo
 |------------|-----------------------------------------|-----------------|
 | **260501** | Message sender balance is insufficient. | -               |
 
+#### withdrawPartial (2606XX)
+| Code       | Situation                               | Possible causes | 
+|------------|-----------------------------------------|-----------------|
+| **260601** | Message sender balance is insufficient. | -               |
+
 ### PaymentGateway (30XXXX)
 
 #### register (3000XX)

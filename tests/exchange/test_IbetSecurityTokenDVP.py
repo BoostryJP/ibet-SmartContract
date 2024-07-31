@@ -2912,7 +2912,7 @@ class TestWithdrawPartial:
         token.transfer(st_dvp.address, 10, {"from": _issuer})
 
         # withdraw
-        with brownie.reverts(revert_msg="260501"):
+        with brownie.reverts(revert_msg="260601"):
             st_dvp.withdrawPartial(token.address, 11, {"from": _issuer})
 
         # assertion
