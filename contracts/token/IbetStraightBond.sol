@@ -405,6 +405,13 @@ contract IbetStraightBond is Ownable, IbetSecurityTokenInterface {
         emit ChangeFaceValue(_faceValue);
     }
 
+    /// @notice 償還日の更新
+    /// @dev オーナーのみ実行可能
+    /// @param _redemptionDate 更新後の償還日
+    function setRedemptionDate(string memory _redemptionDate) public onlyOwner {
+        redemptionDate = _redemptionDate;
+    }
+
     /// @notice 償還金額の更新
     /// @dev オーナーのみ実行可能
     /// @param _redemptionValue 更新後の償還金額
@@ -425,6 +432,13 @@ contract IbetStraightBond is Ownable, IbetSecurityTokenInterface {
 
         // イベント登録
         emit ChangeTransferApprovalRequired(_required);
+    }
+
+    /// @notice 発行目的の更新
+    /// @dev オーナーのみ実行可能
+    /// @param _purpose 更新後の発行目的
+    function setPurpose(string memory _purpose) public onlyOwner {
+        purpose = _purpose;
     }
 
     /// @notice 額面金額通貨の更新

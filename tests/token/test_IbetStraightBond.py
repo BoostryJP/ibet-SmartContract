@@ -2661,6 +2661,48 @@ class TestSetRedemptionValue:
         assert bond_token.redemptionValue() == deploy_args[6]
 
 
+# TEST_setRedemptionDate
+class TestSetRedemptionDate:
+
+    #######################################
+    # Normal
+    #######################################
+
+    # Normal_1
+    def test_normal_1(self, users, IbetStraightBond):
+        issuer = users["issuer"]
+
+        # issue token
+        deploy_args = init_args()
+        bond_token = brownie_utils.force_deploy(issuer, IbetStraightBond, *deploy_args)
+
+        # update
+        bond_token.setRedemptionDate("20240813", {"from": issuer})
+
+        # assertion
+        assert bond_token.redemptionDate() == "20240813"
+
+    #######################################
+    # Error
+    #######################################
+
+    # Error_1
+    # Not authorized
+    def test_error_1(self, users, IbetStraightBond):
+        issuer = users["issuer"]
+
+        # issue token
+        deploy_args = init_args()
+        bond_token = brownie_utils.force_deploy(issuer, IbetStraightBond, *deploy_args)
+
+        # update
+        with brownie.reverts(revert_msg="500001"):
+            bond_token.setRedemptionDate("20240813", {"from": users["user1"]})
+
+        # assertion
+        assert bond_token.redemptionDate() == deploy_args[5]
+
+
 # TEST_setTransferApprovalRequired
 class TestSetTransferApprovalRequired:
 
@@ -2723,6 +2765,48 @@ class TestSetTransferApprovalRequired:
 
         # assertion
         assert bond_token.transferApprovalRequired() == False
+
+
+# TEST_setPurpose
+class TestSetPurpose:
+
+    #######################################
+    # Normal
+    #######################################
+
+    # Normal_1
+    def test_normal_1(self, users, IbetStraightBond):
+        issuer = users["issuer"]
+
+        # issue token
+        deploy_args = init_args()
+        bond_token = brownie_utils.force_deploy(issuer, IbetStraightBond, *deploy_args)
+
+        # update
+        bond_token.setPurpose("updated_purpose", {"from": issuer})
+
+        # assertion
+        assert bond_token.purpose() == "updated_purpose"
+
+    #######################################
+    # Error
+    #######################################
+
+    # Error_1
+    # Not authorized
+    def test_error_1(self, users, IbetStraightBond):
+        issuer = users["issuer"]
+
+        # issue token
+        deploy_args = init_args()
+        bond_token = brownie_utils.force_deploy(issuer, IbetStraightBond, *deploy_args)
+
+        # update
+        with brownie.reverts(revert_msg="500001"):
+            bond_token.setPurpose("updated_purpose", {"from": users["user1"]})
+
+        # assertion
+        assert bond_token.purpose() == deploy_args[10]
 
 
 # TEST_setFaceValueCurrency
