@@ -51,7 +51,8 @@ RUN addgroup -g 1000 apl \
  && echo 'export PATH=$PATH:$HOME/.local/bin' >> ~apl/.bash_profile
 
 # Install python packages
-RUN python -m pip install poetry==1.7.1 && python -m poetry config virtualenvs.create false
+RUN pip install --upgrade --no-cache-dir pip setuptools
+RUN python -m pip install poetry==1.8.3 && python -m poetry config virtualenvs.create false
 COPY pyproject.toml /app/pyproject.toml
 COPY poetry.lock /app/poetry.lock
 RUN python -m poetry install --no-root --directory /app/ \
