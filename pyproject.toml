@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "ibet-SmartContract"
-version = "24.9.0"
+version = "24.12"
 description = "SmartContracts that provides token standards, decentralized exchanges, and other utility functions that can be used on the ibet-Network."
 authors = ["BOOSTRY Co., Ltd. <dev@boostry.co.jp>"]
 license = "Apache License, Version 2.0"
