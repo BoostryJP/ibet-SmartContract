@@ -20,7 +20,7 @@ dev-dependencies = [
 [tool.ruff]
 line-length = 88
 indent-width = 4
-target-version = "py312"
+target-version = "py311"
 exclude = [".venv/*"]
 
 [tool.ruff.format]
@@ -45,7 +45,7 @@ extend-select = ["UP042"]
 # E731: Do not assign a lambda expression, use a def
 # E501: Line too long (trust formatter)
 ignore = ["E402", "E711", "E712", "E721", "E722", "E731", "E501"]
-exclude = ["migrations/*", ".venv/*", "cov/*"]
+exclude = [".venv/*"]
 
 [tool.ruff.lint.extend-per-file-ignores]
 # F401 [*] xxx imported but unused
