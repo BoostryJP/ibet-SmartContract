@@ -19,7 +19,7 @@
 
 # Import account (private key)
 function import_account() {
-  source ~/.bash_profile
+  source ~/.profile
   cd /app/ibet-SmartContract
 
   if [ -e ~/.brownie/accounts/deploy_user.json ]; then

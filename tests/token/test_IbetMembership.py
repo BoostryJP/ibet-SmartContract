@@ -52,7 +52,6 @@ def init_args(exchange_address):
 
 # TEST_deploy
 class TestDeploy:
-
     ##########################################################
     # Normal
     ##########################################################
@@ -98,7 +97,6 @@ class TestDeploy:
 
 # TEST_transfer
 class TestTransfer:
-
     ##########################################################
     # Normal
     ##########################################################
@@ -312,7 +310,6 @@ class TestTransfer:
 
 # TEST_bulkTransfer
 class TestBulkTransfer:
-
     #######################################
     # Normal
     #######################################
@@ -461,7 +458,6 @@ class TestBulkTransfer:
 
 # TEST_transferFrom
 class TestTransferFrom:
-
     ##########################################################
     # Normal
     ##########################################################
@@ -646,7 +642,6 @@ class TestTransferFrom:
 
 # TEST_bulkTransferFrom
 class TestBulkTransferFrom:
-
     #######################################
     # Normal
     #######################################
@@ -753,7 +748,6 @@ class TestBulkTransferFrom:
 
 # TEST_balanceOf
 class TestBalanceOf:
-
     ##########################################################
     # Normal
     ##########################################################
@@ -787,7 +781,6 @@ class TestBalanceOf:
 
 # TEST_setDetails
 class TestSetDetails:
-
     ##########################################################
     # Normal
     ##########################################################
@@ -834,7 +827,6 @@ class TestSetDetails:
 
 # TEST_setReturnDetails
 class TestSetReturnDetails:
-
     ##########################################################
     # Normal
     ##########################################################
@@ -885,7 +877,6 @@ class TestSetReturnDetails:
 
 # TEST_setExpirationDate
 class TestSetExpirationDate:
-
     ##########################################################
     # Normal
     ##########################################################
@@ -936,7 +927,6 @@ class TestSetExpirationDate:
 
 # TEST_setMemo
 class TestSetMemo:
-
     ##########################################################
     # Normal
     ##########################################################
@@ -983,7 +973,6 @@ class TestSetMemo:
 
 # TEST_setTransferable
 class TestSetTransferable:
-
     ##########################################################
     # Normal
     ##########################################################
@@ -1034,7 +1023,6 @@ class TestSetTransferable:
 
 # TEST_setStatus
 class TestSetStatus:
-
     ##########################################################
     # Normal
     ##########################################################
@@ -1081,7 +1069,6 @@ class TestSetStatus:
 
 # TEST_setImageURL, getImageURL
 class TestSetImageUrl:
-
     ##########################################################
     # Normal
     ##########################################################
@@ -1128,7 +1115,6 @@ class TestSetImageUrl:
 
 # TEST_issue
 class TestIssue:
-
     ##########################################################
     # Normal
     ##########################################################
@@ -1217,7 +1203,6 @@ class TestIssue:
 
 # TEST_setTradableExchange
 class TestSetTradableExchange:
-
     ##########################################################
     # Normal
     ##########################################################
@@ -1264,7 +1249,6 @@ class TestSetTradableExchange:
 
 # TEST_setInitialOfferingStatus
 class TestSetInitialOfferingStatus:
-
     ##########################################################
     # Normal
     ##########################################################
@@ -1309,7 +1293,6 @@ class TestSetInitialOfferingStatus:
 
 # TEST_applyForOffering
 class TestApplyForOffering:
-
     ##########################################################
     # Normal
     ##########################################################
@@ -1370,7 +1353,6 @@ class TestApplyForOffering:
 
 # TEST_setContactInformation
 class TestSetContactInformation:
-
     #######################################
     # Normal
     #######################################
@@ -1418,7 +1400,6 @@ class TestSetContactInformation:
 
 # TEST_setPrivacyPolicy
 class TestSetPrivacyPolicy:
-
     #######################################
     # Normal
     #######################################

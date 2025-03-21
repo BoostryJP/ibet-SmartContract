@@ -27,7 +27,6 @@ terms_text_after = "terms_sample\nafter\nend"
 
 # TEST_deploy
 class TestDeploy:
-
     #######################################
     # Normal
     #######################################
@@ -54,7 +53,6 @@ class TestDeploy:
 
 # TEST_register
 class TestRegister:
-
     #######################################
     # Normal
     #######################################
@@ -149,7 +147,6 @@ class TestRegister:
 
 # TEST_modify
 class TestModify:
-
     #######################################
     # Normal
     #######################################
@@ -237,7 +234,6 @@ class TestModify:
 
 # TEST_approve
 class TestApprove:
-
     #######################################
     # Normal
     #######################################
@@ -295,7 +291,6 @@ class TestApprove:
 
 # TEST_warn
 class TestWarn:
-
     #######################################
     # Normal
     #######################################
@@ -353,7 +348,6 @@ class TestWarn:
 
 # TEST_disapprove
 class TestDisapprove:
-
     #######################################
     # Normal
     #######################################
@@ -440,7 +434,6 @@ class TestDisapprove:
 
 # TEST_ban
 class TestBan:
-
     #######################################
     # Normal
     #######################################
@@ -498,7 +491,6 @@ class TestBan:
 
 # TEST_addAgent
 class TestAddAgent:
-
     #######################################
     # Normal
     #######################################
@@ -581,7 +573,6 @@ class TestAddAgent:
 
 # TEST_removeAgent
 class TestRemoveAgent:
-
     #######################################
     # Normal
     #######################################

@@ -44,7 +44,6 @@ from brownie.project.ibet_smart_contract import (
 
 
 def main():
-
     # Settings
     deployer = set_up_deployer()
 

@@ -31,7 +31,6 @@ deploy_args = [
 
 # TEST_register
 class TestRegister:
-
     #######################################
     # Normal
     #######################################
@@ -117,7 +116,6 @@ class TestRegister:
 
 # TEST_changeOwner
 class TestChangeOwner:
-
     #######################################
     # Normal
     #######################################
@@ -227,7 +225,6 @@ class TestChangeOwner:
 
 # TEST_getOwnerAddress
 class TestGetOwnerAddress:
-
     #######################################
     # Normal
     #######################################
@@ -254,7 +251,6 @@ class TestGetOwnerAddress:
 
 # TEST_getListLength
 class TestGetListLength:
-
     #######################################
     # Normal
     #######################################
@@ -281,7 +277,6 @@ class TestGetListLength:
 
 # TEST_getTokenByNum
 class TestGetTokenByNum:
-
     #######################################
     # Normal
     #######################################
@@ -312,7 +307,6 @@ class TestGetTokenByNum:
 
 # TEST_getTokenByAddress
 class TestGetTokenByAddress:
-
     #######################################
     # Normal
     #######################################

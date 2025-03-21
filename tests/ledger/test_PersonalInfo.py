@@ -25,7 +25,6 @@ encrypted_message_after = "encrypted_message_after"
 
 # TEST_register
 class TestRegister:
-
     #######################################
     # Normal
     #######################################
@@ -78,7 +77,6 @@ class TestRegister:
 
 # TEST_isRegistered
 class TestIsRegistered:
-
     #######################################
     # Normal
     #######################################
@@ -108,7 +106,6 @@ class TestIsRegistered:
 
 # TEST_modify
 class TestModify:
-
     #######################################
     # Normal
     #######################################
@@ -185,7 +182,6 @@ class TestModify:
 
 # TEST_forceRegister
 class TestForceRegister:
-
     #######################################
     # Normal
     #######################################
