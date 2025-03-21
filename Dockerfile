@@ -1,27 +1,36 @@
 FROM python:3.11-alpine3.19
 
+ENV UV_VERSION=0.6.5
+ENV UV_COMPILE_BYTECODE=1
+ENV UV_LINK_MODE=copy
+ENV UV_INSTALL_DIR="/usr/local/bin"
+ENV UV_PROJECT_ENVIRONMENT="/home/apl/.venv"
+
 # make application directory
 RUN mkdir -p /app/ibet-SmartContract/
 
 # install packages
 RUN apk update \
- && apk add --no-cache --virtual .build-deps \
-      # use Python package installation
-      make \
-      gcc \
-      pkgconfig \
-      build-base \
-      libressl-dev \
-      libffi-dev \
-      autoconf \
-      automake \
-      libtool \
-      git \
-      # use Solidity compiler and AWS CLI
-      z3 \
-      # use deploy.sh
-      jq \
-      expect
+    && apk add --no-cache --virtual .build-deps \
+    # use Python package installation
+    make \
+    gcc \
+    pkgconfig \
+    build-base \
+    libressl-dev \
+    libffi-dev \
+    autoconf \
+    automake \
+    libtool \
+    git \
+    # use Solidity compiler
+    z3 \
+    # AWS CLI
+    aws-cli \
+    mandoc \
+    # use deploy.sh
+    jq \
+    expect
 
 # use glibc instead of musl-dev
 # NOTE: This is because if it is musl-dev, an dynamic link error will occur in Solidity compiler.
@@ -31,30 +40,35 @@ RUN wget -q -O /etc/apk/keys/sgerrand.rsa.pub https://alpine-pkgs.sgerrand.com/s
  && rm -f glibc-2.33-r0.apk
 ENV LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/lib
 
-# AWS CLI
-RUN wget -q https://awscli.amazonaws.com/awscli-exe-linux-$(arch).zip -O awscliv2.zip \
- && unzip awscliv2.zip \
- && ./aws/install \
- && rm -r aws awscliv2.zip
-
 # add apl user/group
-# NOTE: '/bin/bash' was added when 'libtool' installed.
 RUN addgroup -g 1000 apl \
  && adduser -G apl -D -s /bin/bash -u 1000 apl \
  && echo 'apl ALL=(ALL) NOPASSWD:ALL' >> /etc/sudoers \
  && chown -R apl:apl /app \
- && echo 'export LANG=ja_JP.utf8' >> ~apl/.bash_profile \
- && echo 'export PATH=$PATH:$HOME/.local/bin' >> ~apl/.bash_profile
+ && echo 'export LANG=ja_JP.utf8' >> ~apl/.profile
 
-# Python requirements
-RUN python -m pip install poetry==1.7.1 && python -m poetry config virtualenvs.create false
-COPY pyproject.toml /app/pyproject.toml
-COPY poetry.lock /app/poetry.lock
-RUN python -m poetry install --no-root --directory /app/ \
-  && rm -f /app/pyproject.toml \
-  && rm -f /app/poetry.lock
+# install uv
+ADD https://astral.sh/uv/$UV_VERSION/install.sh /uv-installer.sh
+RUN INSTALLER_NO_MODIFY_PATH=1 sh /uv-installer.sh && rm /uv-installer.sh
+RUN echo 'if [ -f ~/.ashrc ]; then' >> ~apl/.profile \
+ && echo '    . ~/.ashrc' >> ~apl/.profile \
+ && echo 'fi' >> ~apl/.profile \
+ && echo '. $HOME/.venv/bin/activate' >> ~apl/.ashrc
 
-# app deploy
+# prepare venv
+USER apl
+RUN mkdir /home/apl/.venv
+
+# install python packages
+COPY pyproject.toml /app/ibet-SmartContract/pyproject.toml
+COPY uv.lock /app/ibet-SmartContract/uv.lock
+RUN cd /app/ibet-SmartContract \
+ && uv venv $UV_PROJECT_ENVIRONMENT \
+ && uv sync --frozen --no-dev --no-install-project \
+ && rm -f /app/ibet-SmartContract/pyproject.toml \
+ && rm -f /app/ibet-SmartContract/uv.lock
+
+# deploy app
 USER apl
 COPY --chown=apl:apl LICENSE /app/ibet-SmartContract/
 RUN mkdir -p /app/ibet-SmartContract/tools/
@@ -62,7 +76,7 @@ COPY --chown=apl:apl tools/ /app/ibet-SmartContract/tools/
 COPY --chown=apl:apl brownie-config.yaml /app/ibet-SmartContract/
 RUN mkdir -p /app/ibet-SmartContract/data/
 COPY --chown=apl:apl data/ /app/ibet-SmartContract/data/
-RUN source ~apl/.bash_profile \
+RUN source ~apl/.profile \
  && cd /app/ibet-SmartContract/ \
  && brownie networks import data/networks.yml
 RUN mkdir -p /app/ibet-SmartContract/scripts/
@@ -74,4 +88,7 @@ COPY --chown=apl:apl contracts/ /app/ibet-SmartContract/contracts/
 RUN find /app/ibet-SmartContract/ -type d -name __pycache__ | xargs rm -fr \
  && chmod -R 755 /app/ibet-SmartContract/
 
-CMD sh /app/ibet-SmartContract/scripts/deploy_shared_contract.sh
+ENV PYTHONUNBUFFERED=1
+ENV PYTHONPATH=/app/ibet-SmartContract
+
+CMD ["sh"]

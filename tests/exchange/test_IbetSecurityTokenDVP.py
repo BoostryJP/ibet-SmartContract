@@ -58,7 +58,6 @@ def deploy(
 
 # TEST_deploy
 class TestDeploy:
-
     #######################################
     # Normal
     #######################################
@@ -72,7 +71,6 @@ class TestDeploy:
 
 # TEST_storageAddress
 class TestStorageAddress:
-
     #######################################
     # Normal
     #######################################
@@ -85,7 +83,6 @@ class TestStorageAddress:
 
 # TEST_latestDeliveryId
 class TestLatestDeliveryId:
-
     #######################################
     # Normal
     #######################################
@@ -117,7 +114,6 @@ class TestLatestDeliveryId:
 
 # TEST_getDelivery
 class TestGetDelivery:
-
     #######################################
     # Normal
     #######################################
@@ -194,7 +190,6 @@ class TestGetDelivery:
 
 # TEST_balanceOf
 class TestBalanceOf:
-
     #######################################
     # Normal
     #######################################
@@ -241,7 +236,6 @@ class TestBalanceOf:
 
 # TEST_commitmentOf
 class TestCommitmentOf:
-
     #######################################
     # Normal
     #######################################
@@ -305,7 +299,6 @@ class TestCommitmentOf:
 
 # TEST_createDelivery
 class TestCreateDelivery:
-
     #######################################
     # Normal
     #######################################
@@ -605,7 +598,6 @@ class TestCreateDelivery:
 
 # TEST_cancelDelivery
 class TestCancelDelivery:
-
     #######################################
     # Normal
     #######################################
@@ -881,7 +873,6 @@ class TestCancelDelivery:
 
 # TEST_confirmDelivery
 class TestConfirmDelivery:
-
     #######################################
     # Normal
     #######################################
@@ -1252,7 +1243,6 @@ class TestConfirmDelivery:
 
 # TEST_finishDelivery
 class TestFinishDelivery:
-
     #######################################
     # Normal
     #######################################
@@ -1653,7 +1643,6 @@ class TestFinishDelivery:
 
 # TEST_bulkFinishDelivery
 class TestBulkFinishDelivery:
-
     #######################################
     # Normal
     #######################################
@@ -2576,7 +2565,6 @@ class TestBulkFinishDelivery:
 
 # TEST_abortDelivery
 class TestAbortDelivery:
-
     #######################################
     # Normal
     #######################################
@@ -2868,7 +2856,6 @@ class TestAbortDelivery:
 
 # TEST_withdrawPartial
 class TestWithdrawPartial:
-
     #######################################
     # Normal
     #######################################
@@ -2972,7 +2959,6 @@ class TestWithdrawPartial:
 
 # TEST_withdraw
 class TestWithdraw:
-
     #######################################
     # Normal
     #######################################
@@ -3073,7 +3059,6 @@ class TestWithdraw:
 
 # TEST_tokenFallback
 class TestTokenFallback:
-
     #######################################
     # Normal
     #######################################

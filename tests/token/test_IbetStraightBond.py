@@ -89,7 +89,6 @@ def issue_transferable_bond_token(issuer, exchange_address, personal_info_addres
 
 # TEST_deploy
 class TestDeploy:
-
     # Normal_1
     def test_normal_1(self, users, IbetStraightBond):
         issuer = users["issuer"]
@@ -138,7 +137,6 @@ class TestDeploy:
 
 # TEST_transfer
 class TestTransfer:
-
     #######################################
     # Normal
     #######################################
@@ -370,7 +368,6 @@ class TestTransfer:
 
 # TEST_bulkTransfer
 class TestBulkTransfer:
-
     #######################################
     # Normal
     #######################################
@@ -594,7 +591,6 @@ class TestBulkTransfer:
 
 # TEST_transferFrom
 class TestTransferFrom:
-
     #######################################
     # Normal
     #######################################
@@ -677,7 +673,6 @@ class TestTransferFrom:
 
 # TEST_bulkTransferFrom
 class TestBulkTransferFrom:
-
     #######################################
     # Normal
     #######################################
@@ -796,7 +791,6 @@ class TestBulkTransferFrom:
 
 # TEST_balanceOf
 class TestBalanceOf:
-
     #######################################
     # Normal
     #######################################
@@ -816,7 +810,6 @@ class TestBalanceOf:
 
 # TEST_setTradableExchange
 class TestSetTradableExchange:
-
     #######################################
     # Normal
     #######################################
@@ -860,7 +853,6 @@ class TestSetTradableExchange:
 
 # TEST_setPersonalInfoAddress
 class TestSetPersonalInfoAddress:
-
     #######################################
     # Normal
     #######################################
@@ -906,7 +898,6 @@ class TestSetPersonalInfoAddress:
 
 # TEST_setRequirePersonalInfoRegistered
 class TestSetRequirePersonalInfoRegistered:
-
     #######################################
     # Normal
     #######################################
@@ -950,7 +941,6 @@ class TestSetRequirePersonalInfoRegistered:
 
 # TEST_setContactInformation
 class TestSetContactInformation:
-
     #######################################
     # Normal
     #######################################
@@ -998,7 +988,6 @@ class TestSetContactInformation:
 
 # TEST_setPrivacyPolicy
 class TestSetPrivacyPolicy:
-
     #######################################
     # Normal
     #######################################
@@ -1044,7 +1033,6 @@ class TestSetPrivacyPolicy:
 
 # TEST_setMemo
 class TestSetMemo:
-
     #######################################
     # Normal
     #######################################
@@ -1087,7 +1075,6 @@ class TestSetMemo:
 
 # TEST_setInterestRate
 class TestSetInterestRate:
-
     #######################################
     # Normal
     #######################################
@@ -1131,7 +1118,6 @@ class TestSetInterestRate:
 
 # TEST_setInterestPaymentDate
 class TestSetInterestPaymentDate:
-
     #######################################
     # Normal
     #######################################
@@ -1183,7 +1169,6 @@ class TestSetInterestPaymentDate:
 
 # TEST_setTransferable
 class TestSetTransferable:
-
     #######################################
     # Normal
     #######################################
@@ -1225,7 +1210,6 @@ class TestSetTransferable:
 
 # TEST_setStatus
 class TestSetStatus:
-
     #######################################
     # Normal
     #######################################
@@ -1264,7 +1248,6 @@ class TestSetStatus:
 
 # TEST_changeOfferingStatus
 class TestChangeOfferingStatus:
-
     #######################################
     # Normal
     #######################################
@@ -1303,7 +1286,6 @@ class TestChangeOfferingStatus:
 
 # TEST_applyForOffering
 class TestApplyForOffering:
-
     #######################################
     # Normal
     #######################################
@@ -1475,7 +1457,6 @@ class TestApplyForOffering:
 
 # TEST_allot
 class TestAllot:
-
     #######################################
     # Normal
     #######################################
@@ -1545,7 +1526,6 @@ class TestAllot:
 
 # TEST_changeToRedeemed
 class TestChangeToRedeemed:
-
     #######################################
     # Normal
     #######################################
@@ -1589,7 +1569,6 @@ class TestChangeToRedeemed:
 
 # TEST_lock/lockedOf
 class TestLock:
-
     #######################################
     # Normal
     #######################################
@@ -1663,7 +1642,6 @@ class TestLock:
 
 # TEST_unlock
 class TestUnlock:
-
     #######################################
     # Normal
     #######################################
@@ -1749,7 +1727,6 @@ class TestUnlock:
 
 # TEST_forceUnlock
 class TestForceUnlock:
-
     #######################################
     # Normal
     #######################################
@@ -1874,7 +1851,6 @@ class TestForceUnlock:
 
 # TEST_issueFrom
 class TestIssueFrom:
-
     #######################################
     # Normal
     #######################################
@@ -2014,7 +1990,6 @@ class TestIssueFrom:
 
 # TEST_bulkIssueFrom
 class TestBulkIssueFrom:
-
     #######################################
     # Normal
     #######################################
@@ -2184,7 +2159,6 @@ class TestBulkIssueFrom:
 
 # TEST_setFaceValue
 class TestSetFaceValue:
-
     #######################################
     # Normal
     #######################################
@@ -2225,7 +2199,6 @@ class TestSetFaceValue:
 
 # TEST_redeemFrom
 class TestRedeemFrom:
-
     #######################################
     # Normal
     #######################################
@@ -2386,7 +2359,6 @@ class TestRedeemFrom:
 
 # TEST_bulkRedeemFrom
 class TestBulkRedeemFrom:
-
     #######################################
     # Normal
     #######################################
@@ -2621,7 +2593,6 @@ class TestBulkRedeemFrom:
 
 # TEST_setRedemptionValue
 class TestSetRedemptionValue:
-
     #######################################
     # Normal
     #######################################
@@ -2663,7 +2634,6 @@ class TestSetRedemptionValue:
 
 # TEST_setRedemptionDate
 class TestSetRedemptionDate:
-
     #######################################
     # Normal
     #######################################
@@ -2705,7 +2675,6 @@ class TestSetRedemptionDate:
 
 # TEST_setTransferApprovalRequired
 class TestSetTransferApprovalRequired:
-
     #######################################
     # Normal
     #######################################
@@ -2769,7 +2738,6 @@ class TestSetTransferApprovalRequired:
 
 # TEST_setPurpose
 class TestSetPurpose:
-
     #######################################
     # Normal
     #######################################
@@ -2811,7 +2779,6 @@ class TestSetPurpose:
 
 # TEST_setFaceValueCurrency
 class TestSetFaceValueCurrency:
-
     #######################################
     # Normal
     #######################################
@@ -2855,7 +2822,6 @@ class TestSetFaceValueCurrency:
 
 # TEST_setInterestPaymentCurrency
 class TestSetInterestPaymentCurrency:
-
     #######################################
     # Normal
     #######################################
@@ -2899,7 +2865,6 @@ class TestSetInterestPaymentCurrency:
 
 # TEST_setRedemptionValueCurrency
 class TestSetRedemptionValueCurrency:
-
     #######################################
     # Normal
     #######################################
@@ -2943,7 +2908,6 @@ class TestSetRedemptionValueCurrency:
 
 # TEST_setBaseFXRate
 class TestSetBaseFXRate:
-
     #######################################
     # Normal
     #######################################
@@ -2987,7 +2951,6 @@ class TestSetBaseFXRate:
 
 # TEST_applyForTransfer
 class TestApplyForTransfer:
-
     #######################################
     # Normal
     #######################################
@@ -3256,7 +3219,6 @@ class TestApplyForTransfer:
 
 # TEST_cancelTransfer
 class TestCancelTransfer:
-
     #######################################
     # Normal
     #######################################
@@ -3283,7 +3245,10 @@ class TestCancelTransfer:
 
         # apply for transfer
         bond_token.applyForTransfer(
-            user2, transfer_amount, "test_data", {"from": user1}  # from user1 to user2
+            user2,
+            transfer_amount,
+            "test_data",
+            {"from": user1},  # from user1 to user2
         )
 
         # cancel transfer (from applicant)
@@ -3327,7 +3292,10 @@ class TestCancelTransfer:
 
         # apply for transfer
         bond_token.applyForTransfer(
-            user2, transfer_amount, "test_data", {"from": user1}  # from user1 to user2
+            user2,
+            transfer_amount,
+            "test_data",
+            {"from": user1},  # from user1 to user2
         )
 
         # cancel transfer (from issuer)
@@ -3375,7 +3343,10 @@ class TestCancelTransfer:
 
         # apply for transfer
         bond_token.applyForTransfer(
-            user2, transfer_amount, "test_data", {"from": user1}  # from user1 to user2
+            user2,
+            transfer_amount,
+            "test_data",
+            {"from": user1},  # from user1 to user2
         )
 
         # cancel transfer (from issuer)
@@ -3415,7 +3386,10 @@ class TestCancelTransfer:
 
         # apply for transfer
         bond_token.applyForTransfer(
-            user2, transfer_amount, "test_data", {"from": user1}  # from user1 to user2
+            user2,
+            transfer_amount,
+            "test_data",
+            {"from": user1},  # from user1 to user2
         )
 
         # cancel transfer (1)
@@ -3439,7 +3413,6 @@ class TestCancelTransfer:
 
 # TEST_approveTransfer
 class TestApproveTransfer:
-
     #######################################
     # Normal
     #######################################

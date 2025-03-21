@@ -16,7 +16,6 @@ import brownie
 
 
 class TestRecordLog:
-
     ##########################################################
     # Normal
     ##########################################################
@@ -85,7 +84,6 @@ class TestRecordLog:
 
 
 class TestLastLogIndex:
-
     ##########################################################
     # Normal
     ##########################################################
@@ -98,12 +96,11 @@ class TestLastLogIndex:
         user2 = users["user2"]
         # Deploy contract
         freeze_log = admin.deploy(FreezeLog)
-        test_block = web3.eth.block_number + 1
         test_message = "test_message"
         test_freezing_grace_block_count = 5
 
         # Record Log
-        tx = freeze_log.recordLog(
+        freeze_log.recordLog(
             test_message, test_freezing_grace_block_count, {"from": user1}
         )
 
@@ -116,7 +113,6 @@ class TestLastLogIndex:
 
 
 class TestUpdateLog:
-
     ##########################################################
     # Normal
     ##########################################################
@@ -218,7 +214,6 @@ class TestUpdateLog:
 
 
 class TestGetLog:
-
     ##########################################################
     # Normal
     ##########################################################

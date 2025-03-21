@@ -39,7 +39,6 @@ from brownie.project.ibet_smart_contract import PaymentGateway
 
 
 def main():
-
     # Settings
     deployer = set_up_deployer()
 

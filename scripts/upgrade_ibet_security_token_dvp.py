@@ -29,7 +29,6 @@ from brownie.project.ibet_smart_contract import DVPStorage, IbetSecurityTokenDVP
 
 
 def main():
-
     # Settings
     deployer = set_up_deployer()
 
