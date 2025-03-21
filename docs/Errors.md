@@ -157,6 +157,11 @@ Developers will receive error msg as code, and each error code is described belo
 |------------|---------------------------------------------|-----------------|
 | **111501** | The From, To and Value lengths don't match. | -               |
 
+#### forceLock (1116XX)
+| Code       | Situation                                           | Possible causes | 
+|------------|-----------------------------------------------------|-----------------|
+| **111601** | Lock amount is greater than message sender balance. | -               |
+
 ### IbetStraightBond (12XXXX)
 
 #### lock (1200XX)
@@ -265,6 +270,11 @@ Developers will receive error msg as code, and each error code is described belo
 | Code       | Situation                                   | Possible causes | 
 |------------|---------------------------------------------|-----------------|
 | **121501** | The From, To and Value lengths don't match. | -               |
+
+#### forceLock (1216XX)
+| Code       | Situation                                           | Possible causes | 
+|------------|-----------------------------------------------------|-----------------|
+| **121601** | Lock amount is greater than message sender balance. | -               |
 
 ### IbetCoupon (13XXXX)
 
