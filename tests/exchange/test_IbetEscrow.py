@@ -55,7 +55,6 @@ def deploy_share(users, deploy_args):
 
 # TEST_deploy
 class TestDeploy:
-
     #######################################
     # Normal
     #######################################
@@ -69,7 +68,6 @@ class TestDeploy:
 
 # TEST_storageAddress
 class TestStorageAddress:
-
     #######################################
     # Normal
     #######################################
@@ -82,7 +80,6 @@ class TestStorageAddress:
 
 # TEST_latestEscrowId
 class TestLatestEscrowId:
-
     #######################################
     # Normal
     #######################################
@@ -114,7 +111,6 @@ class TestLatestEscrowId:
 
 # TEST_getEscrow
 class TestGetEscrow:
-
     #######################################
     # Normal
     #######################################
@@ -157,7 +153,6 @@ class TestGetEscrow:
 
 # TEST_balanceOf
 class TestBalanceOf:
-
     #######################################
     # Normal
     #######################################
@@ -183,7 +178,6 @@ class TestBalanceOf:
 
 # TEST_commitmentOf
 class TestCommitmentOf:
-
     #######################################
     # Normal
     #######################################
@@ -218,7 +212,6 @@ class TestCommitmentOf:
 
 # TEST_tokenFallback
 class TestTokenFallback:
-
     #######################################
     # Normal
     #######################################
@@ -291,7 +284,6 @@ class TestTokenFallback:
 
 # TEST_withdraw
 class TestWithdraw:
-
     #######################################
     # Normal
     #######################################
@@ -408,7 +400,6 @@ class TestWithdraw:
 
 # TEST_createEscrow
 class TestCreateEscrow:
-
     #######################################
     # Normal
     #######################################
@@ -629,7 +620,6 @@ class TestCreateEscrow:
 
 # TEST_cancelEscrow
 class TestCancelEscrow:
-
     #######################################
     # Normal
     #######################################
@@ -910,7 +900,6 @@ class TestCancelEscrow:
 
 # TEST_finishEscrow
 class TestFinishEscrow:
-
     #######################################
     # Normal
     #######################################
@@ -1185,7 +1174,6 @@ class TestFinishEscrow:
 
 # TEST_bulkFinishEscrow
 class TestBulkFinishEscrow:
-
     #######################################
     # Normal
     #######################################

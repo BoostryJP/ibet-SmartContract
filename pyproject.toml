@@ -1,23 +1,56 @@
-[tool.poetry]
+[project]
 name = "ibet-SmartContract"
 version = "25.3"
+authors = [
+    {name = "BOOSTRY Co., Ltd.", email = "dev@boostry.co.jp"},
+]
+license = {text = "Apache License, Version 2.0"}
+requires-python = "==3.11.11"
+dependencies = [
+    "eth-brownie~=1.20.3",
+]
 description = "SmartContracts that provides token standards, decentralized exchanges, and other utility functions that can be used on the ibet-Network."
-authors = ["BOOSTRY Co., Ltd. <dev@boostry.co.jp>"]
-license = "Apache License, Version 2.0"
 
-[tool.poetry.dependencies]
-python = "~3.11.0"
-eth-brownie = "~1.20.3"
+[tool.uv]
+dev-dependencies = [
+    "pre-commit<4.0.0,>=3.6.0",
+    "ruff<1.0.0,>=0.5.4",
+]
 
-[tool.poetry.group.dev.dependencies]
-pre-commit = "^3.7.0"
-black = "^24.2.0"
-isort = "^5.13.2"
+[tool.ruff]
+line-length = 88
+indent-width = 4
+target-version = "py312"
+exclude = [".venv/*"]
 
-[tool.isort]
-profile = "black"
-combine_as_imports = true
+[tool.ruff.format]
+quote-style = "double"
+indent-style = "space"
+line-ending = "auto"
+skip-magic-trailing-comma = false
 
-[build-system]
-requires = ["poetry-core>=1.0.0"]
-build-backend = "poetry.core.masonry.api"
+[tool.ruff.lint]
+preview = true
+explicit-preview-rules = true
+# E: pycodestyle
+# F: Pyflakes
+select = ["E", "F"]
+# UP042: Checks for classes that inherit from both str and enum.Enum
+extend-select = ["UP042"]
+# E711: Comparison to `None` should be `cond is None`
+# E712: Avoid equality comparisons to False
+# E721: Use is and is not for type comparisons, or isinstance() for isinstance checks
+# E722: Do not use bare except
+# E402: Module level import not at top of file
+# E731: Do not assign a lambda expression, use a def
+# E501: Line too long (trust formatter)
+ignore = ["E402", "E711", "E712", "E721", "E722", "E731", "E501"]
+exclude = ["migrations/*", ".venv/*", "cov/*"]
+
+[tool.ruff.lint.extend-per-file-ignores]
+# F401 [*] xxx imported but unused
+# F403 from .main import * used; unable to detect undefined names
+"__init__.py" = ["F401", "F403"]
+
+[tool.ruff.lint.isort]
+combine-as-imports = true

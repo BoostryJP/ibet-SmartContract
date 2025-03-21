@@ -80,7 +80,6 @@ def issue_transferable_share_token(issuer, exchange_address, personal_info_addre
 
 # TEST_deploy
 class TestDeploy:
-
     # Normal_1
     def test_normal_1(self, IbetShare, users):
         issuer = users["issuer"]
@@ -123,7 +122,6 @@ class TestDeploy:
 
 # TEST_setPrincipalValue
 class TestSetPrincipalValue:
-
     #######################################
     # Normal
     #######################################
@@ -166,7 +164,6 @@ class TestSetPrincipalValue:
 
 # TEST_setTradableExchange
 class TestSetTradableExchange:
-
     #######################################
     # Normal
     #######################################
@@ -210,7 +207,6 @@ class TestSetTradableExchange:
 
 # TEST_setPersonalInfoAddress
 class TestSetPersonalInfoAddress:
-
     #######################################
     # Normal
     #######################################
@@ -256,7 +252,6 @@ class TestSetPersonalInfoAddress:
 
 # TEST_setRequirePersonalInfoRegistered
 class TestSetRequirePersonalInfoRegistered:
-
     #######################################
     # Normal
     #######################################
@@ -300,7 +295,6 @@ class TestSetRequirePersonalInfoRegistered:
 
 # TEST_setDividendInformation
 class TestSetDividendInformation:
-
     #######################################
     # Normal
     #######################################
@@ -352,7 +346,6 @@ class TestSetDividendInformation:
 
 # TEST_setCancellationDate
 class TestSetCancellationDate:
-
     #######################################
     # Normal
     #######################################
@@ -398,7 +391,6 @@ class TestSetCancellationDate:
 
 # TEST_setContactInformation
 class TestSetContactInformation:
-
     #######################################
     # Normal
     #######################################
@@ -446,7 +438,6 @@ class TestSetContactInformation:
 
 # TEST_setPrivacyPolicy
 class TestSetPrivacyPolicy:
-
     #######################################
     # Normal
     #######################################
@@ -494,7 +485,6 @@ class TestSetPrivacyPolicy:
 
 # TEST_setMemo
 class TestSetMemo:
-
     #######################################
     # Normal
     #######################################
@@ -537,7 +527,6 @@ class TestSetMemo:
 
 # TEST_setTransferable
 class TestSetTransferable:
-
     #######################################
     # Normal
     #######################################
@@ -579,7 +568,6 @@ class TestSetTransferable:
 
 # TEST_changeOfferingStatus
 class TestChangeOfferingStatus:
-
     #######################################
     # Normal
     #######################################
@@ -618,7 +606,6 @@ class TestChangeOfferingStatus:
 
 # TEST_balanceOf
 class TestBalanceOf:
-
     #######################################
     # Normal
     #######################################
@@ -638,7 +625,6 @@ class TestBalanceOf:
 
 # TEST_lock/lockedOf
 class TestLock:
-
     #######################################
     # Normal
     #######################################
@@ -712,7 +698,6 @@ class TestLock:
 
 # TEST_unlock
 class TestUnlock:
-
     #######################################
     # Normal
     #######################################
@@ -802,7 +787,6 @@ class TestUnlock:
 
 # TEST_forceUnlock
 class TestForceUnlock:
-
     #######################################
     # Normal
     #######################################
@@ -928,7 +912,6 @@ class TestForceUnlock:
 
 # TEST_transfer
 class TestTransfer:
-
     #######################################
     # Normal
     #######################################
@@ -1180,7 +1163,6 @@ class TestTransfer:
 
 # TEST_bulkTransfer
 class TestBulkTransfer:
-
     #######################################
     # Normal
     #######################################
@@ -1430,7 +1412,6 @@ class TestBulkTransfer:
 
 # TEST_transferFrom
 class TestTransferFrom:
-
     #######################################
     # Normal
     #######################################
@@ -1513,7 +1494,6 @@ class TestTransferFrom:
 
 # TEST_bulkTransferFrom
 class TestBulkTransferFrom:
-
     #######################################
     # Normal
     #######################################
@@ -1632,7 +1612,6 @@ class TestBulkTransferFrom:
 
 # TEST_applyForOffering
 class TestApplyForOffering:
-
     #######################################
     # Normal
     #######################################
@@ -1804,7 +1783,6 @@ class TestApplyForOffering:
 
 # TEST_allot
 class TestAllot:
-
     #######################################
     # Normal
     #######################################
@@ -1874,7 +1852,6 @@ class TestAllot:
 
 # TEST_issueFrom
 class TestIssueFrom:
-
     #######################################
     # Normal
     #######################################
@@ -2014,7 +1991,6 @@ class TestIssueFrom:
 
 # TEST_bulkIssueFrom
 class TestBulkIssueFrom:
-
     #######################################
     # Normal
     #######################################
@@ -2184,7 +2160,6 @@ class TestBulkIssueFrom:
 
 # TEST_redeemFrom
 class TestRedeemFrom:
-
     #######################################
     # Normal
     #######################################
@@ -2343,7 +2318,6 @@ class TestRedeemFrom:
 
 # TEST_bulkRedeemFrom
 class TestBulkRedeemFrom:
-
     #######################################
     # Normal
     #######################################
@@ -2579,7 +2553,6 @@ class TestBulkRedeemFrom:
 
 # TEST_applyForTransfer
 class TestApplyForTransfer:
-
     #######################################
     # Normal
     #######################################
@@ -2848,7 +2821,6 @@ class TestApplyForTransfer:
 
 # TEST_cancelTransfer
 class TestCancelTransfer:
-
     #######################################
     # Normal
     #######################################
@@ -2875,7 +2847,10 @@ class TestCancelTransfer:
 
         # apply for transfer
         share_token.applyForTransfer(
-            user2, transfer_amount, "test_data", {"from": user1}  # from user1 to user2
+            user2,
+            transfer_amount,
+            "test_data",
+            {"from": user1},  # from user1 to user2
         )
 
         # cancel transfer (from applicant)
@@ -2919,7 +2894,10 @@ class TestCancelTransfer:
 
         # apply for transfer
         share_token.applyForTransfer(
-            user2, transfer_amount, "test_data", {"from": user1}  # from user1 to user2
+            user2,
+            transfer_amount,
+            "test_data",
+            {"from": user1},  # from user1 to user2
         )
 
         # cancel transfer (from issuer)
@@ -2967,7 +2945,10 @@ class TestCancelTransfer:
 
         # apply for transfer
         share_token.applyForTransfer(
-            user2, transfer_amount, "test_data", {"from": user1}  # from user1 to user2
+            user2,
+            transfer_amount,
+            "test_data",
+            {"from": user1},  # from user1 to user2
         )
 
         # cancel transfer (from issuer)
@@ -3007,7 +2988,10 @@ class TestCancelTransfer:
 
         # apply for transfer
         share_token.applyForTransfer(
-            user2, transfer_amount, "test_data", {"from": user1}  # from user1 to user2
+            user2,
+            transfer_amount,
+            "test_data",
+            {"from": user1},  # from user1 to user2
         )
 
         # cancel transfer (1)
@@ -3031,7 +3015,6 @@ class TestCancelTransfer:
 
 # TEST_approveTransfer
 class TestApproveTransfer:
-
     #######################################
     # Normal
     #######################################
@@ -3218,7 +3201,6 @@ class TestApproveTransfer:
 
 # TEST_setTransferApprovalRequired
 class TestSetTransferApprovalRequired:
-
     #######################################
     # Normal
     #######################################
@@ -3282,7 +3264,6 @@ class TestSetTransferApprovalRequired:
 
 # TEST_Cancel
 class TestCancel:
-
     #######################################
     # Normal
     #######################################
@@ -3326,7 +3307,6 @@ class TestCancel:
 
 # TEST_setStatus
 class TestSetStatus:
-
     #######################################
     # Normal
     #######################################

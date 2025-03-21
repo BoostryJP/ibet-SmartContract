@@ -1,12 +1,11 @@
-.pytest_cache/
+!.gitkeep
+
 __pycache__
+.cache/
+.venv/
+.pytest_cache/
 .history
 .hypothesis
-build/
-output/
-reports/
-.vscode/
-.idea/
 
 # pyenv
 .python-version
@@ -14,4 +13,17 @@ reports/
 # Node
 node_modules/
 
-!.gitkeep
+# VSCode
+.vscode
+
+# Mac
+.DS_Store
+
+# Intellij
+.idea
+/*.iml
+
+# Project
+build/
+output/
+reports/

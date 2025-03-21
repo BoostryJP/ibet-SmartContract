@@ -55,7 +55,6 @@ def deploy_share(users, deploy_args):
 
 # TEST_deploy
 class TestDeploy:
-
     #######################################
     # Normal
     #######################################
@@ -73,7 +72,6 @@ class TestDeploy:
 
 # TEST_tokenFallback
 class TestTokenFallback:
-
     #######################################
     # Normal
     #######################################
@@ -121,7 +119,6 @@ class TestTokenFallback:
 
 # TEST_withdraw
 class TestWithdraw:
-
     #######################################
     # Normal
     #######################################
@@ -217,7 +214,6 @@ class TestWithdraw:
 
 # TEST_createOrder
 class TestCreateOrder:
-
     #######################################
     # Normal
     #######################################
@@ -422,7 +418,12 @@ class TestCreateOrder:
 
         token.transfer.transact(exchange.address, _amount, {"from": issuer})
         exchange.createOrder.transact(
-            token.address, 0, _price, _isBuy, agent, {"from": issuer}  # zero
+            token.address,
+            0,
+            _price,
+            _isBuy,
+            agent,
+            {"from": issuer},  # zero
         )
 
         # assertion
@@ -568,7 +569,6 @@ class TestCreateOrder:
 
 # TEST_cancelOrder
 class TestCancelOrder:
-
     #######################################
     # Normal
     #######################################
@@ -876,7 +876,6 @@ class TestCancelOrder:
 
 # TEST_forceCancelOrder
 class TestForceCancelOrder:
-
     #######################################
     # Normal
     #######################################
@@ -1184,7 +1183,6 @@ class TestForceCancelOrder:
 
 # TEST_executeOrder
 class TestExecuteOrder:
-
     #######################################
     # Normal
     #######################################
@@ -1956,7 +1954,10 @@ class TestExecuteOrder:
         # take SELL
         with brownie.reverts(revert_msg="110402"):
             exchange.executeOrder.transact(
-                order_id, _take_amount, False, {"from": trader}  # invalid msg.sender
+                order_id,
+                _take_amount,
+                False,
+                {"from": trader},  # invalid msg.sender
             )
 
         # assertion
@@ -1971,7 +1972,6 @@ class TestExecuteOrder:
 
 # TEST_confirmAgreement
 class TestConfirmAgreement:
-
     #######################################
     # Normal
     #######################################
@@ -2451,7 +2451,6 @@ class TestConfirmAgreement:
 
 # TEST_cancelAgreement
 class TestCancelAgreement:
-
     #######################################
     # Normal
     #######################################
@@ -2921,7 +2920,6 @@ class TestCancelAgreement:
 
 # update exchange
 class TestUpdateExchange:
-
     #######################################
     # Normal
     #######################################

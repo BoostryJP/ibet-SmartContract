@@ -31,7 +31,6 @@ deploy_args = [
 
 # TEST_register
 class TestRegister:
-
     #######################################
     # Normal
     #######################################
@@ -101,7 +100,6 @@ class TestRegister:
 
 # TEST_getRegistry
 class TestGetRegistry:
-
     #######################################
     # Normal
     #######################################
