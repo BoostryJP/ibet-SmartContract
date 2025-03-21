@@ -563,6 +563,33 @@ contract IbetStraightBond is Ownable, IbetSecurityTokenInterface {
         emit Lock(msg.sender, _lockAddress, _value, _data);
     }
 
+    /// @notice 資産を強制ロックする
+    /// @dev 発行体のみ実行可能
+    /// @param _lockAddress 資産ロック先アドレス
+    /// @param _accountAddress ロック対象のアドレス
+    /// @param _value ロックする数量
+    /// @param _data イベント出力用の任意のデータ
+    function forceLock(
+        address _lockAddress,
+        address _accountAddress,
+        uint256 _value,
+        string memory _data
+    ) public override onlyOwner {
+        // ロック数量が保有数量を上回っている場合、エラーを返す
+        if (balanceOf(_accountAddress) < _value)
+            revert(ErrorCode.ERR_IbetStraightBond_forceLock_121601);
+
+        // データ更新
+        balances[_accountAddress] = balanceOf(_accountAddress).sub(_value);
+        locked[_lockAddress][_accountAddress] = lockedOf(
+            _lockAddress,
+            _accountAddress
+        ).add(_value);
+
+        // イベント登録
+        emit ForceLock(_accountAddress, _lockAddress, _value, _data);
+    }
+
     /// @notice 資産をアンロックする
     /// @param _accountAddress アンロック対象のアドレス
     /// @param _recipientAddress 受取アドレス

@@ -1640,6 +1640,108 @@ class TestLock:
         assert bond_token.lockedOf(lock_eoa, user) == 0
 
 
+# TEST_forceLock
+class TestForceLock:
+    #######################################
+    # Normal
+    #######################################
+
+    # Normal_1
+    # Force-Lock assets to lock address
+    def test_normal_1(self, users, IbetStraightBond):
+        issuer = users["issuer"]
+        user = users["user1"]
+        lock_eoa = users["user2"]
+
+        # issue token
+        deploy_args = init_args()
+        bond_token = issuer.deploy(IbetStraightBond, *deploy_args)
+
+        transfer_amount = 30
+        lock_amount = 10
+
+        # transfer to account
+        bond_token.transferFrom.transact(
+            issuer, user, transfer_amount, {"from": issuer}
+        )
+
+        # force lock
+        tx = bond_token.forceLock.transact(
+            lock_eoa, user, lock_amount, "some_extra_data", {"from": issuer}
+        )
+
+        # assertion
+        assert bond_token.balanceOf(user) == transfer_amount - lock_amount
+        assert bond_token.lockedOf(lock_eoa, user) == lock_amount
+
+        assert tx.events["ForceLock"]["accountAddress"] == user
+        assert tx.events["ForceLock"]["lockAddress"] == lock_eoa
+        assert tx.events["ForceLock"]["value"] == lock_amount
+        assert tx.events["ForceLock"]["data"] == "some_extra_data"
+
+    #######################################
+    # Error
+    #######################################
+
+    # Error_1
+    # Insufficient balance
+    def test_error_1(self, users, IbetStraightBond):
+        issuer = users["issuer"]
+        user = users["user1"]
+        lock_eoa = users["user2"]
+
+        # issue token
+        deploy_args = init_args()
+        bond_token = issuer.deploy(IbetStraightBond, *deploy_args)
+
+        transfer_amount = 30
+        lock_amount = 40
+
+        # transfer to account
+        bond_token.transferFrom.transact(
+            issuer, user, transfer_amount, {"from": issuer}
+        )
+
+        # force lock
+        with brownie.reverts(revert_msg="121601"):
+            bond_token.forceLock.transact(
+                lock_eoa, user, lock_amount, "some_extra_data", {"from": issuer}
+            )
+
+        # assertion
+        assert bond_token.balanceOf(user) == transfer_amount
+        assert bond_token.lockedOf(lock_eoa, user) == 0
+
+    # Error_2
+    # Tx from not authorized account
+    def test_error_2(self, users, IbetStraightBond):
+        issuer = users["issuer"]
+        user = users["user1"]
+        lock_eoa = users["user2"]
+
+        # issue token
+        deploy_args = init_args()
+        bond_token = issuer.deploy(IbetStraightBond, *deploy_args)
+
+        transfer_amount = 30
+        lock_amount = 10
+
+        # transfer to account
+        bond_token.transferFrom.transact(
+            issuer, user, transfer_amount, {"from": issuer}
+        )
+
+        # force lock
+        with brownie.reverts(revert_msg="500001"):
+            bond_token.forceLock.transact(
+                lock_eoa, user, lock_amount, "some_extra_data", {"from": user}
+            )
+
+        # assertion
+        assert bond_token.balanceOf(user) == transfer_amount
+        assert bond_token.lockedOf(lock_eoa, user) == 0
+
+
 # TEST_unlock
 class TestUnlock:
     #######################################
