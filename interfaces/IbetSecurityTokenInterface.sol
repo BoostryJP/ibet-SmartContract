@@ -198,6 +198,18 @@ abstract contract IbetSecurityTokenInterface is IbetStandardTokenInterface {
         string memory _data
     ) public virtual;
 
+    /// @notice 資産を強制ロックする
+    /// @param _lockAddress 資産ロック先アドレス
+    /// @param _accountAddress ロック対象のアドレス
+    /// @param _value ロックする数量
+    /// @param _data イベント出力用の任意のデータ
+    function forceLock(
+        address _lockAddress,
+        address _accountAddress,
+        uint256 _value,
+        string memory _data
+    ) public virtual;
+
     /// @notice 資産を強制アンロックする
     /// @param _lockAddress 資産ロック先アドレス
     /// @param _accountAddress アンロック対象のアドレス
@@ -222,6 +234,14 @@ abstract contract IbetSecurityTokenInterface is IbetStandardTokenInterface {
 
     /// Event: 資産ロック
     event Lock(
+        address indexed accountAddress,
+        address indexed lockAddress,
+        uint256 value,
+        string data
+    );
+
+    /// Event: 資産強制ロック
+    event ForceLock(
         address indexed accountAddress,
         address indexed lockAddress,
         uint256 value,
