@@ -257,6 +257,15 @@ abstract contract IbetSecurityTokenInterface is IbetStandardTokenInterface {
         string data
     );
 
+    /// Event: 資産強制アンロック
+    event ForceUnlock(
+        address indexed accountAddress,
+        address indexed lockAddress,
+        address recipientAddress,
+        uint256 value,
+        string data
+    );
+
     // -------------------------------------------------------------------
     // 追加発行・償却
     // -------------------------------------------------------------------

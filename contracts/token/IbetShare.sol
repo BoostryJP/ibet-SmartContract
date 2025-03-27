@@ -342,7 +342,7 @@ contract IbetShare is Ownable, IbetSecurityTokenInterface {
         balances[_recipientAddress] = balanceOf(_recipientAddress).add(_value);
 
         // イベント登録
-        emit Unlock(
+        emit ForceUnlock(
             _accountAddress,
             _lockAddress,
             _recipientAddress,
