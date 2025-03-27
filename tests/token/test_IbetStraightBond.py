@@ -1866,11 +1866,11 @@ class TestForceUnlock:
         assert bond_token.balanceOf(user2) == unlock_amount
         assert bond_token.lockedOf(lock_eoa, user1) == lock_amount - unlock_amount
 
-        assert tx.events["Unlock"]["accountAddress"] == user1.address
-        assert tx.events["Unlock"]["lockAddress"] == lock_eoa.address
-        assert tx.events["Unlock"]["recipientAddress"] == user2.address
-        assert tx.events["Unlock"]["value"] == unlock_amount
-        assert tx.events["Unlock"]["data"] == "unlock_message"
+        assert tx.events["ForceUnlock"]["accountAddress"] == user1.address
+        assert tx.events["ForceUnlock"]["lockAddress"] == lock_eoa.address
+        assert tx.events["ForceUnlock"]["recipientAddress"] == user2.address
+        assert tx.events["ForceUnlock"]["value"] == unlock_amount
+        assert tx.events["ForceUnlock"]["data"] == "unlock_message"
 
     #######################################
     # Error
