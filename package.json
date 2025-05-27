@@ -1,6 +1,6 @@
 {
   "devDependencies": {
-    "hardhat": "^2.22.5",
+    "hardhat": "^2.24.1",
     "prettier": "^3.2.5",
     "prettier-plugin-solidity": "^2.0.0"
   }
