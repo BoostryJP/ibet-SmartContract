@@ -7,7 +7,7 @@ authors = [
 license = {text = "Apache License, Version 2.0"}
 requires-python = "==3.11.11"
 dependencies = [
-    "eth-brownie~=1.20.3",
+    "eth-brownie~=1.21.0",
 ]
 description = "SmartContracts that provides token standards, decentralized exchanges, and other utility functions that can be used on the ibet-Network."
 
