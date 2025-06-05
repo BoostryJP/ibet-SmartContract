@@ -121,6 +121,7 @@ $ ./scripts/deploy_shared_contract.sh {--payment_gateway 0xabcd...} {contract_na
 `contract_name` として、以下のコントラクトをデプロイすることができます。
 
 - E2EMessaging 
+- SnapMessaging
 - TokenList
 - PersonalInfo
 - PaymentGateway

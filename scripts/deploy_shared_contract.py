@@ -39,6 +39,7 @@ from brownie.project.ibet_smart_contract import (
     IbetSecurityTokenEscrow,
     PaymentGateway,
     PersonalInfo,
+    SnapMessaging,
     TokenList,
 )
 
@@ -54,6 +55,8 @@ def main():
     # Deploy
     if contract_type == "E2EMessaging":
         deployer.deploy(E2EMessaging)
+    elif contract_type == "SnapMessaging":
+        deployer.deploy(SnapMessaging)
     elif contract_type == "TokenList":
         deployer.deploy(TokenList)
     elif contract_type == "PersonalInfo":
@@ -141,6 +144,7 @@ def parse_args():
 
     deployable_contracts = [
         "E2EMessaging",
+        "SnapMessaging",
         "TokenList",
         "PersonalInfo",
         "PaymentGateway",

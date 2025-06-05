@@ -121,6 +121,7 @@ $ ./scripts/deploy_shared_contract.sh {--payment_gateway 0xabcd...} {contract_na
 You can deploy the following contract as `contract_name`.
 
 - E2EMessaging 
+- SnapMessaging
 - TokenList
 - PersonalInfo
 - PaymentGateway
