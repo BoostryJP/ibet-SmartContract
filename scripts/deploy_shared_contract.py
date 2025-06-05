@@ -55,7 +55,7 @@ def main():
     # Deploy
     if contract_type == "E2EMessaging":
         deployer.deploy(E2EMessaging)
-    if contract_type == "SnapMessaging":
+    elif contract_type == "SnapMessaging":
         deployer.deploy(SnapMessaging)
     elif contract_type == "TokenList":
         deployer.deploy(TokenList)
