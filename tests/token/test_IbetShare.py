@@ -1012,6 +1012,135 @@ class TestForceUnlock:
             )
 
 
+# TEST_forceChangeLockedAccount
+class TestForceChangeLockedAccount:
+    #######################################
+    # Normal
+    #######################################
+
+    # Normal_1
+    def test_normal_1(self, users, IbetShare):
+        issuer = users["issuer"]
+        user1 = users["user1"]
+        user2 = users["user2"]
+        lock_eoa = users["agent"]
+
+        # issue token
+        deploy_args = init_args()
+        share_token = issuer.deploy(IbetShare, *deploy_args)
+
+        transfer_amount = 30
+        lock_amount = 20
+        change_amount = 10
+
+        # transfer to account
+        share_token.transferFrom.transact(
+            issuer, user1, transfer_amount, {"from": issuer}
+        )
+
+        # lock
+        share_token.lock.transact(
+            lock_eoa, lock_amount, "lock_message", {"from": user1}
+        )
+
+        # forceChangeLockedAccount
+        tx = share_token.forceChangeLockedAccount.transact(
+            lock_eoa, user1, user2, change_amount, "change_message", {"from": issuer}
+        )
+
+        # assertion
+        assert share_token.balanceOf(user1) == transfer_amount - lock_amount
+        assert share_token.balanceOf(user2) == 0
+        assert share_token.lockedOf(lock_eoa, user1) == lock_amount - change_amount
+        assert share_token.lockedOf(lock_eoa, user2) == change_amount
+
+        assert tx.events["ForceChangeLockedAccount"]["lockAddress"] == lock_eoa.address
+        assert (
+            tx.events["ForceChangeLockedAccount"]["beforeAccountAddress"]
+            == user1.address
+        )
+        assert (
+            tx.events["ForceChangeLockedAccount"]["afterAccountAddress"]
+            == user2.address
+        )
+        assert tx.events["ForceChangeLockedAccount"]["value"] == change_amount
+        assert tx.events["ForceChangeLockedAccount"]["data"] == "change_message"
+
+    #######################################
+    # Error
+    #######################################
+
+    # Error_1
+    # - Authorization error
+    def test_error_1(self, users, IbetShare):
+        issuer = users["issuer"]
+        user1 = users["user1"]
+        user2 = users["user2"]
+        lock_eoa = users["agent"]
+
+        # issue token
+        deploy_args = init_args()
+        share_token = issuer.deploy(IbetShare, *deploy_args)
+
+        transfer_amount = 30
+        lock_amount = 20
+        change_amount = 10
+
+        # transfer to account
+        share_token.transferFrom.transact(
+            issuer, user1, transfer_amount, {"from": issuer}
+        )
+
+        # lock
+        share_token.lock.transact(
+            lock_eoa, lock_amount, "lock_message", {"from": user1}
+        )
+
+        # forceChangeLockedAccount
+        # - Tx from not authorized account
+        with brownie.reverts(revert_msg="500001"):
+            share_token.forceChangeLockedAccount.transact(
+                lock_eoa, user1, user2, change_amount, "change_message", {"from": user1}
+            )
+
+        # assertion
+        assert share_token.balanceOf(user1) == transfer_amount - lock_amount
+        assert share_token.balanceOf(user2) == 0
+        assert share_token.lockedOf(lock_eoa, user1) == lock_amount
+        assert share_token.lockedOf(lock_eoa, user2) == 0
+
+    # Error_2
+    # - Insufficient locked balance
+    def test_error_2(self, users, IbetShare):
+        issuer = users["issuer"]
+        user1 = users["user1"]
+        user2 = users["user2"]
+        lock_eoa = users["agent"]
+
+        # issue token
+        deploy_args = init_args()
+        share_token = issuer.deploy(IbetShare, *deploy_args)
+
+        change_amount = 10
+
+        # forceChangeLockedAccount
+        with brownie.reverts(revert_msg="111701"):
+            share_token.forceChangeLockedAccount.transact(
+                lock_eoa,
+                user1,
+                user2,
+                change_amount,
+                "change_message",
+                {"from": issuer},
+            )
+
+        # assertion
+        assert share_token.balanceOf(user1) == 0
+        assert share_token.balanceOf(user2) == 0
+        assert share_token.lockedOf(lock_eoa, user1) == 0
+        assert share_token.lockedOf(lock_eoa, user2) == 0
+
+
 # TEST_transfer
 class TestTransfer:
     #######################################
