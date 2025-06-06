@@ -162,6 +162,11 @@ Developers will receive error msg as code, and each error code is described belo
 |------------|-----------------------------------------------------|-----------------|
 | **111601** | Lock amount is greater than message sender balance. | -               |
 
+#### forceChangeLockedAccount (1117XX)
+| Code       | Situation                         | Possible causes |
+|------------|-----------------------------------|-----------------|
+| **111701** | Locked balance is not sufficient. | -               |
+
 ### IbetStraightBond (12XXXX)
 
 #### lock (1200XX)
@@ -275,6 +280,11 @@ Developers will receive error msg as code, and each error code is described belo
 | Code       | Situation                                           | Possible causes | 
 |------------|-----------------------------------------------------|-----------------|
 | **121601** | Lock amount is greater than message sender balance. | -               |
+
+#### forceChangeLockedAccount (1217XX)
+| Code       | Situation                         | Possible causes |
+|------------|-----------------------------------|-----------------|
+| **121701** | Locked balance is not sufficient. | -               |
 
 ### IbetCoupon (13XXXX)
 
