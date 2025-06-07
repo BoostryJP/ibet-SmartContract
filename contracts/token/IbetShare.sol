@@ -351,6 +351,44 @@ contract IbetShare is Ownable, IbetSecurityTokenInterface {
         );
     }
 
+    /// @notice ロック対象のアドレスを強制変更する
+    /// @dev 発行体のみ実行可能
+    /// @param _lockAddress 資産ロック先アドレス
+    /// @param _beforeAccountAddress 以前のロック対象アドレス
+    /// @param _afterAccountAddress 新しいロック対象アドレス
+    /// @param _value ロック対象を変更する数量
+    /// @param _data イベント出力用の任意のデータ
+    function forceChangeLockedAccount(
+        address _lockAddress,
+        address _beforeAccountAddress,
+        address _afterAccountAddress,
+        uint256 _value,
+        string memory _data
+    ) public override onlyOwner {
+        // 変更数量がもともとのロック数量を上回ってる場合、エラーを返す
+        if (lockedOf(_lockAddress, _beforeAccountAddress) < _value)
+            revert(ErrorCode.ERR_IbetShare_forceChangeLockedAccount_111701);
+
+        // データ更新
+        locked[_lockAddress][_beforeAccountAddress] = lockedOf(
+            _lockAddress,
+            _beforeAccountAddress
+        ).sub(_value);
+        locked[_lockAddress][_afterAccountAddress] = lockedOf(
+            _lockAddress,
+            _afterAccountAddress
+        ).add(_value);
+
+        // イベント登録
+        emit ForceChangeLockedAccount(
+            _lockAddress,
+            _beforeAccountAddress,
+            _afterAccountAddress,
+            _value,
+            _data
+        );
+    }
+
     /// @notice コントラクトアドレス判定
     /// @param _addr アドレス
     /// @return is_contract 判定結果

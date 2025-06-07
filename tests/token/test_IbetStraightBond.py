@@ -1951,6 +1951,131 @@ class TestForceUnlock:
         assert bond_token.lockedOf(lock_eoa, user1) == lock_amount
 
 
+# TEST_forceChangeLockedAccount
+class TestForceChangeLockedAccount:
+    #######################################
+    # Normal
+    #######################################
+
+    # Normal_1
+    def test_normal_1(self, users, IbetStraightBond):
+        issuer = users["issuer"]
+        user1 = users["user1"]
+        user2 = users["user2"]
+        lock_eoa = users["agent"]
+
+        # issue token
+        deploy_args = init_args()
+        bond_token = issuer.deploy(IbetStraightBond, *deploy_args)
+
+        transfer_amount = 30
+        lock_amount = 20
+        change_amount = 10
+
+        # transfer to account
+        bond_token.transferFrom.transact(
+            issuer, user1, transfer_amount, {"from": issuer}
+        )
+
+        # lock
+        bond_token.lock.transact(lock_eoa, lock_amount, "lock_message", {"from": user1})
+
+        # forceChangeLockedAccount
+        tx = bond_token.forceChangeLockedAccount.transact(
+            lock_eoa, user1, user2, change_amount, "change_message", {"from": issuer}
+        )
+
+        # assertion
+        assert bond_token.balanceOf(user1) == transfer_amount - lock_amount
+        assert bond_token.balanceOf(user2) == 0
+        assert bond_token.lockedOf(lock_eoa, user1) == lock_amount - change_amount
+        assert bond_token.lockedOf(lock_eoa, user2) == change_amount
+
+        assert tx.events["ForceChangeLockedAccount"]["lockAddress"] == lock_eoa.address
+        assert (
+            tx.events["ForceChangeLockedAccount"]["beforeAccountAddress"]
+            == user1.address
+        )
+        assert (
+            tx.events["ForceChangeLockedAccount"]["afterAccountAddress"]
+            == user2.address
+        )
+        assert tx.events["ForceChangeLockedAccount"]["value"] == change_amount
+        assert tx.events["ForceChangeLockedAccount"]["data"] == "change_message"
+
+    #######################################
+    # Error
+    #######################################
+
+    # Error_1
+    # - Authorization error
+    def test_error_1(self, users, IbetStraightBond):
+        issuer = users["issuer"]
+        user1 = users["user1"]
+        user2 = users["user2"]
+        lock_eoa = users["agent"]
+
+        # issue token
+        deploy_args = init_args()
+        bond_token = issuer.deploy(IbetStraightBond, *deploy_args)
+
+        transfer_amount = 30
+        lock_amount = 20
+        change_amount = 10
+
+        # transfer to account
+        bond_token.transferFrom.transact(
+            issuer, user1, transfer_amount, {"from": issuer}
+        )
+
+        # lock
+        bond_token.lock.transact(lock_eoa, lock_amount, "lock_message", {"from": user1})
+
+        # forceChangeLockedAccount
+        # - Tx from not authorized account
+        with brownie.reverts(revert_msg="500001"):
+            bond_token.forceChangeLockedAccount.transact(
+                lock_eoa, user1, user2, change_amount, "change_message", {"from": user1}
+            )
+
+        # assertion
+        assert bond_token.balanceOf(user1) == transfer_amount - lock_amount
+        assert bond_token.balanceOf(user2) == 0
+        assert bond_token.lockedOf(lock_eoa, user1) == lock_amount
+        assert bond_token.lockedOf(lock_eoa, user2) == 0
+
+    # Error_2
+    # - Insufficient locked balance
+    def test_error_2(self, users, IbetStraightBond):
+        issuer = users["issuer"]
+        user1 = users["user1"]
+        user2 = users["user2"]
+        lock_eoa = users["agent"]
+
+        # issue token
+        deploy_args = init_args()
+        bond_token = issuer.deploy(IbetStraightBond, *deploy_args)
+
+        change_amount = 10
+
+        # forceChangeLockedAccount
+        with brownie.reverts(revert_msg="121701"):
+            bond_token.forceChangeLockedAccount.transact(
+                lock_eoa,
+                user1,
+                user2,
+                change_amount,
+                "change_message",
+                {"from": issuer},
+            )
+
+        # assertion
+        assert bond_token.balanceOf(user1) == 0
+        assert bond_token.balanceOf(user2) == 0
+        assert bond_token.lockedOf(lock_eoa, user1) == 0
+        assert bond_token.lockedOf(lock_eoa, user2) == 0
+
+
 # TEST_issueFrom
 class TestIssueFrom:
     #######################################
