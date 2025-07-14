@@ -17,7 +17,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-pragma solidity ^0.8.0;
+pragma solidity ^0.8.23;
 pragma experimental ABIEncoderV2;
 
 import "./SafeMath.sol";
@@ -407,7 +407,7 @@ contract IbetOTCExchange is Ownable, ContractReceiver, OTCExchangeStorageModel {
                     RegulatorService(regulatorServiceAddress).check(
                         _counterpart
                     ) ==
-                    0
+                        0
             );
         }
 
@@ -425,7 +425,7 @@ contract IbetOTCExchange is Ownable, ContractReceiver, OTCExchangeStorageModel {
                 msg.sender,
                 Ownable(_token).owner()
             ) ==
-            false ||
+                false ||
             IbetStandardTokenInterface(_token).status() == false ||
             validateAgent(_agent) == false
         ) {
@@ -555,7 +555,7 @@ contract IbetOTCExchange is Ownable, ContractReceiver, OTCExchangeStorageModel {
                     RegulatorService(regulatorServiceAddress).check(
                         order.owner
                     ) ==
-                    0
+                        0
             );
         }
 
@@ -582,7 +582,7 @@ contract IbetOTCExchange is Ownable, ContractReceiver, OTCExchangeStorageModel {
                 msg.sender,
                 Ownable(order.token).owner()
             ) ==
-            false ||
+                false ||
             isContract(msg.sender) == true ||
             IbetStandardTokenInterface(order.token).status() == false ||
             order.amount == 0
