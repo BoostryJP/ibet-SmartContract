@@ -17,7 +17,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-pragma solidity ^0.8.0;
+pragma solidity ^0.8.23;
 
 import "./SafeMath.sol";
 import "./Ownable.sol";
@@ -424,12 +424,12 @@ contract IbetStraightBondExchange is Ownable, ContractReceiver {
                     msg.sender,
                     _agent
                 ) ==
-                false ||
+                    false ||
                 PersonalInfo(personalInfoAddress).isRegistered(
                     msg.sender,
                     IbetStraightBond(_token).owner()
                 ) ==
-                false ||
+                    false ||
                 isContract(msg.sender) == true ||
                 IbetStraightBond(_token).isRedeemed() == true ||
                 IbetStraightBond(_token).status() == false ||
@@ -457,12 +457,12 @@ contract IbetStraightBondExchange is Ownable, ContractReceiver {
                     msg.sender,
                     _agent
                 ) ==
-                false ||
+                    false ||
                 PersonalInfo(personalInfoAddress).isRegistered(
                     msg.sender,
                     IbetStraightBond(_token).owner()
                 ) ==
-                false ||
+                    false ||
                 IbetStraightBond(_token).isRedeemed() == true ||
                 IbetStraightBond(_token).status() == false ||
                 validateAgent(_agent) == false
@@ -642,12 +642,12 @@ contract IbetStraightBondExchange is Ownable, ContractReceiver {
                     msg.sender,
                     order.agent
                 ) ==
-                false ||
+                    false ||
                 PersonalInfo(personalInfoAddress).isRegistered(
                     msg.sender,
                     IbetStraightBond(order.token).owner()
                 ) ==
-                false ||
+                    false ||
                 isContract(msg.sender) == true ||
                 IbetStraightBond(order.token).isRedeemed() == true ||
                 IbetStraightBond(order.token).status() == false ||
@@ -680,12 +680,12 @@ contract IbetStraightBondExchange is Ownable, ContractReceiver {
                     msg.sender,
                     order.agent
                 ) ==
-                false ||
+                    false ||
                 PersonalInfo(personalInfoAddress).isRegistered(
                     msg.sender,
                     IbetStraightBond(order.token).owner()
                 ) ==
-                false ||
+                    false ||
                 IbetStraightBond(order.token).isRedeemed() == true ||
                 IbetStraightBond(order.token).status() == false ||
                 balanceOf(msg.sender, order.token) < _amount ||
