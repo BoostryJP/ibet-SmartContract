@@ -2,19 +2,19 @@ name: Pull Request Check
 on: [pull_request]
 
 jobs:
-  lint-black:
-    name: "Lint check (black)"
+  lint-ruff:
+    name: "Lint check (ruff)"
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: psf/black@stable
+      - uses: astral-sh/ruff-action@v3
   lint-prettier:
     name: "Lint check (prettier)"
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
       - name: Use Node.js 20
-        uses: actions/setup-node@v3
+        uses: actions/setup-node@v4
         with:
           node-version: 20
       - run: npm install

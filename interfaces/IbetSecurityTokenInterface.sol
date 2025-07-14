@@ -198,15 +198,42 @@ abstract contract IbetSecurityTokenInterface is IbetStandardTokenInterface {
         string memory _data
     ) public virtual;
 
+    /// @notice 資産を強制ロックする
+    /// @param _lockAddress 資産ロック先アドレス
+    /// @param _accountAddress ロック対象のアドレス
+    /// @param _value ロックする数量
+    /// @param _data イベント出力用の任意のデータ
+    function forceLock(
+        address _lockAddress,
+        address _accountAddress,
+        uint256 _value,
+        string memory _data
+    ) public virtual;
+
     /// @notice 資産を強制アンロックする
     /// @param _lockAddress 資産ロック先アドレス
     /// @param _accountAddress アンロック対象のアドレス
     /// @param _recipientAddress 受取アドレス
+    /// @param _value アンロックする数量
     /// @param _data イベント出力用の任意のデータ
     function forceUnlock(
         address _lockAddress,
         address _accountAddress,
         address _recipientAddress,
+        uint256 _value,
+        string memory _data
+    ) public virtual;
+
+    /// @notice ロック対象のアドレスを強制変更する
+    /// @param _lockAddress 資産ロック先アドレス
+    /// @param _beforeAccountAddress 以前のロック対象アドレス
+    /// @param _afterAccountAddress 新しいロック対象アドレス
+    /// @param _value ロック対象を変更する数量
+    /// @param _data イベント出力用の任意のデータ
+    function forceChangeLockedAccount(
+        address _lockAddress,
+        address _beforeAccountAddress,
+        address _afterAccountAddress,
         uint256 _value,
         string memory _data
     ) public virtual;
@@ -228,11 +255,37 @@ abstract contract IbetSecurityTokenInterface is IbetStandardTokenInterface {
         string data
     );
 
+    /// Event: 資産強制ロック
+    event ForceLock(
+        address indexed accountAddress,
+        address indexed lockAddress,
+        uint256 value,
+        string data
+    );
+
     /// Event: 資産アンロック
     event Unlock(
         address indexed accountAddress,
         address indexed lockAddress,
         address recipientAddress,
+        uint256 value,
+        string data
+    );
+
+    /// Event: 資産強制アンロック
+    event ForceUnlock(
+        address indexed accountAddress,
+        address indexed lockAddress,
+        address recipientAddress,
+        uint256 value,
+        string data
+    );
+
+    /// Event: ロック対象アドレス強制変更
+    event ForceChangeLockedAccount(
+        address indexed lockAddress,
+        address indexed beforeAccountAddress,
+        address indexed afterAccountAddress,
         uint256 value,
         string data
     );

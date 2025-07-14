@@ -73,6 +73,10 @@ library ErrorCode {
     string constant ERR_IbetShare_bulkRedeemFrom_111401 = "111401";
     // IbetShare_bulkTransferFrom
     string constant ERR_IbetShare_bulkTransferFrom_111501 = "111501";
+    // IbetShare_forceLock
+    string constant ERR_IbetShare_forceLock_111601 = "111601";
+    // IbetShare_forceChangeLockedAccount
+    string constant ERR_IbetShare_forceChangeLockedAccount_111701 = "111701";
 
     // 12XXXX
     // IbetStraightBond_lock
@@ -118,6 +122,11 @@ library ErrorCode {
     string constant ERR_IbetStraightBond_bulkRedeemFrom_121401 = "121401";
     // IbetStraightBond_bulkTransferFrom
     string constant ERR_IbetStraightBond_bulkTransferFrom_121501 = "121501";
+    // IbetStraightBond_forceLock
+    string constant ERR_IbetStraightBond_forceLock_121601 = "121601";
+    // IbetStraightBond_forceChangeLockedAccount
+    string constant ERR_IbetStraightBond_forceChangeLockedAccount_121701 =
+        "121701";
 
     // 13XXXX
     // IbetCoupon_transferToContract

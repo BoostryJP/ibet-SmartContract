@@ -259,6 +259,33 @@ contract IbetShare is Ownable, IbetSecurityTokenInterface {
         emit Lock(msg.sender, _lockAddress, _value, _data);
     }
 
+    /// @notice 資産を強制ロックする
+    /// @dev 発行体のみ実行可能
+    /// @param _lockAddress 資産ロック先アドレス
+    /// @param _accountAddress ロック対象のアドレス
+    /// @param _value ロックする数量
+    /// @param _data イベント出力用の任意のデータ
+    function forceLock(
+        address _lockAddress,
+        address _accountAddress,
+        uint256 _value,
+        string memory _data
+    ) public override onlyOwner {
+        // ロック数量が保有数量を上回っている場合、エラーを返す
+        if (balanceOf(_accountAddress) < _value)
+            revert(ErrorCode.ERR_IbetShare_forceLock_111601);
+
+        // データ更新
+        balances[_accountAddress] = balanceOf(_accountAddress).sub(_value);
+        locked[_lockAddress][_accountAddress] = lockedOf(
+            _lockAddress,
+            _accountAddress
+        ).add(_value);
+
+        // イベント登録
+        emit ForceLock(_accountAddress, _lockAddress, _value, _data);
+    }
+
     /// @notice 資産をアンロックする
     /// @param _accountAddress アンロック対象のアドレス
     /// @param _recipientAddress 受取アドレス
@@ -315,10 +342,48 @@ contract IbetShare is Ownable, IbetSecurityTokenInterface {
         balances[_recipientAddress] = balanceOf(_recipientAddress).add(_value);
 
         // イベント登録
-        emit Unlock(
+        emit ForceUnlock(
             _accountAddress,
             _lockAddress,
             _recipientAddress,
+            _value,
+            _data
+        );
+    }
+
+    /// @notice ロック対象のアドレスを強制変更する
+    /// @dev 発行体のみ実行可能
+    /// @param _lockAddress 資産ロック先アドレス
+    /// @param _beforeAccountAddress 以前のロック対象アドレス
+    /// @param _afterAccountAddress 新しいロック対象アドレス
+    /// @param _value ロック対象を変更する数量
+    /// @param _data イベント出力用の任意のデータ
+    function forceChangeLockedAccount(
+        address _lockAddress,
+        address _beforeAccountAddress,
+        address _afterAccountAddress,
+        uint256 _value,
+        string memory _data
+    ) public override onlyOwner {
+        // 変更数量がもともとのロック数量を上回ってる場合、エラーを返す
+        if (lockedOf(_lockAddress, _beforeAccountAddress) < _value)
+            revert(ErrorCode.ERR_IbetShare_forceChangeLockedAccount_111701);
+
+        // データ更新
+        locked[_lockAddress][_beforeAccountAddress] = lockedOf(
+            _lockAddress,
+            _beforeAccountAddress
+        ).sub(_value);
+        locked[_lockAddress][_afterAccountAddress] = lockedOf(
+            _lockAddress,
+            _afterAccountAddress
+        ).add(_value);
+
+        // イベント登録
+        emit ForceChangeLockedAccount(
+            _lockAddress,
+            _beforeAccountAddress,
+            _afterAccountAddress,
             _value,
             _data
         );
