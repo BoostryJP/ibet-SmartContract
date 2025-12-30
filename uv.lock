@@ -550,7 +550,7 @@ wheels = [
 
 [[package]]
 name = "ibet-smartcontract"
-version = "25.9"
+version = "25.12"
 source = { virtual = "." }
 dependencies = [
     { name = "eth-brownie" },

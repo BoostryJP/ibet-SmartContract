@@ -1,6 +1,6 @@
 [project]
 name = "ibet-SmartContract"
-version = "25.9"
+version = "25.12"
 authors = [
     {name = "BOOSTRY Co., Ltd.", email = "dev@boostry.co.jp"},
 ]
