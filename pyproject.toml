@@ -7,12 +7,13 @@ authors = [
 license = {text = "Apache License, Version 2.0"}
 requires-python = "==3.11.11"
 dependencies = [
-    "eth-brownie~=1.20.3",
+    "eth-brownie~=1.21.0",
+    "setuptools<81",
 ]
 description = "SmartContracts that provides token standards, decentralized exchanges, and other utility functions that can be used on the ibet-Network."
 
-[tool.uv]
-dev-dependencies = [
+[dependency-groups]
+dev = [
     "pre-commit<4.0.0,>=3.6.0",
     "ruff<1.0.0,>=0.5.4",
 ]
