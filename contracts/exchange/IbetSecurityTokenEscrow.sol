@@ -241,8 +241,8 @@ contract IbetSecurityTokenEscrow is Ownable, IbetExchangeInterface {
         );
 
         // 更新：エスクローIDをカウントアップ
-        uint256 _escrowId = EscrowStorage(storageAddress).getLatestEscrowId() +
-            1;
+        uint256 _escrowId =
+            EscrowStorage(storageAddress).getLatestEscrowId() + 1;
         EscrowStorage(storageAddress).setLatestEscrowId(_escrowId);
 
         // 更新：エスクロー情報の挿入
