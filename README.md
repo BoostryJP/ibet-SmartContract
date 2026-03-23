@@ -19,9 +19,9 @@ English | [日本語](README_JA.md)
 
 ## Dependencies
 - [Python3](https://www.python.org/downloads/)
-  - Version 3.11
+  - Version 3.13
 - [Node.js](https://nodejs.org/en/download/)
-  - Version 20
+  - Version 24
 - [Solidity](https://docs.soliditylang.org/)
   - We are using Solidity to implement our smart contracts. 
   - Currently, we are using v0.8.23.
