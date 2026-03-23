@@ -1,4 +1,4 @@
-FROM python:3.11-alpine3.23
+FROM python:3.13-alpine3.23
 
 ENV UV_VERSION=0.10.12
 ENV UV_COMPILE_BYTECODE=1

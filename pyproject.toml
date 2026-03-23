@@ -5,7 +5,7 @@ authors = [
     {name = "BOOSTRY Co., Ltd.", email = "dev@boostry.co.jp"},
 ]
 license = {text = "Apache License, Version 2.0"}
-requires-python = "==3.11.*"
+requires-python = "==3.13.*"
 dependencies = [
     "eth-brownie~=1.21.0",
     "setuptools<81",
@@ -21,7 +21,7 @@ dev = [
 [tool.ruff]
 line-length = 88
 indent-width = 4
-target-version = "py311"
+target-version = "py313"
 exclude = [".venv/*"]
 
 [tool.ruff.format]
