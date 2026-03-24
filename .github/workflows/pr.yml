@@ -13,10 +13,10 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v6
-      - name: Use Node.js 20
+      - name: Use Node.js 24
         uses: actions/setup-node@v6
         with:
-          node-version: 20
+          node-version: 24
       - run: npm install
       - run: npx prettier --check --plugin=prettier-plugin-solidity contracts/**/*.sol interfaces/**/*.sol sandbox/**/*.sol
   unit-test:
@@ -31,7 +31,7 @@ jobs:
           sudo chmod 777 /home/runner/work/ibet-SmartContract/ibet-SmartContract/output
       - name: UnitTest
         run: docker compose run sc-unit-test
-      - uses: actions/upload-artifact@v6
+      - uses: actions/upload-artifact@v7
         with:
           name: contract-json
           path: output

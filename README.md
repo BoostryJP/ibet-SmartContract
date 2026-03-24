@@ -5,7 +5,7 @@
 # ibet Smart Contract
 
 <p>
-  <img alt="Version" src="https://img.shields.io/badge/version-25.12-blue.svg?cacheSeconds=2592000" />
+  <img alt="Version" src="https://img.shields.io/badge/version-26.3-blue.svg?cacheSeconds=2592000" />
   <img alt="License: Apache--2.0" src="https://img.shields.io/badge/License-Apache--2.0-yellow.svg" />
 </p>
 
@@ -19,9 +19,9 @@ English | [日本語](README_JA.md)
 
 ## Dependencies
 - [Python3](https://www.python.org/downloads/)
-  - Version 3.11
+  - Version 3.13
 - [Node.js](https://nodejs.org/en/download/)
-  - Version 20
+  - Version 24
 - [Solidity](https://docs.soliditylang.org/)
   - We are using Solidity to implement our smart contracts. 
   - Currently, we are using v0.8.23.

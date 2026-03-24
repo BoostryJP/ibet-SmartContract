@@ -207,8 +207,8 @@ contract IbetSecurityTokenDVP is Ownable, IbetExchangeInterface {
         );
 
         // 更新：決済IDをカウントアップ
-        uint256 _deliveryId = DVPStorage(storageAddress).getLatestDeliveryId() +
-            1;
+        uint256 _deliveryId =
+            DVPStorage(storageAddress).getLatestDeliveryId() + 1;
         DVPStorage(storageAddress).setLatestDeliveryId(_deliveryId);
 
         // 更新：DVP決済情報の挿入
