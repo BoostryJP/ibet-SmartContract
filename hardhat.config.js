@@ -3,9 +3,10 @@ module.exports = {
   networks: {
     hardhat: {
       chainId: 2017,
+      blockGasLimit: 16777216,
+      hardfork: "osaka",
       gasPrice: 0,
-      blockGasLimit: 800000000,
-      hardfork: "berlin",
+      initialBaseFeePerGas: 0,
       throwOnTransactionFailures: false,
       throwOnCallFailures: false,
       allowBlocksWithSameTimestamp: true
