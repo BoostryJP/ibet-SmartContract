@@ -6,18 +6,29 @@ from Crypto.Signature import DSS
 
 
 class _RawHash:
+    block_size = 64
     digest_size = 32
     oid = SHA256.new(b"").oid
 
     def __init__(self, data: bytes):
         self._data = data
 
+    @classmethod
+    def new(cls, data=b""):
+        return cls(data)
+
+    def update(self, data: bytes):
+        self._data += data
+
+    def copy(self):
+        return self.__class__(self._data)
+
     def digest(self):
         return self._data
 
 
 def _generate_p256_signature(private_key, tx_hash):
-    signer = DSS.new(private_key, "fips-186-3", encoding="binary")
+    signer = DSS.new(private_key, "deterministic-rfc6979", encoding="binary")
     if isinstance(tx_hash, (bytes, bytearray)):
         tx_hash_bytes = bytes(tx_hash)
     else:
