@@ -119,7 +119,10 @@ class TestExecute:
         assert receiver.lastValue() == value_to_set
         assert receiver.lastCaller() == wallet.address
         assert wallet.nonce() == 1
+
         assert tx.events["Executed"]["target"] == receiver.address
+        assert tx.events["Executed"]["value"] == 0
+        assert tx.events["Executed"]["data"] == call_data
         assert tx.events["Executed"]["nonce"] == 0
 
     # Error_1
@@ -131,7 +134,7 @@ class TestExecute:
 
         call_data = receiver.setValue.encode_input(999)
 
-        with brownie.reverts():
+        with brownie.reverts(revert_msg="630101"):
             wallet.execute(
                 receiver.address,
                 0,

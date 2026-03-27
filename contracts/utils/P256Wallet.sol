@@ -18,6 +18,8 @@
  */
 pragma solidity ^0.8.23;
 
+import "./Errors.sol";
+
 /// @title P256 Wallet (EIP-7951 precompile based)
 /// @notice A minimal contract wallet that verifies secp256r1(P-256) signatures
 ///         through the EIP-7951-compatible precompile and executes transactions.
@@ -41,13 +43,9 @@ contract P256Wallet {
         uint256 nonce
     );
 
-    error InvalidPublicKey();
-    error InvalidSignature();
-    error ExecutionFailed();
-
     constructor(uint256 _pubKeyX, uint256 _pubKeyY) {
         if (_pubKeyX == 0 || _pubKeyY == 0) {
-            revert InvalidPublicKey();
+            revert(ErrorCode.ERR_P256Wallet_constructor_630001);
         }
         pubKeyX = _pubKeyX;
         pubKeyY = _pubKeyY;
@@ -72,7 +70,7 @@ contract P256Wallet {
         bytes32 txHash = getTransactionHash(target, value, data, nonce);
 
         if (!_verify(txHash, sigR, sigS)) {
-            revert InvalidSignature();
+            revert(ErrorCode.ERR_P256Wallet_execute_630101);
         }
 
         uint256 currentNonce = nonce;
@@ -80,7 +78,7 @@ contract P256Wallet {
 
         (bool success, bytes memory result) = target.call{value: value}(data);
         if (!success) {
-            revert ExecutionFailed();
+            revert(ErrorCode.ERR_P256Wallet_execute_630102);
         }
 
         emit Executed(target, value, data, result, currentNonce);
