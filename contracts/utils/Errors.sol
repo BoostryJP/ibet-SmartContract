@@ -338,4 +338,11 @@ library ErrorCode {
     // 62XXXX
     // FreezeLog_updateLog
     string constant ERR_FreezeLog_updateLog_620001 = "620001";
+
+    // 63XXXX
+    // P256Wallet_constructor
+    string constant ERR_P256Wallet_constructor_630001 = "630001";
+    // P256Wallet_execute
+    string constant ERR_P256Wallet_execute_630101 = "630101";
+    string constant ERR_P256Wallet_execute_630102 = "630102";
 }

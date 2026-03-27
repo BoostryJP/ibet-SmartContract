@@ -5,7 +5,7 @@
 # ibet Smart Contract
 
 <p>
-  <img alt="Version" src="https://img.shields.io/badge/version-26.3-blue.svg?cacheSeconds=2592000" />
+  <img alt="Version" src="https://img.shields.io/badge/version-26.6-blue.svg?cacheSeconds=2592000" />
   <img alt="License: Apache--2.0" src="https://img.shields.io/badge/License-Apache--2.0-yellow.svg" />
 </p>
 
@@ -138,11 +138,6 @@ $ ./scripts/deploy_shared_contract.sh {--payment_gateway 0xabcd...} {contract_na
 ### ネットワーク（hardhat）の設定
 
 ネットワーク設定は `hardhat.config.js` ファイルに定義されています。
-
-- chainId: 2017
-- gasPrice: 0
-- blockGasLimit: 800000000
-- hardfork: "berlin"
 
 ローカル環境で開発を行う際は、`docker-compose.yml` に定義されている、`hardhat-network` コンテナを起動して利用してください。
 デフォルトでは 8545 ポートで RPC サービスが起動します。
