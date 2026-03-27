@@ -29,4 +29,8 @@ contract WalletTestReceiver {
         lastCaller = msg.sender;
         emit Updated(value, msg.sender);
     }
+
+    function revertAlways() external pure {
+        revert("receiver error");
+    }
 }

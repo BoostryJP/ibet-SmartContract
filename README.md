@@ -139,11 +139,6 @@ You will need to deploy them in a different way.
 ### Network(hardhat) settings
 Network settings are defined in the `hardhat.config.js` file.
 
-- chainId: 2017
-- gasPrice: 0
-- blockGasLimit: 800000000
-- hardfork: "berlin"
-
 When developing in a local environment, start and use the `hardhat-network` container defined in `docker-compose.yml`. 
 By default, the RPC service starts on port 8545.
 

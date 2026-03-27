@@ -1,3 +1,22 @@
+"""
+Copyright BOOSTRY Co., Ltd.
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+
+You may obtain a copy of the License at
+http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing,
+software distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+
+See the License for the specific language governing permissions and
+limitations under the License.
+
+SPDX-License-Identifier: Apache-2.0
+"""
+
 import brownie
 import pytest
 from Crypto.Hash import SHA256
@@ -141,5 +160,27 @@ class TestExecute:
                 call_data,
                 0,
                 0,
+                {"from": users["user1"]},
+            )
+
+    # Error_2
+    # target call failure should revert with 630102
+    def test_error_2(self, P256Wallet, WalletTestReceiver, users):
+        admin = users["admin"]
+        receiver = admin.deploy(WalletTestReceiver)
+        call_data = receiver.revertAlways.encode_input()
+
+        private_key, pubkey_x, pubkey_y = _generate_p256_keypair()
+        wallet = admin.deploy(P256Wallet, pubkey_x, pubkey_y)
+        tx_hash = wallet.getTransactionHash.call(receiver.address, 0, call_data, 0)
+        sig_r, sig_s = _generate_p256_signature(private_key, tx_hash)
+
+        with brownie.reverts(revert_msg="630102"):
+            wallet.execute(
+                receiver.address,
+                0,
+                call_data,
+                sig_r,
+                sig_s,
                 {"from": users["user1"]},
             )
