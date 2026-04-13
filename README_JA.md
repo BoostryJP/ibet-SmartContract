@@ -29,7 +29,7 @@
   - eth-brownie フレームワークを利用して、コントラクトの開発とテストを行なっています。
 - [GoQuorum](https://github.com/ConsenSys/quorum)
   - [ibet-Network](https://github.com/BoostryJP/ibet-Network) の公式の GoQuorum ノード上での動作をサポートしています。
-  - ローカル開発・テストでは [hardhat network](https://hardhat.org/hardhat-network/) を利用しています。最新バージョンを利用しています。
+  - ローカル開発・テストでは [Anvil](https://www.getfoundry.sh/anvil) を利用しています。
 - [OpenZeppelin](https://openzeppelin.com/contracts/)
   - 私たちのプロジェクトの一部は OpenZeppelin に依存しています。
   - openzeppelin-contracts の v4.9 を利用しています。
@@ -52,7 +52,7 @@
 
 ## インストール
 
-eth-brownie をインストールします。
+3rd party の依存関係をインストールします。
 ```bash
 $ make install
 ```
@@ -60,11 +60,6 @@ $ make install
 openzeppelin-contractsをインストールします。
 ```bash
 $ brownie pm install OpenZeppelin/openzeppelin-contracts@4.9.3
-```
-
-hardhatをインストールします。
-```bash
-$ npm install
 ```
 
 ## コントラクトのコンパイル
@@ -135,12 +130,9 @@ $ ./scripts/deploy_shared_contract.sh {--payment_gateway 0xabcd...} {contract_na
 
 ## スマートコントラクトの開発
 
-### ネットワーク（hardhat）の設定
+### ネットワーク（Anvil）の設定
 
-ネットワーク設定は `hardhat.config.js` ファイルに定義されています。
-
-ローカル環境で開発を行う際は、`docker-compose.yml` に定義されている、`hardhat-network` コンテナを起動して利用してください。
-デフォルトでは 8545 ポートで RPC サービスが起動します。
+ネットワーク設定は `data/networks.yml` ファイルに定義されています。
 
 ### Brownie の設定
 

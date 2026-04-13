@@ -29,7 +29,7 @@ English | [日本語](README_JA.md)
   - We are using the eth-brownie framework for developing and testing our contracts.
 - [GoQuorum](https://github.com/ConsenSys/quorum)
   - We support the official GoQuorum node of [ibet-Network](https://github.com/BoostryJP/ibet-Network).
-  - We use [hardhat network](https://hardhat.org/hardhat-network/) for local development and unit testing, and we use the latest version.
+  - We use [Anvil](https://www.getfoundry.sh/anvil) for local development and unit testing.
 - [OpenZeppelin](https://openzeppelin.com/contracts/)
   - Our project is partly dependent on OpenZeppelin.
   - We use openzeppelin-contracts v4.9.
@@ -52,7 +52,7 @@ English | [日本語](README_JA.md)
 
 ## Install
 
-Install eth-brownie as a python package.
+Install 3rd party dependencies.
 
 ```bash
 $ make install
@@ -62,12 +62,6 @@ Install openzeppelin-contracts.
 
 ```bash
 $ brownie pm install OpenZeppelin/openzeppelin-contracts@4.9.3
-```
-
-Install hardhat as a Node.js package.
-
-```bash
-$ npm install
 ```
 
 ## Compile Contracts
@@ -136,11 +130,8 @@ You will need to deploy them in a different way.
 
 ## Developing Smart Contracts
 
-### Network(hardhat) settings
-Network settings are defined in the `hardhat.config.js` file.
-
-When developing in a local environment, start and use the `hardhat-network` container defined in `docker-compose.yml`. 
-By default, the RPC service starts on port 8545.
+### Network(Anvil) settings
+Network settings are defined in the `data/networks.yml` file.
 
 ### Brownie settings
 

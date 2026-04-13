@@ -17,13 +17,18 @@ limitations under the License.
 SPDX-License-Identifier: Apache-2.0
 """
 
-from typing import TypedDict
+from subprocess import DEVNULL
+from typing import Generator, TypedDict
 
 import pytest
 from brownie import web3
-from web3.middleware import geth_poa_middleware
+from brownie.network.rpc import anvil as brownie_anvil_rpc
+from web3.middleware.geth_poa import geth_poa_middleware
 
 web3.middleware_onion.inject(geth_poa_middleware, layer=0)
+
+# Brownie launches Anvil with PIPE-backed stdio, which can block when traced output grows.
+setattr(brownie_anvil_rpc, "PIPE", DEVNULL)
 
 
 class Users(TypedDict):
@@ -36,14 +41,15 @@ class Users(TypedDict):
 
 
 @pytest.fixture()
-def users(web3, accounts) -> Users:
+def users(web3, accounts) -> Generator[Users, None, None]:
     admin = accounts[0]
     trader = accounts[1]
     issuer = accounts[2]
     agent = accounts[3]
     user1 = accounts[4]
     user2 = accounts[5]
-    users = {
+
+    users: Users = {
         "admin": admin,
         "trader": trader,
         "issuer": issuer,
