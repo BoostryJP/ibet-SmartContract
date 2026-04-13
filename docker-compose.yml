@@ -3,7 +3,7 @@ services:
     platform: linux/amd64
     build:
       context: .
-      dockerfile: tests/Dockerfile_unittest
+      dockerfile: tests/Dockerfile
     environment:
       TEST_NETWORK: "test_network"
     volumes:
