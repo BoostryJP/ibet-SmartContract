@@ -134,9 +134,6 @@ $ ./scripts/deploy_shared_contract.sh {--payment_gateway 0xabcd...} {contract_na
 
 ネットワーク設定は `data/networks.yml` ファイルに定義されています。
 
-ローカル環境で開発を行う際は、`docker-compose.yml` に定義されている、`anvil-network` コンテナを起動して利用してください。
-デフォルトでは 8545 ポートで RPC サービスが起動します。
-
 ### Brownie の設定
 
 ネットワーク設定を Brownie にインポートします。

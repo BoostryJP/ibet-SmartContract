@@ -133,9 +133,6 @@ You will need to deploy them in a different way.
 ### Network(Anvil) settings
 Network settings are defined in the `data/networks.yml` file.
 
-When developing in a local environment, start and use the `anvil-network` container defined in `docker-compose.yml`.
-By default, the RPC service starts on port 8545.
-
 ### Brownie settings
 
 Importing network settings to Brownie.
