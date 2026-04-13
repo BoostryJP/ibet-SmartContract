@@ -17,7 +17,7 @@
 #
 # SPDX-License-Identifier: Apache-2.0
 
-source ~/.profile
+. ~/.profile
 
 cd /app/ibet-SmartContract
 

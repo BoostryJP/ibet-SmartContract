@@ -18,7 +18,6 @@ SPDX-License-Identifier: Apache-2.0
 """
 
 import brownie
-import pytest
 
 
 class TestSendMessage:
@@ -196,7 +195,7 @@ class TestGetLastMessage:
         e2e_messaging = admin.deploy(E2EMessaging)
 
         # Assertion
-        with pytest.raises(ValueError):
+        with brownie.reverts(revert_msg="610001"):
             e2e_messaging.getLastMessage(receiver)
 
 

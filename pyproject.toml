@@ -18,6 +18,9 @@ dev = [
     "ruff<1.0.0,>=0.5.4",
 ]
 
+[tool.pytest.ini_options]
+addopts = ["--network=test_network"]
+
 [tool.ruff]
 line-length = 88
 indent-width = 4

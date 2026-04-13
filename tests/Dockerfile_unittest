@@ -1,4 +1,6 @@
-FROM python:3.13-alpine3.23
+FROM ghcr.io/foundry-rs/foundry:latest AS foundry
+
+FROM python:3.13-slim
 
 ENV UV_VERSION=0.10.12
 ENV UV_COMPILE_BYTECODE=1
@@ -11,42 +13,29 @@ RUN mkdir -p /app/ibet-SmartContract/
 WORKDIR /app/ibet-SmartContract/
 
 # Install packages
-RUN apk update \
-    && apk add --no-cache --virtual .build-deps \
-    # use Python package installation
-    make \
-    gcc \
-    pkgconfig \
-    build-base \
-    libressl-dev \
-    libffi-dev \
+RUN apt-get update \
+ && apt-get install -y --no-install-recommends \
     autoconf \
     automake \
-    libtool \
-    git \
-    # use Solidity compiler
-    z3 \
-    # AWS CLI
-    aws-cli \
-    mandoc \
-    # use deploy.sh
-    jq \
+    awscli \
+    bash \
+    build-essential \
     expect \
-    # nodejs
-    nodejs \
-    npm
-
-# Use glibc instead of musl-dev
-# NOTE: This is because if it is musl-dev, a DynamicLinkError will occur in Solidity compiler.
-RUN wget -q -O /etc/apk/keys/sgerrand.rsa.pub https://alpine-pkgs.sgerrand.com/sgerrand.rsa.pub \
- && wget https://github.com/sgerrand/alpine-pkg-glibc/releases/download/2.33-r0/glibc-2.33-r0.apk \
- && apk add --force-overwrite glibc-2.33-r0.apk \
- && rm -f glibc-2.33-r0.apk
-ENV LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/lib
+    git \
+    jq \
+    libffi-dev \
+    libssl-dev \
+    libtool \
+    make \
+    pkg-config \
+    sudo \
+    wget \
+    z3 \
+ && rm -rf /var/lib/apt/lists/*
 
 # add apl user/group
-RUN addgroup -g 1000 apl \
- && adduser -G apl -D -s /bin/bash -u 1000 apl \
+RUN groupadd -g 1000 apl \
+ && useradd -g apl -m -s /bin/bash -u 1000 apl \
  && echo 'apl ALL=(ALL) NOPASSWD:ALL' >> /etc/sudoers \
  && chown -R apl:apl /app \
  && echo 'export LANG=ja_JP.utf8' >> ~apl/.profile
@@ -54,6 +43,7 @@ RUN addgroup -g 1000 apl \
 # install uv
 ADD https://astral.sh/uv/$UV_VERSION/install.sh /uv-installer.sh
 RUN INSTALLER_NO_MODIFY_PATH=1 sh /uv-installer.sh && rm /uv-installer.sh
+COPY --from=foundry /usr/local/bin/anvil /usr/local/bin/anvil
 RUN echo 'if [ -f ~/.ashrc ]; then' >> ~apl/.profile \
  && echo '    . ~/.ashrc' >> ~apl/.profile \
  && echo 'fi' >> ~apl/.profile \
@@ -72,13 +62,6 @@ RUN cd /app/ibet-SmartContract \
  && rm -f /app/ibet-SmartContract/pyproject.toml \
  && rm -f /app/ibet-SmartContract/uv.lock
 
-# install hardhat
-USER apl
-COPY --chown=apl:apl package.json /app/ibet-SmartContract
-COPY --chown=apl:apl package-lock.json /app/ibet-SmartContract
-COPY --chown=apl:apl hardhat.config.js /app/ibet-SmartContract
-RUN npm install --only=dev
-
 # deploy app
 COPY --chown=apl:apl LICENSE /app/ibet-SmartContract/
 RUN mkdir -p /app/ibet-SmartContract/tools/
@@ -86,7 +69,7 @@ COPY --chown=apl:apl tools/ /app/ibet-SmartContract/tools/
 COPY --chown=apl:apl brownie-config.yaml /app/ibet-SmartContract/
 RUN mkdir -p /app/ibet-SmartContract/data/
 COPY --chown=apl:apl data/ /app/ibet-SmartContract/data/
-RUN source ~apl/.profile \
+RUN . ~apl/.profile \
  && cd /app/ibet-SmartContract/ \
  && brownie networks import data/networks.yml
 RUN mkdir -p /app/ibet-SmartContract/scripts/

@@ -19,7 +19,7 @@ SPDX-License-Identifier: Apache-2.0
 
 import pytest
 from brownie import web3
-from web3.middleware import geth_poa_middleware
+from web3.middleware.geth_poa import geth_poa_middleware
 
 web3.middleware_onion.inject(geth_poa_middleware, layer=0)
 

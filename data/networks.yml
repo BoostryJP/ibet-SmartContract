@@ -11,8 +11,8 @@ live:
     host: http://quorum:8545
 development:
 - id: test_network
-  name: Hardhat Network
+  name: Anvil Network
   host: http://localhost:8545
-  cmd: npx hardhat --config ./hardhat.config.js node
+  cmd: anvil --host 0.0.0.0 --chain-id 2017 --hardfork osaka --gas-limit 800000000 --gas-price 0 --block-base-fee-per-gas 0 --steps-tracing
   cmd_settings:
     port: 8545
