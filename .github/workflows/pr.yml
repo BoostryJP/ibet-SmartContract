@@ -39,6 +39,18 @@ jobs:
           version: stable
       - name: Install dependencies
         run: uv sync --frozen --no-install-project
+      - name: Install Solidity compiler
+        run: |
+          set -euo pipefail
+          solcx_dir="$HOME/.solcx"
+          temp_dir="$(mktemp -d)"
+          compiler_path="$temp_dir/solc-static-linux"
+          compiler_url="https://github.com/ethereum/solidity/releases/download/v0.8.34/solc-static-linux"
+          compiler_sha256="d40adc6f9fdbb22a97d32a02fa05688bf2ee7886affc48c9851b0afd4a726b39"
+          mkdir -p "$solcx_dir"
+          curl -fsSL "$compiler_url" -o "$compiler_path"
+          echo "$compiler_sha256  $compiler_path" | sha256sum --check --status
+          install -m 0755 "$compiler_path" "$solcx_dir/solc-v0.8.34"
       - name: Import Brownie network settings
         run: uv run brownie networks import data/networks.yml true
       - name: Compile contracts
