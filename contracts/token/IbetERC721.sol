@@ -16,7 +16,7 @@
  *
  * SPDX-License-Identifier: Apache-2.0
  */
-pragma solidity ^0.8.23;
+pragma solidity ^0.8.34;
 
 import "OpenZeppelin/openzeppelin-contracts@4.9.3/contracts/token/ERC721/ERC721.sol";
 import "OpenZeppelin/openzeppelin-contracts@4.9.3/contracts/token/ERC721/extensions/ERC721Burnable.sol";
