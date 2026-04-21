@@ -16,7 +16,7 @@
  *
  * SPDX-License-Identifier: Apache-2.0
  */
-pragma solidity ^0.8.23;
+pragma solidity ^0.8.34;
 
 import "./Errors.sol";
 
