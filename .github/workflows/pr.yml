@@ -39,8 +39,6 @@ jobs:
           version: stable
       - name: Install dependencies
         run: uv sync --frozen --no-install-project
-      - name: Install Solidity compiler 0.8.23
-        run: uv run python -c "from solcx import install_solc; install_solc('0.8.23')"
       - name: Import Brownie network settings
         run: uv run brownie networks import data/networks.yml true
       - name: Compile contracts
