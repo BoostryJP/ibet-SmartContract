@@ -37,8 +37,6 @@ jobs:
         uses: foundry-rs/foundry-toolchain@c7450ba673e133f5ee30098b3b54f444d3a2ca2d # v1.8.0
         with:
           version: "1.5.1"  # stable
-      - name: Show Forge version
-        run: forge --version
       - name: Install dependencies
         run: uv sync --frozen --no-install-project
       - name: Install Solidity compiler
