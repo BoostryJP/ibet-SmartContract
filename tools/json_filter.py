@@ -18,31 +18,41 @@ SPDX-License-Identifier: Apache-2.0
 """
 
 import json
-import os
+from pathlib import Path
+
+BUILD_MANIFEST = Path(".build/__local__.json")
+OUTPUT_DIR = Path("output")
+
+
+def _iter_project_contracts(manifest):
+    for name, contract in manifest.get("contractTypes", {}).items():
+        source_id = contract.get("sourceId", "")
+        if not source_id.startswith("contracts/"):
+            continue
+
+        yield name, contract
 
 
 def main():
-    # Contract
-    _path = "build/contracts"
-    file_list = os.listdir(_path)
-    for file in file_list:
-        if os.path.isfile(os.path.join(_path, file)):
-            contract_json = json.load(open(f"build/contracts/{file}", "r"))
-            output = {
-                "abi": contract_json["abi"],
-                "bytecode": contract_json["bytecode"],
-                "deployedBytecode": contract_json["deployedBytecode"],
-            }
-            with open(f"output/{file}", "w") as f:
-                json.dump(output, f, indent=2)
+    OUTPUT_DIR.mkdir(exist_ok=True)
+    for existing_file in OUTPUT_DIR.glob("*.json"):
+        existing_file.unlink()
 
-    # Interface
-    file_list = os.listdir("build/interfaces")
-    for file in file_list:
-        contract_json = json.load(open(f"build/interfaces/{file}", "r"))
+    with BUILD_MANIFEST.open("r", encoding="utf-8") as file:
+        manifest = json.load(file)
+
+    for name, contract_json in _iter_project_contracts(manifest):
         output = {"abi": contract_json["abi"]}
-        with open(f"output/{file}", "w") as f:
-            json.dump(output, f, indent=2)
+
+        deployment = contract_json.get("deploymentBytecode", {})
+        runtime = contract_json.get("runtimeBytecode", {})
+        if "bytecode" in deployment:
+            output["bytecode"] = deployment["bytecode"]
+        if "bytecode" in runtime:
+            output["deployedBytecode"] = runtime["bytecode"]
+
+        with (OUTPUT_DIR / f"{name}.json").open("w", encoding="utf-8") as file:
+            json.dump(output, file, indent=2)
 
 
 if __name__ == "__main__":

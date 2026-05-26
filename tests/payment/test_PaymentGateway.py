@@ -17,7 +17,7 @@ limitations under the License.
 SPDX-License-Identifier: Apache-2.0
 """
 
-import brownie
+from ape_utils import ZERO_ADDRESS, event_args, reverts
 
 encrypted_message = "encrypted_message"
 encrypted_message_after = "encrypted_message_after"
@@ -42,8 +42,8 @@ class TestDeploy:
 
         # assertion
         payment_account = pg_contract.payment_accounts(trader, agent)
-        assert payment_account[0] == brownie.ZERO_ADDRESS
-        assert payment_account[1] == brownie.ZERO_ADDRESS
+        assert payment_account[0] == ZERO_ADDRESS
+        assert payment_account[1] == ZERO_ADDRESS
         assert payment_account[2] == ""
         assert payment_account[3] == 0
 
@@ -67,7 +67,7 @@ class TestRegister:
         pg_contract = admin.deploy(PaymentGateway)
 
         # register
-        tx = pg_contract.register.transact(agent, encrypted_message, {"from": trader})
+        tx = pg_contract.register(agent, encrypted_message, sender=trader)
 
         # assertion
         payment_account = pg_contract.payment_accounts(trader, agent)
@@ -79,8 +79,9 @@ class TestRegister:
         account_approved = pg_contract.accountApproved(trader, agent)
         assert account_approved is False
 
-        assert tx.events["Register"]["account_address"] == trader.address
-        assert tx.events["Register"]["agent_address"] == agent.address
+        event = event_args(tx, pg_contract.Register)
+        assert event["account_address"] == trader.address
+        assert event["agent_address"] == agent.address
 
     # Normal_2
     # Multiple registrations
@@ -93,10 +94,10 @@ class TestRegister:
         pg_contract = admin.deploy(PaymentGateway)
 
         # register (1)
-        pg_contract.register.transact(agent, encrypted_message, {"from": trader})
+        pg_contract.register(agent, encrypted_message, sender=trader)
 
         # register (2)
-        pg_contract.register.transact(agent, encrypted_message_after, {"from": trader})
+        pg_contract.register(agent, encrypted_message_after, sender=trader)
 
         # assertion
         payment_account = pg_contract.payment_accounts(trader, agent)
@@ -123,16 +124,14 @@ class TestRegister:
         pg_contract = admin.deploy(PaymentGateway)
 
         # register (1)
-        pg_contract.register.transact(agent, encrypted_message, {"from": trader})
+        pg_contract.register(agent, encrypted_message, sender=trader)
 
         # ban
-        pg_contract.ban.transact(trader, {"from": agent})
+        pg_contract.ban(trader, sender=agent)
 
         # register (2)
-        with brownie.reverts(revert_msg="300001"):
-            pg_contract.register.transact(
-                agent, encrypted_message_after, {"from": trader}
-            )
+        with reverts("300001"):
+            pg_contract.register(agent, encrypted_message_after, sender=trader)
 
         # assertion
         payment_account = pg_contract.payment_accounts(trader, agent)
@@ -161,12 +160,10 @@ class TestModify:
         pg_contract = admin.deploy(PaymentGateway)
 
         # register
-        pg_contract.register.transact(agent, encrypted_message, {"from": trader})
+        pg_contract.register(agent, encrypted_message, sender=trader)
 
         # modify
-        tx = pg_contract.modify.transact(
-            trader, encrypted_message_after, {"from": agent}
-        )
+        tx = pg_contract.modify(trader, encrypted_message_after, sender=agent)
 
         # assertion
         payment_account = pg_contract.payment_accounts(trader, agent)
@@ -175,8 +172,9 @@ class TestModify:
         assert payment_account[2] == encrypted_message_after
         assert payment_account[3] == 1
 
-        assert tx.events["Modify"]["account_address"] == trader.address
-        assert tx.events["Modify"]["agent_address"] == agent.address
+        event = event_args(tx, pg_contract.Modify)
+        assert event["account_address"] == trader.address
+        assert event["agent_address"] == agent.address
 
     #######################################
     # Error
@@ -193,15 +191,13 @@ class TestModify:
         pg_contract = admin.deploy(PaymentGateway)
 
         # modify
-        with brownie.reverts(revert_msg="300501"):
-            pg_contract.modify.transact(
-                trader, encrypted_message_after, {"from": agent}
-            )
+        with reverts("300501"):
+            pg_contract.modify(trader, encrypted_message_after, sender=agent)
 
         # assertion
         payment_account = pg_contract.payment_accounts(trader, agent)
-        assert payment_account[0] == brownie.ZERO_ADDRESS
-        assert payment_account[1] == brownie.ZERO_ADDRESS
+        assert payment_account[0] == ZERO_ADDRESS
+        assert payment_account[1] == ZERO_ADDRESS
         assert payment_account[2] == ""
         assert payment_account[3] == 0
 
@@ -216,13 +212,11 @@ class TestModify:
         pg_contract = admin.deploy(PaymentGateway)
 
         # register
-        pg_contract.register.transact(agent, encrypted_message, {"from": trader})
+        pg_contract.register(agent, encrypted_message, sender=trader)
 
         # modify
-        with brownie.reverts(revert_msg="300501"):
-            pg_contract.modify.transact(
-                trader, encrypted_message_after, {"from": trader}
-            )
+        with reverts("300501"):
+            pg_contract.modify(trader, encrypted_message_after, sender=trader)
 
         # assertion
         payment_account = pg_contract.payment_accounts(trader, agent)
@@ -248,10 +242,10 @@ class TestApprove:
         pg_contract = admin.deploy(PaymentGateway)
 
         # register
-        pg_contract.register.transact(agent, encrypted_message, {"from": trader})
+        pg_contract.register(agent, encrypted_message, sender=trader)
 
         # approve
-        tx = pg_contract.approve.transact(trader, {"from": agent})
+        tx = pg_contract.approve(trader, sender=agent)
 
         # assertion
         payment_account = pg_contract.payment_accounts(trader, agent)
@@ -263,8 +257,9 @@ class TestApprove:
         account_approved = pg_contract.accountApproved(trader, agent)
         assert account_approved is True
 
-        assert tx.events["Approve"]["account_address"] == trader.address
-        assert tx.events["Approve"]["agent_address"] == agent.address
+        event = event_args(tx, pg_contract.Approve)
+        assert event["account_address"] == trader.address
+        assert event["agent_address"] == agent.address
 
     #######################################
     # Error
@@ -281,12 +276,12 @@ class TestApprove:
         pg_contract = admin.deploy(PaymentGateway)
 
         # approve
-        with brownie.reverts(revert_msg="300101"):
-            pg_contract.approve.transact(trader, {"from": agent})
+        with reverts("300101"):
+            pg_contract.approve(trader, sender=agent)
 
         # assertion
         payment_account = pg_contract.payment_accounts(trader, agent)
-        assert payment_account[0] == brownie.ZERO_ADDRESS
+        assert payment_account[0] == ZERO_ADDRESS
 
 
 # TEST_warn
@@ -305,10 +300,10 @@ class TestWarn:
         pg_contract = admin.deploy(PaymentGateway)
 
         # register
-        pg_contract.register.transact(agent, encrypted_message, {"from": trader})
+        pg_contract.register(agent, encrypted_message, sender=trader)
 
         # warn
-        tx = pg_contract.warn.transact(trader, {"from": agent})
+        tx = pg_contract.warn(trader, sender=agent)
 
         # assertion
         payment_account = pg_contract.payment_accounts(trader, agent)
@@ -320,8 +315,9 @@ class TestWarn:
         account_approved = pg_contract.accountApproved(trader, agent)
         assert account_approved is False
 
-        assert tx.events["Warn"]["account_address"] == trader.address
-        assert tx.events["Warn"]["agent_address"] == agent.address
+        event = event_args(tx, pg_contract.Warn)
+        assert event["account_address"] == trader.address
+        assert event["agent_address"] == agent.address
 
     #######################################
     # Error
@@ -338,12 +334,12 @@ class TestWarn:
         pg_contract = admin.deploy(PaymentGateway)
 
         # warn
-        with brownie.reverts(revert_msg="300201"):
-            pg_contract.warn.transact(trader, {"from": agent})
+        with reverts("300201"):
+            pg_contract.warn(trader, sender=agent)
 
         # assertion
         payment_account = pg_contract.payment_accounts(trader, agent)
-        assert payment_account[0] == brownie.ZERO_ADDRESS
+        assert payment_account[0] == ZERO_ADDRESS
 
 
 # TEST_disapprove
@@ -362,10 +358,10 @@ class TestDisapprove:
         pg_contract = admin.deploy(PaymentGateway)
 
         # register
-        pg_contract.register.transact(agent, encrypted_message, {"from": trader})
+        pg_contract.register(agent, encrypted_message, sender=trader)
 
         # disapprove
-        tx = pg_contract.disapprove.transact(trader, {"from": agent})
+        tx = pg_contract.disapprove(trader, sender=agent)
 
         # assertion
         payment_account = pg_contract.payment_accounts(trader, agent)
@@ -377,8 +373,9 @@ class TestDisapprove:
         account_approved = pg_contract.accountApproved(trader, agent)
         assert account_approved is False
 
-        assert tx.events["Disapprove"]["account_address"] == trader.address
-        assert tx.events["Disapprove"]["agent_address"] == agent.address
+        event = event_args(tx, pg_contract.Disapprove)
+        assert event["account_address"] == trader.address
+        assert event["agent_address"] == agent.address
 
     # Normal_2
     # register -> approve -> disapprove
@@ -391,13 +388,13 @@ class TestDisapprove:
         pg_contract = admin.deploy(PaymentGateway)
 
         # register
-        pg_contract.register.transact(agent, encrypted_message, {"from": trader})
+        pg_contract.register(agent, encrypted_message, sender=trader)
 
         # approve
-        pg_contract.approve.transact(trader, {"from": agent})
+        pg_contract.approve(trader, sender=agent)
 
         # disapprove
-        pg_contract.disapprove.transact(trader, {"from": agent})
+        pg_contract.disapprove(trader, sender=agent)
 
         # assertion
         payment_account = pg_contract.payment_accounts(trader, agent)
@@ -424,12 +421,12 @@ class TestDisapprove:
         pg_contract = admin.deploy(PaymentGateway)
 
         # disapprove
-        with brownie.reverts(revert_msg="300301"):
-            pg_contract.disapprove.transact(trader, {"from": agent})
+        with reverts("300301"):
+            pg_contract.disapprove(trader, sender=agent)
 
         # assertion
         payment_account = pg_contract.payment_accounts(trader, agent)
-        assert payment_account[0] == brownie.ZERO_ADDRESS
+        assert payment_account[0] == ZERO_ADDRESS
 
 
 # TEST_ban
@@ -448,10 +445,10 @@ class TestBan:
         pg_contract = admin.deploy(PaymentGateway)
 
         # register
-        pg_contract.register.transact(agent, encrypted_message, {"from": trader})
+        pg_contract.register(agent, encrypted_message, sender=trader)
 
         # ban
-        tx = pg_contract.ban.transact(trader, {"from": agent})
+        tx = pg_contract.ban(trader, sender=agent)
 
         # assertion
         payment_account = pg_contract.payment_accounts(trader, agent)
@@ -463,8 +460,9 @@ class TestBan:
         account_approved = pg_contract.accountApproved(trader, agent)
         assert account_approved is False
 
-        assert tx.events["Ban"]["account_address"] == trader.address
-        assert tx.events["Ban"]["agent_address"] == agent.address
+        event = event_args(tx, pg_contract.Ban)
+        assert event["account_address"] == trader.address
+        assert event["agent_address"] == agent.address
 
     #######################################
     # Error
@@ -481,12 +479,12 @@ class TestBan:
         pg_contract = admin.deploy(PaymentGateway)
 
         # ban
-        with brownie.reverts(revert_msg="300401"):
-            pg_contract.ban.transact(trader, {"from": agent})
+        with reverts("300401"):
+            pg_contract.ban(trader, sender=agent)
 
         # assertion
         payment_account = pg_contract.payment_accounts(trader, agent)
-        assert payment_account[0] == brownie.ZERO_ADDRESS
+        assert payment_account[0] == ZERO_ADDRESS
 
 
 # TEST_addAgent
@@ -504,7 +502,7 @@ class TestAddAgent:
         pg_contract = admin.deploy(PaymentGateway)
 
         # assertion
-        agent_available = pg_contract.getAgent(brownie.ZERO_ADDRESS)
+        agent_available = pg_contract.getAgent(ZERO_ADDRESS)
         assert agent_available == False
 
     # Normal_2
@@ -517,13 +515,14 @@ class TestAddAgent:
         pg_contract = admin.deploy(PaymentGateway)
 
         # add agent
-        tx = pg_contract.addAgent.transact(agent, {"from": admin})
+        tx = pg_contract.addAgent(agent, sender=admin)
 
         # assertion
         agent_available = pg_contract.getAgent(agent)
         assert agent_available == True
 
-        assert tx.events["AddAgent"]["agent_address"] == agent.address
+        event = event_args(tx, pg_contract.AddAgent)
+        assert event["agent_address"] == agent.address
 
     # Normal_3
     # Add multiple agents
@@ -536,10 +535,10 @@ class TestAddAgent:
         pg_contract = admin.deploy(PaymentGateway)
 
         # add agent 1
-        pg_contract.addAgent.transact(agent_1, {"from": admin})
+        pg_contract.addAgent(agent_1, sender=admin)
 
         # add agent 2
-        pg_contract.addAgent.transact(agent_2, {"from": admin})
+        pg_contract.addAgent(agent_2, sender=admin)
 
         # assertion
         agent_1_available = pg_contract.getAgent(agent_1)
@@ -563,8 +562,8 @@ class TestAddAgent:
         pg_contract = admin.deploy(PaymentGateway)
 
         # add agent
-        with brownie.reverts(revert_msg="500001"):
-            pg_contract.addAgent.transact(agent, {"from": attacker})
+        with reverts("500001"):
+            pg_contract.addAgent(agent, sender=attacker)
 
         # assertion
         agent_available = pg_contract.getAgent(agent)
@@ -587,13 +586,14 @@ class TestRemoveAgent:
         pg_contract = admin.deploy(PaymentGateway)
 
         # remove agent
-        tx = pg_contract.removeAgent.transact(agent, {"from": admin})
+        tx = pg_contract.removeAgent(agent, sender=admin)
 
         # assertion
         agent_available = pg_contract.getAgent(agent)
         assert agent_available == False
 
-        assert tx.events["RemoveAgent"]["agent_address"] == agent.address
+        event = event_args(tx, pg_contract.RemoveAgent)
+        assert event["agent_address"] == agent.address
 
     # Normal_2
     def test_normal_2(self, PaymentGateway, users):
@@ -604,16 +604,17 @@ class TestRemoveAgent:
         pg_contract = admin.deploy(PaymentGateway)
 
         # add agent
-        pg_contract.addAgent.transact(agent, {"from": admin})
+        pg_contract.addAgent(agent, sender=admin)
 
         # remove agent
-        tx = pg_contract.removeAgent.transact(agent, {"from": admin})
+        tx = pg_contract.removeAgent(agent, sender=admin)
 
         # assertion
         agent_available = pg_contract.getAgent(agent)
         assert agent_available == False
 
-        assert tx.events["RemoveAgent"]["agent_address"] == agent.address
+        event = event_args(tx, pg_contract.RemoveAgent)
+        assert event["agent_address"] == agent.address
 
     #######################################
     # Error
@@ -630,11 +631,11 @@ class TestRemoveAgent:
         pg_contract = admin.deploy(PaymentGateway)
 
         # add agent
-        pg_contract.addAgent.transact(agent, {"from": admin})
+        pg_contract.addAgent(agent, sender=admin)
 
         # remove agent
-        with brownie.reverts(revert_msg="500001"):
-            pg_contract.removeAgent.transact(agent, {"from": attacker})
+        with reverts("500001"):
+            pg_contract.removeAgent(agent, sender=attacker)
 
         # assertion
         agent_available = pg_contract.getAgent(agent)

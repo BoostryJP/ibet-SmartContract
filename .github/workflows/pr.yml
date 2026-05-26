@@ -18,7 +18,7 @@ jobs:
         with:
           node-version: 24
       - run: npm install
-      - run: npx prettier --check --plugin=prettier-plugin-solidity contracts/**/*.sol interfaces/**/*.sol sandbox/**/*.sol
+      - run: npx prettier --check --plugin=prettier-plugin-solidity contracts/**/*.sol interfaces/**/*.sol
   unit-test:
     name: "Unit tests"
     runs-on: ubuntu-latest
@@ -51,12 +51,12 @@ jobs:
           curl -fsSL "$compiler_url" -o "$compiler_path"
           echo "$compiler_sha256  $compiler_path" | sha256sum --check --status
           install -m 0755 "$compiler_path" "$solcx_dir/solc-v0.8.34"
-      - name: Import Brownie network settings
-        run: uv run brownie networks import data/networks.yml true
+      - name: Install Ape dependencies
+        run: uv run ape pm install
       - name: Compile contracts
-        run: uv run brownie compile --all
+        run: uv run ape compile
       - name: UnitTest
-        run: uv run pytest --disable-warnings -v tests/
+        run: uv run ape test --network ethereum:local:foundry tests/
       - name: Generate contract JSON
         run: uv run python tools/json_filter.py
       - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a  # v7.0.1

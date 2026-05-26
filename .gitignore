@@ -24,6 +24,7 @@ node_modules/
 /*.iml
 
 # Project
+.build/
 build/
 output/
 reports/

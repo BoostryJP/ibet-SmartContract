@@ -17,13 +17,13 @@ limitations under the License.
 SPDX-License-Identifier: Apache-2.0
 """
 
-import brownie
+from ape_utils import ZERO_ADDRESS, event_args, reverts
 
 deploy_args = [
     "test_share",  # name
     "test_symbol",  # symbol
     100000,  # total supply
-    brownie.ZERO_ADDRESS,  # tradable exchange
+    ZERO_ADDRESS,  # tradable exchange
     "test_contact_information",
     "test_privacy_policy",
 ]
@@ -47,8 +47,8 @@ class TestRegister:
         token = issuer.deploy(IbetStandardToken, *deploy_args)
 
         # register
-        tx = contract_registry.register.transact(
-            token.address, "IbetStandardToken", {"from": issuer}
+        tx = contract_registry.register(
+            token.address, "IbetStandardToken", sender=issuer
         )
 
         # assertion
@@ -57,9 +57,10 @@ class TestRegister:
             issuer.address,
         )
 
-        assert tx.events["Registered"]["contractAddress"] == token.address
-        assert tx.events["Registered"]["contractType"] == "IbetStandardToken"
-        assert tx.events["Registered"]["contractOwner"] == issuer.address
+        event = event_args(tx, contract_registry.Registered)
+        assert event["contractAddress"] == token.address
+        assert event["contractType"] == "IbetStandardToken"
+        assert event["contractOwner"] == issuer.address
 
     #######################################
     # Error
@@ -74,9 +75,9 @@ class TestRegister:
         contract_registry = admin.deploy(ContractRegistry)
 
         # register to list
-        with brownie.reverts(revert_msg="600001"):
-            contract_registry.register.transact(
-                brownie.ZERO_ADDRESS, "IbetStandardToken", {"from": users["user1"]}
+        with reverts("600001"):
+            contract_registry.register(
+                ZERO_ADDRESS, "IbetStandardToken", sender=users["user1"]
             )
 
     # Error_2
@@ -92,9 +93,9 @@ class TestRegister:
         token = issuer.deploy(IbetStandardToken, *deploy_args)
 
         # register to list
-        with brownie.reverts(revert_msg="600002"):
-            contract_registry.register.transact(
-                token.address, "IbetStandardToken", {"from": users["user1"]}
+        with reverts("600002"):
+            contract_registry.register(
+                token.address, "IbetStandardToken", sender=users["user1"]
             )
 
 
@@ -116,9 +117,7 @@ class TestGetRegistry:
         token = issuer.deploy(IbetStandardToken, *deploy_args)
 
         # register to list
-        contract_registry.register.transact(
-            token.address, "IbetStandardToken", {"from": issuer}
-        )
+        contract_registry.register(token.address, "IbetStandardToken", sender=issuer)
 
         # assertion
         assert contract_registry.getRegistry(token.address) == (
