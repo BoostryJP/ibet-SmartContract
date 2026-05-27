@@ -7,8 +7,9 @@ authors = [
 license = {text = "Apache License, Version 2.0"}
 requires-python = "==3.13.*"
 dependencies = [
-    "eth-brownie~=1.21.0",
-    "setuptools<81",
+    "ape-foundry~=0.8.12",
+    "ape-solidity~=0.8.5",
+    "eth-ape~=0.8.49",
 ]
 description = "SmartContracts that provides token standards, decentralized exchanges, and other utility functions that can be used on the ibet-Network."
 
@@ -19,7 +20,8 @@ dev = [
 ]
 
 [tool.pytest.ini_options]
-addopts = ["--network=test_network"]
+addopts = ["--network=ethereum:local:foundry"]
+pythonpath = [".", "tests"]
 
 [tool.ruff]
 line-length = 88
@@ -58,3 +60,6 @@ exclude = [".venv/*"]
 
 [tool.ruff.lint.isort]
 combine-as-imports = true
+
+[tool.uv]
+exclude-newer = "7 days"

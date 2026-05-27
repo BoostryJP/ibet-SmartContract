@@ -17,7 +17,7 @@ limitations under the License.
 SPDX-License-Identifier: Apache-2.0
 """
 
-import brownie
+from ape_utils import reverts
 
 
 class TestDeploy:
@@ -50,7 +50,7 @@ class TestSafeMint:
         token = issuer.deploy(IbetERC721)
 
         # mint
-        token.safeMint(issuer.address, 123, {"from": issuer})
+        token.safeMint(issuer.address, 123, sender=issuer)
 
         # assertion
         assert token.name() == "IbetERC721"
@@ -70,5 +70,5 @@ class TestSafeMint:
         token = issuer.deploy(IbetERC721)
 
         # mint
-        with brownie.reverts(revert_msg="Ownable: caller is not the owner"):
-            token.safeMint(issuer.address, 123, {"from": other})
+        with reverts("Ownable: caller is not the owner"):
+            token.safeMint(issuer.address, 123, sender=other)

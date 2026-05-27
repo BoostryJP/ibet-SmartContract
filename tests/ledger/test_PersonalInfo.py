@@ -17,7 +17,7 @@ limitations under the License.
 SPDX-License-Identifier: Apache-2.0
 """
 
-import brownie
+from ape_utils import ZERO_ADDRESS, event_args, reverts
 
 encrypted_message = "encrypted_message"
 encrypted_message_after = "encrypted_message_after"
@@ -35,7 +35,7 @@ class TestRegister:
         link = users["issuer"]
 
         # register
-        tx = personal_info.register.transact(link, encrypted_message, {"from": account})
+        tx = personal_info.register(link, encrypted_message, sender=account)
 
         # assertion
         registered_personal_info = personal_info.personal_info(account, link)
@@ -46,8 +46,9 @@ class TestRegister:
         is_registered = personal_info.isRegistered(account, link)
         assert is_registered is True
 
-        assert tx.events["Register"]["account_address"] == account.address
-        assert tx.events["Register"]["link_address"] == link.address
+        event = event_args(tx, personal_info.Register)
+        assert event["account_address"] == account.address
+        assert event["link_address"] == link.address
 
     # Normal_2
     # Update
@@ -56,14 +57,10 @@ class TestRegister:
         link = users["issuer"]
 
         # register 1
-        personal_info.register.transact(
-            link.address, encrypted_message, {"from": account}
-        )
+        personal_info.register(link.address, encrypted_message, sender=account)
 
         # register 2
-        personal_info.register.transact(
-            link, encrypted_message_after, {"from": account}
-        )
+        personal_info.register(link, encrypted_message_after, sender=account)
 
         # assertion
         registered_personal_info = personal_info.personal_info(account, link)
@@ -97,7 +94,7 @@ class TestIsRegistered:
         link = users["issuer"]
 
         # register
-        personal_info.register.transact(link, encrypted_message, {"from": account})
+        personal_info.register(link, encrypted_message, sender=account)
 
         # assertion
         is_registered = personal_info.isRegistered(account, link)
@@ -116,12 +113,10 @@ class TestModify:
         link = users["issuer"]
 
         # register
-        personal_info.register.transact(link, encrypted_message, {"from": account})
+        personal_info.register(link, encrypted_message, sender=account)
 
         # modify
-        tx = personal_info.modify.transact(
-            account, encrypted_message_after, {"from": link}
-        )
+        tx = personal_info.modify(account, encrypted_message_after, sender=link)
 
         # assertion
         modified_personal_info = personal_info.personal_info(account, link)
@@ -129,8 +124,9 @@ class TestModify:
         assert modified_personal_info[1] == link
         assert modified_personal_info[2] == encrypted_message_after
 
-        assert tx.events["Modify"]["account_address"] == account.address
-        assert tx.events["Modify"]["link_address"] == link.address
+        event = event_args(tx, personal_info.Modify)
+        assert event["account_address"] == account.address
+        assert event["link_address"] == link.address
 
     #######################################
     # Error
@@ -143,15 +139,13 @@ class TestModify:
         link = users["issuer"]
 
         # modify
-        with brownie.reverts(revert_msg="400001"):
-            personal_info.modify.transact(
-                account, encrypted_message_after, {"from": link}
-            )
+        with reverts("400001"):
+            personal_info.modify(account, encrypted_message_after, sender=link)
 
         # assertion
         actual_personal_info = personal_info.personal_info(account, link)
-        assert actual_personal_info[0] == brownie.ZERO_ADDRESS
-        assert actual_personal_info[1] == brownie.ZERO_ADDRESS
+        assert actual_personal_info[0] == ZERO_ADDRESS
+        assert actual_personal_info[1] == ZERO_ADDRESS
         assert actual_personal_info[2] == ""
 
         is_registered = personal_info.isRegistered(account, link)
@@ -165,13 +159,11 @@ class TestModify:
         modifier = users["admin"]
 
         # register
-        personal_info.register.transact(link, encrypted_message, {"from": account})
+        personal_info.register(link, encrypted_message, sender=account)
 
         # modify
-        with brownie.reverts(revert_msg="400001"):
-            personal_info.modify.transact(
-                account, encrypted_message_after, {"from": modifier}
-            )
+        with reverts("400001"):
+            personal_info.modify(account, encrypted_message_after, sender=modifier)
 
         # assertion
         actual_personal_info = personal_info.personal_info(account, link)
@@ -192,8 +184,8 @@ class TestForceRegister:
         link = users["issuer"]
 
         # register
-        tx = personal_info.forceRegister.transact(
-            account.address, encrypted_message, {"from": link}
+        tx = personal_info.forceRegister(
+            account.address, encrypted_message, sender=link
         )
 
         # assertion
@@ -205,8 +197,9 @@ class TestForceRegister:
         is_registered = personal_info.isRegistered(account, link)
         assert is_registered is True
 
-        assert tx.events["Register"]["account_address"] == account.address
-        assert tx.events["Register"]["link_address"] == link.address
+        event = event_args(tx, personal_info.Register)
+        assert event["account_address"] == account.address
+        assert event["link_address"] == link.address
 
     # Normal_2
     # Update
@@ -215,13 +208,11 @@ class TestForceRegister:
         link = users["issuer"]
 
         # register 1
-        personal_info.forceRegister.transact(
-            account.address, encrypted_message, {"from": link}
-        )
+        personal_info.forceRegister(account.address, encrypted_message, sender=link)
 
         # register 2
-        personal_info.forceRegister.transact(
-            account.address, encrypted_message_after, {"from": link}
+        personal_info.forceRegister(
+            account.address, encrypted_message_after, sender=link
         )
 
         # assertion

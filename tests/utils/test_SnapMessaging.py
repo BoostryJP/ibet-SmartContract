@@ -17,6 +17,8 @@ limitations under the License.
 SPDX-License-Identifier: Apache-2.0
 """
 
+from ape_utils import event_args
+
 
 class TestSendMessage:
     ##########################################################
@@ -32,15 +34,14 @@ class TestSendMessage:
         test_message = "test_message"
 
         # Deploy contract
-        snap_messaging = admin.deploy(SnapMessaging)
+        snap_messaging = SnapMessaging.deploy(sender=admin)
 
         # Send message
-        tx = snap_messaging.sendMessage.transact(
-            receiver, test_message, {"from": sender}
-        )
+        tx = snap_messaging.sendMessage(receiver, test_message, sender=sender)
 
         # Assertion
-        assert tx.events["Message"]["sender"] == sender
-        assert tx.events["Message"]["receiver"] == receiver
-        assert tx.events["Message"]["time"] is not None
-        assert tx.events["Message"]["text"] == test_message
+        event = event_args(tx, SnapMessaging.Message)
+        assert event["sender"] == sender.address
+        assert event["receiver"] == receiver.address
+        assert event["time"] is not None
+        assert event["text"] == test_message

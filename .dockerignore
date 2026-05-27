@@ -1,8 +1,0 @@
-.python-version
-.pytest_cache
-.venv
-__pycache__
-/build/
-/report/
-/node_modules/
-Dockerfile

@@ -17,7 +17,7 @@ limitations under the License.
 SPDX-License-Identifier: Apache-2.0
 """
 
-import brownie
+from ape_utils import ZERO_ADDRESS, call_view_method, event_args, reverts
 
 
 class TestSendMessage:
@@ -37,22 +37,21 @@ class TestSendMessage:
         e2e_messaging = admin.deploy(E2EMessaging)
 
         # Send message
-        tx = e2e_messaging.sendMessage.transact(
-            receiver, test_message, {"from": sender}
-        )
+        tx = e2e_messaging.sendMessage(receiver, test_message, sender=sender)
 
         # Assertion
-        assert tx.events["Message"]["sender"] == sender
-        assert tx.events["Message"]["receiver"] == receiver
-        assert tx.events["Message"]["text"] == test_message
+        event = event_args(tx, e2e_messaging.Message)
+        assert event["sender"] == sender
+        assert event["receiver"] == receiver
+        assert event["text"] == test_message
 
         last_msg_index = e2e_messaging.last_msg_index(receiver)
         assert last_msg_index == 1
 
-        message = e2e_messaging.messages(receiver, 0)
+        message = call_view_method(e2e_messaging, "messages", receiver, 0)
         assert message[0] == sender
         assert message[1] == test_message
-        assert message[2] == tx.events["Message"]["time"]
+        assert message[2] == event["time"]
 
     # Normal_2
     # Send twice
@@ -68,36 +67,34 @@ class TestSendMessage:
         e2e_messaging = admin.deploy(E2EMessaging)
 
         # Send message (1)
-        tx1 = e2e_messaging.sendMessage.transact(
-            receiver, test_message_1, {"from": sender}
-        )
+        tx1 = e2e_messaging.sendMessage(receiver, test_message_1, sender=sender)
 
         # Send message (2)
-        tx2 = e2e_messaging.sendMessage.transact(
-            receiver, test_message_2, {"from": sender}
-        )
+        tx2 = e2e_messaging.sendMessage(receiver, test_message_2, sender=sender)
 
         # Assertion
-        assert tx1.events["Message"]["sender"] == sender
-        assert tx1.events["Message"]["receiver"] == receiver
-        assert tx1.events["Message"]["text"] == test_message_1
+        event_1 = event_args(tx1, e2e_messaging.Message)
+        assert event_1["sender"] == sender
+        assert event_1["receiver"] == receiver
+        assert event_1["text"] == test_message_1
 
-        assert tx2.events["Message"]["sender"] == sender
-        assert tx2.events["Message"]["receiver"] == receiver
-        assert tx2.events["Message"]["text"] == test_message_2
+        event_2 = event_args(tx2, e2e_messaging.Message)
+        assert event_2["sender"] == sender
+        assert event_2["receiver"] == receiver
+        assert event_2["text"] == test_message_2
 
         last_msg_index = e2e_messaging.last_msg_index(receiver)
         assert last_msg_index == 2
 
-        message_1 = e2e_messaging.messages(receiver, 0)
+        message_1 = call_view_method(e2e_messaging, "messages", receiver, 0)
         assert message_1[0] == sender
         assert message_1[1] == test_message_1
-        assert message_1[2] == tx1.events["Message"]["time"]
+        assert message_1[2] == event_1["time"]
 
-        message_2 = e2e_messaging.messages(receiver, 1)
+        message_2 = call_view_method(e2e_messaging, "messages", receiver, 1)
         assert message_2[0] == sender
         assert message_2[1] == test_message_2
-        assert message_2[2] == tx2.events["Message"]["time"]
+        assert message_2[2] == event_2["time"]
 
 
 class TestLastIndex:
@@ -119,7 +116,7 @@ class TestLastIndex:
         last_msg_index_before = e2e_messaging.last_msg_index(receiver)
 
         # Send message
-        e2e_messaging.sendMessage.transact(receiver, test_message, {"from": sender})
+        e2e_messaging.sendMessage(receiver, test_message, sender=sender)
 
         # Assertion
         assert last_msg_index_before == 0
@@ -144,15 +141,14 @@ class TestGetLastMessage:
         e2e_messaging = admin.deploy(E2EMessaging)
 
         # Send message
-        tx = e2e_messaging.sendMessage.transact(
-            receiver, test_message, {"from": sender}
-        )
+        tx = e2e_messaging.sendMessage(receiver, test_message, sender=sender)
 
         # Assertion
-        message = e2e_messaging.getLastMessage(receiver)
+        message = call_view_method(e2e_messaging, "getLastMessage", receiver)
         assert message[0] == sender
         assert message[1] == test_message
-        assert message[2] == tx.events["Message"]["time"]
+        event = event_args(tx, e2e_messaging.Message)
+        assert message[2] == event["time"]
 
     # Normal_2
     # Send twice
@@ -168,18 +164,17 @@ class TestGetLastMessage:
         e2e_messaging = admin.deploy(E2EMessaging)
 
         # Send message (1)
-        e2e_messaging.sendMessage.transact(receiver, test_message_1, {"from": sender})
+        e2e_messaging.sendMessage(receiver, test_message_1, sender=sender)
 
         # Send message (2)
-        tx = e2e_messaging.sendMessage.transact(
-            receiver, test_message_2, {"from": sender}
-        )
+        tx = e2e_messaging.sendMessage(receiver, test_message_2, sender=sender)
 
         # Assertion
-        message = e2e_messaging.getLastMessage(receiver)
+        message = call_view_method(e2e_messaging, "getLastMessage", receiver)
         assert message[0] == sender
         assert message[1] == test_message_2
-        assert message[2] == tx.events["Message"]["time"]
+        event = event_args(tx, e2e_messaging.Message)
+        assert message[2] == event["time"]
 
     ##########################################################
     # Error
@@ -195,7 +190,7 @@ class TestGetLastMessage:
         e2e_messaging = admin.deploy(E2EMessaging)
 
         # Assertion
-        with brownie.reverts(revert_msg="610001"):
+        with reverts("610001"):
             e2e_messaging.getLastMessage(receiver)
 
 
@@ -216,15 +211,14 @@ class TestGetMessageByIndex:
         e2e_messaging = admin.deploy(E2EMessaging)
 
         # Send message
-        tx = e2e_messaging.sendMessage.transact(
-            receiver, test_message, {"from": sender}
-        )
+        tx = e2e_messaging.sendMessage(receiver, test_message, sender=sender)
 
         # Assertion
-        message = e2e_messaging.getMessageByIndex(receiver, 0)
+        message = call_view_method(e2e_messaging, "getMessageByIndex", receiver, 0)
         assert message[0] == sender
         assert message[1] == test_message
-        assert message[2] == tx.events["Message"]["time"]
+        event = event_args(tx, e2e_messaging.Message)
+        assert message[2] == event["time"]
 
     # Normal_2
     # Send twice
@@ -240,25 +234,23 @@ class TestGetMessageByIndex:
         e2e_messaging = admin.deploy(E2EMessaging)
 
         # Send message (1)
-        tx1 = e2e_messaging.sendMessage.transact(
-            receiver, test_message_1, {"from": sender}
-        )
+        tx1 = e2e_messaging.sendMessage(receiver, test_message_1, sender=sender)
 
         # Send message (2)
-        tx2 = e2e_messaging.sendMessage.transact(
-            receiver, test_message_2, {"from": sender}
-        )
+        tx2 = e2e_messaging.sendMessage(receiver, test_message_2, sender=sender)
 
         # Assertion
-        message = e2e_messaging.getMessageByIndex(receiver, 0)
+        message = call_view_method(e2e_messaging, "getMessageByIndex", receiver, 0)
         assert message[0] == sender
         assert message[1] == test_message_1
-        assert message[2] == tx1.events["Message"]["time"]
+        event_1 = event_args(tx1, e2e_messaging.Message)
+        assert message[2] == event_1["time"]
 
-        message = e2e_messaging.getMessageByIndex(receiver, 1)
+        message = call_view_method(e2e_messaging, "getMessageByIndex", receiver, 1)
         assert message[0] == sender
         assert message[1] == test_message_2
-        assert message[2] == tx2.events["Message"]["time"]
+        event_2 = event_args(tx2, e2e_messaging.Message)
+        assert message[2] == event_2["time"]
 
     ##########################################################
     # Error
@@ -274,8 +266,8 @@ class TestGetMessageByIndex:
         e2e_messaging = admin.deploy(E2EMessaging)
 
         # Assertion
-        message = e2e_messaging.getMessageByIndex(receiver, 1)
-        assert message[0] == brownie.ZERO_ADDRESS
+        message = call_view_method(e2e_messaging, "getMessageByIndex", receiver, 1)
+        assert message[0] == ZERO_ADDRESS
         assert message[1] == ""
         assert message[2] == 0
 
@@ -297,25 +289,25 @@ class TestClearMessage:
         e2e_messaging = admin.deploy(E2EMessaging)
 
         # Send message
-        tx1 = e2e_messaging.sendMessage.transact(
-            receiver, test_message, {"from": sender}
-        )
+        tx1 = e2e_messaging.sendMessage(receiver, test_message, sender=sender)
 
         # Clear message
         latest_index = e2e_messaging.last_msg_index(receiver)
-        tx2 = e2e_messaging.clearMessage.transact(
-            receiver, latest_index - 1, {"from": sender}
-        )
+        tx2 = e2e_messaging.clearMessage(receiver, latest_index - 1, sender=sender)
 
         # Assertion
-        assert tx2.events["MessageCleared"]["sender"] == sender
-        assert tx2.events["MessageCleared"]["receiver"] == receiver
-        assert tx2.events["MessageCleared"]["index"] == latest_index - 1
+        event = event_args(tx2, e2e_messaging.MessageCleared)
+        assert event["sender"] == sender
+        assert event["receiver"] == receiver
+        assert event["index"] == latest_index - 1
 
-        message = e2e_messaging.messages(receiver, latest_index - 1)
+        message = call_view_method(
+            e2e_messaging, "messages", receiver, latest_index - 1
+        )
+        created_event = event_args(tx1, e2e_messaging.Message)
         assert message[0] == sender
         assert message[1] == ""
-        assert message[2] == tx1.events["Message"]["time"]
+        assert message[2] == created_event["time"]
 
     ##########################################################
     # Error
@@ -334,21 +326,20 @@ class TestClearMessage:
         e2e_messaging = admin.deploy(E2EMessaging)
 
         # Send message
-        tx1 = e2e_messaging.sendMessage.transact(
-            receiver, test_message, {"from": sender}
-        )
+        tx1 = e2e_messaging.sendMessage(receiver, test_message, sender=sender)
 
         # Clear message
         latest_index = e2e_messaging.last_msg_index(receiver)
-        with brownie.reverts(revert_msg="610101"):
-            e2e_messaging.clearMessage.transact(
-                receiver, latest_index - 1, {"from": receiver}
-            )
+        with reverts("610101"):
+            e2e_messaging.clearMessage(receiver, latest_index - 1, sender=receiver)
 
-        message = e2e_messaging.messages(receiver, latest_index - 1)
+        message = call_view_method(
+            e2e_messaging, "messages", receiver, latest_index - 1
+        )
+        event = event_args(tx1, e2e_messaging.Message)
         assert message[0] == sender
         assert message[1] == test_message
-        assert message[2] == tx1.events["Message"]["time"]
+        assert message[2] == event["time"]
 
 
 class TestGetPublicKey:
@@ -365,7 +356,7 @@ class TestGetPublicKey:
         e2e_messaging = admin.deploy(E2EMessaging)
 
         # Set public key
-        e2e_messaging.setPublicKey.transact("test_key", "test_key_type", {"from": who})
+        e2e_messaging.setPublicKey("test_key", "test_key_type", sender=who)
 
         # Assertion
         public_key = e2e_messaging.getPublicKey(who)
@@ -387,18 +378,17 @@ class TestSetPublicKey:
         e2e_messaging = admin.deploy(E2EMessaging)
 
         # Set public key
-        tx = e2e_messaging.setPublicKey.transact(
-            "test_key", "test_key_type", {"from": who}
-        )
+        tx = e2e_messaging.setPublicKey("test_key", "test_key_type", sender=who)
 
         # Assertion
         public_key = e2e_messaging.getPublicKey(who)
         assert public_key[0] == "test_key"
         assert public_key[1] == "test_key_type"
 
-        assert tx.events["PublicKeyUpdated"]["who"] == who
-        assert tx.events["PublicKeyUpdated"]["key"] == "test_key"
-        assert tx.events["PublicKeyUpdated"]["key_type"] == "test_key_type"
+        event = event_args(tx, e2e_messaging.PublicKeyUpdated)
+        assert event["who"] == who
+        assert event["key"] == "test_key"
+        assert event["key_type"] == "test_key_type"
 
     # Normal_2
     # Set twice
@@ -410,14 +400,10 @@ class TestSetPublicKey:
         e2e_messaging = admin.deploy(E2EMessaging)
 
         # Set public key (1)
-        e2e_messaging.setPublicKey.transact(
-            "test_key_1", "test_key_type_1", {"from": who}
-        )
+        e2e_messaging.setPublicKey("test_key_1", "test_key_type_1", sender=who)
 
         # Set public key (2)
-        e2e_messaging.setPublicKey.transact(
-            "test_key_2", "test_key_type_2", {"from": who}
-        )
+        e2e_messaging.setPublicKey("test_key_2", "test_key_type_2", sender=who)
 
         # Assertion
         public_key = e2e_messaging.getPublicKey(who)

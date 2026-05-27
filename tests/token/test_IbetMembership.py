@@ -17,8 +17,9 @@ limitations under the License.
 SPDX-License-Identifier: Apache-2.0
 """
 
-import brownie
 import pytest
+from ape.exceptions import VirtualMachineError
+from ape_utils import ZERO_ADDRESS, event_args, reverts
 
 
 def init_args(exchange_address):
@@ -113,9 +114,7 @@ class TestTransfer:
         membership_contract = issuer.deploy(IbetMembership, *deploy_args)
 
         # transfer
-        tx = membership_contract.transfer.transact(
-            trader, transfer_amount, {"from": issuer}
-        )
+        tx = membership_contract.transfer(trader, transfer_amount, sender=issuer)
 
         # assertion
         issuer_balance = membership_contract.balanceOf(issuer)
@@ -123,9 +122,10 @@ class TestTransfer:
         assert issuer_balance == deploy_args[2] - transfer_amount
         assert trader_balance == transfer_amount
 
-        assert tx.events["Transfer"]["from"] == issuer
-        assert tx.events["Transfer"]["to"] == trader
-        assert tx.events["Transfer"]["value"] == transfer_amount
+        event = event_args(tx, membership_contract.Transfer)
+        assert event["from"] == issuer
+        assert event["to"] == trader
+        assert event["value"] == transfer_amount
 
     # Normal_1_2
     # Transfer to account address
@@ -141,17 +141,16 @@ class TestTransfer:
 
         # transfer
         transfer_amount = 2**256 - 1
-        tx = membership_contract.transfer.transact(
-            trader, transfer_amount, {"from": issuer}
-        )
+        tx = membership_contract.transfer(trader, transfer_amount, sender=issuer)
 
         # assertion
         assert membership_contract.balanceOf(issuer) == 0
         assert membership_contract.balanceOf(trader) == 2**256 - 1
 
-        assert tx.events["Transfer"]["from"] == issuer
-        assert tx.events["Transfer"]["to"] == trader
-        assert tx.events["Transfer"]["value"] == transfer_amount
+        event = event_args(tx, membership_contract.Transfer)
+        assert event["from"] == issuer
+        assert event["to"] == trader
+        assert event["value"] == transfer_amount
 
     # Normal_2_1
     # Transfer to contract address
@@ -165,17 +164,18 @@ class TestTransfer:
 
         # transfer to contract address
         exchange_address = exchange.address
-        tx = membership_contract.transfer.transact(
-            exchange_address, transfer_amount, {"from": issuer}
+        tx = membership_contract.transfer(
+            exchange_address, transfer_amount, sender=issuer
         )
 
         # assertion
         assert membership_contract.balanceOf(issuer) == deploy_args[2] - transfer_amount
         assert membership_contract.balanceOf(exchange_address) == transfer_amount
 
-        assert tx.events["Transfer"]["from"] == issuer
-        assert tx.events["Transfer"]["to"] == exchange_address
-        assert tx.events["Transfer"]["value"] == transfer_amount
+        event = event_args(tx, membership_contract.Transfer)
+        assert event["from"] == issuer
+        assert event["to"] == exchange_address
+        assert event["value"] == transfer_amount
 
     # Normal_2_2
     # Transfer to contract address
@@ -191,17 +191,18 @@ class TestTransfer:
         # transfer
         exchange_address = exchange.address
         transfer_amount = 2**256 - 1
-        tx = membership_contract.transfer.transact(
-            exchange_address, transfer_amount, {"from": issuer}
+        tx = membership_contract.transfer(
+            exchange_address, transfer_amount, sender=issuer
         )
 
         # assertion
         assert membership_contract.balanceOf(issuer) == 0
         assert membership_contract.balanceOf(exchange_address) == 2**256 - 1
 
-        assert tx.events["Transfer"]["from"] == issuer
-        assert tx.events["Transfer"]["to"] == exchange_address
-        assert tx.events["Transfer"]["value"] == transfer_amount
+        event = event_args(tx, membership_contract.Transfer)
+        assert event["from"] == issuer
+        assert event["to"] == exchange_address
+        assert event["value"] == transfer_amount
 
     ##########################################################
     # Error
@@ -219,10 +220,8 @@ class TestTransfer:
 
         # transfer
         transfer_amount = 10000000000
-        with brownie.reverts(revert_msg="140101"):
-            membership_contract.transfer.transact(
-                trader, transfer_amount, {"from": issuer}
-            )
+        with reverts("140101"):
+            membership_contract.transfer(trader, transfer_amount, sender=issuer)
 
         assert membership_contract.balanceOf(issuer) == deploy_args[2]
         assert membership_contract.balanceOf(trader) == 0
@@ -241,16 +240,16 @@ class TestTransfer:
         membership_contract = issuer.deploy(IbetMembership, *deploy_args)
 
         with pytest.raises(AttributeError):
-            membership_contract.isContract(trader, {"from": issuer})
+            membership_contract.isContract(trader, sender=issuer)
 
         with pytest.raises(AttributeError):
-            membership_contract.transferToAddress.transact(
-                trader, transfer_amount, data, {"from": issuer}
+            membership_contract.transferToAddress(
+                trader, transfer_amount, data, sender=issuer
             )
 
         with pytest.raises(AttributeError):
-            membership_contract.transferToContract.transact(
-                trader, transfer_amount, data, {"from": issuer}
+            membership_contract.transferToContract(
+                trader, transfer_amount, data, sender=issuer
             )
 
     # Error_3
@@ -266,8 +265,8 @@ class TestTransfer:
 
         # transfer
         transfer_amount = 10
-        with brownie.reverts(revert_msg="140102"):
-            membership_contract.transfer(trader, transfer_amount, {"from": issuer})
+        with reverts("140102"):
+            membership_contract.transfer(trader, transfer_amount, sender=issuer)
 
         # assertion
         assert membership_contract.balanceOf(issuer) == deploy_args[2]
@@ -298,9 +297,9 @@ class TestTransfer:
 
         # transfer
         transfer_amount = 10
-        with brownie.reverts(revert_msg="140001"):
-            membership_contract.transfer.transact(
-                not_tradable_exchange.address, transfer_amount, {"from": issuer}
+        with reverts("140001"):
+            membership_contract.transfer(
+                not_tradable_exchange.address, transfer_amount, sender=issuer
             )
 
         # assertion
@@ -327,8 +326,8 @@ class TestBulkTransfer:
         # bulk transfer
         to_address_list = [to_address]
         amount_list = [1]
-        membership_contract.bulkTransfer.transact(
-            to_address_list, amount_list, {"from": from_address}
+        membership_contract.bulkTransfer(
+            to_address_list, amount_list, sender=from_address
         )
 
         # assertion
@@ -353,8 +352,8 @@ class TestBulkTransfer:
         for i in range(100):
             to_address_list.append(to_address)
             amount_list.append(1)
-        membership_contract.bulkTransfer.transact(
-            to_address_list, amount_list, {"from": from_address}
+        membership_contract.bulkTransfer(
+            to_address_list, amount_list, sender=from_address
         )
 
         # assertion
@@ -375,8 +374,8 @@ class TestBulkTransfer:
         # bulk transfer
         to_address_list = [exchange.address]
         amount_list = [1]
-        membership_contract.bulkTransfer.transact(
-            to_address_list, amount_list, {"from": from_address}
+        membership_contract.bulkTransfer(
+            to_address_list, amount_list, sender=from_address
         )
 
         # assertion
@@ -401,9 +400,9 @@ class TestBulkTransfer:
         membership_contract = from_address.deploy(IbetMembership, *deploy_args)
 
         # over the upper limit
-        with brownie.reverts(revert_msg=""):
-            membership_contract.bulkTransfer.transact(
-                [to_address, to_address], [2**256 - 1, 1], {"from": from_address}
+        with pytest.raises(VirtualMachineError):
+            membership_contract.bulkTransfer(
+                [to_address, to_address], [2**256 - 1, 1], sender=from_address
             )
 
         from_balance = membership_contract.balanceOf(from_address)
@@ -422,9 +421,9 @@ class TestBulkTransfer:
         membership_contract = from_address.deploy(IbetMembership, *deploy_args)
 
         # bulk transfer
-        with brownie.reverts(revert_msg="140202"):
-            membership_contract.bulkTransfer.transact(
-                [to_address, to_address], [deploy_args[2], 1], {"from": from_address}
+        with reverts("140202"):
+            membership_contract.bulkTransfer(
+                [to_address, to_address], [deploy_args[2], 1], sender=from_address
             )  # error
 
         assert membership_contract.balanceOf(from_address) == deploy_args[2]
@@ -441,12 +440,12 @@ class TestBulkTransfer:
         membership_contract = from_address.deploy(IbetMembership, *deploy_args)
 
         # change to non-transferable
-        membership_contract.setTransferable.transact(False, {"from": from_address})
+        membership_contract.setTransferable(False, sender=from_address)
 
         # bulk transfer
-        with brownie.reverts(revert_msg="140203"):
-            membership_contract.bulkTransfer.transact(
-                [to_address], [1], {"from": from_address}
+        with reverts("140203"):
+            membership_contract.bulkTransfer(
+                [to_address], [1], sender=from_address
             )  # error
 
         # assertion
@@ -475,11 +474,11 @@ class TestTransferFrom:
         membership_contract = issuer.deploy(IbetMembership, *deploy_args)
 
         # transfer
-        membership_contract.transfer.transact(from_address, value, {"from": issuer})
+        membership_contract.transfer(from_address, value, sender=issuer)
 
         # forced transfer
-        tx = membership_contract.transferFrom.transact(
-            from_address, to_address, value, {"from": issuer}
+        tx = membership_contract.transferFrom(
+            from_address, to_address, value, sender=issuer
         )
 
         # assertion
@@ -490,9 +489,10 @@ class TestTransferFrom:
         assert from_balance == 0
         assert to_balance == value
 
-        assert tx.events["Transfer"]["from"] == from_address
-        assert tx.events["Transfer"]["to"] == to_address
-        assert tx.events["Transfer"]["value"] == value
+        event = event_args(tx, membership_contract.Transfer)
+        assert event["from"] == from_address
+        assert event["to"] == to_address
+        assert event["value"] == value
 
     # Normal_1_2
     # Transfer to account address
@@ -509,11 +509,11 @@ class TestTransferFrom:
         membership_contract = issuer.deploy(IbetMembership, *deploy_args)
 
         # transfer
-        membership_contract.transfer.transact(from_address, max_value, {"from": issuer})
+        membership_contract.transfer(from_address, max_value, sender=issuer)
 
         # forced transfer
-        tx = membership_contract.transferFrom.transact(
-            from_address, to_address, max_value, {"from": issuer}
+        tx = membership_contract.transferFrom(
+            from_address, to_address, max_value, sender=issuer
         )
 
         # assertion
@@ -524,9 +524,10 @@ class TestTransferFrom:
         assert from_balance == 0
         assert to_balance == max_value
 
-        assert tx.events["Transfer"]["from"] == from_address
-        assert tx.events["Transfer"]["to"] == to_address
-        assert tx.events["Transfer"]["value"] == max_value
+        event = event_args(tx, membership_contract.Transfer)
+        assert event["from"] == from_address
+        assert event["to"] == to_address
+        assert event["value"] == max_value
 
     # Normal_2_1
     # Transfer to contract address
@@ -541,11 +542,11 @@ class TestTransferFrom:
         to_address = exchange.address
 
         # transfer
-        membership_contract.transfer.transact(from_address, value, {"from": issuer})
+        membership_contract.transfer(from_address, value, sender=issuer)
 
         # forced transfer
-        tx = membership_contract.transferFrom.transact(
-            from_address, to_address, value, {"from": issuer}
+        tx = membership_contract.transferFrom(
+            from_address, to_address, value, sender=issuer
         )
 
         # assertion
@@ -556,9 +557,10 @@ class TestTransferFrom:
         assert from_balance == 0
         assert to_balance == value
 
-        assert tx.events["Transfer"]["from"] == from_address
-        assert tx.events["Transfer"]["to"] == to_address
-        assert tx.events["Transfer"]["value"] == value
+        event = event_args(tx, membership_contract.Transfer)
+        assert event["from"] == from_address
+        assert event["to"] == to_address
+        assert event["value"] == value
 
     # Normal_2_2
     # Transfer to contract address
@@ -575,11 +577,11 @@ class TestTransferFrom:
         membership_contract = issuer.deploy(IbetMembership, *deploy_args)
 
         # transfer
-        membership_contract.transfer.transact(from_address, max_value, {"from": issuer})
+        membership_contract.transfer(from_address, max_value, sender=issuer)
 
         # forced transfer
-        tx = membership_contract.transferFrom.transact(
-            from_address, to_address, max_value, {"from": issuer}
+        tx = membership_contract.transferFrom(
+            from_address, to_address, max_value, sender=issuer
         )
 
         issuer_balance = membership_contract.balanceOf(issuer)
@@ -589,9 +591,10 @@ class TestTransferFrom:
         assert from_balance == 0
         assert to_balance == max_value
 
-        assert tx.events["Transfer"]["from"] == from_address
-        assert tx.events["Transfer"]["to"] == to_address
-        assert tx.events["Transfer"]["value"] == max_value
+        event = event_args(tx, membership_contract.Transfer)
+        assert event["from"] == from_address
+        assert event["to"] == to_address
+        assert event["value"] == max_value
 
     ##########################################################
     # Error
@@ -609,9 +612,9 @@ class TestTransferFrom:
 
         # forced transfer
         transfer_amount = 10000000000
-        with brownie.reverts(revert_msg="140301"):
-            membership_contract.transferFrom.transact(
-                issuer, to_address, transfer_amount, {"from": issuer}
+        with reverts("140301"):
+            membership_contract.transferFrom(
+                issuer, to_address, transfer_amount, sender=issuer
             )
 
         # assertion
@@ -630,9 +633,9 @@ class TestTransferFrom:
         membership_contract = issuer.deploy(IbetMembership, *deploy_args)
 
         # forced transfer
-        with brownie.reverts(revert_msg="500001"):
-            membership_contract.transferFrom.transact(
-                issuer, to_address, transfer_amount, {"from": admin}
+        with reverts("500001"):
+            membership_contract.transferFrom(
+                issuer, to_address, transfer_amount, sender=admin
             )
 
         # assertion
@@ -659,11 +662,11 @@ class TestBulkTransferFrom:
 
         # bulk forced transfer
         #   issuer -> to_address_1 -> to_address_2
-        membership_token.bulkTransferFrom.transact(
+        membership_token.bulkTransferFrom(
             [issuer, to_address_1],
             [to_address_1, to_address_2],
             [value, value],
-            {"from": issuer},
+            sender=issuer,
         )
 
         # assertion
@@ -687,9 +690,9 @@ class TestBulkTransferFrom:
         membership_token = issuer.deploy(IbetMembership, *deploy_args)
 
         # bulk forced transfer
-        with brownie.reverts(revert_msg="500001"):
-            membership_token.bulkTransferFrom.transact(
-                [issuer], [to_address], [10, 10], {"from": to_address}
+        with reverts("500001"):
+            membership_token.bulkTransferFrom(
+                [issuer], [to_address], [10, 10], sender=to_address
             )
 
         # assertion
@@ -708,9 +711,9 @@ class TestBulkTransferFrom:
         membership_token = issuer.deploy(IbetMembership, *deploy_args)
 
         # bulk forced transfer
-        with brownie.reverts(revert_msg="140501"):
-            membership_token.bulkTransferFrom.transact(
-                [issuer, issuer], [to_address_1], [10, 10], {"from": issuer}
+        with reverts("140501"):
+            membership_token.bulkTransferFrom(
+                [issuer, issuer], [to_address_1], [10, 10], sender=issuer
             )
 
         # assertion
@@ -732,12 +735,12 @@ class TestBulkTransferFrom:
         # bulk forced transfer
         #   issuer -> to_address_1
         #   to_address_2 -> to_address_1
-        with brownie.reverts(revert_msg="140301"):
-            membership_token.bulkTransferFrom.transact(
+        with reverts("140301"):
+            membership_token.bulkTransferFrom(
                 [issuer, to_address_2],
                 [to_address_1, to_address_1],
                 [10, 10],
-                {"from": issuer},
+                sender=issuer,
             )
 
         # assertion
@@ -795,7 +798,7 @@ class TestSetDetails:
         membership_contract = issuer.deploy(IbetMembership, *deploy_args)
 
         # change token details
-        membership_contract.setDetails.transact(after_details, {"from": issuer})
+        membership_contract.setDetails(after_details, sender=issuer)
 
         # assertion
         details = membership_contract.details()
@@ -817,8 +820,8 @@ class TestSetDetails:
         membership_contract = issuer.deploy(IbetMembership, *deploy_args)
 
         # change token details
-        with brownie.reverts(revert_msg="500001"):
-            membership_contract.setDetails.transact(after_details, {"from": attacker})
+        with reverts("500001"):
+            membership_contract.setDetails(after_details, sender=attacker)
 
         # assertion
         details = membership_contract.details()
@@ -841,9 +844,7 @@ class TestSetReturnDetails:
         membership_contract = issuer.deploy(IbetMembership, *deploy_args)
 
         # set return details
-        membership_contract.setReturnDetails.transact(
-            after_return_details, {"from": issuer}
-        )
+        membership_contract.setReturnDetails(after_return_details, sender=issuer)
 
         # assertion
         return_details = membership_contract.returnDetails()
@@ -865,10 +866,8 @@ class TestSetReturnDetails:
         membership_contract = issuer.deploy(IbetMembership, *deploy_args)
 
         # set return details
-        with brownie.reverts(revert_msg="500001"):
-            membership_contract.setReturnDetails.transact(
-                after_return_details, {"from": attacker}
-            )
+        with reverts("500001"):
+            membership_contract.setReturnDetails(after_return_details, sender=attacker)
 
         # assertion
         return_details = membership_contract.returnDetails()
@@ -891,9 +890,7 @@ class TestSetExpirationDate:
         membership_contract = issuer.deploy(IbetMembership, *deploy_args)
 
         # set expiration date
-        membership_contract.setExpirationDate.transact(
-            after_expiration_date, {"from": issuer}
-        )
+        membership_contract.setExpirationDate(after_expiration_date, sender=issuer)
 
         # assertion
         expiration_date = membership_contract.expirationDate()
@@ -915,9 +912,9 @@ class TestSetExpirationDate:
         membership_contract = issuer.deploy(IbetMembership, *deploy_args)
 
         # set expiration date
-        with brownie.reverts(revert_msg="500001"):
-            membership_contract.setExpirationDate.transact(
-                after_expiration_date, {"from": attacker}
+        with reverts("500001"):
+            membership_contract.setExpirationDate(
+                after_expiration_date, sender=attacker
             )
 
         # assertion
@@ -941,7 +938,7 @@ class TestSetMemo:
         membership_contract = issuer.deploy(IbetMembership, *deploy_args)
 
         # set memo
-        membership_contract.setMemo.transact(after_memo, {"from": issuer})
+        membership_contract.setMemo(after_memo, sender=issuer)
 
         # assertion
         memo = membership_contract.memo()
@@ -963,8 +960,8 @@ class TestSetMemo:
         membership_contract = issuer.deploy(IbetMembership, *deploy_args)
 
         # set memo
-        with brownie.reverts(revert_msg="500001"):
-            membership_contract.setMemo.transact(after_memo, {"from": attacker})
+        with reverts("500001"):
+            membership_contract.setMemo(after_memo, sender=attacker)
 
         # assertion
         memo = membership_contract.memo()
@@ -987,9 +984,7 @@ class TestSetTransferable:
         membership_contract = issuer.deploy(IbetMembership, *deploy_args)
 
         # set transferable
-        membership_contract.setTransferable.transact(
-            after_transferable, {"from": issuer}
-        )
+        membership_contract.setTransferable(after_transferable, sender=issuer)
 
         # assertion
         transferable = membership_contract.transferable()
@@ -1011,10 +1006,8 @@ class TestSetTransferable:
         membership_contract = issuer.deploy(IbetMembership, *deploy_args)
 
         # set transferable
-        with brownie.reverts(revert_msg="500001"):
-            membership_contract.setTransferable.transact(
-                after_transferable, {"from": attacker}
-            )
+        with reverts("500001"):
+            membership_contract.setTransferable(after_transferable, sender=attacker)
 
         # assertion
         transferable = membership_contract.transferable()
@@ -1037,7 +1030,7 @@ class TestSetStatus:
         membership_contract = issuer.deploy(IbetMembership, *deploy_args)
 
         # change status
-        membership_contract.setStatus.transact(after_status, {"from": issuer})
+        membership_contract.setStatus(after_status, sender=issuer)
 
         # assertion
         status = membership_contract.status()
@@ -1059,8 +1052,8 @@ class TestSetStatus:
         membership_contract = issuer.deploy(IbetMembership, *deploy_args)
 
         # change status
-        with brownie.reverts(revert_msg="500001"):
-            membership_contract.setStatus.transact(after_status, {"from": attacker})
+        with reverts("500001"):
+            membership_contract.setStatus(after_status, sender=attacker)
 
         # assertion
         status = membership_contract.status()
@@ -1083,7 +1076,7 @@ class TestSetImageUrl:
         membership_contract = issuer.deploy(IbetMembership, *deploy_args)
 
         # set image url
-        membership_contract.setImageURL.transact(0, after_url, {"from": issuer})
+        membership_contract.setImageURL(0, after_url, sender=issuer)
 
         # assertion
         url = membership_contract.getImageURL(0)
@@ -1105,8 +1098,8 @@ class TestSetImageUrl:
         membership_contract = issuer.deploy(IbetMembership, *deploy_args)
 
         # set image url
-        with brownie.reverts(revert_msg="500001"):
-            membership_contract.setImageURL.transact(0, after_url, {"from": attacker})
+        with reverts("500001"):
+            membership_contract.setImageURL(0, after_url, sender=attacker)
 
         # assertion
         url = membership_contract.getImageURL(0)
@@ -1129,7 +1122,7 @@ class TestIssue:
         membership_contract = issuer.deploy(IbetMembership, *deploy_args)
 
         # additional issue
-        membership_contract.issue.transact(value, {"from": issuer})
+        membership_contract.issue(value, sender=issuer)
 
         # assertion
         total_supply = membership_contract.totalSupply()
@@ -1148,7 +1141,7 @@ class TestIssue:
         membership_contract = issuer.deploy(IbetMembership, *deploy_args)
 
         # additional issue
-        membership_contract.issue.transact(1, {"from": issuer})
+        membership_contract.issue(1, sender=issuer)
 
         # assertion
         total_supply = membership_contract.totalSupply()
@@ -1171,8 +1164,8 @@ class TestIssue:
         membership_contract = issuer.deploy(IbetMembership, *deploy_args)
 
         # additional issue
-        with brownie.reverts(revert_msg="Integer overflow"):
-            membership_contract.issue.transact(1, {"from": issuer})
+        with pytest.raises(VirtualMachineError):
+            membership_contract.issue(1, sender=issuer)
 
         # assertion
         total_supply = membership_contract.totalSupply()
@@ -1191,8 +1184,8 @@ class TestIssue:
         membership_contract = issuer.deploy(IbetMembership, *deploy_args)
 
         # additional issue
-        with brownie.reverts(revert_msg="500001"):
-            membership_contract.issue.transact(1, {"from": attacker})
+        with reverts("500001"):
+            membership_contract.issue(1, sender=attacker)
 
         # assertion
         total_supply = membership_contract.totalSupply()
@@ -1216,12 +1209,10 @@ class TestSetTradableExchange:
         membership_contract = issuer.deploy(IbetMembership, *deploy_args)
 
         # change exchange contract
-        membership_contract.setTradableExchange.transact(
-            brownie.ZERO_ADDRESS, {"from": issuer}
-        )
+        membership_contract.setTradableExchange(ZERO_ADDRESS, sender=issuer)
 
         # assertion
-        assert membership_contract.tradableExchange() == brownie.ZERO_ADDRESS
+        assert membership_contract.tradableExchange() == ZERO_ADDRESS
 
     ##########################################################
     # Error
@@ -1238,10 +1229,8 @@ class TestSetTradableExchange:
         membership_contract = issuer.deploy(IbetMembership, *deploy_args)
 
         # change exchange contract
-        with brownie.reverts(revert_msg="500001"):
-            membership_contract.setTradableExchange.transact(
-                brownie.ZERO_ADDRESS, {"from": trader}
-            )
+        with reverts("500001"):
+            membership_contract.setTradableExchange(ZERO_ADDRESS, sender=trader)
 
         # assertion
         assert membership_contract.tradableExchange() == exchange.address
@@ -1263,7 +1252,7 @@ class TestSetInitialOfferingStatus:
         assert membership_contract.initialOfferingStatus() is False
 
         # change offering status
-        membership_contract.setInitialOfferingStatus.transact(True, {"from": issuer})
+        membership_contract.setInitialOfferingStatus(True, sender=issuer)
 
         # assertion
         assert membership_contract.initialOfferingStatus() is True
@@ -1282,10 +1271,8 @@ class TestSetInitialOfferingStatus:
         membership_contract = issuer.deploy(IbetMembership, *deploy_args)
 
         # change offering status
-        with brownie.reverts(revert_msg="500001"):
-            membership_contract.setInitialOfferingStatus.transact(
-                True, {"from": users["user1"]}
-            )
+        with reverts("500001"):
+            membership_contract.setInitialOfferingStatus(True, sender=users["user1"])
 
         # assertion
         assert membership_contract.initialOfferingStatus() is False
@@ -1306,7 +1293,7 @@ class TestApplyForOffering:
         # issue token
         deploy_args = init_args(exchange.address)
         membership_contract = issuer.deploy(IbetMembership, *deploy_args)
-        membership_contract.setInitialOfferingStatus.transact(True, {"from": issuer})
+        membership_contract.setInitialOfferingStatus(True, sender=issuer)
 
         # assertion
         assert membership_contract.applications(trader) == ""
@@ -1319,15 +1306,16 @@ class TestApplyForOffering:
         # issue token
         deploy_args = init_args(exchange.address)
         membership_contract = issuer.deploy(IbetMembership, *deploy_args)
-        membership_contract.setInitialOfferingStatus.transact(True, {"from": issuer})
+        membership_contract.setInitialOfferingStatus(True, sender=issuer)
 
         # apply for
-        tx = membership_contract.applyForOffering.transact("abcdefgh", {"from": trader})
+        tx = membership_contract.applyForOffering("abcdefgh", sender=trader)
 
         # assertion
         assert membership_contract.applications(trader) == "abcdefgh"
 
-        assert tx.events["ApplyFor"]["accountAddress"] == trader
+        event = event_args(tx, membership_contract.ApplyFor)
+        assert event["accountAddress"] == trader
 
     ##########################################################
     # Error
@@ -1344,8 +1332,8 @@ class TestApplyForOffering:
         membership_contract = issuer.deploy(IbetMembership, *deploy_args)
 
         # apply for
-        with brownie.reverts(revert_msg="140401"):
-            membership_contract.applyForOffering.transact("abcdefgh", {"from": trader})
+        with reverts("140401"):
+            membership_contract.applyForOffering("abcdefgh", sender=trader)
 
         # assertion
         assert membership_contract.applications(trader) == ""
@@ -1366,8 +1354,8 @@ class TestSetContactInformation:
         membership_contract = issuer.deploy(IbetMembership, *deploy_args)
 
         # set contact information
-        membership_contract.setContactInformation.transact(
-            "updated contact information", {"from": issuer}
+        membership_contract.setContactInformation(
+            "updated contact information", sender=issuer
         )
 
         # assertion
@@ -1388,9 +1376,9 @@ class TestSetContactInformation:
         membership_contract = issuer.deploy(IbetMembership, *deploy_args)
 
         # set contact information
-        with brownie.reverts(revert_msg="500001"):
-            membership_contract.setContactInformation.transact(
-                "updated contact information", {"from": other}
+        with reverts("500001"):
+            membership_contract.setContactInformation(
+                "updated contact information", sender=other
             )
 
         # assertion
@@ -1413,9 +1401,7 @@ class TestSetPrivacyPolicy:
         membership_contract = issuer.deploy(IbetMembership, *deploy_args)
 
         # set privacy policy
-        membership_contract.setPrivacyPolicy.transact(
-            "updated privacy policy", {"from": issuer}
-        )
+        membership_contract.setPrivacyPolicy("updated privacy policy", sender=issuer)
 
         # assertion
         privacy_policy = membership_contract.privacyPolicy()
@@ -1436,10 +1422,8 @@ class TestSetPrivacyPolicy:
         membership_contract = issuer.deploy(IbetMembership, *deploy_args)
 
         # set privacy policy
-        with brownie.reverts(revert_msg="500001"):
-            membership_contract.setPrivacyPolicy.transact(
-                "updated privacy policy", {"from": other}
-            )
+        with reverts("500001"):
+            membership_contract.setPrivacyPolicy("updated privacy policy", sender=other)
 
         # assertion
         privacy_policy = membership_contract.privacyPolicy()

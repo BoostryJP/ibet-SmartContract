@@ -17,8 +17,7 @@ limitations under the License.
 SPDX-License-Identifier: Apache-2.0
 """
 
-import brownie
-import pytest
+from ape_utils import call_view_method, event_args, reverts
 from Crypto.Hash import SHA256
 from Crypto.PublicKey import ECC
 from Crypto.Signature import DSS
@@ -81,16 +80,16 @@ class TestDeploy:
 
         assert wallet.pubKeyX() == pubkey_x
         assert wallet.pubKeyY() == pubkey_y
-        assert wallet.nonce() == 0
+        assert call_view_method(wallet, "nonce") == 0
 
     # Error_1
     def test_error_1(self, P256Wallet, users):
         admin = users["admin"]
 
-        with pytest.raises(ValueError):
+        with reverts("630001"):
             admin.deploy(P256Wallet, 0, 2)
 
-        with pytest.raises(ValueError):
+        with reverts("630001"):
             admin.deploy(P256Wallet, 2, 0)
 
 
@@ -106,7 +105,7 @@ class TestGetTransactionHash:
         data = "0x11223344"
         nonce = 7
 
-        tx_hash = wallet.getTransactionHash.call(target, value, data, nonce)
+        tx_hash = wallet.getTransactionHash(target, value, data, nonce)
 
         assert tx_hash != "0x" + "00" * 32
 
@@ -123,7 +122,7 @@ class TestExecute:
 
         private_key, pubkey_x, pubkey_y = _generate_p256_keypair()
         wallet = admin.deploy(P256Wallet, pubkey_x, pubkey_y)
-        tx_hash = wallet.getTransactionHash.call(receiver.address, 0, call_data, 0)
+        tx_hash = wallet.getTransactionHash(receiver.address, 0, call_data, 0)
         sig_r, sig_s = _generate_p256_signature(private_key, tx_hash)
 
         tx = wallet.execute(
@@ -132,17 +131,18 @@ class TestExecute:
             call_data,
             sig_r,
             sig_s,
-            {"from": users["user1"]},
+            sender=users["user1"],
         )
 
         assert receiver.lastValue() == value_to_set
         assert receiver.lastCaller() == wallet.address
-        assert wallet.nonce() == 1
+        assert call_view_method(wallet, "nonce") == 1
 
-        assert tx.events["Executed"]["target"] == receiver.address
-        assert tx.events["Executed"]["value"] == 0
-        assert tx.events["Executed"]["data"] == call_data
-        assert tx.events["Executed"]["nonce"] == 0
+        event = event_args(tx, wallet.Executed)
+        assert event["target"] == receiver.address
+        assert event["value"] == 0
+        assert event["data"] == call_data
+        assert event["nonce"] == 0
 
     # Error_1
     # invalid signature should always fail
@@ -153,14 +153,14 @@ class TestExecute:
 
         call_data = receiver.setValue.encode_input(999)
 
-        with brownie.reverts(revert_msg="630101"):
+        with reverts("630101"):
             wallet.execute(
                 receiver.address,
                 0,
                 call_data,
                 0,
                 0,
-                {"from": users["user1"]},
+                sender=users["user1"],
             )
 
     # Error_2
@@ -172,15 +172,15 @@ class TestExecute:
 
         private_key, pubkey_x, pubkey_y = _generate_p256_keypair()
         wallet = admin.deploy(P256Wallet, pubkey_x, pubkey_y)
-        tx_hash = wallet.getTransactionHash.call(receiver.address, 0, call_data, 0)
+        tx_hash = wallet.getTransactionHash(receiver.address, 0, call_data, 0)
         sig_r, sig_s = _generate_p256_signature(private_key, tx_hash)
 
-        with brownie.reverts(revert_msg="630102"):
+        with reverts("630102"):
             wallet.execute(
                 receiver.address,
                 0,
                 call_data,
                 sig_r,
                 sig_s,
-                {"from": users["user1"]},
+                sender=users["user1"],
             )

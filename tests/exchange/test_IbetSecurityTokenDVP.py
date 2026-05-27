@@ -17,7 +17,8 @@ limitations under the License.
 SPDX-License-Identifier: Apache-2.0
 """
 
-import brownie
+from ape import project
+from ape_utils import ZERO_ADDRESS, event_args, has_event, reverts
 
 
 def init_args():
@@ -42,16 +43,14 @@ def deploy(
     transferable: bool = True,
     transfer_approval_required: bool = False,
 ):
-    from brownie import IbetShare
-
-    token = users["issuer"].deploy(IbetShare, *deploy_args)
-    token.setTradableExchange(tradable_exchange, {"from": users["issuer"]})
+    token = users["issuer"].deploy(project.IbetShare, *deploy_args)  # type: ignore
+    token.setTradableExchange(tradable_exchange, sender=users["issuer"])
 
     if transferable:
-        token.setTransferable(True, {"from": users["issuer"]})
+        token.setTransferable(True, sender=users["issuer"])
 
     if transfer_approval_required:
-        token.setTransferApprovalRequired(True, {"from": users["issuer"]})
+        token.setTransferApprovalRequired(True, sender=users["issuer"])
 
     return token
 
@@ -101,11 +100,11 @@ class TestLatestDeliveryId:
         token = deploy(users, deploy_args=deploy_args, tradable_exchange=st_dvp.address)
 
         # transfer to DVP contract
-        token.transfer(st_dvp.address, _deposit_amount, {"from": _issuer})
+        token.transfer(st_dvp.address, _deposit_amount, sender=_issuer)
 
         # create delivery
         st_dvp.createDelivery(
-            token.address, _buyer, _dvp_amount, _agent, _data, {"from": _issuer}
+            token.address, _buyer, _dvp_amount, _agent, _data, sender=_issuer
         )
 
         # assertion
@@ -133,11 +132,11 @@ class TestGetDelivery:
         token = deploy(users, deploy_args=deploy_args, tradable_exchange=st_dvp.address)
 
         # transfer to DVP contract
-        token.transfer(st_dvp.address, _deposit_amount, {"from": _issuer})
+        token.transfer(st_dvp.address, _deposit_amount, sender=_issuer)
 
         # create delivery
         st_dvp.createDelivery(
-            token.address, _buyer, _delivery_amount, _agent, _data, {"from": _issuer}
+            token.address, _buyer, _delivery_amount, _agent, _data, sender=_issuer
         )
 
         # assertion
@@ -170,7 +169,7 @@ class TestGetDelivery:
         token = deploy(users, deploy_args=deploy_args, tradable_exchange=st_dvp.address)
 
         # transfer to DVP contract
-        token.transfer(st_dvp.address, _deposit_amount, {"from": _issuer})
+        token.transfer(st_dvp.address, _deposit_amount, sender=_issuer)
 
         # assertion
         delivery_id = st_dvp.latestDeliveryId()
@@ -205,7 +204,7 @@ class TestBalanceOf:
         token = deploy(users, deploy_args=deploy_args, tradable_exchange=st_dvp.address)
 
         # transfer to DVP contract
-        token.transfer(st_dvp.address, _value, {"from": _issuer})
+        token.transfer(st_dvp.address, _value, sender=_issuer)
 
         # assertion
         assert st_dvp.balanceOf(_issuer, token.address) == _value
@@ -225,7 +224,7 @@ class TestBalanceOf:
         token = deploy(users, deploy_args=deploy_args, tradable_exchange=st_dvp.address)
 
         # transfer to DVP contract
-        token.transfer(st_dvp.address, _value, {"from": _issuer})
+        token.transfer(st_dvp.address, _value, sender=_issuer)
 
         # assertion
         assert st_dvp.balanceOf(user1, token.address) == 0
@@ -255,11 +254,11 @@ class TestCommitmentOf:
         token = deploy(users, deploy_args=deploy_args, tradable_exchange=st_dvp.address)
 
         # transfer to DVP contract
-        token.transfer(st_dvp.address, _deposit_amount, {"from": _issuer})
+        token.transfer(st_dvp.address, _deposit_amount, sender=_issuer)
 
         # create delivery
         st_dvp.createDelivery(
-            token.address, _buyer, _delivery_amount, _agent, _data, {"from": _issuer}
+            token.address, _buyer, _delivery_amount, _agent, _data, sender=_issuer
         )
 
         # assertion
@@ -283,11 +282,11 @@ class TestCommitmentOf:
         token = deploy(users, deploy_args=deploy_args, tradable_exchange=st_dvp.address)
 
         # transfer to DVP contract
-        token.transfer(st_dvp.address, _deposit_amount, {"from": _issuer})
+        token.transfer(st_dvp.address, _deposit_amount, sender=_issuer)
 
         # create delivery
         st_dvp.createDelivery(
-            token.address, _buyer, _delivery_amount, _agent, _data, {"from": _issuer}
+            token.address, _buyer, _delivery_amount, _agent, _data, sender=_issuer
         )
 
         # assertion
@@ -317,11 +316,11 @@ class TestCreateDelivery:
         token = deploy(users, deploy_args=deploy_args, tradable_exchange=st_dvp.address)
 
         # transfer to DVP contract
-        token.transfer(st_dvp.address, _deposit_amount, {"from": _issuer})
+        token.transfer(st_dvp.address, _deposit_amount, sender=_issuer)
 
         # create delivery
         tx = st_dvp.createDelivery(
-            token.address, _buyer, _delivery_amount, _agent, _data, {"from": _issuer}
+            token.address, _buyer, _delivery_amount, _agent, _data, sender=_issuer
         )
 
         # assertion
@@ -341,13 +340,14 @@ class TestCreateDelivery:
             True,
         )
 
-        assert tx.events["DeliveryCreated"]["deliveryId"] == latest_delivery_id
-        assert tx.events["DeliveryCreated"]["token"] == token.address
-        assert tx.events["DeliveryCreated"]["seller"] == _issuer
-        assert tx.events["DeliveryCreated"]["buyer"] == _buyer
-        assert tx.events["DeliveryCreated"]["amount"] == _delivery_amount
-        assert tx.events["DeliveryCreated"]["agent"] == _agent
-        assert tx.events["DeliveryCreated"]["data"] == _data
+        event = event_args(tx, st_dvp.DeliveryCreated)
+        assert event["deliveryId"] == latest_delivery_id
+        assert event["token"] == token.address
+        assert event["seller"] == _issuer
+        assert event["buyer"] == _buyer
+        assert event["amount"] == _delivery_amount
+        assert event["agent"] == _agent
+        assert event["data"] == _data
 
     # Normal_2
     # Create twice
@@ -364,17 +364,17 @@ class TestCreateDelivery:
         token = deploy(users, deploy_args=deploy_args, tradable_exchange=st_dvp.address)
 
         # transfer to DVP contract
-        token.transfer(st_dvp.address, _deposit_amount, {"from": _issuer})
+        token.transfer(st_dvp.address, _deposit_amount, sender=_issuer)
 
         # create delivery (1)
         tx1 = st_dvp.createDelivery(
-            token.address, _buyer, _delivery_amount, _agent, _data, {"from": _issuer}
+            token.address, _buyer, _delivery_amount, _agent, _data, sender=_issuer
         )
         latest_delivery_id1 = st_dvp.latestDeliveryId()
 
         # create delivery (2)
         tx2 = st_dvp.createDelivery(
-            token.address, _buyer, _delivery_amount, _agent, _data, {"from": _issuer}
+            token.address, _buyer, _delivery_amount, _agent, _data, sender=_issuer
         )
         latest_delivery_id2 = st_dvp.latestDeliveryId()
 
@@ -395,13 +395,14 @@ class TestCreateDelivery:
             True,
         )
 
-        assert tx1.events["DeliveryCreated"]["deliveryId"] == latest_delivery_id1
-        assert tx1.events["DeliveryCreated"]["token"] == token.address
-        assert tx1.events["DeliveryCreated"]["seller"] == _issuer
-        assert tx1.events["DeliveryCreated"]["buyer"] == _buyer
-        assert tx1.events["DeliveryCreated"]["amount"] == _delivery_amount
-        assert tx1.events["DeliveryCreated"]["agent"] == _agent
-        assert tx1.events["DeliveryCreated"]["data"] == _data
+        event_1 = event_args(tx1, st_dvp.DeliveryCreated)
+        assert event_1["deliveryId"] == latest_delivery_id1
+        assert event_1["token"] == token.address
+        assert event_1["seller"] == _issuer
+        assert event_1["buyer"] == _buyer
+        assert event_1["amount"] == _delivery_amount
+        assert event_1["agent"] == _agent
+        assert event_1["data"] == _data
 
         assert st_dvp.getDelivery(latest_delivery_id2) == (
             token.address,
@@ -413,13 +414,14 @@ class TestCreateDelivery:
             True,
         )
 
-        assert tx2.events["DeliveryCreated"]["deliveryId"] == latest_delivery_id2
-        assert tx2.events["DeliveryCreated"]["token"] == token.address
-        assert tx2.events["DeliveryCreated"]["seller"] == _issuer
-        assert tx2.events["DeliveryCreated"]["buyer"] == _buyer
-        assert tx2.events["DeliveryCreated"]["amount"] == _delivery_amount
-        assert tx2.events["DeliveryCreated"]["agent"] == _agent
-        assert tx2.events["DeliveryCreated"]["data"] == _data
+        event_2 = event_args(tx2, st_dvp.DeliveryCreated)
+        assert event_2["deliveryId"] == latest_delivery_id2
+        assert event_2["token"] == token.address
+        assert event_2["seller"] == _issuer
+        assert event_2["buyer"] == _buyer
+        assert event_2["amount"] == _delivery_amount
+        assert event_2["agent"] == _agent
+        assert event_2["data"] == _data
 
     #######################################
     # Error
@@ -440,12 +442,12 @@ class TestCreateDelivery:
         token = deploy(users, deploy_args=deploy_args, tradable_exchange=st_dvp.address)
 
         # transfer to DVP contract
-        token.transfer(st_dvp.address, _deposit_amount, {"from": _issuer})
+        token.transfer(st_dvp.address, _deposit_amount, sender=_issuer)
 
         # create delivery
-        with brownie.reverts(revert_msg="260001"):
+        with reverts("260001"):
             st_dvp.createDelivery(
-                token.address, _buyer, 0, _agent, _data, {"from": _issuer}
+                token.address, _buyer, 0, _agent, _data, sender=_issuer
             )
 
         # assertion
@@ -467,17 +469,17 @@ class TestCreateDelivery:
         token = deploy(users, deploy_args=deploy_args, tradable_exchange=st_dvp.address)
 
         # transfer to DVP contract
-        token.transfer(st_dvp.address, _deposit_amount, {"from": _issuer})
+        token.transfer(st_dvp.address, _deposit_amount, sender=_issuer)
 
         # create delivery
-        with brownie.reverts(revert_msg="260002"):
+        with reverts("260002"):
             st_dvp.createDelivery(
                 token.address,
                 _buyer,
                 _deposit_amount + 1,
                 _agent,
                 _data,
-                {"from": _issuer},
+                sender=_issuer,
             )
 
         # assertion
@@ -500,20 +502,20 @@ class TestCreateDelivery:
         token = deploy(users, deploy_args=deploy_args, tradable_exchange=st_dvp.address)
 
         # transfer to DVP contract
-        token.transfer(st_dvp.address, _deposit_amount, {"from": _issuer})
+        token.transfer(st_dvp.address, _deposit_amount, sender=_issuer)
 
         # set status to False
-        token.setStatus(False, {"from": _issuer})
+        token.setStatus(False, sender=_issuer)
 
         # create delivery
-        with brownie.reverts(revert_msg="260003"):
+        with reverts("260003"):
             st_dvp.createDelivery(
                 token.address,
                 _buyer,
                 _delivery_amount,
                 _agent,
                 _data,
-                {"from": _issuer},
+                sender=_issuer,
             )
 
         # assertion
@@ -536,20 +538,20 @@ class TestCreateDelivery:
         token = deploy(users, deploy_args=deploy_args, tradable_exchange=st_dvp.address)
 
         # transfer to DVP contract
-        token.transfer(st_dvp.address, _deposit_amount, {"from": _issuer})
+        token.transfer(st_dvp.address, _deposit_amount, sender=_issuer)
 
         # set status to False
-        token.setTransferApprovalRequired(True, {"from": _issuer})
+        token.setTransferApprovalRequired(True, sender=_issuer)
 
         # create delivery
-        with brownie.reverts(revert_msg="260004"):
+        with reverts("260004"):
             st_dvp.createDelivery(
                 token.address,
                 _buyer,
                 _delivery_amount,
                 _agent,
                 _data,
-                {"from": _issuer},
+                sender=_issuer,
             )
 
         # assertion
@@ -572,21 +574,21 @@ class TestCreateDelivery:
         token = deploy(users, deploy_args=deploy_args, tradable_exchange=st_dvp.address)
 
         # transfer to DVP contract
-        token.transfer(st_dvp.address, _deposit_amount, {"from": _issuer})
+        token.transfer(st_dvp.address, _deposit_amount, sender=_issuer)
 
         # update storage
-        st_dvp_storage.upgradeVersion(brownie.ZERO_ADDRESS, {"from": _admin})
+        st_dvp_storage.upgradeVersion(ZERO_ADDRESS, sender=_admin)
 
         # create delivery
         bf_latest_delivery_id = st_dvp.latestDeliveryId()
-        with brownie.reverts(revert_msg=""):
+        with reverts("250001"):
             st_dvp.createDelivery(
                 token.address,
                 _buyer,
                 _delivery_amount,
                 _agent,
                 _data,
-                {"from": _issuer},
+                sender=_issuer,
             )
         af_latest_delivery_id = st_dvp.latestDeliveryId()
 
@@ -617,16 +619,16 @@ class TestCancelDelivery:
         token = deploy(users, deploy_args=deploy_args, tradable_exchange=st_dvp.address)
 
         # transfer to DVP contract
-        token.transfer(st_dvp.address, _deposit_amount, {"from": _issuer})
+        token.transfer(st_dvp.address, _deposit_amount, sender=_issuer)
 
         # create delivery
         st_dvp.createDelivery(
-            token.address, _buyer, _delivery_amount, _agent, _data, {"from": _issuer}
+            token.address, _buyer, _delivery_amount, _agent, _data, sender=_issuer
         )
 
         # cancel delivery
         latest_delivery_id = st_dvp.latestDeliveryId()
-        tx = st_dvp.cancelDelivery(latest_delivery_id, {"from": _issuer})
+        tx = st_dvp.cancelDelivery(latest_delivery_id, sender=_issuer)
 
         # assertion
         assert st_dvp.balanceOf(_issuer, token.address) == _deposit_amount
@@ -641,12 +643,13 @@ class TestCancelDelivery:
             False,
         )
 
-        assert tx.events["DeliveryCanceled"]["deliveryId"] == latest_delivery_id
-        assert tx.events["DeliveryCanceled"]["token"] == token.address
-        assert tx.events["DeliveryCanceled"]["seller"] == _issuer
-        assert tx.events["DeliveryCanceled"]["buyer"] == _buyer
-        assert tx.events["DeliveryCanceled"]["amount"] == _delivery_amount
-        assert tx.events["DeliveryCanceled"]["agent"] == _agent
+        event = event_args(tx, st_dvp.DeliveryCanceled)
+        assert event["deliveryId"] == latest_delivery_id
+        assert event["token"] == token.address
+        assert event["seller"] == _issuer
+        assert event["buyer"] == _buyer
+        assert event["amount"] == _delivery_amount
+        assert event["agent"] == _agent
 
     # Normal_2
     # msg.sender is the buyer of the delivery
@@ -663,16 +666,16 @@ class TestCancelDelivery:
         token = deploy(users, deploy_args=deploy_args, tradable_exchange=st_dvp.address)
 
         # transfer to DVP contract
-        token.transfer(st_dvp.address, _deposit_amount, {"from": _issuer})
+        token.transfer(st_dvp.address, _deposit_amount, sender=_issuer)
 
         # create delivery
         st_dvp.createDelivery(
-            token.address, _buyer, _delivery_amount, _agent, _data, {"from": _issuer}
+            token.address, _buyer, _delivery_amount, _agent, _data, sender=_issuer
         )
 
         # cancel delivery
         latest_delivery_id = st_dvp.latestDeliveryId()
-        tx = st_dvp.cancelDelivery(latest_delivery_id, {"from": _buyer})
+        tx = st_dvp.cancelDelivery(latest_delivery_id, sender=_buyer)
 
         # assertion
         assert st_dvp.balanceOf(_issuer, token.address) == _deposit_amount
@@ -687,12 +690,13 @@ class TestCancelDelivery:
             False,
         )
 
-        assert tx.events["DeliveryCanceled"]["deliveryId"] == latest_delivery_id
-        assert tx.events["DeliveryCanceled"]["token"] == token.address
-        assert tx.events["DeliveryCanceled"]["seller"] == _issuer
-        assert tx.events["DeliveryCanceled"]["buyer"] == _buyer
-        assert tx.events["DeliveryCanceled"]["amount"] == _delivery_amount
-        assert tx.events["DeliveryCanceled"]["agent"] == _agent
+        event = event_args(tx, st_dvp.DeliveryCanceled)
+        assert event["deliveryId"] == latest_delivery_id
+        assert event["token"] == token.address
+        assert event["seller"] == _issuer
+        assert event["buyer"] == _buyer
+        assert event["amount"] == _delivery_amount
+        assert event["agent"] == _agent
 
     #######################################
     # Error
@@ -714,17 +718,17 @@ class TestCancelDelivery:
         token = deploy(users, deploy_args=deploy_args, tradable_exchange=st_dvp.address)
 
         # transfer to DVP contract
-        token.transfer(st_dvp.address, _deposit_amount, {"from": _issuer})
+        token.transfer(st_dvp.address, _deposit_amount, sender=_issuer)
 
         # create delivery
         st_dvp.createDelivery(
-            token.address, _buyer, _delivery_amount, _agent, _data, {"from": _issuer}
+            token.address, _buyer, _delivery_amount, _agent, _data, sender=_issuer
         )
 
         # cancel delivery
         latest_delivery_id = st_dvp.latestDeliveryId()
-        with brownie.reverts(revert_msg="260101"):
-            st_dvp.cancelDelivery(latest_delivery_id + 1, {"from": _issuer})
+        with reverts("260101"):
+            st_dvp.cancelDelivery(latest_delivery_id + 1, sender=_issuer)
 
         # assertion
         assert (
@@ -758,20 +762,20 @@ class TestCancelDelivery:
         token = deploy(users, deploy_args=deploy_args, tradable_exchange=st_dvp.address)
 
         # transfer to DVP contract
-        token.transfer(st_dvp.address, _deposit_amount, {"from": _issuer})
+        token.transfer(st_dvp.address, _deposit_amount, sender=_issuer)
 
         # create delivery
         st_dvp.createDelivery(
-            token.address, _buyer, _delivery_amount, _agent, _data, {"from": _issuer}
+            token.address, _buyer, _delivery_amount, _agent, _data, sender=_issuer
         )
 
         # cancel delivery (1)
         latest_delivery_id = st_dvp.latestDeliveryId()
-        st_dvp.cancelDelivery(latest_delivery_id, {"from": _issuer})
+        st_dvp.cancelDelivery(latest_delivery_id, sender=_issuer)
 
         # cancel delivery (2)
-        with brownie.reverts(revert_msg="260102"):
-            st_dvp.cancelDelivery(latest_delivery_id, {"from": _issuer})
+        with reverts("260102"):
+            st_dvp.cancelDelivery(latest_delivery_id, sender=_issuer)
 
     # Error_3
     # Delivery must have not been confirmed.
@@ -789,20 +793,20 @@ class TestCancelDelivery:
         token = deploy(users, deploy_args=deploy_args, tradable_exchange=st_dvp.address)
 
         # transfer to DVP contract
-        token.transfer(st_dvp.address, _deposit_amount, {"from": _issuer})
+        token.transfer(st_dvp.address, _deposit_amount, sender=_issuer)
 
         # create delivery
         st_dvp.createDelivery(
-            token.address, _buyer, _delivery_amount, _agent, _data, {"from": _issuer}
+            token.address, _buyer, _delivery_amount, _agent, _data, sender=_issuer
         )
 
         # confirm delivery
         latest_delivery_id = st_dvp.latestDeliveryId()
-        st_dvp.confirmDelivery(latest_delivery_id, {"from": _buyer})
+        st_dvp.confirmDelivery(latest_delivery_id, sender=_buyer)
 
         # cancel delivery
-        with brownie.reverts(revert_msg="260103"):
-            st_dvp.cancelDelivery(latest_delivery_id, {"from": _buyer})
+        with reverts("260103"):
+            st_dvp.cancelDelivery(latest_delivery_id, sender=_buyer)
 
     # Error_4
     # msg.sender must be the sender or buyer of the delivery.
@@ -820,17 +824,17 @@ class TestCancelDelivery:
         token = deploy(users, deploy_args=deploy_args, tradable_exchange=st_dvp.address)
 
         # transfer to DVP contract
-        token.transfer(st_dvp.address, _deposit_amount, {"from": _issuer})
+        token.transfer(st_dvp.address, _deposit_amount, sender=_issuer)
 
         # create delivery
         st_dvp.createDelivery(
-            token.address, _buyer, _delivery_amount, _agent, _data, {"from": _issuer}
+            token.address, _buyer, _delivery_amount, _agent, _data, sender=_issuer
         )
 
         # cancel delivery
         latest_delivery_id = st_dvp.latestDeliveryId()
-        with brownie.reverts(revert_msg="260104"):
-            st_dvp.cancelDelivery(latest_delivery_id, {"from": _agent})
+        with reverts("260104"):
+            st_dvp.cancelDelivery(latest_delivery_id, sender=_agent)
 
     # Error_5
     # Storage is not writable.
@@ -848,20 +852,20 @@ class TestCancelDelivery:
         token = deploy(users, deploy_args=deploy_args, tradable_exchange=st_dvp.address)
 
         # transfer to DVP contract
-        token.transfer(st_dvp.address, _deposit_amount, {"from": _issuer})
+        token.transfer(st_dvp.address, _deposit_amount, sender=_issuer)
 
         # create delivery
         st_dvp.createDelivery(
-            token.address, _buyer, _delivery_amount, _agent, _data, {"from": _issuer}
+            token.address, _buyer, _delivery_amount, _agent, _data, sender=_issuer
         )
 
         # update storage
-        st_dvp_storage.upgradeVersion(brownie.ZERO_ADDRESS, {"from": _admin})
+        st_dvp_storage.upgradeVersion(ZERO_ADDRESS, sender=_admin)
 
         # cancel delivery
         latest_delivery_id = st_dvp.latestDeliveryId()
-        with brownie.reverts(revert_msg=""):
-            st_dvp.cancelDelivery(latest_delivery_id, {"from": _issuer})
+        with reverts("250001"):
+            st_dvp.cancelDelivery(latest_delivery_id, sender=_issuer)
 
         # assertion
         assert (
@@ -891,16 +895,16 @@ class TestConfirmDelivery:
         token = deploy(users, deploy_args=deploy_args, tradable_exchange=st_dvp.address)
 
         # transfer to DVP contract
-        token.transfer(st_dvp.address, _deposit_amount, {"from": _issuer})
+        token.transfer(st_dvp.address, _deposit_amount, sender=_issuer)
 
         # create delivery
         st_dvp.createDelivery(
-            token.address, _buyer, _delivery_amount, _agent, _data, {"from": _issuer}
+            token.address, _buyer, _delivery_amount, _agent, _data, sender=_issuer
         )
 
         # confirm delivery
         latest_delivery_id = st_dvp.latestDeliveryId()
-        tx = st_dvp.confirmDelivery(latest_delivery_id, {"from": _buyer})
+        tx = st_dvp.confirmDelivery(latest_delivery_id, sender=_buyer)
         # assertion
         assert (
             st_dvp.balanceOf(_issuer, token.address)
@@ -918,12 +922,13 @@ class TestConfirmDelivery:
             True,
         )
 
-        assert tx.events["DeliveryConfirmed"]["deliveryId"] == latest_delivery_id
-        assert tx.events["DeliveryConfirmed"]["token"] == token.address
-        assert tx.events["DeliveryConfirmed"]["seller"] == _issuer
-        assert tx.events["DeliveryConfirmed"]["buyer"] == _buyer
-        assert tx.events["DeliveryConfirmed"]["amount"] == _delivery_amount
-        assert tx.events["DeliveryConfirmed"]["agent"] == _agent
+        event = event_args(tx, st_dvp.DeliveryConfirmed)
+        assert event["deliveryId"] == latest_delivery_id
+        assert event["token"] == token.address
+        assert event["seller"] == _issuer
+        assert event["buyer"] == _buyer
+        assert event["amount"] == _delivery_amount
+        assert event["agent"] == _agent
 
     #######################################
     # Error
@@ -945,17 +950,17 @@ class TestConfirmDelivery:
         token = deploy(users, deploy_args=deploy_args, tradable_exchange=st_dvp.address)
 
         # transfer to DVP contract
-        token.transfer(st_dvp.address, _deposit_amount, {"from": _issuer})
+        token.transfer(st_dvp.address, _deposit_amount, sender=_issuer)
 
         # create delivery
         st_dvp.createDelivery(
-            token.address, _buyer, _delivery_amount, _agent, _data, {"from": _issuer}
+            token.address, _buyer, _delivery_amount, _agent, _data, sender=_issuer
         )
 
         # finish delivery
         latest_delivery_id = st_dvp.latestDeliveryId()
-        with brownie.reverts(revert_msg="260201"):
-            st_dvp.confirmDelivery(latest_delivery_id + 1, {"from": _buyer})
+        with reverts("260201"):
+            st_dvp.confirmDelivery(latest_delivery_id + 1, sender=_buyer)
 
         # assertion
         assert (
@@ -989,20 +994,20 @@ class TestConfirmDelivery:
         token = deploy(users, deploy_args=deploy_args, tradable_exchange=st_dvp.address)
 
         # transfer to DVP contract
-        token.transfer(st_dvp.address, _deposit_amount, {"from": _issuer})
+        token.transfer(st_dvp.address, _deposit_amount, sender=_issuer)
 
         # create delivery
         st_dvp.createDelivery(
-            token.address, _buyer, _delivery_amount, _agent, _data, {"from": _issuer}
+            token.address, _buyer, _delivery_amount, _agent, _data, sender=_issuer
         )
 
         # confirm delivery (1)
         latest_delivery_id = st_dvp.latestDeliveryId()
-        st_dvp.cancelDelivery(latest_delivery_id, {"from": _buyer})
+        st_dvp.cancelDelivery(latest_delivery_id, sender=_buyer)
 
         # confirm delivery (2)
-        with brownie.reverts(revert_msg="260202"):
-            st_dvp.confirmDelivery(latest_delivery_id, {"from": _buyer})
+        with reverts("260202"):
+            st_dvp.confirmDelivery(latest_delivery_id, sender=_buyer)
 
         # assertion
         assert st_dvp.balanceOf(_issuer, token.address) == _deposit_amount
@@ -1033,20 +1038,20 @@ class TestConfirmDelivery:
         token = deploy(users, deploy_args=deploy_args, tradable_exchange=st_dvp.address)
 
         # transfer to DVP contract
-        token.transfer(st_dvp.address, _deposit_amount, {"from": _issuer})
+        token.transfer(st_dvp.address, _deposit_amount, sender=_issuer)
 
         # create delivery
         st_dvp.createDelivery(
-            token.address, _buyer, _delivery_amount, _agent, _data, {"from": _issuer}
+            token.address, _buyer, _delivery_amount, _agent, _data, sender=_issuer
         )
 
         # confirm delivery (1)
         latest_delivery_id = st_dvp.latestDeliveryId()
-        st_dvp.confirmDelivery(latest_delivery_id, {"from": _buyer})
+        st_dvp.confirmDelivery(latest_delivery_id, sender=_buyer)
 
         # confirm delivery (2)
-        with brownie.reverts(revert_msg="260203"):
-            st_dvp.confirmDelivery(latest_delivery_id, {"from": _agent})
+        with reverts("260203"):
+            st_dvp.confirmDelivery(latest_delivery_id, sender=_agent)
 
         # assertion
         assert (
@@ -1080,17 +1085,17 @@ class TestConfirmDelivery:
         token = deploy(users, deploy_args=deploy_args, tradable_exchange=st_dvp.address)
 
         # transfer to DVP contract
-        token.transfer(st_dvp.address, _deposit_amount, {"from": _issuer})
+        token.transfer(st_dvp.address, _deposit_amount, sender=_issuer)
 
         # create delivery
         st_dvp.createDelivery(
-            token.address, _buyer, _delivery_amount, _agent, _data, {"from": _issuer}
+            token.address, _buyer, _delivery_amount, _agent, _data, sender=_issuer
         )
 
         # confirm delivery
         latest_delivery_id = st_dvp.latestDeliveryId()
-        with brownie.reverts(revert_msg="260204"):
-            st_dvp.confirmDelivery(latest_delivery_id, {"from": _agent})
+        with reverts("260204"):
+            st_dvp.confirmDelivery(latest_delivery_id, sender=_agent)
 
         # assertion
         assert (
@@ -1124,20 +1129,20 @@ class TestConfirmDelivery:
         token = deploy(users, deploy_args=deploy_args, tradable_exchange=st_dvp.address)
 
         # transfer to DVP contract
-        token.transfer(st_dvp.address, _deposit_amount, {"from": _issuer})
+        token.transfer(st_dvp.address, _deposit_amount, sender=_issuer)
 
         # create delivery
         st_dvp.createDelivery(
-            token.address, _buyer, _delivery_amount, _agent, _data, {"from": _issuer}
+            token.address, _buyer, _delivery_amount, _agent, _data, sender=_issuer
         )
 
         # set status to False
-        token.setStatus(False, {"from": _issuer})
+        token.setStatus(False, sender=_issuer)
 
         # confirm delivery
         latest_delivery_id = st_dvp.latestDeliveryId()
-        with brownie.reverts(revert_msg="260205"):
-            st_dvp.confirmDelivery(latest_delivery_id, {"from": _buyer})
+        with reverts("260205"):
+            st_dvp.confirmDelivery(latest_delivery_id, sender=_buyer)
 
         # assertion
         assert (
@@ -1171,20 +1176,20 @@ class TestConfirmDelivery:
         token = deploy(users, deploy_args=deploy_args, tradable_exchange=st_dvp.address)
 
         # transfer to DVP contract
-        token.transfer(st_dvp.address, _deposit_amount, {"from": _issuer})
+        token.transfer(st_dvp.address, _deposit_amount, sender=_issuer)
 
         # create delivery
         st_dvp.createDelivery(
-            token.address, _buyer, _delivery_amount, _agent, _data, {"from": _issuer}
+            token.address, _buyer, _delivery_amount, _agent, _data, sender=_issuer
         )
 
         # set TransferApprovalRequired to True
-        token.setTransferApprovalRequired(True, {"from": _issuer})
+        token.setTransferApprovalRequired(True, sender=_issuer)
 
         # confirm delivery
         latest_delivery_id = st_dvp.latestDeliveryId()
-        with brownie.reverts(revert_msg="260206"):
-            st_dvp.confirmDelivery(latest_delivery_id, {"from": _buyer})
+        with reverts("260206"):
+            st_dvp.confirmDelivery(latest_delivery_id, sender=_buyer)
 
         # assertion
         assert (
@@ -1218,20 +1223,20 @@ class TestConfirmDelivery:
         token = deploy(users, deploy_args=deploy_args, tradable_exchange=st_dvp.address)
 
         # transfer to DVP contract
-        token.transfer(st_dvp.address, _deposit_amount, {"from": _issuer})
+        token.transfer(st_dvp.address, _deposit_amount, sender=_issuer)
 
         # create delivery
         st_dvp.createDelivery(
-            token.address, _buyer, _delivery_amount, _agent, _data, {"from": _issuer}
+            token.address, _buyer, _delivery_amount, _agent, _data, sender=_issuer
         )
 
         # update storage
-        st_dvp_storage.upgradeVersion(brownie.ZERO_ADDRESS, {"from": _admin})
+        st_dvp_storage.upgradeVersion(ZERO_ADDRESS, sender=_admin)
 
         # confirm delivery
         latest_delivery_id = st_dvp.latestDeliveryId()
-        with brownie.reverts(revert_msg=""):
-            st_dvp.confirmDelivery(latest_delivery_id, {"from": _buyer})
+        with reverts("250001"):
+            st_dvp.confirmDelivery(latest_delivery_id, sender=_buyer)
 
         # assertion
         assert (
@@ -1261,17 +1266,17 @@ class TestFinishDelivery:
         token = deploy(users, deploy_args=deploy_args, tradable_exchange=st_dvp.address)
 
         # transfer to DVP contract
-        token.transfer(st_dvp.address, _deposit_amount, {"from": _issuer})
+        token.transfer(st_dvp.address, _deposit_amount, sender=_issuer)
 
         # create delivery
         st_dvp.createDelivery(
-            token.address, _buyer, _delivery_amount, _agent, _data, {"from": _issuer}
+            token.address, _buyer, _delivery_amount, _agent, _data, sender=_issuer
         )
 
         # finish delivery
         latest_delivery_id = st_dvp.latestDeliveryId()
-        st_dvp.confirmDelivery(latest_delivery_id, {"from": _buyer})
-        tx = st_dvp.finishDelivery(latest_delivery_id, {"from": _agent})
+        st_dvp.confirmDelivery(latest_delivery_id, sender=_buyer)
+        tx = st_dvp.finishDelivery(latest_delivery_id, sender=_agent)
 
         # assertion
         assert (
@@ -1290,17 +1295,19 @@ class TestFinishDelivery:
             False,
         )
 
-        assert tx.events["DeliveryFinished"]["deliveryId"] == latest_delivery_id
-        assert tx.events["DeliveryFinished"]["token"] == token.address
-        assert tx.events["DeliveryFinished"]["seller"] == _issuer
-        assert tx.events["DeliveryFinished"]["buyer"] == _buyer
-        assert tx.events["DeliveryFinished"]["amount"] == _delivery_amount
-        assert tx.events["DeliveryFinished"]["agent"] == _agent
+        finish_event = event_args(tx, st_dvp.DeliveryFinished)
+        assert finish_event["deliveryId"] == latest_delivery_id
+        assert finish_event["token"] == token.address
+        assert finish_event["seller"] == _issuer
+        assert finish_event["buyer"] == _buyer
+        assert finish_event["amount"] == _delivery_amount
+        assert finish_event["agent"] == _agent
 
-        assert tx.events["HolderChanged"]["token"] == token.address
-        assert tx.events["HolderChanged"]["from"] == _issuer
-        assert tx.events["HolderChanged"]["to"] == _buyer
-        assert tx.events["HolderChanged"]["value"] == _delivery_amount
+        holder_changed_event = event_args(tx, st_dvp.HolderChanged)
+        assert holder_changed_event["token"] == token.address
+        assert holder_changed_event["from"] == _issuer
+        assert holder_changed_event["to"] == _buyer
+        assert holder_changed_event["value"] == _delivery_amount
 
     #######################################
     # Error
@@ -1322,20 +1329,20 @@ class TestFinishDelivery:
         token = deploy(users, deploy_args=deploy_args, tradable_exchange=st_dvp.address)
 
         # transfer to DVP contract
-        token.transfer(st_dvp.address, _deposit_amount, {"from": _issuer})
+        token.transfer(st_dvp.address, _deposit_amount, sender=_issuer)
 
         # create delivery
         st_dvp.createDelivery(
-            token.address, _buyer, _delivery_amount, _agent, _data, {"from": _issuer}
+            token.address, _buyer, _delivery_amount, _agent, _data, sender=_issuer
         )
 
         # confirm delivery
         latest_delivery_id = st_dvp.latestDeliveryId()
-        st_dvp.confirmDelivery(latest_delivery_id, {"from": _buyer})
+        st_dvp.confirmDelivery(latest_delivery_id, sender=_buyer)
 
         # finish delivery
-        with brownie.reverts(revert_msg="260301"):
-            st_dvp.finishDelivery(latest_delivery_id + 1, {"from": _agent})
+        with reverts("260301"):
+            st_dvp.finishDelivery(latest_delivery_id + 1, sender=_agent)
 
         # assertion
         assert (
@@ -1370,23 +1377,23 @@ class TestFinishDelivery:
         token = deploy(users, deploy_args=deploy_args, tradable_exchange=st_dvp.address)
 
         # transfer to DVP contract
-        token.transfer(st_dvp.address, _deposit_amount, {"from": _issuer})
+        token.transfer(st_dvp.address, _deposit_amount, sender=_issuer)
 
         # create delivery
         st_dvp.createDelivery(
-            token.address, _buyer, _delivery_amount, _agent, _data, {"from": _issuer}
+            token.address, _buyer, _delivery_amount, _agent, _data, sender=_issuer
         )
 
         # confirm delivery
         latest_delivery_id = st_dvp.latestDeliveryId()
-        st_dvp.confirmDelivery(latest_delivery_id, {"from": _buyer})
+        st_dvp.confirmDelivery(latest_delivery_id, sender=_buyer)
 
         # finish delivery (1)
-        st_dvp.finishDelivery(latest_delivery_id, {"from": _agent})
+        st_dvp.finishDelivery(latest_delivery_id, sender=_agent)
 
         # finish delivery (2)
-        with brownie.reverts(revert_msg="260302"):
-            st_dvp.finishDelivery(latest_delivery_id, {"from": _agent})
+        with reverts("260302"):
+            st_dvp.finishDelivery(latest_delivery_id, sender=_agent)
 
         # assertion
         assert (
@@ -1421,17 +1428,17 @@ class TestFinishDelivery:
         token = deploy(users, deploy_args=deploy_args, tradable_exchange=st_dvp.address)
 
         # transfer to DVP contract
-        token.transfer(st_dvp.address, _deposit_amount, {"from": _issuer})
+        token.transfer(st_dvp.address, _deposit_amount, sender=_issuer)
 
         # create delivery
         st_dvp.createDelivery(
-            token.address, _buyer, _delivery_amount, _agent, _data, {"from": _issuer}
+            token.address, _buyer, _delivery_amount, _agent, _data, sender=_issuer
         )
 
         # finish delivery
         latest_delivery_id = st_dvp.latestDeliveryId()
-        with brownie.reverts(revert_msg="260303"):
-            st_dvp.finishDelivery(latest_delivery_id, {"from": _agent})
+        with reverts("260303"):
+            st_dvp.finishDelivery(latest_delivery_id, sender=_agent)
 
         # assertion
         assert (
@@ -1465,20 +1472,20 @@ class TestFinishDelivery:
         token = deploy(users, deploy_args=deploy_args, tradable_exchange=st_dvp.address)
 
         # transfer to DVP contract
-        token.transfer(st_dvp.address, _deposit_amount, {"from": _issuer})
+        token.transfer(st_dvp.address, _deposit_amount, sender=_issuer)
 
         # create delivery
         st_dvp.createDelivery(
-            token.address, _buyer, _delivery_amount, _agent, _data, {"from": _issuer}
+            token.address, _buyer, _delivery_amount, _agent, _data, sender=_issuer
         )
 
         # confirm delivery
         latest_delivery_id = st_dvp.latestDeliveryId()
-        st_dvp.confirmDelivery(latest_delivery_id, {"from": _buyer})
+        st_dvp.confirmDelivery(latest_delivery_id, sender=_buyer)
 
         # finish delivery
-        with brownie.reverts(revert_msg="260304"):
-            st_dvp.finishDelivery(latest_delivery_id, {"from": _buyer})
+        with reverts("260304"):
+            st_dvp.finishDelivery(latest_delivery_id, sender=_buyer)
 
         # assertion
         assert (
@@ -1513,23 +1520,23 @@ class TestFinishDelivery:
         token = deploy(users, deploy_args=deploy_args, tradable_exchange=st_dvp.address)
 
         # transfer to DVP contract
-        token.transfer(st_dvp.address, _deposit_amount, {"from": _issuer})
+        token.transfer(st_dvp.address, _deposit_amount, sender=_issuer)
 
         # create delivery
         st_dvp.createDelivery(
-            token.address, _buyer, _delivery_amount, _agent, _data, {"from": _issuer}
+            token.address, _buyer, _delivery_amount, _agent, _data, sender=_issuer
         )
 
         # confirm delivery
         latest_delivery_id = st_dvp.latestDeliveryId()
-        st_dvp.confirmDelivery(latest_delivery_id, {"from": _buyer})
+        st_dvp.confirmDelivery(latest_delivery_id, sender=_buyer)
 
         # set status to False
-        token.setStatus(False, {"from": _issuer})
+        token.setStatus(False, sender=_issuer)
 
         # finish delivery
-        with brownie.reverts(revert_msg="260305"):
-            st_dvp.finishDelivery(latest_delivery_id, {"from": _agent})
+        with reverts("260305"):
+            st_dvp.finishDelivery(latest_delivery_id, sender=_agent)
 
         # assertion
         assert (
@@ -1564,23 +1571,23 @@ class TestFinishDelivery:
         token = deploy(users, deploy_args=deploy_args, tradable_exchange=st_dvp.address)
 
         # transfer to DVP contract
-        token.transfer(st_dvp.address, _deposit_amount, {"from": _issuer})
+        token.transfer(st_dvp.address, _deposit_amount, sender=_issuer)
 
         # create delivery
         st_dvp.createDelivery(
-            token.address, _buyer, _delivery_amount, _agent, _data, {"from": _issuer}
+            token.address, _buyer, _delivery_amount, _agent, _data, sender=_issuer
         )
 
         # confirm delivery
         latest_delivery_id = st_dvp.latestDeliveryId()
-        st_dvp.confirmDelivery(latest_delivery_id, {"from": _buyer})
+        st_dvp.confirmDelivery(latest_delivery_id, sender=_buyer)
 
         # set TransferApprovalRequired to True
-        token.setTransferApprovalRequired(True, {"from": _issuer})
+        token.setTransferApprovalRequired(True, sender=_issuer)
 
         # finish delivery
-        with brownie.reverts(revert_msg="260306"):
-            st_dvp.finishDelivery(latest_delivery_id, {"from": _agent})
+        with reverts("260306"):
+            st_dvp.finishDelivery(latest_delivery_id, sender=_agent)
 
         # assertion
         assert (
@@ -1615,23 +1622,23 @@ class TestFinishDelivery:
         token = deploy(users, deploy_args=deploy_args, tradable_exchange=st_dvp.address)
 
         # transfer to DVP contract
-        token.transfer(st_dvp.address, _deposit_amount, {"from": _issuer})
+        token.transfer(st_dvp.address, _deposit_amount, sender=_issuer)
 
         # create delivery
         st_dvp.createDelivery(
-            token.address, _buyer, _delivery_amount, _agent, _data, {"from": _issuer}
+            token.address, _buyer, _delivery_amount, _agent, _data, sender=_issuer
         )
 
         # confirm delivery
         latest_delivery_id = st_dvp.latestDeliveryId()
-        st_dvp.confirmDelivery(latest_delivery_id, {"from": _buyer})
+        st_dvp.confirmDelivery(latest_delivery_id, sender=_buyer)
 
         # update storage
-        st_dvp_storage.upgradeVersion(brownie.ZERO_ADDRESS, {"from": _admin})
+        st_dvp_storage.upgradeVersion(ZERO_ADDRESS, sender=_admin)
 
         # finish delivery
-        with brownie.reverts(revert_msg=""):
-            st_dvp.finishDelivery(latest_delivery_id, {"from": _agent})
+        with reverts("250001"):
+            st_dvp.finishDelivery(latest_delivery_id, sender=_agent)
 
         # assertion
         assert (
@@ -1662,19 +1669,19 @@ class TestBulkFinishDelivery:
         token = deploy(users, deploy_args=deploy_args, tradable_exchange=st_dvp.address)
 
         # transfer to DVP contract
-        token.transfer(st_dvp.address, _deposit_amount, {"from": _issuer})
+        token.transfer(st_dvp.address, _deposit_amount, sender=_issuer)
 
         # create delivery
         st_dvp.createDelivery(
-            token.address, _buyer, _delivery_amount, _agent, _data, {"from": _issuer}
+            token.address, _buyer, _delivery_amount, _agent, _data, sender=_issuer
         )
 
         # confirm delivery
         latest_delivery_id = st_dvp.latestDeliveryId()
-        st_dvp.confirmDelivery(latest_delivery_id, {"from": _buyer})
+        st_dvp.confirmDelivery(latest_delivery_id, sender=_buyer)
 
         # bulk finish delivery
-        tx = st_dvp.bulkFinishDelivery([latest_delivery_id], {"from": _agent})
+        tx = st_dvp.bulkFinishDelivery([latest_delivery_id], sender=_agent)
 
         # assertion
         assert (
@@ -1693,17 +1700,19 @@ class TestBulkFinishDelivery:
             False,
         )
 
-        assert tx.events["DeliveryFinished"]["deliveryId"] == latest_delivery_id
-        assert tx.events["DeliveryFinished"]["token"] == token.address
-        assert tx.events["DeliveryFinished"]["seller"] == _issuer
-        assert tx.events["DeliveryFinished"]["buyer"] == _buyer
-        assert tx.events["DeliveryFinished"]["amount"] == _delivery_amount
-        assert tx.events["DeliveryFinished"]["agent"] == _agent
+        finish_event = event_args(tx, st_dvp.DeliveryFinished)
+        assert finish_event["deliveryId"] == latest_delivery_id
+        assert finish_event["token"] == token.address
+        assert finish_event["seller"] == _issuer
+        assert finish_event["buyer"] == _buyer
+        assert finish_event["amount"] == _delivery_amount
+        assert finish_event["agent"] == _agent
 
-        assert tx.events["HolderChanged"]["token"] == token.address
-        assert tx.events["HolderChanged"]["from"] == _issuer
-        assert tx.events["HolderChanged"]["to"] == _buyer
-        assert tx.events["HolderChanged"]["value"] == _delivery_amount
+        holder_changed_event = event_args(tx, st_dvp.HolderChanged)
+        assert holder_changed_event["token"] == token.address
+        assert holder_changed_event["from"] == _issuer
+        assert holder_changed_event["to"] == _buyer
+        assert holder_changed_event["value"] == _delivery_amount
 
     # Normal_1_2
     # multiple data
@@ -1720,7 +1729,7 @@ class TestBulkFinishDelivery:
         token = deploy(users, deploy_args=deploy_args, tradable_exchange=st_dvp.address)
 
         # transfer to DVP contract
-        token.transfer(st_dvp.address, _deposit_amount, {"from": _issuer})
+        token.transfer(st_dvp.address, _deposit_amount, sender=_issuer)
 
         # create delivery
         delivery_id_list = []
@@ -1731,15 +1740,15 @@ class TestBulkFinishDelivery:
                 _delivery_amount,
                 _agent,
                 _data,
-                {"from": _issuer},
+                sender=_issuer,
             )
             # confirm delivery
             latest_delivery_id = st_dvp.latestDeliveryId()
-            st_dvp.confirmDelivery(latest_delivery_id, {"from": _buyer})
+            st_dvp.confirmDelivery(latest_delivery_id, sender=_buyer)
             delivery_id_list.append(latest_delivery_id)
 
         # bulk finish delivery
-        tx = st_dvp.bulkFinishDelivery(delivery_id_list, {"from": _agent})
+        st_dvp.bulkFinishDelivery(delivery_id_list, sender=_agent)
 
         # assertion
         assert (
@@ -1758,20 +1767,6 @@ class TestBulkFinishDelivery:
                 True,
                 False,
             )
-
-        for event, delivery_id in zip(tx.events["DeliveryFinished"], delivery_id_list):
-            assert event["deliveryId"] == delivery_id
-            assert event["token"] == token.address
-            assert event["seller"] == _issuer
-            assert event["buyer"] == _buyer
-            assert event["amount"] == _delivery_amount
-            assert event["agent"] == _agent
-
-        for event, delivery_id in zip(tx.events["HolderChanged"], delivery_id_list):
-            assert event["token"] == token.address
-            assert event["from"] == _issuer
-            assert event["to"] == _buyer
-            assert event["value"] == _delivery_amount
 
     #######################################
     # Error
@@ -1793,22 +1788,22 @@ class TestBulkFinishDelivery:
         token = deploy(users, deploy_args=deploy_args, tradable_exchange=st_dvp.address)
 
         # transfer to DVP contract
-        token.transfer(st_dvp.address, _deposit_amount, {"from": _issuer})
+        token.transfer(st_dvp.address, _deposit_amount, sender=_issuer)
 
         # create delivery
         st_dvp.createDelivery(
-            token.address, _buyer, _delivery_amount, _agent, _data, {"from": _issuer}
+            token.address, _buyer, _delivery_amount, _agent, _data, sender=_issuer
         )
 
         # confirm delivery
         latest_delivery_id = st_dvp.latestDeliveryId()
-        st_dvp.confirmDelivery(latest_delivery_id, {"from": _buyer})
+        st_dvp.confirmDelivery(latest_delivery_id, sender=_buyer)
 
         # bulk finish delivery
-        with brownie.reverts(revert_msg="260301"):
-            tx = st_dvp.bulkFinishDelivery([latest_delivery_id + 1], {"from": _agent})
-            assert "DeliveryFinished" not in tx.events
-            assert "HolderChanged" not in tx.events
+        with reverts("260301"):
+            tx = st_dvp.bulkFinishDelivery([latest_delivery_id + 1], sender=_agent)
+            assert not has_event(tx, st_dvp.DeliveryFinished)
+            assert not has_event(tx, st_dvp.HolderChanged)
 
         # assertion
         assert (
@@ -1843,24 +1838,24 @@ class TestBulkFinishDelivery:
         token = deploy(users, deploy_args=deploy_args, tradable_exchange=st_dvp.address)
 
         # transfer to DVP contract
-        token.transfer(st_dvp.address, _deposit_amount, {"from": _issuer})
+        token.transfer(st_dvp.address, _deposit_amount, sender=_issuer)
 
         # create delivery
         st_dvp.createDelivery(
-            token.address, _buyer, _delivery_amount, _agent, _data, {"from": _issuer}
+            token.address, _buyer, _delivery_amount, _agent, _data, sender=_issuer
         )
 
         # confirm delivery
         latest_delivery_id = st_dvp.latestDeliveryId()
-        st_dvp.confirmDelivery(latest_delivery_id, {"from": _buyer})
+        st_dvp.confirmDelivery(latest_delivery_id, sender=_buyer)
 
         # bulk finish delivery
-        with brownie.reverts(revert_msg="260301"):
+        with reverts("260301"):
             tx = st_dvp.bulkFinishDelivery(
-                [latest_delivery_id, latest_delivery_id + 1], {"from": _agent}
+                [latest_delivery_id, latest_delivery_id + 1], sender=_agent
             )
-            assert "DeliveryFinished" not in tx.events
-            assert "HolderChanged" not in tx.events
+            assert not has_event(tx, st_dvp.DeliveryFinished)
+            assert not has_event(tx, st_dvp.HolderChanged)
 
         # assertion
         assert (
@@ -1895,25 +1890,25 @@ class TestBulkFinishDelivery:
         token = deploy(users, deploy_args=deploy_args, tradable_exchange=st_dvp.address)
 
         # transfer to DVP contract
-        token.transfer(st_dvp.address, _deposit_amount, {"from": _issuer})
+        token.transfer(st_dvp.address, _deposit_amount, sender=_issuer)
 
         # create delivery
         st_dvp.createDelivery(
-            token.address, _buyer, _delivery_amount, _agent, _data, {"from": _issuer}
+            token.address, _buyer, _delivery_amount, _agent, _data, sender=_issuer
         )
 
         # confirm delivery
         latest_delivery_id = st_dvp.latestDeliveryId()
-        st_dvp.confirmDelivery(latest_delivery_id, {"from": _buyer})
+        st_dvp.confirmDelivery(latest_delivery_id, sender=_buyer)
 
         # bulk finish delivery (1)
-        st_dvp.bulkFinishDelivery([latest_delivery_id], {"from": _agent})
+        st_dvp.bulkFinishDelivery([latest_delivery_id], sender=_agent)
 
         # bulk finish delivery (2)
-        with brownie.reverts(revert_msg="260302"):
-            tx = st_dvp.bulkFinishDelivery([latest_delivery_id], {"from": _agent})
-            assert "DeliveryFinished" not in tx.events
-            assert "HolderChanged" not in tx.events
+        with reverts("260302"):
+            tx = st_dvp.bulkFinishDelivery([latest_delivery_id], sender=_agent)
+            assert not has_event(tx, st_dvp.DeliveryFinished)
+            assert not has_event(tx, st_dvp.HolderChanged)
 
         # assertion
         assert (
@@ -1948,33 +1943,33 @@ class TestBulkFinishDelivery:
         token = deploy(users, deploy_args=deploy_args, tradable_exchange=st_dvp.address)
 
         # transfer to DVP contract
-        token.transfer(st_dvp.address, _deposit_amount, {"from": _issuer})
+        token.transfer(st_dvp.address, _deposit_amount, sender=_issuer)
 
         # create delivery (1)
         st_dvp.createDelivery(
-            token.address, _buyer, _delivery_amount, _agent, _data, {"from": _issuer}
+            token.address, _buyer, _delivery_amount, _agent, _data, sender=_issuer
         )
 
         # confirm delivery (1)
         valid_delivery_id = st_dvp.latestDeliveryId()
-        st_dvp.confirmDelivery(valid_delivery_id, {"from": _buyer})
+        st_dvp.confirmDelivery(valid_delivery_id, sender=_buyer)
 
         # create delivery (2)
         st_dvp.createDelivery(
-            token.address, _buyer, _delivery_amount, _agent, _data, {"from": _issuer}
+            token.address, _buyer, _delivery_amount, _agent, _data, sender=_issuer
         )
 
         # cancel delivery (2)
         latest_delivery_id = st_dvp.latestDeliveryId()
-        st_dvp.cancelDelivery(latest_delivery_id, {"from": _buyer})
+        st_dvp.cancelDelivery(latest_delivery_id, sender=_buyer)
 
         # bulk finish delivery
-        with brownie.reverts(revert_msg="260302"):
+        with reverts("260302"):
             tx = st_dvp.bulkFinishDelivery(
-                [valid_delivery_id, latest_delivery_id], {"from": _agent}
+                [valid_delivery_id, latest_delivery_id], sender=_agent
             )
-            assert "DeliveryFinished" not in tx.events
-            assert "HolderChanged" not in tx.events
+            assert not has_event(tx, st_dvp.DeliveryFinished)
+            assert not has_event(tx, st_dvp.HolderChanged)
 
         # assertion
         assert (
@@ -2018,19 +2013,19 @@ class TestBulkFinishDelivery:
         token = deploy(users, deploy_args=deploy_args, tradable_exchange=st_dvp.address)
 
         # transfer to DVP contract
-        token.transfer(st_dvp.address, _deposit_amount, {"from": _issuer})
+        token.transfer(st_dvp.address, _deposit_amount, sender=_issuer)
 
         # create delivery
         st_dvp.createDelivery(
-            token.address, _buyer, _delivery_amount, _agent, _data, {"from": _issuer}
+            token.address, _buyer, _delivery_amount, _agent, _data, sender=_issuer
         )
 
         # bulk finish delivery
         latest_delivery_id = st_dvp.latestDeliveryId()
-        with brownie.reverts(revert_msg="260303"):
-            tx = st_dvp.bulkFinishDelivery([latest_delivery_id], {"from": _agent})
-            assert "DeliveryFinished" not in tx.events
-            assert "HolderChanged" not in tx.events
+        with reverts("260303"):
+            tx = st_dvp.bulkFinishDelivery([latest_delivery_id], sender=_agent)
+            assert not has_event(tx, st_dvp.DeliveryFinished)
+            assert not has_event(tx, st_dvp.HolderChanged)
 
         # assertion
         assert (
@@ -2065,30 +2060,30 @@ class TestBulkFinishDelivery:
         token = deploy(users, deploy_args=deploy_args, tradable_exchange=st_dvp.address)
 
         # transfer to DVP contract
-        token.transfer(st_dvp.address, _deposit_amount, {"from": _issuer})
+        token.transfer(st_dvp.address, _deposit_amount, sender=_issuer)
 
         # create delivery (1)
         st_dvp.createDelivery(
-            token.address, _buyer, _delivery_amount, _agent, _data, {"from": _issuer}
+            token.address, _buyer, _delivery_amount, _agent, _data, sender=_issuer
         )
 
         # confirm delivery
         valid_delivery_id = st_dvp.latestDeliveryId()
-        st_dvp.confirmDelivery(valid_delivery_id, {"from": _buyer})
+        st_dvp.confirmDelivery(valid_delivery_id, sender=_buyer)
 
         # create delivery (2)
         st_dvp.createDelivery(
-            token.address, _buyer, _delivery_amount, _agent, _data, {"from": _issuer}
+            token.address, _buyer, _delivery_amount, _agent, _data, sender=_issuer
         )
         latest_delivery_id = st_dvp.latestDeliveryId()
 
         # bulk finish delivery
-        with brownie.reverts(revert_msg="260303"):
+        with reverts("260303"):
             tx = st_dvp.bulkFinishDelivery(
-                [valid_delivery_id, latest_delivery_id], {"from": _agent}
+                [valid_delivery_id, latest_delivery_id], sender=_agent
             )
-            assert "DeliveryFinished" not in tx.events
-            assert "HolderChanged" not in tx.events
+            assert not has_event(tx, st_dvp.DeliveryFinished)
+            assert not has_event(tx, st_dvp.HolderChanged)
 
         # assertion
         assert (
@@ -2132,22 +2127,22 @@ class TestBulkFinishDelivery:
         token = deploy(users, deploy_args=deploy_args, tradable_exchange=st_dvp.address)
 
         # transfer to DVP contract
-        token.transfer(st_dvp.address, _deposit_amount, {"from": _issuer})
+        token.transfer(st_dvp.address, _deposit_amount, sender=_issuer)
 
         # create delivery
         st_dvp.createDelivery(
-            token.address, _buyer, _delivery_amount, _agent, _data, {"from": _issuer}
+            token.address, _buyer, _delivery_amount, _agent, _data, sender=_issuer
         )
 
         # confirm delivery
         latest_delivery_id = st_dvp.latestDeliveryId()
-        st_dvp.confirmDelivery(latest_delivery_id, {"from": _buyer})
+        st_dvp.confirmDelivery(latest_delivery_id, sender=_buyer)
 
         # bulk finish delivery
-        with brownie.reverts(revert_msg="260304"):
-            tx = st_dvp.bulkFinishDelivery([latest_delivery_id], {"from": _buyer})
-            assert "DeliveryFinished" not in tx.events
-            assert "HolderChanged" not in tx.events
+        with reverts("260304"):
+            tx = st_dvp.bulkFinishDelivery([latest_delivery_id], sender=_buyer)
+            assert not has_event(tx, st_dvp.DeliveryFinished)
+            assert not has_event(tx, st_dvp.HolderChanged)
 
         # assertion
         assert (
@@ -2182,16 +2177,16 @@ class TestBulkFinishDelivery:
         token = deploy(users, deploy_args=deploy_args, tradable_exchange=st_dvp.address)
 
         # transfer to DVP contract
-        token.transfer(st_dvp.address, _deposit_amount, {"from": _issuer})
+        token.transfer(st_dvp.address, _deposit_amount, sender=_issuer)
 
         # create delivery (1)
         st_dvp.createDelivery(
-            token.address, _buyer, _delivery_amount, _agent, _data, {"from": _issuer}
+            token.address, _buyer, _delivery_amount, _agent, _data, sender=_issuer
         )
         latest_delivery_id_1 = st_dvp.latestDeliveryId()
 
         # confirm delivery (1)
-        st_dvp.confirmDelivery(latest_delivery_id_1, {"from": _buyer})
+        st_dvp.confirmDelivery(latest_delivery_id_1, sender=_buyer)
 
         # create delivery (2)
         st_dvp.createDelivery(
@@ -2200,20 +2195,20 @@ class TestBulkFinishDelivery:
             _delivery_amount,
             _buyer,  # buyer is set as agent
             _data,
-            {"from": _issuer},
+            sender=_issuer,
         )
 
         # confirm delivery (2)
         latest_delivery_id_2 = st_dvp.latestDeliveryId()
-        st_dvp.confirmDelivery(latest_delivery_id_2, {"from": _buyer})
+        st_dvp.confirmDelivery(latest_delivery_id_2, sender=_buyer)
 
         # bulk finish delivery
-        with brownie.reverts(revert_msg="260304"):
+        with reverts("260304"):
             tx = st_dvp.bulkFinishDelivery(
-                [latest_delivery_id_1, latest_delivery_id_2], {"from": _agent}
+                [latest_delivery_id_1, latest_delivery_id_2], sender=_agent
             )
-            assert "DeliveryFinished" not in tx.events
-            assert "HolderChanged" not in tx.events
+            assert not has_event(tx, st_dvp.DeliveryFinished)
+            assert not has_event(tx, st_dvp.HolderChanged)
 
         # assertion
         assert (
@@ -2257,25 +2252,25 @@ class TestBulkFinishDelivery:
         token = deploy(users, deploy_args=deploy_args, tradable_exchange=st_dvp.address)
 
         # transfer to DVP contract
-        token.transfer(st_dvp.address, _deposit_amount, {"from": _issuer})
+        token.transfer(st_dvp.address, _deposit_amount, sender=_issuer)
 
         # create delivery
         st_dvp.createDelivery(
-            token.address, _buyer, _delivery_amount, _agent, _data, {"from": _issuer}
+            token.address, _buyer, _delivery_amount, _agent, _data, sender=_issuer
         )
 
         # confirm delivery
         latest_delivery_id = st_dvp.latestDeliveryId()
-        st_dvp.confirmDelivery(latest_delivery_id, {"from": _buyer})
+        st_dvp.confirmDelivery(latest_delivery_id, sender=_buyer)
 
         # set status to False
-        token.setStatus(False, {"from": _issuer})
+        token.setStatus(False, sender=_issuer)
 
         # bulk finish delivery
-        with brownie.reverts(revert_msg="260305"):
-            tx = st_dvp.bulkFinishDelivery([latest_delivery_id], {"from": _agent})
-            assert "DeliveryFinished" not in tx.events
-            assert "HolderChanged" not in tx.events
+        with reverts("260305"):
+            tx = st_dvp.bulkFinishDelivery([latest_delivery_id], sender=_agent)
+            assert not has_event(tx, st_dvp.DeliveryFinished)
+            assert not has_event(tx, st_dvp.HolderChanged)
 
         # assertion
         assert (
@@ -2315,38 +2310,38 @@ class TestBulkFinishDelivery:
         )
 
         # transfer to DVP contract (1)
-        token_1.transfer(st_dvp.address, _deposit_amount, {"from": _issuer})
+        token_1.transfer(st_dvp.address, _deposit_amount, sender=_issuer)
         # transfer to DVP contract (2)
-        token_2.transfer(st_dvp.address, _deposit_amount, {"from": _issuer})
+        token_2.transfer(st_dvp.address, _deposit_amount, sender=_issuer)
 
         # create delivery (1)
         st_dvp.createDelivery(
-            token_1.address, _buyer, _delivery_amount, _agent, _data, {"from": _issuer}
+            token_1.address, _buyer, _delivery_amount, _agent, _data, sender=_issuer
         )
 
         # confirm delivery (1)
         latest_delivery_id_1 = st_dvp.latestDeliveryId()
-        st_dvp.confirmDelivery(latest_delivery_id_1, {"from": _buyer})
+        st_dvp.confirmDelivery(latest_delivery_id_1, sender=_buyer)
 
         # create delivery (2)
         st_dvp.createDelivery(
-            token_2.address, _buyer, _delivery_amount, _agent, _data, {"from": _issuer}
+            token_2.address, _buyer, _delivery_amount, _agent, _data, sender=_issuer
         )
 
         # confirm delivery (2)
         latest_delivery_id_2 = st_dvp.latestDeliveryId()
-        st_dvp.confirmDelivery(latest_delivery_id_2, {"from": _buyer})
+        st_dvp.confirmDelivery(latest_delivery_id_2, sender=_buyer)
 
         # set status to False
-        token_1.setStatus(False, {"from": _issuer})
+        token_1.setStatus(False, sender=_issuer)
 
         # bulk finish delivery
-        with brownie.reverts(revert_msg="260305"):
+        with reverts("260305"):
             tx = st_dvp.bulkFinishDelivery(
-                [latest_delivery_id_1, latest_delivery_id_2], {"from": _agent}
+                [latest_delivery_id_1, latest_delivery_id_2], sender=_agent
             )
-            assert "DeliveryFinished" not in tx.events
-            assert "HolderChanged" not in tx.events
+            assert not has_event(tx, st_dvp.DeliveryFinished)
+            assert not has_event(tx, st_dvp.HolderChanged)
 
         # assertion
         assert (
@@ -2396,25 +2391,25 @@ class TestBulkFinishDelivery:
         token = deploy(users, deploy_args=deploy_args, tradable_exchange=st_dvp.address)
 
         # transfer to DVP contract
-        token.transfer(st_dvp.address, _deposit_amount, {"from": _issuer})
+        token.transfer(st_dvp.address, _deposit_amount, sender=_issuer)
 
         # create delivery
         st_dvp.createDelivery(
-            token.address, _buyer, _delivery_amount, _agent, _data, {"from": _issuer}
+            token.address, _buyer, _delivery_amount, _agent, _data, sender=_issuer
         )
 
         # confirm delivery
         latest_delivery_id = st_dvp.latestDeliveryId()
-        st_dvp.confirmDelivery(latest_delivery_id, {"from": _buyer})
+        st_dvp.confirmDelivery(latest_delivery_id, sender=_buyer)
 
         # set transferApprovalRequired to True
-        token.setTransferApprovalRequired(True, {"from": _issuer})
+        token.setTransferApprovalRequired(True, sender=_issuer)
 
         # bulk finish delivery
-        with brownie.reverts(revert_msg="260306"):
-            tx = st_dvp.bulkFinishDelivery([latest_delivery_id], {"from": _agent})
-            assert "DeliveryFinished" not in tx.events
-            assert "HolderChanged" not in tx.events
+        with reverts("260306"):
+            tx = st_dvp.bulkFinishDelivery([latest_delivery_id], sender=_agent)
+            assert not has_event(tx, st_dvp.DeliveryFinished)
+            assert not has_event(tx, st_dvp.HolderChanged)
 
         # assertion
         assert (
@@ -2454,38 +2449,38 @@ class TestBulkFinishDelivery:
         )
 
         # transfer to DVP contract (1)
-        token_1.transfer(st_dvp.address, _deposit_amount, {"from": _issuer})
+        token_1.transfer(st_dvp.address, _deposit_amount, sender=_issuer)
         # transfer to DVP contract (2)
-        token_2.transfer(st_dvp.address, _deposit_amount, {"from": _issuer})
+        token_2.transfer(st_dvp.address, _deposit_amount, sender=_issuer)
 
         # create delivery (1)
         st_dvp.createDelivery(
-            token_1.address, _buyer, _delivery_amount, _agent, _data, {"from": _issuer}
+            token_1.address, _buyer, _delivery_amount, _agent, _data, sender=_issuer
         )
 
         # confirm delivery (1)
         latest_delivery_id_1 = st_dvp.latestDeliveryId()
-        st_dvp.confirmDelivery(latest_delivery_id_1, {"from": _buyer})
+        st_dvp.confirmDelivery(latest_delivery_id_1, sender=_buyer)
 
         # create delivery (2)
         st_dvp.createDelivery(
-            token_2.address, _buyer, _delivery_amount, _agent, _data, {"from": _issuer}
+            token_2.address, _buyer, _delivery_amount, _agent, _data, sender=_issuer
         )
 
         # confirm delivery (2)
         latest_delivery_id_2 = st_dvp.latestDeliveryId()
-        st_dvp.confirmDelivery(latest_delivery_id_2, {"from": _buyer})
+        st_dvp.confirmDelivery(latest_delivery_id_2, sender=_buyer)
 
         # set transferApprovalRequired to True
-        token_1.setTransferApprovalRequired(True, {"from": _issuer})
+        token_1.setTransferApprovalRequired(True, sender=_issuer)
 
         # bulk finish delivery
-        with brownie.reverts(revert_msg="260306"):
+        with reverts("260306"):
             tx = st_dvp.bulkFinishDelivery(
-                [latest_delivery_id_1, latest_delivery_id_2], {"from": _agent}
+                [latest_delivery_id_1, latest_delivery_id_2], sender=_agent
             )
-            assert "DeliveryFinished" not in tx.events
-            assert "HolderChanged" not in tx.events
+            assert not has_event(tx, st_dvp.DeliveryFinished)
+            assert not has_event(tx, st_dvp.HolderChanged)
 
         # assertion
         assert (
@@ -2535,25 +2530,25 @@ class TestBulkFinishDelivery:
         token = deploy(users, deploy_args=deploy_args, tradable_exchange=st_dvp.address)
 
         # transfer to DVP contract
-        token.transfer(st_dvp.address, _deposit_amount, {"from": _issuer})
+        token.transfer(st_dvp.address, _deposit_amount, sender=_issuer)
 
         # create delivery
         st_dvp.createDelivery(
-            token.address, _buyer, _delivery_amount, _agent, _data, {"from": _issuer}
+            token.address, _buyer, _delivery_amount, _agent, _data, sender=_issuer
         )
 
         # confirm delivery
         latest_delivery_id = st_dvp.latestDeliveryId()
-        st_dvp.confirmDelivery(latest_delivery_id, {"from": _buyer})
+        st_dvp.confirmDelivery(latest_delivery_id, sender=_buyer)
 
         # update storage
-        st_dvp_storage.upgradeVersion(brownie.ZERO_ADDRESS, {"from": _admin})
+        st_dvp_storage.upgradeVersion(ZERO_ADDRESS, sender=_admin)
 
         # bulk finish delivery
-        with brownie.reverts(revert_msg=""):
-            tx = st_dvp.bulkFinishDelivery([latest_delivery_id], {"from": _agent})
-            assert "DeliveryFinished" not in tx.events
-            assert "HolderChanged" not in tx.events
+        with reverts("250001"):
+            tx = st_dvp.bulkFinishDelivery([latest_delivery_id], sender=_agent)
+            assert not has_event(tx, st_dvp.DeliveryFinished)
+            assert not has_event(tx, st_dvp.HolderChanged)
 
         # assertion
         assert (
@@ -2583,19 +2578,19 @@ class TestAbortDelivery:
         token = deploy(users, deploy_args=deploy_args, tradable_exchange=st_dvp.address)
 
         # transfer to DVP contract
-        token.transfer(st_dvp.address, _deposit_amount, {"from": _issuer})
+        token.transfer(st_dvp.address, _deposit_amount, sender=_issuer)
 
         # create delivery
         st_dvp.createDelivery(
-            token.address, _buyer, _delivery_amount, _agent, _data, {"from": _issuer}
+            token.address, _buyer, _delivery_amount, _agent, _data, sender=_issuer
         )
 
         # confirm delivery
         latest_delivery_id = st_dvp.latestDeliveryId()
-        st_dvp.confirmDelivery(latest_delivery_id, {"from": _buyer})
+        st_dvp.confirmDelivery(latest_delivery_id, sender=_buyer)
 
         # finish delivery
-        tx = st_dvp.abortDelivery(latest_delivery_id, {"from": _agent})
+        tx = st_dvp.abortDelivery(latest_delivery_id, sender=_agent)
 
         # assertion
         assert st_dvp.balanceOf(_issuer, token.address) == _deposit_amount
@@ -2611,12 +2606,13 @@ class TestAbortDelivery:
             False,
         )
 
-        assert tx.events["DeliveryAborted"]["deliveryId"] == latest_delivery_id
-        assert tx.events["DeliveryAborted"]["token"] == token.address
-        assert tx.events["DeliveryAborted"]["seller"] == _issuer
-        assert tx.events["DeliveryAborted"]["buyer"] == _buyer
-        assert tx.events["DeliveryAborted"]["amount"] == _delivery_amount
-        assert tx.events["DeliveryAborted"]["agent"] == _agent
+        event = event_args(tx, st_dvp.DeliveryAborted)
+        assert event["deliveryId"] == latest_delivery_id
+        assert event["token"] == token.address
+        assert event["seller"] == _issuer
+        assert event["buyer"] == _buyer
+        assert event["amount"] == _delivery_amount
+        assert event["agent"] == _agent
 
     #######################################
     # Error
@@ -2638,18 +2634,18 @@ class TestAbortDelivery:
         token = deploy(users, deploy_args=deploy_args, tradable_exchange=st_dvp.address)
 
         # transfer to DVP contract
-        token.transfer(st_dvp.address, _deposit_amount, {"from": _issuer})
+        token.transfer(st_dvp.address, _deposit_amount, sender=_issuer)
 
         # create delivery
         st_dvp.createDelivery(
-            token.address, _buyer, _delivery_amount, _agent, _data, {"from": _issuer}
+            token.address, _buyer, _delivery_amount, _agent, _data, sender=_issuer
         )
 
         # finish delivery
         latest_delivery_id = st_dvp.latestDeliveryId()
-        st_dvp.confirmDelivery(latest_delivery_id, {"from": _buyer})
-        with brownie.reverts(revert_msg="260401"):
-            st_dvp.abortDelivery(latest_delivery_id + 1, {"from": _agent})
+        st_dvp.confirmDelivery(latest_delivery_id, sender=_buyer)
+        with reverts("260401"):
+            st_dvp.abortDelivery(latest_delivery_id + 1, sender=_agent)
 
         # assertion
         assert (
@@ -2684,23 +2680,23 @@ class TestAbortDelivery:
         token = deploy(users, deploy_args=deploy_args, tradable_exchange=st_dvp.address)
 
         # transfer to DVP contract
-        token.transfer(st_dvp.address, _deposit_amount, {"from": _issuer})
+        token.transfer(st_dvp.address, _deposit_amount, sender=_issuer)
 
         # create delivery
         st_dvp.createDelivery(
-            token.address, _buyer, _delivery_amount, _agent, _data, {"from": _issuer}
+            token.address, _buyer, _delivery_amount, _agent, _data, sender=_issuer
         )
 
         # confirm delivery
         latest_delivery_id = st_dvp.latestDeliveryId()
-        st_dvp.confirmDelivery(latest_delivery_id, {"from": _buyer})
+        st_dvp.confirmDelivery(latest_delivery_id, sender=_buyer)
 
         # finish delivery
-        st_dvp.finishDelivery(latest_delivery_id, {"from": _agent})
+        st_dvp.finishDelivery(latest_delivery_id, sender=_agent)
 
         # abort delivery
-        with brownie.reverts(revert_msg="260402"):
-            st_dvp.abortDelivery(latest_delivery_id, {"from": _agent})
+        with reverts("260402"):
+            st_dvp.abortDelivery(latest_delivery_id, sender=_agent)
 
         # assertion
         assert (
@@ -2735,17 +2731,17 @@ class TestAbortDelivery:
         token = deploy(users, deploy_args=deploy_args, tradable_exchange=st_dvp.address)
 
         # transfer to DVP contract
-        token.transfer(st_dvp.address, _deposit_amount, {"from": _issuer})
+        token.transfer(st_dvp.address, _deposit_amount, sender=_issuer)
 
         # create delivery
         st_dvp.createDelivery(
-            token.address, _buyer, _delivery_amount, _agent, _data, {"from": _issuer}
+            token.address, _buyer, _delivery_amount, _agent, _data, sender=_issuer
         )
 
         # abort delivery
         latest_delivery_id = st_dvp.latestDeliveryId()
-        with brownie.reverts(revert_msg="260403"):
-            st_dvp.abortDelivery(latest_delivery_id, {"from": _agent})
+        with reverts("260403"):
+            st_dvp.abortDelivery(latest_delivery_id, sender=_agent)
 
         # assertion
         assert (
@@ -2780,20 +2776,20 @@ class TestAbortDelivery:
         token = deploy(users, deploy_args=deploy_args, tradable_exchange=st_dvp.address)
 
         # transfer to DVP contract
-        token.transfer(st_dvp.address, _deposit_amount, {"from": _issuer})
+        token.transfer(st_dvp.address, _deposit_amount, sender=_issuer)
 
         # create delivery
         st_dvp.createDelivery(
-            token.address, _buyer, _delivery_amount, _agent, _data, {"from": _issuer}
+            token.address, _buyer, _delivery_amount, _agent, _data, sender=_issuer
         )
 
         # confirm delivery
         latest_delivery_id = st_dvp.latestDeliveryId()
-        st_dvp.confirmDelivery(latest_delivery_id, {"from": _buyer})
+        st_dvp.confirmDelivery(latest_delivery_id, sender=_buyer)
 
         # finish delivery
-        with brownie.reverts(revert_msg="260404"):
-            st_dvp.abortDelivery(latest_delivery_id, {"from": _buyer})
+        with reverts("260404"):
+            st_dvp.abortDelivery(latest_delivery_id, sender=_buyer)
 
         # assertion
         assert (
@@ -2828,23 +2824,23 @@ class TestAbortDelivery:
         token = deploy(users, deploy_args=deploy_args, tradable_exchange=st_dvp.address)
 
         # transfer to DVP contract
-        token.transfer(st_dvp.address, _deposit_amount, {"from": _issuer})
+        token.transfer(st_dvp.address, _deposit_amount, sender=_issuer)
 
         # create delivery
         st_dvp.createDelivery(
-            token.address, _buyer, _delivery_amount, _agent, _data, {"from": _issuer}
+            token.address, _buyer, _delivery_amount, _agent, _data, sender=_issuer
         )
 
         # confirm delivery
         latest_delivery_id = st_dvp.latestDeliveryId()
-        st_dvp.confirmDelivery(latest_delivery_id, {"from": _buyer})
+        st_dvp.confirmDelivery(latest_delivery_id, sender=_buyer)
 
         # update storage
-        st_dvp_storage.upgradeVersion(brownie.ZERO_ADDRESS, {"from": _admin})
+        st_dvp_storage.upgradeVersion(ZERO_ADDRESS, sender=_admin)
 
         # finish delivery
-        with brownie.reverts(revert_msg=""):
-            st_dvp.finishDelivery(latest_delivery_id, {"from": _agent})
+        with reverts("250001"):
+            st_dvp.finishDelivery(latest_delivery_id, sender=_agent)
 
         # assertion
         assert (
@@ -2870,17 +2866,18 @@ class TestWithdrawPartial:
         token = deploy(users, deploy_args=deploy_args, tradable_exchange=st_dvp.address)
 
         # transfer to DVP contract
-        token.transfer(st_dvp.address, _value, {"from": _issuer})
+        token.transfer(st_dvp.address, _value, sender=_issuer)
 
         # withdraw
-        tx = st_dvp.withdrawPartial(token.address, 2**256 - 1, {"from": _issuer})
+        tx = st_dvp.withdrawPartial(token.address, 2**256 - 1, sender=_issuer)
 
         # assertion
         assert token.balanceOf(_issuer) == deploy_args[2]
         assert st_dvp.balanceOf(_issuer, token.address) == 0
 
-        assert tx.events["Withdrawn"]["token"] == token.address
-        assert tx.events["Withdrawn"]["account"] == _issuer
+        event = event_args(tx, st_dvp.Withdrawn)
+        assert event["token"] == token.address
+        assert event["account"] == _issuer
 
     #######################################
     # Error
@@ -2896,11 +2893,11 @@ class TestWithdrawPartial:
         token = deploy(users, deploy_args=deploy_args, tradable_exchange=st_dvp.address)
 
         # transfer to DVP contract
-        token.transfer(st_dvp.address, 10, {"from": _issuer})
+        token.transfer(st_dvp.address, 10, sender=_issuer)
 
         # withdraw
-        with brownie.reverts(revert_msg="260601"):
-            st_dvp.withdrawPartial(token.address, 11, {"from": _issuer})
+        with reverts("260601"):
+            st_dvp.withdrawPartial(token.address, 11, sender=_issuer)
 
         # assertion
         assert token.balanceOf(_issuer) == deploy_args[2] - 10
@@ -2918,14 +2915,14 @@ class TestWithdrawPartial:
         token = deploy(users, deploy_args=deploy_args, tradable_exchange=st_dvp.address)
 
         # transfer to DVP contract
-        token.transfer(st_dvp.address, _value, {"from": _issuer})
+        token.transfer(st_dvp.address, _value, sender=_issuer)
 
         # update storage
-        st_dvp_storage.upgradeVersion(brownie.ZERO_ADDRESS, {"from": _admin})
+        st_dvp_storage.upgradeVersion(ZERO_ADDRESS, sender=_admin)
 
         # withdraw
-        with brownie.reverts(revert_msg=""):
-            st_dvp.withdrawPartial(token.address, 10, {"from": _issuer})
+        with reverts("250001"):
+            st_dvp.withdrawPartial(token.address, 10, sender=_issuer)
 
         # assertion
         assert token.balanceOf(_issuer) == deploy_args[2] - _value
@@ -2942,14 +2939,14 @@ class TestWithdrawPartial:
         token = deploy(users, deploy_args=deploy_args, tradable_exchange=st_dvp.address)
 
         # transfer to DVP contract
-        token.transfer(st_dvp.address, _value, {"from": _issuer})
+        token.transfer(st_dvp.address, _value, sender=_issuer)
 
         # set to not transferable
-        token.setTransferable(False, {"from": _issuer})
+        token.setTransferable(False, sender=_issuer)
 
         # withdraw
-        with brownie.reverts(revert_msg="110402"):
-            st_dvp.withdrawPartial(token.address, 10, {"from": _issuer})
+        with reverts("110402"):
+            st_dvp.withdrawPartial(token.address, 10, sender=_issuer)
 
         # assertion
         assert token.balanceOf(_issuer) == 0
@@ -2973,17 +2970,18 @@ class TestWithdraw:
         token = deploy(users, deploy_args=deploy_args, tradable_exchange=st_dvp.address)
 
         # transfer to DVP contract
-        token.transfer(st_dvp.address, _value, {"from": _issuer})
+        token.transfer(st_dvp.address, _value, sender=_issuer)
 
         # withdraw
-        tx = st_dvp.withdraw(token.address, {"from": _issuer})
+        tx = st_dvp.withdraw(token.address, sender=_issuer)
 
         # assertion
         assert token.balanceOf(_issuer) == deploy_args[2]
         assert st_dvp.balanceOf(_issuer, token.address) == 0
 
-        assert tx.events["Withdrawn"]["token"] == token.address
-        assert tx.events["Withdrawn"]["account"] == _issuer
+        event = event_args(tx, st_dvp.Withdrawn)
+        assert event["token"] == token.address
+        assert event["account"] == _issuer
 
     #######################################
     # Error
@@ -2999,8 +2997,8 @@ class TestWithdraw:
         token = deploy(users, deploy_args=deploy_args, tradable_exchange=st_dvp.address)
 
         # withdraw
-        with brownie.reverts(revert_msg="260501"):
-            st_dvp.withdraw(token.address, {"from": _issuer})
+        with reverts("260501"):
+            st_dvp.withdraw(token.address, sender=_issuer)
 
         # assertion
         assert token.balanceOf(_issuer) == deploy_args[2]
@@ -3018,14 +3016,14 @@ class TestWithdraw:
         token = deploy(users, deploy_args=deploy_args, tradable_exchange=st_dvp.address)
 
         # transfer to DVP contract
-        token.transfer(st_dvp.address, _value, {"from": _issuer})
+        token.transfer(st_dvp.address, _value, sender=_issuer)
 
         # update storage
-        st_dvp_storage.upgradeVersion(brownie.ZERO_ADDRESS, {"from": _admin})
+        st_dvp_storage.upgradeVersion(ZERO_ADDRESS, sender=_admin)
 
         # withdraw
-        with brownie.reverts(revert_msg=""):
-            st_dvp.withdraw(token.address, {"from": _issuer})
+        with reverts("250001"):
+            st_dvp.withdraw(token.address, sender=_issuer)
 
         # assertion
         assert token.balanceOf(_issuer) == deploy_args[2] - _value
@@ -3042,14 +3040,14 @@ class TestWithdraw:
         token = deploy(users, deploy_args=deploy_args, tradable_exchange=st_dvp.address)
 
         # transfer to DVP contract
-        token.transfer(st_dvp.address, _value, {"from": _issuer})
+        token.transfer(st_dvp.address, _value, sender=_issuer)
 
         # set to not transferable
-        token.setTransferable(False, {"from": _issuer})
+        token.setTransferable(False, sender=_issuer)
 
         # withdraw
-        with brownie.reverts(revert_msg="110402"):
-            st_dvp.withdraw(token.address, {"from": _issuer})
+        with reverts("110402"):
+            st_dvp.withdraw(token.address, sender=_issuer)
 
         # assertion
         assert token.balanceOf(_issuer) == 0
@@ -3073,14 +3071,15 @@ class TestTokenFallback:
         token = deploy(users, deploy_args=deploy_args, tradable_exchange=st_dvp.address)
 
         # transfer to DVP contract
-        tx = token.transfer(st_dvp.address, _value, {"from": _issuer})
+        tx = token.transfer(st_dvp.address, _value, sender=_issuer)
 
         # assertion
         assert token.balanceOf(_issuer) == deploy_args[2] - _value
         assert st_dvp.balanceOf(_issuer, token.address) == _value
 
-        assert tx.events["Deposited"]["token"] == token.address
-        assert tx.events["Deposited"]["account"] == _issuer
+        event = event_args(tx, st_dvp.Deposited)
+        assert event["token"] == token.address
+        assert event["account"] == _issuer
 
     # Normal_2
     # Multiple deposit
@@ -3093,10 +3092,10 @@ class TestTokenFallback:
         token = deploy(users, deploy_args=deploy_args, tradable_exchange=st_dvp.address)
 
         # transfer to DVP contract (1)
-        token.transfer(st_dvp.address, _value, {"from": _issuer})
+        token.transfer(st_dvp.address, _value, sender=_issuer)
 
         # transfer to DVP contract (2)
-        token.transfer(st_dvp.address, _value, {"from": _issuer})
+        token.transfer(st_dvp.address, _value, sender=_issuer)
 
         # assertion
         assert token.balanceOf(_issuer) == deploy_args[2] - _value * 2
@@ -3118,11 +3117,11 @@ class TestTokenFallback:
         token = deploy(users, deploy_args=deploy_args, tradable_exchange=st_dvp.address)
 
         # update storage
-        st_dvp_storage.upgradeVersion(brownie.ZERO_ADDRESS, {"from": _admin})
+        st_dvp_storage.upgradeVersion(ZERO_ADDRESS, sender=_admin)
 
         # transfer to DVP contract
-        with brownie.reverts(revert_msg=""):
-            token.transfer(st_dvp.address, _value, {"from": _issuer})
+        with reverts("250001"):
+            token.transfer(st_dvp.address, _value, sender=_issuer)
 
         # assertion
         assert token.balanceOf(_issuer) == deploy_args[2]
