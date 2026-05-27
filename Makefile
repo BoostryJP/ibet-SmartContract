@@ -22,5 +22,5 @@ lint:
 compile:
 	uv run ape compile
 
-test:
+test: compile
 	uv run ape test --network ethereum:local:foundry tests/ ${ARG}
