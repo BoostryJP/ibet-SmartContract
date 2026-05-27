@@ -28,5 +28,4 @@ compile:
 	uv run ape compile
 
 test:
-	@ANVIL_HOST=$(ANVIL_HOST) ANVIL_PORT=$(ANVIL_PORT) ANVIL_LOG_FILE=$(ANVIL_LOG_FILE) ANVIL_STARTUP_TIMEOUT_SECONDS=$(ANVIL_STARTUP_TIMEOUT_SECONDS) \
-		uv run ape test --network ethereum:local:foundry tests/ ${ARG}
+	uv run ape test --network ethereum:local:foundry tests/ ${ARG}

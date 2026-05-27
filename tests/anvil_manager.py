@@ -91,7 +91,10 @@ def _wait_for_anvil() -> None:
 
 
 def stop_managed_anvil() -> None:
-    """Stop the managed Anvil process if it is running."""
+    """
+    Stop the managed Anvil process if it is running.
+    """
+
     global _ANVIL_PROCESS
 
     if _ANVIL_PROCESS is None:
@@ -108,10 +111,13 @@ def stop_managed_anvil() -> None:
 
 
 def ensure_anvil_running() -> None:
-    """Ensure that an Anvil process is running and ready to accept connections."""
+    """
+    Ensure that an Anvil process is running and ready to accept connections.
+    """
+
     global _ANVIL_PROCESS
 
-    # Check if anvil is already running on the specified port
+    # Check if a process is already listening on the Anvil port
     existing_pid = _listener_pid()
     if existing_pid is not None:
         existing_command = _listener_command(existing_pid)
@@ -137,11 +143,17 @@ def ensure_anvil_running() -> None:
 
 @pytest.hookimpl(tryfirst=True)
 def pytest_configure():
-    """Pytest hook to ensure Anvil is running before any tests are executed."""
+    """
+    Pytest hook to ensure Anvil is running before any tests are executed.
+    """
+
     ensure_anvil_running()
 
 
 @pytest.hookimpl(trylast=True)
 def pytest_unconfigure():
-    """Pytest hook to stop the managed Anvil process after all tests have completed."""
+    """
+    Pytest hook to stop the managed Anvil process after all tests have completed.
+    """
+
     stop_managed_anvil()

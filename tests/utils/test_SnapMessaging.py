@@ -38,9 +38,9 @@ class TestSendMessage:
 
         # Send message
         tx = snap_messaging.sendMessage(receiver, test_message, sender=sender)
-        event = event_args(tx, SnapMessaging.Message)
 
         # Assertion
+        event = event_args(tx, SnapMessaging.Message)
         assert event["sender"] == sender.address
         assert event["receiver"] == receiver.address
         assert event["time"] is not None

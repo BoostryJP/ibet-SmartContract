@@ -16,15 +16,16 @@ limitations under the License.
 SPDX-License-Identifier: Apache-2.0
 """
 
-from typing import Any, cast
+from typing import Any
 
-from ape import accounts as ape_accounts, networks
+from ape import networks
+from ape.api.transactions import ReceiptAPI
+from ape.contracts import ContractEvent
 from ape.pytest.contextmanagers import RevertsContextManager
 from eth_utils.address import to_checksum_address
 from eth_utils.conversions import to_hex
 
 ZERO_ADDRESS = "0x0000000000000000000000000000000000000000"
-_FUNDED_SENDERS: set[str] = set()
 
 
 def _custom_error_type(contract_container, error_name: str):
@@ -63,30 +64,7 @@ def reverts(
     return RevertsContextManager(expected_message=expected_message, **error_inputs)
 
 
-def tx_sender(sender):
-    """
-    Get the transaction sender address, and fund it if necessary.
-
-    Note:
-    - This function is intended to be used in tests where the sender may not be a funded account.
-    - The sender can be any address, and if it is not already funded, it will be funded with 1 ether from the first test account.
-    """
-
-    if not isinstance(sender, str):
-        raise TypeError("tx_sender() expects a raw address string")
-
-    test_accounts = cast(Any, getattr(ape_accounts, "test_accounts"))
-
-    sender_address = to_checksum_address(sender)
-    normalized = sender_address.lower()
-    if normalized not in _FUNDED_SENDERS:
-        test_accounts[0].transfer(sender_address, 10**18)
-        _FUNDED_SENDERS.add(normalized)
-
-    return sender_address
-
-
-def normalize_abi_value(canonical_type, value):
+def normalize_abi_value(canonical_type: str, value: Any) -> Any:
     """
     Normalize ABI value based on its canonical type.
     """
@@ -103,7 +81,7 @@ def normalize_abi_value(canonical_type, value):
     return value
 
 
-def event_args(tx, event):
+def event_args(tx: ReceiptAPI, event: ContractEvent) -> dict[str, Any]:
     """
     Extract event arguments from a transaction receipt for a specific event.
     """
@@ -127,7 +105,7 @@ def event_args(tx, event):
     return normalized_args
 
 
-def has_event(tx, event):
+def has_event(tx: ReceiptAPI, event: ContractEvent) -> bool:
     """
     Check whether a transaction receipt emitted a specific event.
     """
@@ -149,13 +127,16 @@ def _normalize_web3_call_arg(value):
 
 
 def call_view_method(contract, method_name: str, *args):
-    provider = cast(Any, getattr(networks, "provider"))
+    """
+    Call a view method of a contract using Web3.py directly, bypassing Ape's call mechanism.
+    """
+    web3 = networks.provider.web3  # type: ignore
     abi = [
         item.model_dump(mode="json", by_alias=True, exclude_none=True)
         if hasattr(item, "model_dump")
         else item
         for item in contract.contract_type.abi
     ]
-    web3_contract = provider.web3.eth.contract(address=contract.address, abi=abi)
+    web3_contract = web3.eth.contract(address=contract.address, abi=abi)
     normalized_args = [_normalize_web3_call_arg(arg) for arg in args]
     return getattr(web3_contract.functions, method_name)(*normalized_args).call()
