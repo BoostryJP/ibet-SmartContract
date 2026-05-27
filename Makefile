@@ -1,10 +1,5 @@
 .PHONY: install setup update format compile test
 
-ANVIL_HOST ?= 127.0.0.1
-ANVIL_PORT ?= 8545
-ANVIL_LOG_FILE ?= /tmp/ibet-smartcontract-anvil.log
-ANVIL_STARTUP_TIMEOUT_SECONDS ?= 30
-
 install:
 	uv sync --frozen --no-install-project
 	uv run pre-commit install
@@ -27,5 +22,5 @@ lint:
 compile:
 	uv run ape compile
 
-test:
+test: compile
 	uv run ape test --network ethereum:local:foundry tests/ ${ARG}
