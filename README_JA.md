@@ -19,7 +19,7 @@
 
 ## 依存
 - [Python3](https://www.python.org/downloads/)
-  - バージョン 3.13
+  - バージョン 3.14
 - [uv](https://docs.astral.sh/uv/)
   - Python 環境の管理と Ape コマンドの実行には uv を利用しています。
 - [Solidity](https://docs.soliditylang.org/)

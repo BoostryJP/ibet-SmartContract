@@ -7,7 +7,20 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10  # v6.0.3
-      - uses: astral-sh/ruff-action@0ce1b0bf8b818ef400413f810f8a11cdbda0034b  # v4.0.0
+      - name: Set up Python
+        uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405  # v6.2.0
+        with:
+          python-version: "3.14"
+      - name: Set up uv
+        uses: astral-sh/setup-uv@fac544c07dec837d0ccb6301d7b5580bf5edae39 # v8.2.0
+        with:
+          enable-cache: true
+      - name: Install dependencies
+        env:
+          UV_MALWARE_CHECK: "1"
+        run: uv sync --frozen --no-install-project
+      - name: Ruff check
+        run: uv run ruff check .
   lint-prettier:
     name: "Lint check (prettier)"
     runs-on: ubuntu-latest
@@ -28,7 +41,7 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405  # v6.2.0
         with:
-          python-version: "3.13"
+          python-version: "3.14"
       - name: Set up uv
         uses: astral-sh/setup-uv@fac544c07dec837d0ccb6301d7b5580bf5edae39  # v8.2.0
         with:
@@ -38,6 +51,8 @@ jobs:
         with:
           version: "1.5.1"  # stable
       - name: Install dependencies
+        env:
+          UV_MALWARE_CHECK: "1"
         run: uv sync --frozen --no-install-project
       - name: Install Solidity compiler
         run: |
