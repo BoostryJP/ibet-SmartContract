@@ -19,7 +19,7 @@ English | [日本語](README_JA.md)
 
 ## Dependencies
 - [Python3](https://www.python.org/downloads/)
-  - Version 3.13
+  - Version 3.14
 - [uv](https://docs.astral.sh/uv/)
   - We use uv to manage the Python environment and run Ape commands.
 - [Solidity](https://docs.soliditylang.org/)
