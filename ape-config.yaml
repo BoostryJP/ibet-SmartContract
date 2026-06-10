@@ -14,7 +14,7 @@ compile:
 
 solidity:
   version: 0.8.34
-  evm_version: osaka
+  evm_version: berlin
   import_remapping:
     - "@openzeppelin=openzeppelin/4.9.3"
 
