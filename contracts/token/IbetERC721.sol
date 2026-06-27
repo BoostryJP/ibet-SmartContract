@@ -16,11 +16,11 @@
  *
  * SPDX-License-Identifier: Apache-2.0
  */
-pragma solidity ^0.8.23;
+pragma solidity ^0.8.34;
 
-import "OpenZeppelin/openzeppelin-contracts@4.9.3/contracts/token/ERC721/ERC721.sol";
-import "OpenZeppelin/openzeppelin-contracts@4.9.3/contracts/token/ERC721/extensions/ERC721Burnable.sol";
-import "OpenZeppelin/openzeppelin-contracts@4.9.3/contracts/access/Ownable.sol";
+import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
+import "@openzeppelin/contracts/token/ERC721/extensions/ERC721Burnable.sol";
+import "@openzeppelin/contracts/access/Ownable.sol";
 
 contract IbetERC721 is ERC721, ERC721Burnable, Ownable {
     constructor() ERC721("IbetERC721", "") {}

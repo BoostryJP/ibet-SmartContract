@@ -1,0 +1,41 @@
+name: ibet-SmartContract
+
+plugins:
+  - name: solidity
+  - name: foundry
+
+dependencies:
+  - name: OpenZeppelin
+    github: OpenZeppelin/openzeppelin-contracts
+    version: 4.9.3
+
+compile:
+  include_dependencies: true
+
+solidity:
+  version: 0.8.34
+  evm_version: berlin
+  import_remapping:
+    - "@openzeppelin=openzeppelin/4.9.3"
+
+ethereum:
+  default_network: local
+
+  local:
+    default_provider: foundry
+
+foundry:
+  host: http://127.0.0.1:8545
+  base_fee: 0
+  priority_fee: 0
+  gas_price: 0
+  chain_id: 2017
+  gas_limit: 800000000
+  evm_version: osaka
+  request_timeout: 5
+  process_attempts: 3
+
+test:
+  mnemonic: test test test test test test test test test test test junk
+  number_of_accounts: 10
+  hd_path: m/44'/60'/0'/0/{}

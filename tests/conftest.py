@@ -20,10 +20,9 @@ SPDX-License-Identifier: Apache-2.0
 from typing import TypedDict
 
 import pytest
-from brownie import web3
-from web3.middleware import geth_poa_middleware
+from ape import networks
 
-web3.middleware_onion.inject(geth_poa_middleware, layer=0)
+pytest_plugins = ("anvil_manager",)
 
 
 class Users(TypedDict):
@@ -36,23 +35,53 @@ class Users(TypedDict):
 
 
 @pytest.fixture()
-def users(web3, accounts) -> Users:
-    admin = accounts[0]
-    trader = accounts[1]
-    issuer = accounts[2]
-    agent = accounts[3]
-    user1 = accounts[4]
-    user2 = accounts[5]
-    users = {
-        "admin": admin,
-        "trader": trader,
-        "issuer": issuer,
-        "agent": agent,
-        "user1": user1,
-        "user2": user2,
+def users(accounts) -> Users:
+    return {
+        "admin": accounts[0],
+        "trader": accounts[1],
+        "issuer": accounts[2],
+        "agent": accounts[3],
+        "user1": accounts[4],
+        "user2": accounts[5],
     }
 
-    yield users
+
+@pytest.fixture()
+def web3():
+    return networks.provider.web3  # type: ignore
+
+
+def _contract_fixture(contract_name: str):
+    @pytest.fixture(name=contract_name)
+    def fixture(project):
+        return getattr(project, contract_name)
+
+    return fixture
+
+
+PersonalInfo = _contract_fixture("PersonalInfo")
+PaymentGateway = _contract_fixture("PaymentGateway")
+ExchangeStorage = _contract_fixture("ExchangeStorage")
+IbetExchange = _contract_fixture("IbetExchange")
+EscrowStorage = _contract_fixture("EscrowStorage")
+IbetEscrow = _contract_fixture("IbetEscrow")
+IbetSecurityTokenEscrow = _contract_fixture("IbetSecurityTokenEscrow")
+DVPStorage = _contract_fixture("DVPStorage")
+IbetSecurityTokenDVP = _contract_fixture("IbetSecurityTokenDVP")
+ContractRegistry = _contract_fixture("ContractRegistry")
+E2EMessaging = _contract_fixture("E2EMessaging")
+FreezeLog = _contract_fixture("FreezeLog")
+P256Wallet = _contract_fixture("P256Wallet")
+SnapMessaging = _contract_fixture("SnapMessaging")
+TokenList = _contract_fixture("TokenList")
+IbetCoupon = _contract_fixture("IbetCoupon")
+IbetERC20 = _contract_fixture("IbetERC20")
+IbetERC721 = _contract_fixture("IbetERC721")
+IbetMembership = _contract_fixture("IbetMembership")
+IbetShare = _contract_fixture("IbetShare")
+IbetStandardToken = _contract_fixture("IbetStandardToken")
+IbetStraightBond = _contract_fixture("IbetStraightBond")
+WalletTestReceiver = _contract_fixture("WalletTestReceiver")
 
 
 @pytest.fixture()
@@ -64,7 +93,7 @@ def personal_info(PersonalInfo, users):
 @pytest.fixture()
 def payment_gateway(PaymentGateway, users):
     payment_gateway = users["admin"].deploy(PaymentGateway)
-    payment_gateway.addAgent.transact(users["agent"], {"from": users["admin"]})
+    payment_gateway.addAgent(users["agent"], sender=users["admin"])
     return payment_gateway
 
 
@@ -78,7 +107,7 @@ def exchange_storage(ExchangeStorage, users):
 def exchange(IbetExchange, users, payment_gateway, exchange_storage):
     deploy_args = [payment_gateway.address, exchange_storage.address]
     exchange = users["admin"].deploy(IbetExchange, *deploy_args)
-    exchange_storage.upgradeVersion.transact(exchange.address, {"from": users["admin"]})
+    exchange_storage.upgradeVersion(exchange.address, sender=users["admin"])
     return exchange
 
 
@@ -92,7 +121,7 @@ def escrow_storage(EscrowStorage, users):
 def escrow(IbetEscrow, users, escrow_storage):
     deploy_args = [escrow_storage.address]
     escrow = users["admin"].deploy(IbetEscrow, *deploy_args)
-    escrow_storage.upgradeVersion.transact(escrow.address, {"from": users["admin"]})
+    escrow_storage.upgradeVersion(escrow.address, sender=users["admin"])
     return escrow
 
 
@@ -106,9 +135,7 @@ def st_escrow_storage(EscrowStorage, users):
 def st_escrow(IbetSecurityTokenEscrow, users, st_escrow_storage):
     deploy_args = [st_escrow_storage.address]
     st_escrow = users["admin"].deploy(IbetSecurityTokenEscrow, *deploy_args)
-    st_escrow_storage.upgradeVersion.transact(
-        st_escrow.address, {"from": users["admin"]}
-    )
+    st_escrow_storage.upgradeVersion(st_escrow.address, sender=users["admin"])
     return st_escrow
 
 
@@ -122,5 +149,5 @@ def st_dvp_storage(DVPStorage, users):
 def st_dvp(IbetSecurityTokenDVP, users, st_dvp_storage):
     deploy_args = [st_dvp_storage.address]
     st_dvp = users["admin"].deploy(IbetSecurityTokenDVP, *deploy_args)
-    st_dvp_storage.upgradeVersion.transact(st_dvp.address, {"from": users["admin"]})
+    st_dvp_storage.upgradeVersion(st_dvp.address, sender=users["admin"])
     return st_dvp

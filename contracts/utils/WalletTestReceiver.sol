@@ -16,13 +16,21 @@
  *
  * SPDX-License-Identifier: Apache-2.0
  */
+pragma solidity ^0.8.34;
 
-pragma solidity ^0.8.23;
+contract WalletTestReceiver {
+    uint256 public lastValue;
+    address public lastCaller;
 
-/// @title RegulatorServiceの標準インターフェース
-abstract contract RegulatorService {
-    /// @notice 取引可否チェック
-    /// @param _participant 取引参加者のアドレス（EOA）
-    /// @return uint8 リターンコード：成功（0)
-    function check(address _participant) public view virtual returns (uint8);
+    event Updated(uint256 value, address caller);
+
+    function setValue(uint256 value) external {
+        lastValue = value;
+        lastCaller = msg.sender;
+        emit Updated(value, msg.sender);
+    }
+
+    function revertAlways() external pure {
+        revert("receiver error");
+    }
 }

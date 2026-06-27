@@ -5,7 +5,7 @@
 # ibet Smart Contract
 
 <p>
-  <img alt="Version" src="https://img.shields.io/badge/version-26.3-blue.svg?cacheSeconds=2592000" />
+  <img alt="Version" src="https://img.shields.io/badge/version-26.6-blue.svg?cacheSeconds=2592000" />
   <img alt="License: Apache--2.0" src="https://img.shields.io/badge/License-Apache--2.0-yellow.svg" />
 </p>
 
@@ -19,151 +19,91 @@
 
 ## 依存
 - [Python3](https://www.python.org/downloads/)
-  - バージョン 3.13
-- [Node.js](https://nodejs.org/en/download/)
-  - バージョン 24
+  - バージョン 3.14
+- [uv](https://docs.astral.sh/uv/)
+  - Python 環境の管理と Ape コマンドの実行には uv を利用しています。
 - [Solidity](https://docs.soliditylang.org/)
   - スマートコントラクトの実装には Solidity を利用しています。
-  - 現在、私たちは v0.8.23 を利用しています。
-- [eth-brownie](https://github.com/eth-brownie/brownie)
-  - eth-brownie フレームワークを利用して、コントラクトの開発とテストを行なっています。
-- [GoQuorum](https://github.com/ConsenSys/quorum)
-  - [ibet-Network](https://github.com/BoostryJP/ibet-Network) の公式の GoQuorum ノード上での動作をサポートしています。
-  - ローカル開発・テストでは [hardhat network](https://hardhat.org/hardhat-network/) を利用しています。最新バージョンを利用しています。
+  - 現在、私たちは v0.8.34 を利用しています。
+- [Ape](https://apeworx.io/)
+  - コントラクトのコンパイルとテストには Ape を利用しています。
+- [Foundry Anvil](https://www.getfoundry.sh/anvil)
+  - ローカル開発・ユニットテストでは Anvil を利用しています。
 - [OpenZeppelin](https://openzeppelin.com/contracts/)
   - 私たちのプロジェクトの一部は OpenZeppelin に依存しています。
-  - openzeppelin-contracts の v4.9 を利用しています。
+  - openzeppelin-contracts の v4.9.3 を利用しています。
+- [Node.js](https://nodejs.org/en/download/)
+  - バージョン 24
   
 ## 各コントラクトの概要
 
 ### インターフェース: `/interfaces`
 
-- `IbetStandardTokenInterface`: トークンの標準インターフェース
-- `IbetExchangeInterface`: 取引（Exchange）コントラクトの標準インターフェース
+- `IbetStandardTokenInterface`: ibetトークンコントラクトの標準インターフェース
+- `IbetExchangeInterface`: 取引所コントラクトの標準インターフェース
 
 ### コントラクト: `/contracts`
 
-- `access`: 各アクションを実行できるユーザーを決定するための権限制御機能を提供します。
-- `exchange`: 様々な取引機能（Exchange）の実装です。
-- `ledger`: 法定原簿に必要な付加情報を管理するためのデータストレージ機能を提供します。
-- `payment`: オフチェーン決済を実現するため機能群です。
-- `token`: 各種トークンフォーマットの実装です（ERC20、ERC721、Bond型、Share型など）。
-- `utils`: その他のユーティリティ機能です。
+- **access**: オーナーシップやアクセス制御の基本コントラクト（例: `Ownable`）
+- **exchange**: 分散型取引所やエスクロー、DVPなどの取引・決済関連コントラクト（`IbetExchange`、`IbetEscrow`、`IbetSecurityTokenDVP` など）
+- **ledger**: オンチェーンアカウントとオフチェーン情報を紐付ける個人情報管理コントラクト（`PersonalInfo`）
+- **payment**: トークンとオフチェーン決済のアトミックな受渡しを実現するペイメントゲートウェイ・DvPエージェントコントラクト（`PaymentGateway`）
+- **token**: 各種トークン標準および実装：
+  - ibet独自トークン（Bond型、Share型、Membership型、Coupon型）
+  - ERC20・ERC721互換トークン
+  - トークンレジストリコントラクト（`TokenList`）
+- **utils**: メッセージング、コントラクトウォレットなどの補助コントラクト群（`E2EMessaging`、`SnapMessaging`、`P256Wallet` など）
 
 ## インストール
 
-eth-brownie をインストールします。
+Python、Node.js、および開発用依存関係をインストールします。
+事前に `uv` と Foundry が利用できる状態になっていることを確認してください。
 ```bash
 $ make install
 ```
 
-openzeppelin-contractsをインストールします。
+Ape が管理する Solidity パッケージ依存関係をインストールします。
 ```bash
-$ brownie pm install OpenZeppelin/openzeppelin-contracts@4.9.3
-```
-
-hardhatをインストールします。
-```bash
-$ npm install
+$ make setup
 ```
 
 ## コントラクトのコンパイル
 
-コントラクトのコンパイルには eth-brownie を利用します。
+Ape を利用してコントラクトをコンパイルします。
 ```bash
-$ brownie compile
+$ make compile
 ```
 
-## コントラクトのデプロイ
-
-### 環境変数の設定
-
-コントラクトデプロイ時に用いるEOAを、環境変数で切り替えることができます。
-
-#### 1. GoQuorum (Geth)
-
-GoQuorum（Geth）内に保存した秘密鍵を仕様する場合は、以下の環境変数を設定してください。
-
-- `ETH_ACCOUNT_PASSWORD` - Geth の keystore file に設定したパスフレーズ
-
-#### 2. ローカルの keystore file
-
-ローカルに保存した keystore file を利用する場合は、以下の環境変数を設定してください。
-
-- `ETH_KEYSTORE_PATH` - keystore file を保存したディレクトリパス。
-- `ETH_ACCOUNT_PASSWORD` - keystore file に設定したパスフレーズ
-
-#### 3. 平文の秘密鍵
-
-平文の秘密鍵を利用する場合は、以下の環境変数を設定してください。
-
-- `ETH_PRIVATE_KEY` - 平文の秘密鍵
-- `ETH_ACCOUNT_PASSWORD` - 秘密鍵を暗号化するためのパスフレーズ
-
-#### 4. AWS Secrets Manager
-
-[AWS Secrets Manager](https://docs.aws.amazon.com/secretsmanager/latest/userguide/intro.html) に保存した秘密鍵を指定することもできます。
-秘密鍵は keystore file のフォーマットで保存してください。
-以下の環境変数を設定してください。
-
-- `AWS_REGION_NAME` - AWS リージョン（デフォルト：ap-northeast-1）
-- `AWS_SECRETS_ID` - シークレットの ARN
-- `ETH_ACCOUNT_PASSWORD` - keystore file に対して設定したパスフレーズ
-
-### コントラクトのデプロイ方法
-
-以下のコマンドを実行してコントラクトのデプロイが可能です。
+必要に応じて、以下のコマンドを直接実行することもできます。
 
 ```bash
-$ ./scripts/deploy_shared_contract.sh {--payment_gateway 0xabcd...} {contract_name}
+$ uv run ape compile
 ```
-
-`contract_name` として、以下のコントラクトをデプロイすることができます。
-
-- E2EMessaging 
-- SnapMessaging
-- TokenList
-- PersonalInfo
-- PaymentGateway
-- IbetExchange (* --payment_gateway オプションが必要)
-- IbetEscrow
-- IbetSecurityTokenEscrow
-- FreezeLog
-
-その他のコントラクトはスクリプトによるデプロイをサポートしていません。
-それらのコントラクトについては、その他の方法でデプロイする必要があります。
 
 ## スマートコントラクトの開発
 
-### ネットワーク（hardhat）の設定
+### ローカル開発環境
 
-ネットワーク設定は `hardhat.config.js` ファイルに定義されています。
-
-- chainId: 2017
-- gasPrice: 0
-- blockGasLimit: 800000000
-- hardfork: "berlin"
-
-ローカル環境で開発を行う際は、`docker-compose.yml` に定義されている、`hardhat-network` コンテナを起動して利用してください。
-デフォルトでは 8545 ポートで RPC サービスが起動します。
-
-### Brownie の設定
-
-ネットワーク設定を Brownie にインポートします。
-```bash
-$ brownie networks import data/networks.yml
-```
+ローカルのテストネットワークは `ethereum:local:foundry` を利用します。
+Ape の設定は `ape-config.yaml` に定義されており、pytest でも同じネットワークがデフォルトで利用されます。
 
 ### テストの実行
 
-以下のようにテストを実行します。
+全テストを実行する場合は、以下のコマンドを利用します。
 ```bash
-$ brownie test
+$ make test
 ```
 
-以下のように pytest を利用することも可能です。
+必要に応じて、Ape のコマンドを直接実行することもできます。
+
 ```bash
-$ pytest tests/
+$ uv run ape test --network ethereum:local:foundry tests/
+```
+
+開発中に一部のテストだけを実行したい場合は、`ARG` で pytest の対象を渡せます。
+
+```bash
+$ make test ARG="tests/token/test_IbetERC20.py"
 ```
 
 ## ブランチ作成方針

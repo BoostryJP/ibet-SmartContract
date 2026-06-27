@@ -17,8 +17,10 @@ limitations under the License.
 SPDX-License-Identifier: Apache-2.0
 """
 
-import brownie
 import pytest
+from ape import project
+from ape.exceptions import VirtualMachineError
+from ape_utils import ZERO_ADDRESS, call_view_method, event_args, reverts
 
 
 def init_args():
@@ -47,8 +49,6 @@ def init_args():
 
 
 def issue_transferable_share_token(issuer, exchange_address, personal_info_address):
-    from brownie import IbetShare
-
     name = "test_share"
     symbol = "IBS"
     issue_price = 1000
@@ -71,11 +71,19 @@ def issue_transferable_share_token(issuer, exchange_address, personal_info_addre
         principal_value,
     ]
 
-    share_token = issuer.deploy(IbetShare, *deploy_args)
-    share_token.setTradableExchange.transact(exchange_address, {"from": issuer})
-    share_token.setPersonalInfoAddress.transact(personal_info_address, {"from": issuer})
-    share_token.setTransferable.transact(True, {"from": issuer})
+    share_token = issuer.deploy(project.IbetShare, *deploy_args)  # type: ignore
+    share_token.setTradableExchange(exchange_address, sender=issuer)
+    share_token.setPersonalInfoAddress(personal_info_address, sender=issuer)
+    share_token.setTransferable(True, sender=issuer)
     return share_token, deploy_args
+
+
+def offering_application(share_token, applicant):
+    return tuple(call_view_method(share_token, "applicationsForOffering", applicant))
+
+
+def transfer_application(share_token, index):
+    return tuple(call_view_method(share_token, "applicationsForTransfer", index))
 
 
 # TEST_deploy
@@ -135,7 +143,7 @@ class TestSetPrincipalValue:
         share_token = issuer.deploy(IbetShare, *deploy_args)
 
         # update principal value
-        share_token.setPrincipalValue.transact(9000, {"from": issuer})
+        share_token.setPrincipalValue(9000, sender=issuer)
 
         # assertion
         assert share_token.principalValue() == 9000
@@ -155,8 +163,8 @@ class TestSetPrincipalValue:
         share_token = issuer.deploy(IbetShare, *deploy_args)
 
         # update principal value
-        with brownie.reverts(revert_msg="500001"):
-            share_token.setPrincipalValue.transact(9000, {"from": trader})
+        with reverts("500001"):
+            share_token.setPrincipalValue(9000, sender=trader)
 
         # assertion
         assert share_token.principalValue() == deploy_args[8]
@@ -177,10 +185,10 @@ class TestSetTradableExchange:
         share_token = issuer.deploy(IbetShare, *deploy_args)
 
         # change exchange contract
-        share_token.setTradableExchange.transact(brownie.ETH_ADDRESS, {"from": issuer})
+        share_token.setTradableExchange(ZERO_ADDRESS, sender=issuer)
 
         # assertion
-        assert share_token.tradableExchange() == brownie.ETH_ADDRESS
+        assert share_token.tradableExchange() == ZERO_ADDRESS
 
     #######################################
     # Error
@@ -196,13 +204,11 @@ class TestSetTradableExchange:
         share_token = issuer.deploy(IbetShare, *deploy_args)
 
         # change exchange contract
-        with brownie.reverts(revert_msg="500001"):
-            share_token.setTradableExchange.transact(
-                brownie.ETH_ADDRESS, {"from": users["user1"]}
-            )
+        with reverts("500001"):
+            share_token.setTradableExchange(ZERO_ADDRESS, sender=users["user1"])
 
         # assertion
-        assert share_token.tradableExchange() == brownie.ZERO_ADDRESS
+        assert share_token.tradableExchange() == ZERO_ADDRESS
 
 
 # TEST_setPersonalInfoAddress
@@ -220,12 +226,10 @@ class TestSetPersonalInfoAddress:
         share_token = issuer.deploy(IbetShare, *deploy_args)
 
         # update contract
-        share_token.setPersonalInfoAddress.transact(
-            brownie.ETH_ADDRESS, {"from": issuer}
-        )
+        share_token.setPersonalInfoAddress(ZERO_ADDRESS, sender=issuer)
 
         # assertion
-        assert share_token.personalInfoAddress() == brownie.ETH_ADDRESS
+        assert share_token.personalInfoAddress() == ZERO_ADDRESS
 
     #######################################
     # Error
@@ -241,13 +245,11 @@ class TestSetPersonalInfoAddress:
         share_token = issuer.deploy(IbetShare, *deploy_args)
 
         # update contract
-        with brownie.reverts(revert_msg="500001"):
-            share_token.setPersonalInfoAddress.transact(
-                brownie.ETH_ADDRESS, {"from": users["user1"]}
-            )
+        with reverts("500001"):
+            share_token.setPersonalInfoAddress(ZERO_ADDRESS, sender=users["user1"])
 
         # assertion
-        assert share_token.personalInfoAddress() == brownie.ZERO_ADDRESS
+        assert share_token.personalInfoAddress() == ZERO_ADDRESS
 
 
 # TEST_setRequirePersonalInfoRegistered
@@ -265,7 +267,7 @@ class TestSetRequirePersonalInfoRegistered:
         share_token = issuer.deploy(IbetShare, *deploy_args)
 
         # update contract
-        share_token.setRequirePersonalInfoRegistered.transact(False, {"from": issuer})
+        share_token.setRequirePersonalInfoRegistered(False, sender=issuer)
 
         # assertion
         assert share_token.requirePersonalInfoRegistered() == False
@@ -284,10 +286,8 @@ class TestSetRequirePersonalInfoRegistered:
         share_token = issuer.deploy(IbetShare, *deploy_args)
 
         # update contract
-        with brownie.reverts(revert_msg="500001"):
-            share_token.setRequirePersonalInfoRegistered.transact(
-                False, {"from": users["user1"]}
-            )
+        with reverts("500001"):
+            share_token.setRequirePersonalInfoRegistered(False, sender=users["user1"])
 
         # assertion
         assert share_token.requirePersonalInfoRegistered() == True
@@ -308,9 +308,7 @@ class TestSetDividendInformation:
         share_token = issuer.deploy(IbetShare, *deploy_args)
 
         # update
-        share_token.setDividendInformation.transact(
-            22000, "20200829", "20200831", {"from": issuer}
-        )
+        share_token.setDividendInformation(22000, "20200829", "20200831", sender=issuer)
 
         # assertion
         dividend_information = share_token.dividendInformation()
@@ -332,9 +330,9 @@ class TestSetDividendInformation:
         share_token = issuer.deploy(IbetShare, *deploy_args)
 
         # update
-        with brownie.reverts(revert_msg="500001"):
-            share_token.setDividendInformation.transact(
-                22000, "20200829", "20200831", {"from": users["user1"]}
+        with reverts("500001"):
+            share_token.setDividendInformation(
+                22000, "20200829", "20200831", sender=users["user1"]
             )
 
         # assertion
@@ -359,7 +357,7 @@ class TestSetCancellationDate:
         share_token = issuer.deploy(IbetShare, *deploy_args)
 
         # update
-        share_token.setCancellationDate.transact("20200831", {"from": issuer})
+        share_token.setCancellationDate("20200831", sender=issuer)
 
         # assertion
         cancellation_date = share_token.cancellationDate()
@@ -379,10 +377,8 @@ class TestSetCancellationDate:
         share_token = issuer.deploy(IbetShare, *deploy_args)
 
         # update
-        with brownie.reverts(revert_msg="500001"):
-            share_token.setCancellationDate.transact(
-                "20200930", {"from": users["user1"]}
-            )
+        with reverts("500001"):
+            share_token.setCancellationDate("20200930", sender=users["user1"])
 
         # assertion
         cancellation_date = share_token.cancellationDate()
@@ -404,9 +400,7 @@ class TestSetContactInformation:
         share_token = issuer.deploy(IbetShare, *deploy_args)
 
         # update
-        share_token.setContactInformation.transact(
-            "updated contact information", {"from": issuer}
-        )
+        share_token.setContactInformation("updated contact information", sender=issuer)
 
         # assertion
         contact_information = share_token.contactInformation()
@@ -426,9 +420,9 @@ class TestSetContactInformation:
         share_token = issuer.deploy(IbetShare, *deploy_args)
 
         # update
-        with brownie.reverts(revert_msg="500001"):
-            share_token.setContactInformation.transact(
-                "updated contact information", {"from": users["user1"]}
+        with reverts("500001"):
+            share_token.setContactInformation(
+                "updated contact information", sender=users["user1"]
             )
 
         # assertion
@@ -451,9 +445,7 @@ class TestSetPrivacyPolicy:
         share_token = issuer.deploy(IbetShare, *deploy_args)
 
         # update
-        share_token.setPrivacyPolicy.transact(
-            "updated privacy policy", {"from": issuer}
-        )
+        share_token.setPrivacyPolicy("updated privacy policy", sender=issuer)
 
         # assertion
         privacy_policy = share_token.privacyPolicy()
@@ -473,9 +465,9 @@ class TestSetPrivacyPolicy:
         share_token = issuer.deploy(IbetShare, *deploy_args)
 
         # update
-        with brownie.reverts(revert_msg="500001"):
-            share_token.setPrivacyPolicy.transact(
-                "updated privacy policy", {"from": users["user1"]}
+        with reverts("500001"):
+            share_token.setPrivacyPolicy(
+                "updated privacy policy", sender=users["user1"]
             )
 
         # assertion
@@ -498,7 +490,7 @@ class TestSetMemo:
         share_token = issuer.deploy(IbetShare, *deploy_args)
 
         # set memo
-        share_token.setMemo.transact("updated memo", {"from": issuer})
+        share_token.setMemo("updated memo", sender=issuer)
 
         # assertion
         memo = share_token.memo()
@@ -518,8 +510,8 @@ class TestSetMemo:
         share_token = issuer.deploy(IbetShare, *deploy_args)
 
         # set memo
-        with brownie.reverts(revert_msg="500001"):
-            share_token.setMemo.transact("updated memo", {"from": users["user1"]})
+        with reverts("500001"):
+            share_token.setMemo("updated memo", sender=users["user1"])
 
         memo = share_token.memo()
         assert memo == ""
@@ -540,7 +532,7 @@ class TestSetTransferable:
         share_token = issuer.deploy(IbetShare, *deploy_args)
 
         # update
-        share_token.setTransferable.transact(True, {"from": issuer})
+        share_token.setTransferable(True, sender=issuer)
 
         # assertion
         assert share_token.transferable() is True
@@ -559,8 +551,8 @@ class TestSetTransferable:
         share_token = issuer.deploy(IbetShare, *deploy_args)
 
         # update
-        with brownie.reverts(revert_msg="500001"):
-            share_token.setTransferable.transact(True, {"from": users["user1"]})
+        with reverts("500001"):
+            share_token.setTransferable(True, sender=users["user1"])
 
         # assertion
         assert share_token.transferable() is False
@@ -581,7 +573,7 @@ class TestChangeOfferingStatus:
         share_token = issuer.deploy(IbetShare, *deploy_args)
 
         # update
-        share_token.changeOfferingStatus.transact(True, {"from": issuer})
+        share_token.changeOfferingStatus(True, sender=issuer)
 
         # assertion
         assert share_token.isOffering() is True
@@ -600,8 +592,8 @@ class TestChangeOfferingStatus:
         share_token = issuer.deploy(IbetShare, *deploy_args)
 
         # change exchange contract
-        with brownie.reverts(revert_msg="500001"):
-            share_token.changeOfferingStatus.transact(True, {"from": users["user1"]})
+        with reverts("500001"):
+            share_token.changeOfferingStatus(True, sender=users["user1"])
 
 
 # TEST_balanceOf
@@ -644,23 +636,20 @@ class TestLock:
         lock_amount = 10
 
         # transfer to account
-        share_token.transferFrom.transact(
-            issuer, user, transfer_amount, {"from": issuer}
-        )
+        share_token.transferFrom(issuer, user, transfer_amount, sender=issuer)
 
         # lock
-        tx = share_token.lock.transact(
-            lock_eoa, lock_amount, "some_extra_data", {"from": user}
-        )
+        tx = share_token.lock(lock_eoa, lock_amount, "some_extra_data", sender=user)
 
         # assertion
         assert share_token.balanceOf(user) == transfer_amount - lock_amount
         assert share_token.lockedOf(lock_eoa, user) == lock_amount
 
-        assert tx.events["Lock"]["accountAddress"] == user
-        assert tx.events["Lock"]["lockAddress"] == lock_eoa
-        assert tx.events["Lock"]["value"] == lock_amount
-        assert tx.events["Lock"]["data"] == "some_extra_data"
+        event = event_args(tx, share_token.Lock)
+        assert event["accountAddress"] == user
+        assert event["lockAddress"] == lock_eoa
+        assert event["value"] == lock_amount
+        assert event["data"] == "some_extra_data"
 
     #######################################
     # Error
@@ -681,15 +670,11 @@ class TestLock:
         lock_amount = 40
 
         # transfer to account
-        share_token.transferFrom.transact(
-            issuer, user, transfer_amount, {"from": issuer}
-        )
+        share_token.transferFrom(issuer, user, transfer_amount, sender=issuer)
 
         # lock
-        with brownie.reverts(revert_msg="110002"):
-            share_token.lock.transact(
-                lock_eoa, lock_amount, "some_extra_data", {"from": user}
-            )
+        with reverts("110002"):
+            share_token.lock(lock_eoa, lock_amount, "some_extra_data", sender=user)
 
         # assertion
         assert share_token.balanceOf(user) == transfer_amount
@@ -717,23 +702,22 @@ class TestForceLock:
         lock_amount = 10
 
         # transfer to account
-        share_token.transferFrom.transact(
-            issuer, user, transfer_amount, {"from": issuer}
-        )
+        share_token.transferFrom(issuer, user, transfer_amount, sender=issuer)
 
         # force lock
-        tx = share_token.forceLock.transact(
-            lock_eoa, user, lock_amount, "some_extra_data", {"from": issuer}
+        tx = share_token.forceLock(
+            lock_eoa, user, lock_amount, "some_extra_data", sender=issuer
         )
 
         # assertion
         assert share_token.balanceOf(user) == transfer_amount - lock_amount
         assert share_token.lockedOf(lock_eoa, user) == lock_amount
 
-        assert tx.events["ForceLock"]["accountAddress"] == user
-        assert tx.events["ForceLock"]["lockAddress"] == lock_eoa
-        assert tx.events["ForceLock"]["value"] == lock_amount
-        assert tx.events["ForceLock"]["data"] == "some_extra_data"
+        event = event_args(tx, share_token.ForceLock)
+        assert event["accountAddress"] == user
+        assert event["lockAddress"] == lock_eoa
+        assert event["value"] == lock_amount
+        assert event["data"] == "some_extra_data"
 
     #######################################
     # Error
@@ -754,14 +738,12 @@ class TestForceLock:
         lock_amount = 40
 
         # transfer to account
-        share_token.transferFrom.transact(
-            issuer, user, transfer_amount, {"from": issuer}
-        )
+        share_token.transferFrom(issuer, user, transfer_amount, sender=issuer)
 
         # force lock
-        with brownie.reverts(revert_msg="111601"):
-            share_token.forceLock.transact(
-                lock_eoa, user, lock_amount, "some_extra_data", {"from": issuer}
+        with reverts("111601"):
+            share_token.forceLock(
+                lock_eoa, user, lock_amount, "some_extra_data", sender=issuer
             )
 
         # assertion
@@ -783,14 +765,12 @@ class TestForceLock:
         lock_amount = 10
 
         # transfer to account
-        share_token.transferFrom.transact(
-            issuer, user, transfer_amount, {"from": issuer}
-        )
+        share_token.transferFrom(issuer, user, transfer_amount, sender=issuer)
 
         # force lock
-        with brownie.reverts(revert_msg="500001"):
-            share_token.forceLock.transact(
-                lock_eoa, user, lock_amount, "some_extra_data", {"from": user}
+        with reverts("500001"):
+            share_token.forceLock(
+                lock_eoa, user, lock_amount, "some_extra_data", sender=user
             )
 
         # assertion
@@ -820,18 +800,14 @@ class TestUnlock:
         unlock_amount = 10
 
         # transfer to account
-        share_token.transferFrom.transact(
-            issuer, user1, transfer_amount, {"from": issuer}
-        )
+        share_token.transferFrom(issuer, user1, transfer_amount, sender=issuer)
 
         # lock
-        share_token.lock.transact(
-            lock_eoa, lock_amount, "lock_message", {"from": user1}
-        )
+        share_token.lock(lock_eoa, lock_amount, "lock_message", sender=user1)
 
         # unlock
-        tx = share_token.unlock.transact(
-            user1, user2, unlock_amount, "unlock_message", {"from": lock_eoa}
+        tx = share_token.unlock(
+            user1, user2, unlock_amount, "unlock_message", sender=lock_eoa
         )
 
         # assertion
@@ -839,11 +815,12 @@ class TestUnlock:
         assert share_token.balanceOf(user2) == unlock_amount
         assert share_token.lockedOf(lock_eoa, user1) == lock_amount - unlock_amount
 
-        assert tx.events["Unlock"]["accountAddress"] == user1.address
-        assert tx.events["Unlock"]["lockAddress"] == lock_eoa.address
-        assert tx.events["Unlock"]["recipientAddress"] == user2.address
-        assert tx.events["Unlock"]["value"] == unlock_amount
-        assert tx.events["Unlock"]["data"] == "unlock_message"
+        event = event_args(tx, share_token.Unlock)
+        assert event["accountAddress"] == user1.address
+        assert event["lockAddress"] == lock_eoa.address
+        assert event["recipientAddress"] == user2.address
+        assert event["value"] == unlock_amount
+        assert event["data"] == "unlock_message"
 
     #######################################
     # Error
@@ -866,19 +843,15 @@ class TestUnlock:
         unlock_amount = 11
 
         # transfer to account
-        share_token.transferFrom.transact(
-            issuer, user1, transfer_amount, {"from": issuer}
-        )
+        share_token.transferFrom(issuer, user1, transfer_amount, sender=issuer)
 
         # lock
-        share_token.lock.transact(
-            lock_eoa, lock_amount, "lock_message", {"from": user1}
-        )
+        share_token.lock(lock_eoa, lock_amount, "lock_message", sender=user1)
 
         # unlock
-        with brownie.reverts(revert_msg="110102"):
-            share_token.unlock.transact(
-                user1, user2, unlock_amount, "unlock_message", {"from": lock_eoa}
+        with reverts("110102"):
+            share_token.unlock(
+                user1, user2, unlock_amount, "unlock_message", sender=lock_eoa
             )
 
         # assertion
@@ -909,18 +882,14 @@ class TestForceUnlock:
         unlock_amount = 10
 
         # transfer to account
-        share_token.transferFrom.transact(
-            issuer, user1, transfer_amount, {"from": issuer}
-        )
+        share_token.transferFrom(issuer, user1, transfer_amount, sender=issuer)
 
         # lock
-        share_token.lock.transact(
-            lock_eoa, lock_amount, "lock_message", {"from": user1}
-        )
+        share_token.lock(lock_eoa, lock_amount, "lock_message", sender=user1)
 
         # forceUnlock
-        tx = share_token.forceUnlock.transact(
-            lock_eoa, user1, user2, unlock_amount, "unlock_message", {"from": issuer}
+        tx = share_token.forceUnlock(
+            lock_eoa, user1, user2, unlock_amount, "unlock_message", sender=issuer
         )
 
         # assertion
@@ -928,11 +897,12 @@ class TestForceUnlock:
         assert share_token.balanceOf(user2) == unlock_amount
         assert share_token.lockedOf(lock_eoa, user1) == lock_amount - unlock_amount
 
-        assert tx.events["ForceUnlock"]["accountAddress"] == user1.address
-        assert tx.events["ForceUnlock"]["lockAddress"] == lock_eoa.address
-        assert tx.events["ForceUnlock"]["recipientAddress"] == user2.address
-        assert tx.events["ForceUnlock"]["value"] == unlock_amount
-        assert tx.events["ForceUnlock"]["data"] == "unlock_message"
+        event = event_args(tx, share_token.ForceUnlock)
+        assert event["accountAddress"] == user1.address
+        assert event["lockAddress"] == lock_eoa.address
+        assert event["recipientAddress"] == user2.address
+        assert event["value"] == unlock_amount
+        assert event["data"] == "unlock_message"
 
     #######################################
     # Error
@@ -955,24 +925,20 @@ class TestForceUnlock:
         unlock_amount = 11
 
         # transfer to account
-        share_token.transferFrom.transact(
-            issuer, user1, transfer_amount, {"from": issuer}
-        )
+        share_token.transferFrom(issuer, user1, transfer_amount, sender=issuer)
 
         # lock
-        share_token.lock.transact(
-            lock_eoa, lock_amount, "lock_message", {"from": user1}
-        )
+        share_token.lock(lock_eoa, lock_amount, "lock_message", sender=user1)
 
         # forceUnlock
-        with brownie.reverts(revert_msg="111201"):
-            share_token.forceUnlock.transact(
+        with reverts("111201"):
+            share_token.forceUnlock(
                 lock_eoa,
                 user1,
                 user2,
                 unlock_amount,
                 "unlock_message",
-                {"from": issuer},
+                sender=issuer,
             )
 
         # assertion
@@ -996,19 +962,15 @@ class TestForceUnlock:
         lock_amount = 10
 
         # transfer to account
-        share_token.transferFrom.transact(
-            issuer, user1, transfer_amount, {"from": issuer}
-        )
+        share_token.transferFrom(issuer, user1, transfer_amount, sender=issuer)
 
         # lock
-        share_token.lock.transact(
-            lock_eoa, lock_amount, "lock_message", {"from": user1}
-        )
+        share_token.lock(lock_eoa, lock_amount, "lock_message", sender=user1)
 
         # forceUnlock
-        with brownie.reverts(revert_msg="500001"):
-            share_token.forceUnlock.transact(
-                lock_eoa, user1, user2, lock_amount, "unlock_message", {"from": user2}
+        with reverts("500001"):
+            share_token.forceUnlock(
+                lock_eoa, user1, user2, lock_amount, "unlock_message", sender=user2
             )
 
 
@@ -1034,18 +996,14 @@ class TestForceChangeLockedAccount:
         change_amount = 10
 
         # transfer to account
-        share_token.transferFrom.transact(
-            issuer, user1, transfer_amount, {"from": issuer}
-        )
+        share_token.transferFrom(issuer, user1, transfer_amount, sender=issuer)
 
         # lock
-        share_token.lock.transact(
-            lock_eoa, lock_amount, "lock_message", {"from": user1}
-        )
+        share_token.lock(lock_eoa, lock_amount, "lock_message", sender=user1)
 
         # forceChangeLockedAccount
-        tx = share_token.forceChangeLockedAccount.transact(
-            lock_eoa, user1, user2, change_amount, "change_message", {"from": issuer}
+        tx = share_token.forceChangeLockedAccount(
+            lock_eoa, user1, user2, change_amount, "change_message", sender=issuer
         )
 
         # assertion
@@ -1054,17 +1012,12 @@ class TestForceChangeLockedAccount:
         assert share_token.lockedOf(lock_eoa, user1) == lock_amount - change_amount
         assert share_token.lockedOf(lock_eoa, user2) == change_amount
 
-        assert tx.events["ForceChangeLockedAccount"]["lockAddress"] == lock_eoa.address
-        assert (
-            tx.events["ForceChangeLockedAccount"]["beforeAccountAddress"]
-            == user1.address
-        )
-        assert (
-            tx.events["ForceChangeLockedAccount"]["afterAccountAddress"]
-            == user2.address
-        )
-        assert tx.events["ForceChangeLockedAccount"]["value"] == change_amount
-        assert tx.events["ForceChangeLockedAccount"]["data"] == "change_message"
+        event = event_args(tx, share_token.ForceChangeLockedAccount)
+        assert event["lockAddress"] == lock_eoa.address
+        assert event["beforeAccountAddress"] == user1.address
+        assert event["afterAccountAddress"] == user2.address
+        assert event["value"] == change_amount
+        assert event["data"] == "change_message"
 
     #######################################
     # Error
@@ -1087,20 +1040,16 @@ class TestForceChangeLockedAccount:
         change_amount = 10
 
         # transfer to account
-        share_token.transferFrom.transact(
-            issuer, user1, transfer_amount, {"from": issuer}
-        )
+        share_token.transferFrom(issuer, user1, transfer_amount, sender=issuer)
 
         # lock
-        share_token.lock.transact(
-            lock_eoa, lock_amount, "lock_message", {"from": user1}
-        )
+        share_token.lock(lock_eoa, lock_amount, "lock_message", sender=user1)
 
         # forceChangeLockedAccount
         # - Tx from not authorized account
-        with brownie.reverts(revert_msg="500001"):
-            share_token.forceChangeLockedAccount.transact(
-                lock_eoa, user1, user2, change_amount, "change_message", {"from": user1}
+        with reverts("500001"):
+            share_token.forceChangeLockedAccount(
+                lock_eoa, user1, user2, change_amount, "change_message", sender=user1
             )
 
         # assertion
@@ -1124,14 +1073,14 @@ class TestForceChangeLockedAccount:
         change_amount = 10
 
         # forceChangeLockedAccount
-        with brownie.reverts(revert_msg="111701"):
-            share_token.forceChangeLockedAccount.transact(
+        with reverts("111701"):
+            share_token.forceChangeLockedAccount(
                 lock_eoa,
                 user1,
                 user2,
                 change_amount,
                 "change_message",
-                {"from": issuer},
+                sender=issuer,
             )
 
         # assertion
@@ -1159,27 +1108,26 @@ class TestTransfer:
         # issue token
         share_token, deploy_args = issue_transferable_share_token(
             issuer=issuer,
-            exchange_address=brownie.ZERO_ADDRESS,
+            exchange_address=ZERO_ADDRESS,
             personal_info_address=personal_info.address,
         )
 
         # register personal info of to_address
-        personal_info.register.transact(
-            from_address.address, "encrypted_message", {"from": to_address}
+        personal_info.register(
+            from_address.address, "encrypted_message", sender=to_address
         )
 
         # transfer
-        tx = share_token.transfer.transact(
-            to_address.address, transfer_amount, {"from": issuer}
-        )
+        tx = share_token.transfer(to_address.address, transfer_amount, sender=issuer)
 
         # assertion
         assert share_token.balanceOf(issuer) == deploy_args[3] - transfer_amount
         assert share_token.balanceOf(to_address) == transfer_amount
 
-        assert tx.events["Transfer"]["from"] == from_address
-        assert tx.events["Transfer"]["to"] == to_address
-        assert tx.events["Transfer"]["value"] == transfer_amount
+        event = event_args(tx, share_token.Transfer)
+        assert event["from"] == from_address
+        assert event["to"] == to_address
+        assert event["value"] == transfer_amount
 
     # Normal_1_2
     # Transfer to EOA
@@ -1193,25 +1141,24 @@ class TestTransfer:
         # issue token
         share_token, deploy_args = issue_transferable_share_token(
             issuer=issuer,
-            exchange_address=brownie.ZERO_ADDRESS,
+            exchange_address=ZERO_ADDRESS,
             personal_info_address=personal_info.address,
         )
 
         # set requirePersonalInfoRegistered to False
-        share_token.setRequirePersonalInfoRegistered.transact(False, {"from": issuer})
+        share_token.setRequirePersonalInfoRegistered(False, sender=issuer)
 
         # transfer
-        tx = share_token.transfer.transact(
-            to_address.address, transfer_amount, {"from": issuer}
-        )
+        tx = share_token.transfer(to_address.address, transfer_amount, sender=issuer)
 
         # assertion
         assert share_token.balanceOf(issuer) == deploy_args[3] - transfer_amount
         assert share_token.balanceOf(to_address) == transfer_amount
 
-        assert tx.events["Transfer"]["from"] == from_address
-        assert tx.events["Transfer"]["to"] == to_address
-        assert tx.events["Transfer"]["value"] == transfer_amount
+        event = event_args(tx, share_token.Transfer)
+        assert event["from"] == from_address
+        assert event["to"] == to_address
+        assert event["value"] == transfer_amount
 
     # Normal_2
     # Transfer to contract address
@@ -1229,17 +1176,16 @@ class TestTransfer:
 
         # transfer
         to_address = exchange.address
-        tx = share_token.transfer.transact(
-            to_address, transfer_amount, {"from": from_address}
-        )
+        tx = share_token.transfer(to_address, transfer_amount, sender=from_address)
 
         # assertion
         assert share_token.balanceOf(from_address) == deploy_args[3] - transfer_amount
         assert share_token.balanceOf(to_address) == transfer_amount
 
-        assert tx.events["Transfer"]["from"] == from_address
-        assert tx.events["Transfer"]["to"] == to_address
-        assert tx.events["Transfer"]["value"] == transfer_amount
+        event = event_args(tx, share_token.Transfer)
+        assert event["from"] == from_address
+        assert event["to"] == to_address
+        assert event["value"] == transfer_amount
 
     #######################################
     # Error
@@ -1255,21 +1201,19 @@ class TestTransfer:
         # issue token
         share_token, deploy_args = issue_transferable_share_token(
             issuer=issuer,
-            exchange_address=brownie.ZERO_ADDRESS,
+            exchange_address=ZERO_ADDRESS,
             personal_info_address=personal_info.address,
         )
 
         # register personal info of to_address
-        personal_info.register.transact(
-            from_address.address, "encrypted_message", {"from": to_address}
+        personal_info.register(
+            from_address.address, "encrypted_message", sender=to_address
         )
 
         # transfer
         transfer_amount = deploy_args[3] + 1
-        with brownie.reverts(revert_msg="110401"):
-            share_token.transfer.transact(
-                to_address.address, transfer_amount, {"from": issuer}
-            )
+        with reverts("110401"):
+            share_token.transfer(to_address.address, transfer_amount, sender=issuer)
 
         # assertion
         assert share_token.balanceOf(issuer) == deploy_args[3]
@@ -1286,21 +1230,21 @@ class TestTransfer:
         # issue token
         share_token, deploy_args = issue_transferable_share_token(
             issuer=issuer,
-            exchange_address=brownie.ZERO_ADDRESS,
-            personal_info_address=brownie.ZERO_ADDRESS,
+            exchange_address=ZERO_ADDRESS,
+            personal_info_address=ZERO_ADDRESS,
         )
 
         with pytest.raises(AttributeError):
             share_token.isContract(to_address)
 
         with pytest.raises(AttributeError):
-            share_token.transferToAddress.transact(
-                to_address, transfer_amount, "test_data", {"from": from_address}
+            share_token.transferToAddress(
+                to_address, transfer_amount, "test_data", sender=from_address
             )
 
         with pytest.raises(AttributeError):
-            share_token.transferToContract.transact(
-                to_address, transfer_amount, "test_data", {"from": from_address}
+            share_token.transferToContract(
+                to_address, transfer_amount, "test_data", sender=from_address
             )
 
     # Error_3
@@ -1315,8 +1259,8 @@ class TestTransfer:
         share_token = issuer.deploy(IbetShare, *deploy_args)
 
         # transfer
-        with brownie.reverts(revert_msg="110402"):
-            share_token.transfer.transact(to_address, transfer_amount, {"from": issuer})
+        with reverts("110402"):
+            share_token.transfer(to_address, transfer_amount, sender=issuer)
 
         # assertion
         from_balance = share_token.balanceOf(issuer)
@@ -1333,11 +1277,11 @@ class TestTransfer:
         # issue transferable token
         deploy_args = init_args()
         share_token = issuer.deploy(IbetShare, *deploy_args)
-        share_token.setTransferable(True, {"from": issuer})
+        share_token.setTransferable(True, sender=issuer)
 
         # transfer
-        with brownie.reverts(revert_msg="110301"):
-            share_token.transfer.transact(exchange, transfer_amount, {"from": issuer})
+        with reverts("110301"):
+            share_token.transfer(exchange, transfer_amount, sender=issuer)
 
         assert share_token.balanceOf(issuer) == deploy_args[3]
         assert share_token.balanceOf(exchange) == 0
@@ -1352,15 +1296,13 @@ class TestTransfer:
         # issue token
         share_token, deploy_args = issue_transferable_share_token(
             issuer=issuer,
-            exchange_address=brownie.ZERO_ADDRESS,
+            exchange_address=ZERO_ADDRESS,
             personal_info_address=personal_info.address,
         )
 
         # transfer
-        with brownie.reverts(revert_msg="110202"):
-            share_token.transfer.transact(
-                to_address.address, transfer_amount, {"from": issuer}
-            )
+        with reverts("110202"):
+            share_token.transfer(to_address.address, transfer_amount, sender=issuer)
 
         # assertion
         assert share_token.balanceOf(issuer) == deploy_args[3]
@@ -1376,14 +1318,14 @@ class TestTransfer:
         # issue token
         share_token, deploy_args = issue_transferable_share_token(
             issuer=issuer,
-            exchange_address=brownie.ZERO_ADDRESS,
+            exchange_address=ZERO_ADDRESS,
             personal_info_address=personal_info.address,
         )
-        share_token.setTransferApprovalRequired(True, {"from": issuer})
+        share_token.setTransferApprovalRequired(True, sender=issuer)
 
         # transfer
-        with brownie.reverts(revert_msg="110201"):
-            share_token.transfer.transact(to_address, transfer_amount, {"from": issuer})
+        with reverts("110201"):
+            share_token.transfer(to_address, transfer_amount, sender=issuer)
 
         # assertion
         from_balance = share_token.balanceOf(issuer)
@@ -1408,21 +1350,19 @@ class TestBulkTransfer:
         # issue share token
         share_contract, deploy_args = issue_transferable_share_token(
             issuer=issuer,
-            exchange_address=brownie.ZERO_ADDRESS,
+            exchange_address=ZERO_ADDRESS,
             personal_info_address=personal_info.address,
         )
 
         # register personal info (to_address)
-        personal_info.register.transact(
-            from_address.address, "encrypted_message", {"from": to_address}
+        personal_info.register(
+            from_address.address, "encrypted_message", sender=to_address
         )
 
         # bulk transfer
         to_address_list = [to_address]
         amount_list = [1]
-        share_contract.bulkTransfer.transact(
-            to_address_list, amount_list, {"from": from_address}
-        )
+        share_contract.bulkTransfer(to_address_list, amount_list, sender=from_address)
 
         # assertion
         from_balance = share_contract.balanceOf(from_address)
@@ -1441,13 +1381,13 @@ class TestBulkTransfer:
         # issue share token
         share_contract, deploy_args = issue_transferable_share_token(
             issuer=issuer,
-            exchange_address=brownie.ZERO_ADDRESS,
+            exchange_address=ZERO_ADDRESS,
             personal_info_address=personal_info.address,
         )
 
         # register personal info (to_address)
-        personal_info.register.transact(
-            from_address.address, "encrypted_message", {"from": to_address}
+        personal_info.register(
+            from_address.address, "encrypted_message", sender=to_address
         )
 
         # bulk transfer
@@ -1457,9 +1397,7 @@ class TestBulkTransfer:
             to_address_list.append(to_address)
             amount_list.append(1)
 
-        share_contract.bulkTransfer.transact(
-            to_address_list, amount_list, {"from": from_address}
-        )
+        share_contract.bulkTransfer(to_address_list, amount_list, sender=from_address)
 
         # assertion
         from_balance = share_contract.balanceOf(from_address)
@@ -1478,14 +1416,12 @@ class TestBulkTransfer:
         # issue share token
         share_contract, deploy_args = issue_transferable_share_token(
             issuer=issuer,
-            exchange_address=brownie.ZERO_ADDRESS,
+            exchange_address=ZERO_ADDRESS,
             personal_info_address=personal_info.address,
         )
 
         # set requirePersonalInfoRegistered to False
-        share_contract.setRequirePersonalInfoRegistered.transact(
-            False, {"from": issuer}
-        )
+        share_contract.setRequirePersonalInfoRegistered(False, sender=issuer)
 
         # bulk transfer
         to_address_list = []
@@ -1494,9 +1430,7 @@ class TestBulkTransfer:
             to_address_list.append(to_address)
             amount_list.append(1)
 
-        share_contract.bulkTransfer.transact(
-            to_address_list, amount_list, {"from": from_address}
-        )
+        share_contract.bulkTransfer(to_address_list, amount_list, sender=from_address)
 
         # assertion
         from_balance = share_contract.balanceOf(from_address)
@@ -1520,9 +1454,7 @@ class TestBulkTransfer:
         # bulk transfer
         to_address_list = [exchange.address]
         amount_list = [1]
-        share_contract.bulkTransfer.transact(
-            to_address_list, amount_list, {"from": from_address}
-        )
+        share_contract.bulkTransfer(to_address_list, amount_list, sender=from_address)
 
         # assertion
         from_balance = share_contract.balanceOf(from_address)
@@ -1544,19 +1476,17 @@ class TestBulkTransfer:
         # issue share token
         share_contract, deploy_args = issue_transferable_share_token(
             issuer=issuer,
-            exchange_address=brownie.ZERO_ADDRESS,
+            exchange_address=ZERO_ADDRESS,
             personal_info_address=personal_info.address,
         )
 
         # register personal info (to_address)
-        personal_info.register.transact(
-            from_address, "encrypted_message", {"from": to_address}
-        )
+        personal_info.register(from_address, "encrypted_message", sender=to_address)
 
         # bulk transfer
-        with brownie.reverts(revert_msg="110503"):
-            share_contract.bulkTransfer.transact(
-                [to_address, to_address], [deploy_args[3], 1], {"from": issuer}
+        with reverts("110503"):
+            share_contract.bulkTransfer(
+                [to_address, to_address], [deploy_args[3], 1], sender=issuer
             )
 
         # assertion
@@ -1573,19 +1503,17 @@ class TestBulkTransfer:
         # issue share token
         share_contract, deploy_args = issue_transferable_share_token(
             issuer=issuer,
-            exchange_address=brownie.ZERO_ADDRESS,
+            exchange_address=ZERO_ADDRESS,
             personal_info_address=personal_info.address,
         )
-        share_contract.setTransferable.transact(False, {"from": issuer})
+        share_contract.setTransferable(False, sender=issuer)
 
         # register personal info (to_address)
-        personal_info.register.transact(
-            from_address, "encrypted_message", {"from": to_address}
-        )
+        personal_info.register(from_address, "encrypted_message", sender=to_address)
 
         # bulk transfer
-        with brownie.reverts(revert_msg="110504"):
-            share_contract.bulkTransfer.transact([to_address], [1], {"from": issuer})
+        with reverts("110504"):
+            share_contract.bulkTransfer([to_address], [1], sender=issuer)
 
         # assertion
         from_balance = share_contract.balanceOf(issuer)
@@ -1602,13 +1530,13 @@ class TestBulkTransfer:
         # issue share token
         share_contract, deploy_args = issue_transferable_share_token(
             issuer=issuer,
-            exchange_address=brownie.ZERO_ADDRESS,
+            exchange_address=ZERO_ADDRESS,
             personal_info_address=personal_info.address,
         )
 
         # bulk transfer
-        with brownie.reverts(revert_msg="110202"):
-            share_contract.bulkTransfer.transact([to_address], [1], {"from": issuer})
+        with reverts("110202"):
+            share_contract.bulkTransfer([to_address], [1], sender=issuer)
 
         # assertion
         from_balance = share_contract.balanceOf(issuer)
@@ -1625,14 +1553,14 @@ class TestBulkTransfer:
         # issue share token
         share_contract, deploy_args = issue_transferable_share_token(
             issuer=issuer,
-            exchange_address=brownie.ZERO_ADDRESS,
+            exchange_address=ZERO_ADDRESS,
             personal_info_address=personal_info.address,
         )
-        share_contract.setTransferApprovalRequired(True, {"from": issuer})
+        share_contract.setTransferApprovalRequired(True, sender=issuer)
 
         # bulk transfer
-        with brownie.reverts(revert_msg="110501"):
-            share_contract.bulkTransfer.transact([to_address], [1], {"from": issuer})
+        with reverts("110501"):
+            share_contract.bulkTransfer([to_address], [1], sender=issuer)
 
         # assertion
         from_balance = share_contract.balanceOf(issuer)
@@ -1657,14 +1585,12 @@ class TestTransferFrom:
         # issue token
         share_token, deploy_args = issue_transferable_share_token(
             issuer=issuer,
-            exchange_address=brownie.ZERO_ADDRESS,
+            exchange_address=ZERO_ADDRESS,
             personal_info_address=personal_info.address,
         )
 
         # forced transfer
-        share_token.transferFrom.transact(
-            from_address, to_address, value, {"from": issuer}
-        )
+        share_token.transferFrom(from_address, to_address, value, sender=issuer)
 
         # assertion
         assert share_token.balanceOf(issuer) == deploy_args[3] - value
@@ -1684,14 +1610,14 @@ class TestTransferFrom:
         # issue token
         share_token, deploy_args = issue_transferable_share_token(
             issuer=issuer,
-            exchange_address=brownie.ZERO_ADDRESS,
+            exchange_address=ZERO_ADDRESS,
             personal_info_address=personal_info.address,
         )
 
         # forced transfer
-        with brownie.reverts(revert_msg="110601"):
-            share_token.transferFrom.transact(
-                from_address, to_address, deploy_args[3] + 1, {"from": issuer}
+        with reverts("110601"):
+            share_token.transferFrom(
+                from_address, to_address, deploy_args[3] + 1, sender=issuer
             )
 
         # assertion
@@ -1708,14 +1634,14 @@ class TestTransferFrom:
         # issue token
         share_token, deploy_args = issue_transferable_share_token(
             issuer=issuer,
-            exchange_address=brownie.ZERO_ADDRESS,
+            exchange_address=ZERO_ADDRESS,
             personal_info_address=personal_info.address,
         )
 
         # forced transfer
-        with brownie.reverts(revert_msg="500001"):
-            share_token.transferFrom.transact(
-                from_address, to_address, deploy_args[3] + 1, {"from": to_address}
+        with reverts("500001"):
+            share_token.transferFrom(
+                from_address, to_address, deploy_args[3] + 1, sender=to_address
             )
 
         # assertion
@@ -1739,17 +1665,17 @@ class TestBulkTransferFrom:
         # issue token
         share_token, deploy_args = issue_transferable_share_token(
             issuer=issuer,
-            exchange_address=brownie.ZERO_ADDRESS,
+            exchange_address=ZERO_ADDRESS,
             personal_info_address=personal_info.address,
         )
 
         # bulk forced transfer
         #   issuer -> to_address_1 -> to_address_2
-        share_token.bulkTransferFrom.transact(
+        share_token.bulkTransferFrom(
             [issuer, to_address_1],
             [to_address_1, to_address_2],
             [value, value],
-            {"from": issuer},
+            sender=issuer,
         )
 
         # assertion
@@ -1771,14 +1697,14 @@ class TestBulkTransferFrom:
         # issue token
         share_token, deploy_args = issue_transferable_share_token(
             issuer=issuer,
-            exchange_address=brownie.ZERO_ADDRESS,
+            exchange_address=ZERO_ADDRESS,
             personal_info_address=personal_info.address,
         )
 
         # bulk forced transfer
-        with brownie.reverts(revert_msg="500001"):
-            share_token.bulkTransferFrom.transact(
-                [issuer], [to_address], [10, 10], {"from": to_address}
+        with reverts("500001"):
+            share_token.bulkTransferFrom(
+                [issuer], [to_address], [10, 10], sender=to_address
             )
 
         # assertion
@@ -1795,14 +1721,14 @@ class TestBulkTransferFrom:
         # issue token
         share_token, deploy_args = issue_transferable_share_token(
             issuer=issuer,
-            exchange_address=brownie.ZERO_ADDRESS,
+            exchange_address=ZERO_ADDRESS,
             personal_info_address=personal_info.address,
         )
 
         # bulk forced transfer
-        with brownie.reverts(revert_msg="111501"):
-            share_token.bulkTransferFrom.transact(
-                [issuer, issuer], [to_address_1], [10, 10], {"from": issuer}
+        with reverts("111501"):
+            share_token.bulkTransferFrom(
+                [issuer, issuer], [to_address_1], [10, 10], sender=issuer
             )
 
         # assertion
@@ -1820,19 +1746,19 @@ class TestBulkTransferFrom:
         # issue token
         share_token, deploy_args = issue_transferable_share_token(
             issuer=issuer,
-            exchange_address=brownie.ZERO_ADDRESS,
+            exchange_address=ZERO_ADDRESS,
             personal_info_address=personal_info.address,
         )
 
         # bulk forced transfer
         #   issuer -> to_address_1
         #   to_address_2 -> to_address_1
-        with brownie.reverts(revert_msg="110601"):
-            share_token.bulkTransferFrom.transact(
+        with reverts("110601"):
+            share_token.bulkTransferFrom(
                 [issuer, to_address_2],
                 [to_address_1, to_address_1],
                 [10, 10],
-                {"from": issuer},
+                sender=issuer,
             )
 
         # assertion
@@ -1855,12 +1781,12 @@ class TestApplyForOffering:
         # issue token
         share_token, deploy_args = issue_transferable_share_token(
             issuer=issuer,
-            exchange_address=brownie.ZERO_ADDRESS,
+            exchange_address=ZERO_ADDRESS,
             personal_info_address=personal_info.address,
         )
 
         # assertion
-        application = share_token.applicationsForOffering(brownie.ETH_ADDRESS)
+        application = offering_application(share_token, ZERO_ADDRESS)
         assert application[0] == 0
         assert application[1] == 0
         assert application[2] == ""
@@ -1875,23 +1801,21 @@ class TestApplyForOffering:
         # issue token
         share_token, deploy_args = issue_transferable_share_token(
             issuer=issuer,
-            exchange_address=brownie.ZERO_ADDRESS,
+            exchange_address=ZERO_ADDRESS,
             personal_info_address=personal_info.address,
         )
 
         # update offering status
-        share_token.changeOfferingStatus.transact(True, {"from": issuer})
+        share_token.changeOfferingStatus(True, sender=issuer)
 
         # register personal info of applicant
-        personal_info.register.transact(
-            issuer, "encrypted_message", {"from": applicant}
-        )
+        personal_info.register(issuer, "encrypted_message", sender=applicant)
 
         # apply for offering
-        share_token.applyForOffering.transact(10, "abcdefgh", {"from": applicant})
+        share_token.applyForOffering(10, "abcdefgh", sender=applicant)
 
         # assertion
-        application = share_token.applicationsForOffering(applicant)
+        application = offering_application(share_token, applicant)
         assert application[0] == 10
         assert application[1] == 0
         assert application[2] == "abcdefgh"
@@ -1906,21 +1830,21 @@ class TestApplyForOffering:
         # issue token
         share_token, deploy_args = issue_transferable_share_token(
             issuer=issuer,
-            exchange_address=brownie.ZERO_ADDRESS,
+            exchange_address=ZERO_ADDRESS,
             personal_info_address=personal_info.address,
         )
 
         # update offering status
-        share_token.changeOfferingStatus.transact(True, {"from": issuer})
+        share_token.changeOfferingStatus(True, sender=issuer)
 
         # set requirePersonalInfoRegistered to False
-        share_token.setRequirePersonalInfoRegistered.transact(False, {"from": issuer})
+        share_token.setRequirePersonalInfoRegistered(False, sender=issuer)
 
         # apply for offering
-        share_token.applyForOffering.transact(10, "abcdefgh", {"from": applicant})
+        share_token.applyForOffering(10, "abcdefgh", sender=applicant)
 
         # assertion
-        application = share_token.applicationsForOffering(applicant)
+        application = offering_application(share_token, applicant)
         assert application[0] == 10
         assert application[1] == 0
         assert application[2] == "abcdefgh"
@@ -1934,26 +1858,24 @@ class TestApplyForOffering:
         # issue token
         share_token, deploy_args = issue_transferable_share_token(
             issuer=issuer,
-            exchange_address=brownie.ZERO_ADDRESS,
+            exchange_address=ZERO_ADDRESS,
             personal_info_address=personal_info.address,
         )
 
         # update offering status
-        share_token.changeOfferingStatus.transact(True, {"from": issuer})
+        share_token.changeOfferingStatus(True, sender=issuer)
 
         # register personal info of applicant
-        personal_info.register.transact(
-            issuer, "encrypted_message", {"from": applicant}
-        )
+        personal_info.register(issuer, "encrypted_message", sender=applicant)
 
         # apply for offering (1)
-        share_token.applyForOffering.transact(10, "abcdefgh", {"from": applicant})
+        share_token.applyForOffering(10, "abcdefgh", sender=applicant)
 
         # apply for offering (2)
-        share_token.applyForOffering.transact(20, "vwxyz", {"from": applicant})
+        share_token.applyForOffering(20, "vwxyz", sender=applicant)
 
         # assertion
-        application = share_token.applicationsForOffering(applicant)
+        application = offering_application(share_token, applicant)
         assert application[0] == 20
         assert application[1] == 0
         assert application[2] == "vwxyz"
@@ -1971,16 +1893,16 @@ class TestApplyForOffering:
         # issue token
         share_token, deploy_args = issue_transferable_share_token(
             issuer=issuer,
-            exchange_address=brownie.ZERO_ADDRESS,
+            exchange_address=ZERO_ADDRESS,
             personal_info_address=personal_info.address,
         )
 
         # apply for offering
-        with brownie.reverts(revert_msg="111001"):
-            share_token.applyForOffering.transact(10, "abcdefgh", {"from": applicant})
+        with reverts("111001"):
+            share_token.applyForOffering(10, "abcdefgh", sender=applicant)
 
         # assertion
-        application = share_token.applicationsForOffering(applicant)
+        application = offering_application(share_token, applicant)
         assert application[0] == 0
         assert application[1] == 0
         assert application[2] == ""
@@ -1994,19 +1916,19 @@ class TestApplyForOffering:
         # issue token
         share_token, deploy_args = issue_transferable_share_token(
             issuer=issuer,
-            exchange_address=brownie.ZERO_ADDRESS,
+            exchange_address=ZERO_ADDRESS,
             personal_info_address=personal_info.address,
         )
 
         # update offering status
-        share_token.changeOfferingStatus.transact(True, {"from": issuer})
+        share_token.changeOfferingStatus(True, sender=issuer)
 
         # apply for offering
-        with brownie.reverts(revert_msg="111002"):
-            share_token.applyForOffering.transact(10, "abcdefgh", {"from": applicant})
+        with reverts("111002"):
+            share_token.applyForOffering(10, "abcdefgh", sender=applicant)
 
         # assertion
-        application = share_token.applicationsForOffering(applicant)
+        application = offering_application(share_token, applicant)
         assert application[0] == 0
         assert application[1] == 0
         assert application[2] == ""
@@ -2026,26 +1948,24 @@ class TestAllot:
         # issue token
         share_token, deploy_args = issue_transferable_share_token(
             issuer=issuer,
-            exchange_address=brownie.ZERO_ADDRESS,
+            exchange_address=ZERO_ADDRESS,
             personal_info_address=personal_info.address,
         )
 
         # update offering status
-        share_token.changeOfferingStatus.transact(True, {"from": issuer})
+        share_token.changeOfferingStatus(True, sender=issuer)
 
         # register personal info of applicant
-        personal_info.register.transact(
-            issuer, "encrypted_message", {"from": applicant}
-        )
+        personal_info.register(issuer, "encrypted_message", sender=applicant)
 
         # apply for offering
-        share_token.applyForOffering.transact(10, "abcdefgh", {"from": applicant})
+        share_token.applyForOffering(10, "abcdefgh", sender=applicant)
 
         # allot
-        share_token.allot.transact(applicant, 5, {"from": issuer})
+        share_token.allot(applicant, 5, sender=issuer)
 
         # assertion
-        application = share_token.applicationsForOffering(applicant)
+        application = offering_application(share_token, applicant)
         assert application[0] == 10
         assert application[1] == 5
         assert application[2] == "abcdefgh"
@@ -2063,19 +1983,19 @@ class TestAllot:
         # issue token
         share_token, deploy_args = issue_transferable_share_token(
             issuer=issuer,
-            exchange_address=brownie.ZERO_ADDRESS,
+            exchange_address=ZERO_ADDRESS,
             personal_info_address=personal_info.address,
         )
 
         # update offering status
-        share_token.changeOfferingStatus.transact(True, {"from": issuer})
+        share_token.changeOfferingStatus(True, sender=issuer)
 
         # allot
-        with brownie.reverts(revert_msg="500001"):
-            share_token.allot.transact(applicant, 5, {"from": applicant})
+        with reverts("500001"):
+            share_token.allot(applicant, 5, sender=applicant)
 
         # assertion
-        application = share_token.applicationsForOffering(applicant)
+        application = offering_application(share_token, applicant)
         assert application[0] == 0
         assert application[1] == 0
         assert application[2] == ""
@@ -2099,9 +2019,7 @@ class TestIssueFrom:
         share_token = issuer.deploy(IbetShare, *deploy_args)
 
         # issue from issuer address
-        share_token.issueFrom.transact(
-            issuer, brownie.ZERO_ADDRESS, issue_amount, {"from": issuer}
-        )
+        share_token.issueFrom(issuer, ZERO_ADDRESS, issue_amount, sender=issuer)
 
         # assertion
         assert share_token.totalSupply() == deploy_args[3] + issue_amount
@@ -2119,14 +2037,12 @@ class TestIssueFrom:
         share_token = issuer.deploy(IbetShare, *deploy_args)
 
         # issue from EOA
-        share_token.issueFrom.transact(
-            brownie.ETH_ADDRESS, brownie.ZERO_ADDRESS, issue_amount, {"from": issuer}
-        )
+        share_token.issueFrom(ZERO_ADDRESS, ZERO_ADDRESS, issue_amount, sender=issuer)
 
         # assertion
         assert share_token.totalSupply() == deploy_args[3] + issue_amount
         assert share_token.balanceOf(issuer) == deploy_args[3]
-        assert share_token.balanceOf(brownie.ETH_ADDRESS) == issue_amount
+        assert share_token.balanceOf(ZERO_ADDRESS) == issue_amount
 
     # Normal_3
     # Issue from locked address
@@ -2142,14 +2058,10 @@ class TestIssueFrom:
         share_token = issuer.deploy(IbetShare, *deploy_args)
 
         # lock
-        share_token.lock.transact(
-            lock_address, lock_amount, "lock_message", {"from": issuer}
-        )
+        share_token.lock(lock_address, lock_amount, "lock_message", sender=issuer)
 
         # issue from lock address
-        share_token.issueFrom.transact(
-            issuer, lock_address, issue_amount, {"from": issuer}
-        )
+        share_token.issueFrom(issuer, lock_address, issue_amount, sender=issuer)
 
         # assertion
         assert share_token.totalSupply() == deploy_args[3] + issue_amount
@@ -2171,10 +2083,8 @@ class TestIssueFrom:
         share_token = issuer.deploy(IbetShare, *deploy_args)
 
         # issue from issuer address
-        with brownie.reverts(revert_msg="Integer overflow"):
-            share_token.issueFrom.transact(
-                issuer, brownie.ZERO_ADDRESS, 1, {"from": issuer}
-            )
+        with pytest.raises(VirtualMachineError):
+            share_token.issueFrom(issuer, ZERO_ADDRESS, 1, sender=issuer)
 
     # Error_1_2
     # Over the limit
@@ -2190,15 +2100,11 @@ class TestIssueFrom:
         share_token = issuer.deploy(IbetShare, *deploy_args)
 
         # lock
-        share_token.lock.transact(
-            lock_address, lock_amount, "lock_message", {"from": issuer}
-        )
+        share_token.lock(lock_address, lock_amount, "lock_message", sender=issuer)
 
         # issue from lock address
-        with brownie.reverts(revert_msg="Integer overflow"):
-            share_token.issueFrom.transact(
-                issuer, lock_address, issue_amount, {"from": issuer}
-            )
+        with pytest.raises(VirtualMachineError):
+            share_token.issueFrom(issuer, lock_address, issue_amount, sender=issuer)
 
         # assertion
         assert share_token.balanceOf(issuer) == deploy_args[3] - lock_amount
@@ -2214,10 +2120,8 @@ class TestIssueFrom:
         share_token = issuer.deploy(IbetShare, *deploy_args)
 
         # issue from not authorized user
-        with brownie.reverts(revert_msg="500001"):
-            share_token.issueFrom.transact(
-                issuer, brownie.ZERO_ADDRESS, 1, {"from": users["user1"]}
-            )
+        with reverts("500001"):
+            share_token.issueFrom(issuer, ZERO_ADDRESS, 1, sender=users["user1"])
 
 
 # TEST_bulkIssueFrom
@@ -2238,17 +2142,17 @@ class TestBulkIssueFrom:
         share_token = issuer.deploy(IbetShare, *deploy_args)
 
         # bulk issue
-        share_token.bulkIssueFrom.transact(
-            [issuer, brownie.ETH_ADDRESS],
-            [brownie.ZERO_ADDRESS, brownie.ZERO_ADDRESS],
+        share_token.bulkIssueFrom(
+            [issuer, ZERO_ADDRESS],
+            [ZERO_ADDRESS, ZERO_ADDRESS],
             [issue_amount, issue_amount],
-            {"from": issuer},
+            sender=issuer,
         )
 
         # assertion
         assert share_token.totalSupply() == deploy_args[3] + issue_amount * 2
         assert share_token.balanceOf(issuer) == deploy_args[3] + issue_amount
-        assert share_token.balanceOf(brownie.ETH_ADDRESS) == issue_amount
+        assert share_token.balanceOf(ZERO_ADDRESS) == issue_amount
 
     # Normal_2
     # Issue from locked address
@@ -2264,26 +2168,24 @@ class TestBulkIssueFrom:
         share_token = issuer.deploy(IbetShare, *deploy_args)
 
         # lock
-        share_token.lock.transact(
-            lock_address, lock_amount, "lock_message", {"from": issuer}
-        )
+        share_token.lock(lock_address, lock_amount, "lock_message", sender=issuer)
 
         # bulkIssue from lock address
-        share_token.bulkIssueFrom.transact(
-            [issuer, brownie.ETH_ADDRESS],
+        share_token.bulkIssueFrom(
+            [issuer, ZERO_ADDRESS],
             [lock_address, lock_address],
             [issue_amount, issue_amount],
-            {"from": issuer},
+            sender=issuer,
         )
 
         # assertion
         assert share_token.totalSupply() == deploy_args[3] + issue_amount * 2
 
         assert share_token.balanceOf(issuer) == deploy_args[3] - lock_amount
-        assert share_token.balanceOf(brownie.ETH_ADDRESS) == 0
+        assert share_token.balanceOf(ZERO_ADDRESS) == 0
 
         assert share_token.lockedOf(lock_address, issuer) == lock_amount + issue_amount
-        assert share_token.lockedOf(lock_address, brownie.ETH_ADDRESS) == issue_amount
+        assert share_token.lockedOf(lock_address, ZERO_ADDRESS) == issue_amount
 
     #######################################
     # Error
@@ -2300,17 +2202,17 @@ class TestBulkIssueFrom:
         share_token = issuer.deploy(IbetShare, *deploy_args)
 
         # bulk issue
-        with brownie.reverts(revert_msg="Integer overflow"):
-            share_token.bulkIssueFrom.transact(
-                [brownie.ETH_ADDRESS, issuer],
-                [brownie.ZERO_ADDRESS, brownie.ZERO_ADDRESS],
+        with pytest.raises(VirtualMachineError):
+            share_token.bulkIssueFrom(
+                [ZERO_ADDRESS, issuer],
+                [ZERO_ADDRESS, ZERO_ADDRESS],
                 [1, 1],
-                {"from": issuer},
+                sender=issuer,
             )
 
         # assertion
         assert share_token.balanceOf(issuer) == deploy_args[3]
-        assert share_token.balanceOf(brownie.ETH_ADDRESS) == 0
+        assert share_token.balanceOf(ZERO_ADDRESS) == 0
 
     # Error_1_2
     # Over the limit
@@ -2326,25 +2228,23 @@ class TestBulkIssueFrom:
         share_token = issuer.deploy(IbetShare, *deploy_args)
 
         # lock
-        share_token.lock.transact(
-            lock_address, lock_amount, "lock_message", {"from": issuer}
-        )
+        share_token.lock(lock_address, lock_amount, "lock_message", sender=issuer)
 
         # bulk issue
-        with brownie.reverts(revert_msg="Integer overflow"):
-            share_token.bulkIssueFrom.transact(
-                [brownie.ETH_ADDRESS, issuer],
-                [brownie.ZERO_ADDRESS, lock_address],
+        with pytest.raises(VirtualMachineError):
+            share_token.bulkIssueFrom(
+                [ZERO_ADDRESS, issuer],
+                [ZERO_ADDRESS, lock_address],
                 [issue_amount, issue_amount],
-                {"from": issuer},
+                sender=issuer,
             )
 
         # assertion
         assert share_token.balanceOf(issuer) == deploy_args[3] - lock_amount
-        assert share_token.balanceOf(brownie.ETH_ADDRESS) == 0
+        assert share_token.balanceOf(ZERO_ADDRESS) == 0
 
         assert share_token.lockedOf(lock_address, issuer) == lock_amount
-        assert share_token.lockedOf(lock_address, brownie.ETH_ADDRESS) == 0
+        assert share_token.lockedOf(lock_address, ZERO_ADDRESS) == 0
 
     # Error_2
     # Not authorized
@@ -2357,9 +2257,9 @@ class TestBulkIssueFrom:
         share_token = issuer.deploy(IbetShare, *deploy_args)
 
         # issue from not authorized user
-        with brownie.reverts(revert_msg="500001"):
-            share_token.bulkIssueFrom.transact(
-                [issuer], [brownie.ZERO_ADDRESS], [1], {"from": users["user1"]}
+        with reverts("500001"):
+            share_token.bulkIssueFrom(
+                [issuer], [ZERO_ADDRESS], [1], sender=users["user1"]
             )
 
     # Error_3
@@ -2375,18 +2275,18 @@ class TestBulkIssueFrom:
         share_token = issuer.deploy(IbetShare, *deploy_args)
 
         # bulk issue
-        with brownie.reverts(revert_msg="111301"):
-            share_token.bulkIssueFrom.transact(
-                [issuer, brownie.ETH_ADDRESS],
-                [brownie.ZERO_ADDRESS],
+        with reverts("111301"):
+            share_token.bulkIssueFrom(
+                [issuer, ZERO_ADDRESS],
+                [ZERO_ADDRESS],
                 [issue_amount],
-                {"from": issuer},
+                sender=issuer,
             )
 
         # assertion
         assert share_token.totalSupply() == deploy_args[3]
         assert share_token.balanceOf(issuer) == deploy_args[3]
-        assert share_token.balanceOf(brownie.ETH_ADDRESS) == 0
+        assert share_token.balanceOf(ZERO_ADDRESS) == 0
 
 
 # TEST_redeemFrom
@@ -2406,9 +2306,7 @@ class TestRedeemFrom:
         share_token = issuer.deploy(IbetShare, *deploy_args)
 
         # redeem
-        share_token.redeemFrom.transact(
-            issuer, brownie.ZERO_ADDRESS, redeem_amount, {"from": issuer}
-        )
+        share_token.redeemFrom(issuer, ZERO_ADDRESS, redeem_amount, sender=issuer)
 
         # assertion
         total_supply = share_token.totalSupply()
@@ -2430,14 +2328,10 @@ class TestRedeemFrom:
         share_token = issuer.deploy(IbetShare, *deploy_args)
 
         # transfer to user
-        share_token.transferFrom.transact(
-            issuer, user, transfer_amount, {"from": issuer}
-        )
+        share_token.transferFrom(issuer, user, transfer_amount, sender=issuer)
 
         # redeem
-        share_token.redeemFrom.transact(
-            user, brownie.ZERO_ADDRESS, redeem_amount, {"from": issuer}
-        )
+        share_token.redeemFrom(user, ZERO_ADDRESS, redeem_amount, sender=issuer)
 
         # assertion
         assert share_token.totalSupply() == deploy_args[3] - redeem_amount
@@ -2458,14 +2352,10 @@ class TestRedeemFrom:
         share_token = issuer.deploy(IbetShare, *deploy_args)
 
         # lock
-        share_token.lock.transact(
-            lock_address, lock_amount, "lock_message", {"from": issuer}
-        )
+        share_token.lock(lock_address, lock_amount, "lock_message", sender=issuer)
 
         # redeem from lock address
-        share_token.redeemFrom.transact(
-            issuer, lock_address, redeem_amount, {"from": issuer}
-        )
+        share_token.redeemFrom(issuer, lock_address, redeem_amount, sender=issuer)
 
         # assertion
         assert share_token.totalSupply() == deploy_args[3] - redeem_amount
@@ -2488,10 +2378,8 @@ class TestRedeemFrom:
         share_token = issuer.deploy(IbetShare, *deploy_args)
 
         # redeem
-        with brownie.reverts(revert_msg="111102"):
-            share_token.redeemFrom.transact(
-                issuer, brownie.ZERO_ADDRESS, redeem_amount, {"from": issuer}
-            )
+        with reverts("111102"):
+            share_token.redeemFrom(issuer, ZERO_ADDRESS, redeem_amount, sender=issuer)
 
         # assertion
         assert share_token.totalSupply() == deploy_args[3]
@@ -2511,15 +2399,11 @@ class TestRedeemFrom:
         share_token = issuer.deploy(IbetShare, *deploy_args)
 
         # lock
-        share_token.lock.transact(
-            lock_address, lock_amount, "lock_message", {"from": issuer}
-        )
+        share_token.lock(lock_address, lock_amount, "lock_message", sender=issuer)
 
         # redeem from lock address
-        with brownie.reverts(revert_msg="111101"):
-            share_token.redeemFrom.transact(
-                issuer, lock_address, redeem_amount, {"from": issuer}
-            )
+        with reverts("111101"):
+            share_token.redeemFrom(issuer, lock_address, redeem_amount, sender=issuer)
 
         # assertion
         assert share_token.totalSupply() == deploy_args[3]
@@ -2537,9 +2421,9 @@ class TestRedeemFrom:
         share_token = issuer.deploy(IbetShare, *deploy_args)
 
         # redeem
-        with brownie.reverts(revert_msg="500001"):
-            share_token.redeemFrom.transact(
-                issuer, brownie.ZERO_ADDRESS, redeem_amount, {"from": users["user1"]}
+        with reverts("500001"):
+            share_token.redeemFrom(
+                issuer, ZERO_ADDRESS, redeem_amount, sender=users["user1"]
             )
 
         # assertion
@@ -2565,16 +2449,14 @@ class TestBulkRedeemFrom:
         share_token = issuer.deploy(IbetShare, *deploy_args)
 
         # transfer token to other EOA
-        share_token.transferFrom.transact(
-            issuer, brownie.ETH_ADDRESS, transfer_amount, {"from": issuer}
-        )
+        share_token.transferFrom(issuer, ZERO_ADDRESS, transfer_amount, sender=issuer)
 
         # bulk redeem
-        share_token.bulkRedeemFrom.transact(
-            [issuer, brownie.ETH_ADDRESS],
-            [brownie.ZERO_ADDRESS, brownie.ZERO_ADDRESS],
+        share_token.bulkRedeemFrom(
+            [issuer, ZERO_ADDRESS],
+            [ZERO_ADDRESS, ZERO_ADDRESS],
             [redeem_amount, redeem_amount],
-            {"from": issuer},
+            sender=issuer,
         )
 
         # assertion
@@ -2583,10 +2465,7 @@ class TestBulkRedeemFrom:
             share_token.balanceOf(issuer)
             == deploy_args[3] - transfer_amount - redeem_amount
         )
-        assert (
-            share_token.balanceOf(brownie.ETH_ADDRESS)
-            == transfer_amount - redeem_amount
-        )
+        assert share_token.balanceOf(ZERO_ADDRESS) == transfer_amount - redeem_amount
 
     # Normal_2
     # Redeem from locked address
@@ -2603,24 +2482,20 @@ class TestBulkRedeemFrom:
         share_token = issuer.deploy(IbetShare, *deploy_args)
 
         # transfer token to other EOA
-        share_token.transferFrom.transact(
-            issuer, brownie.ETH_ADDRESS, transfer_amount, {"from": issuer}
-        )
+        share_token.transferFrom(issuer, ZERO_ADDRESS, transfer_amount, sender=issuer)
 
         # lock
-        share_token.lock.transact(
-            lock_address, lock_amount, "lock_message", {"from": issuer}
-        )
-        share_token.lock.transact(
-            lock_address, lock_amount, "lock_message", {"from": brownie.ETH_ADDRESS}
+        share_token.lock(lock_address, lock_amount, "lock_message", sender=issuer)
+        share_token.forceLock(
+            lock_address, ZERO_ADDRESS, lock_amount, "lock_message", sender=issuer
         )
 
         # bulk redeem from lock address
-        share_token.bulkRedeemFrom.transact(
-            [issuer, brownie.ETH_ADDRESS],
+        share_token.bulkRedeemFrom(
+            [issuer, ZERO_ADDRESS],
             [lock_address, lock_address],
             [redeem_amount, redeem_amount],
-            {"from": issuer},
+            sender=issuer,
         )
 
         # assertion
@@ -2630,13 +2505,11 @@ class TestBulkRedeemFrom:
             share_token.balanceOf(issuer)
             == deploy_args[3] - transfer_amount - lock_amount
         )
-        assert (
-            share_token.balanceOf(brownie.ETH_ADDRESS) == transfer_amount - lock_amount
-        )
+        assert share_token.balanceOf(ZERO_ADDRESS) == transfer_amount - lock_amount
 
         assert share_token.lockedOf(lock_address, issuer) == lock_amount - redeem_amount
         assert (
-            share_token.lockedOf(lock_address, brownie.ETH_ADDRESS)
+            share_token.lockedOf(lock_address, ZERO_ADDRESS)
             == lock_amount - redeem_amount
         )
 
@@ -2657,23 +2530,21 @@ class TestBulkRedeemFrom:
         share_token = issuer.deploy(IbetShare, *deploy_args)
 
         # transfer token to other EOA
-        share_token.transferFrom.transact(
-            issuer, brownie.ETH_ADDRESS, transfer_amount, {"from": issuer}
-        )
+        share_token.transferFrom(issuer, ZERO_ADDRESS, transfer_amount, sender=issuer)
 
         # bulk redeem
-        with brownie.reverts(revert_msg="111401"):
-            share_token.bulkRedeemFrom.transact(
-                [issuer, brownie.ETH_ADDRESS],
-                [brownie.ZERO_ADDRESS],
+        with reverts("111401"):
+            share_token.bulkRedeemFrom(
+                [issuer, ZERO_ADDRESS],
+                [ZERO_ADDRESS],
                 [redeem_amount],
-                {"from": issuer},
+                sender=issuer,
             )
 
         # assertion
         assert share_token.totalSupply() == deploy_args[3]
         assert share_token.balanceOf(issuer) == deploy_args[3] - transfer_amount
-        assert share_token.balanceOf(brownie.ETH_ADDRESS) == transfer_amount
+        assert share_token.balanceOf(ZERO_ADDRESS) == transfer_amount
 
     # Error_2_1
     # Exceeds balance
@@ -2689,23 +2560,21 @@ class TestBulkRedeemFrom:
         share_token = issuer.deploy(IbetShare, *deploy_args)
 
         # transfer token to other EOA
-        share_token.transferFrom.transact(
-            issuer, brownie.ETH_ADDRESS, transfer_amount, {"from": issuer}
-        )
+        share_token.transferFrom(issuer, ZERO_ADDRESS, transfer_amount, sender=issuer)
 
         # redeem
-        with brownie.reverts(revert_msg="111102"):
-            share_token.bulkRedeemFrom.transact(
-                [brownie.ETH_ADDRESS, issuer],
-                [brownie.ZERO_ADDRESS, brownie.ZERO_ADDRESS],
+        with reverts("111102"):
+            share_token.bulkRedeemFrom(
+                [ZERO_ADDRESS, issuer],
+                [ZERO_ADDRESS, ZERO_ADDRESS],
                 [redeem_amount, redeem_amount],
-                {"from": issuer},
+                sender=issuer,
             )
 
         # assertion
         assert share_token.totalSupply() == deploy_args[3]
         assert share_token.balanceOf(issuer) == deploy_args[3] - transfer_amount
-        assert share_token.balanceOf(brownie.ETH_ADDRESS) == transfer_amount
+        assert share_token.balanceOf(ZERO_ADDRESS) == transfer_amount
 
     # Error_2_2
     # Exceeds locked quantity
@@ -2722,25 +2591,21 @@ class TestBulkRedeemFrom:
         share_token = issuer.deploy(IbetShare, *deploy_args)
 
         # transfer token to other EOA
-        share_token.transferFrom.transact(
-            issuer, brownie.ETH_ADDRESS, transfer_amount, {"from": issuer}
-        )
+        share_token.transferFrom(issuer, ZERO_ADDRESS, transfer_amount, sender=issuer)
 
         # lock
-        share_token.lock.transact(
-            lock_address, lock_amount, "lock_message", {"from": issuer}
-        )
-        share_token.lock.transact(
-            lock_address, lock_amount, "lock_message", {"from": brownie.ETH_ADDRESS}
+        share_token.lock(lock_address, lock_amount, "lock_message", sender=issuer)
+        share_token.forceLock(
+            lock_address, ZERO_ADDRESS, lock_amount, "lock_message", sender=issuer
         )
 
         # redeem from lock address
-        with brownie.reverts(revert_msg="111101"):
-            share_token.bulkRedeemFrom.transact(
-                [brownie.ETH_ADDRESS, issuer],
+        with reverts("111101"):
+            share_token.bulkRedeemFrom(
+                [ZERO_ADDRESS, issuer],
                 [lock_address, lock_address],
                 [20, 21],
-                {"from": issuer},
+                sender=issuer,
             )
 
         # assertion
@@ -2750,12 +2615,10 @@ class TestBulkRedeemFrom:
             share_token.balanceOf(issuer)
             == deploy_args[3] - transfer_amount - lock_amount
         )
-        assert (
-            share_token.balanceOf(brownie.ETH_ADDRESS) == transfer_amount - lock_amount
-        )
+        assert share_token.balanceOf(ZERO_ADDRESS) == transfer_amount - lock_amount
 
         assert share_token.lockedOf(lock_address, issuer) == lock_amount
-        assert share_token.lockedOf(lock_address, brownie.ETH_ADDRESS) == lock_amount
+        assert share_token.lockedOf(lock_address, ZERO_ADDRESS) == lock_amount
 
     # Error_3
     # Not authorized
@@ -2769,12 +2632,12 @@ class TestBulkRedeemFrom:
         share_token = issuer.deploy(IbetShare, *deploy_args)
 
         # redeem
-        with brownie.reverts(revert_msg="500001"):
-            share_token.bulkRedeemFrom.transact(
+        with reverts("500001"):
+            share_token.bulkRedeemFrom(
                 [issuer],
-                [brownie.ZERO_ADDRESS],
+                [ZERO_ADDRESS],
                 [redeem_amount],
-                {"from": users["user1"]},
+                sender=users["user1"],
             )
 
         # assertion
@@ -2798,35 +2661,36 @@ class TestApplyForTransfer:
         # issue token
         share_token, deploy_args = issue_transferable_share_token(
             issuer=issuer,
-            exchange_address=brownie.ZERO_ADDRESS,
+            exchange_address=ZERO_ADDRESS,
             personal_info_address=personal_info.address,
         )
-        share_token.setTransferApprovalRequired(True, {"from": issuer})
+        share_token.setTransferApprovalRequired(True, sender=issuer)
 
         # register personal information (to_address)
-        personal_info.register(issuer, "encrypted_message", {"from": to_address})
+        personal_info.register(issuer, "encrypted_message", sender=to_address)
 
         # apply for transfer
         tx = share_token.applyForTransfer(
-            to_address, transfer_amount, transfer_data, {"from": issuer}
+            to_address, transfer_amount, transfer_data, sender=issuer
         )
 
         # assertion
         assert share_token.balances(issuer) == deploy_args[3] - transfer_amount
         assert share_token.balances(to_address) == 0
         assert share_token.pendingTransfer(issuer) == transfer_amount
-        assert share_token.applicationsForTransfer(0) == (
+        assert transfer_application(share_token, 0) == (
             issuer,
             to_address,
             transfer_amount,
             True,
         )
 
-        assert tx.events["ApplyForTransfer"]["index"] == 0
-        assert tx.events["ApplyForTransfer"]["from"] == issuer
-        assert tx.events["ApplyForTransfer"]["to"] == to_address
-        assert tx.events["ApplyForTransfer"]["value"] == transfer_amount
-        assert tx.events["ApplyForTransfer"]["data"] == transfer_data
+        event = event_args(tx, share_token.ApplyForTransfer)
+        assert event["index"] == 0
+        assert event["from"] == issuer
+        assert event["to"] == to_address
+        assert event["value"] == transfer_amount
+        assert event["data"] == transfer_data
 
     # Normal_2
     # Multiple execution
@@ -2839,18 +2703,18 @@ class TestApplyForTransfer:
         # issue token
         share_token, deploy_args = issue_transferable_share_token(
             issuer=issuer,
-            exchange_address=brownie.ZERO_ADDRESS,
+            exchange_address=ZERO_ADDRESS,
             personal_info_address=personal_info.address,
         )
-        share_token.setTransferApprovalRequired(True, {"from": issuer})
+        share_token.setTransferApprovalRequired(True, sender=issuer)
 
         # register personal information (to_address)
-        personal_info.register(issuer, "encrypted_message", {"from": to_address})
+        personal_info.register(issuer, "encrypted_message", sender=to_address)
 
         # apply for transfer
         for i in range(2):
             share_token.applyForTransfer(
-                to_address, transfer_amount, transfer_data, {"from": issuer}
+                to_address, transfer_amount, transfer_data, sender=issuer
             )
 
         # assertion
@@ -2858,7 +2722,7 @@ class TestApplyForTransfer:
         assert share_token.balances(to_address) == 0
         assert share_token.pendingTransfer(issuer) == transfer_amount * 2
         for i in range(2):
-            assert share_token.applicationsForTransfer(i) == (
+            assert transfer_application(share_token, i) == (
                 issuer,
                 to_address,
                 transfer_amount,
@@ -2877,20 +2741,20 @@ class TestApplyForTransfer:
         # issue token
         share_token, deploy_args = issue_transferable_share_token(
             issuer=issuer,
-            exchange_address=brownie.ZERO_ADDRESS,
+            exchange_address=ZERO_ADDRESS,
             personal_info_address=personal_info.address,
         )
-        share_token.setTransferApprovalRequired(True, {"from": issuer})
+        share_token.setTransferApprovalRequired(True, sender=issuer)
 
         # apply for transfer
         share_token.applyForTransfer(
-            to_address, transfer_amount, transfer_data, {"from": issuer}
+            to_address, transfer_amount, transfer_data, sender=issuer
         )
 
         # assertion
         assert share_token.balances(issuer) == deploy_args[3] - transfer_amount
         assert share_token.pendingTransfer(issuer) == transfer_amount
-        assert share_token.applicationsForTransfer(0) == (
+        assert transfer_application(share_token, 0) == (
             issuer,
             to_address,
             transfer_amount,
@@ -2908,35 +2772,36 @@ class TestApplyForTransfer:
         # issue token
         share_token, deploy_args = issue_transferable_share_token(
             issuer=issuer,
-            exchange_address=brownie.ZERO_ADDRESS,
+            exchange_address=ZERO_ADDRESS,
             personal_info_address=personal_info.address,
         )
-        share_token.setTransferApprovalRequired(True, {"from": issuer})
+        share_token.setTransferApprovalRequired(True, sender=issuer)
 
         # set requirePersonalInfoRegistered to False
-        share_token.setRequirePersonalInfoRegistered.transact(False, {"from": issuer})
+        share_token.setRequirePersonalInfoRegistered(False, sender=issuer)
 
         # apply for transfer
         tx = share_token.applyForTransfer(
-            to_address, transfer_amount, transfer_data, {"from": issuer}
+            to_address, transfer_amount, transfer_data, sender=issuer
         )
 
         # assertion
         assert share_token.balances(issuer) == deploy_args[3] - transfer_amount
         assert share_token.balances(to_address) == 0
         assert share_token.pendingTransfer(issuer) == transfer_amount
-        assert share_token.applicationsForTransfer(0) == (
+        assert transfer_application(share_token, 0) == (
             issuer,
             to_address,
             transfer_amount,
             True,
         )
 
-        assert tx.events["ApplyForTransfer"]["index"] == 0
-        assert tx.events["ApplyForTransfer"]["from"] == issuer
-        assert tx.events["ApplyForTransfer"]["to"] == to_address
-        assert tx.events["ApplyForTransfer"]["value"] == transfer_amount
-        assert tx.events["ApplyForTransfer"]["data"] == transfer_data
+        event = event_args(tx, share_token.ApplyForTransfer)
+        assert event["index"] == 0
+        assert event["from"] == issuer
+        assert event["to"] == to_address
+        assert event["value"] == transfer_amount
+        assert event["data"] == transfer_data
 
     #######################################
     # Error
@@ -2953,14 +2818,14 @@ class TestApplyForTransfer:
         # issue token
         share_token, deploy_args = issue_transferable_share_token(
             issuer=issuer,
-            exchange_address=brownie.ZERO_ADDRESS,
-            personal_info_address=brownie.ZERO_ADDRESS,
+            exchange_address=ZERO_ADDRESS,
+            personal_info_address=ZERO_ADDRESS,
         )
 
         # apply for transfer
-        with brownie.reverts(revert_msg="110701"):
+        with reverts("110701"):
             share_token.applyForTransfer(
-                to_address, transfer_amount, transfer_data, {"from": issuer}
+                to_address, transfer_amount, transfer_data, sender=issuer
             )
 
         # assertion
@@ -2979,16 +2844,16 @@ class TestApplyForTransfer:
         # issue token
         share_token, deploy_args = issue_transferable_share_token(
             issuer=issuer,
-            exchange_address=brownie.ZERO_ADDRESS,
-            personal_info_address=brownie.ZERO_ADDRESS,
+            exchange_address=ZERO_ADDRESS,
+            personal_info_address=ZERO_ADDRESS,
         )
-        share_token.setTransferApprovalRequired(True, {"from": issuer})
-        share_token.setTransferable(False, {"from": issuer})
+        share_token.setTransferApprovalRequired(True, sender=issuer)
+        share_token.setTransferable(False, sender=issuer)
 
         # apply for transfer
-        with brownie.reverts(revert_msg="110701"):
+        with reverts("110701"):
             share_token.applyForTransfer(
-                to_address, transfer_amount, transfer_data, {"from": issuer}
+                to_address, transfer_amount, transfer_data, sender=issuer
             )
 
         # assertion
@@ -3006,15 +2871,15 @@ class TestApplyForTransfer:
         # issue token
         share_token, deploy_args = issue_transferable_share_token(
             issuer=issuer,
-            exchange_address=brownie.ZERO_ADDRESS,
-            personal_info_address=brownie.ZERO_ADDRESS,
+            exchange_address=ZERO_ADDRESS,
+            personal_info_address=ZERO_ADDRESS,
         )
-        share_token.setTransferApprovalRequired(True, {"from": issuer})
+        share_token.setTransferApprovalRequired(True, sender=issuer)
 
         # apply for transfer
-        with brownie.reverts(revert_msg="110701"):
+        with reverts("110701"):
             share_token.applyForTransfer(
-                to_address, deploy_args[3] + 1, transfer_data, {"from": issuer}
+                to_address, deploy_args[3] + 1, transfer_data, sender=issuer
             )
 
         # assertion
@@ -3033,15 +2898,15 @@ class TestApplyForTransfer:
         # issue token
         share_token, deploy_args = issue_transferable_share_token(
             issuer=issuer,
-            exchange_address=brownie.ZERO_ADDRESS,
+            exchange_address=ZERO_ADDRESS,
             personal_info_address=personal_info.address,
         )
-        share_token.setTransferApprovalRequired(True, {"from": issuer})
+        share_token.setTransferApprovalRequired(True, sender=issuer)
 
         # apply for transfer
-        with brownie.reverts(revert_msg="110702"):
+        with reverts("110702"):
             share_token.applyForTransfer(
-                to_address, transfer_amount, transfer_data, {"from": issuer}
+                to_address, transfer_amount, transfer_data, sender=issuer
             )
 
         # assertion
@@ -3067,41 +2932,42 @@ class TestCancelTransfer:
         # issue token
         share_token, deploy_args = issue_transferable_share_token(
             issuer=issuer,
-            exchange_address=brownie.ZERO_ADDRESS,
+            exchange_address=ZERO_ADDRESS,
             personal_info_address=personal_info.address,
         )
-        share_token.transferFrom(issuer, user1, transfer_amount, {"from": issuer})
-        share_token.setTransferApprovalRequired(True, {"from": issuer})
+        share_token.transferFrom(issuer, user1, transfer_amount, sender=issuer)
+        share_token.setTransferApprovalRequired(True, sender=issuer)
 
         # register personal information (to_address)
-        personal_info.register(issuer, "encrypted_message", {"from": user2})
+        personal_info.register(issuer, "encrypted_message", sender=user2)
 
         # apply for transfer
         share_token.applyForTransfer(
             user2,
             transfer_amount,
             "test_data",
-            {"from": user1},  # from user1 to user2
+            sender=user1,  # from user1 to user2
         )
 
         # cancel transfer (from applicant)
-        tx = share_token.cancelTransfer(0, "test_data", {"from": user1})
+        tx = share_token.cancelTransfer(0, "test_data", sender=user1)
 
         # assertion
         assert share_token.balances(issuer) == deploy_args[3] - transfer_amount
         assert share_token.balances(user1) == transfer_amount
         assert share_token.pendingTransfer(user1) == 0
-        assert share_token.applicationsForTransfer(0) == (
+        assert transfer_application(share_token, 0) == (
             user1,
             user2,
             transfer_amount,
             False,
         )
 
-        assert tx.events["CancelTransfer"]["index"] == 0
-        assert tx.events["CancelTransfer"]["from"] == user1
-        assert tx.events["CancelTransfer"]["to"] == user2
-        assert tx.events["CancelTransfer"]["data"] == "test_data"
+        event = event_args(tx, share_token.CancelTransfer)
+        assert event["index"] == 0
+        assert event["from"] == user1
+        assert event["to"] == user2
+        assert event["data"] == "test_data"
 
     # Normal_2
     # Cancel by issuer
@@ -3114,41 +2980,42 @@ class TestCancelTransfer:
         # issue token
         share_token, deploy_args = issue_transferable_share_token(
             issuer=issuer,
-            exchange_address=brownie.ZERO_ADDRESS,
+            exchange_address=ZERO_ADDRESS,
             personal_info_address=personal_info.address,
         )
-        share_token.transferFrom(issuer, user1, transfer_amount, {"from": issuer})
-        share_token.setTransferApprovalRequired(True, {"from": issuer})
+        share_token.transferFrom(issuer, user1, transfer_amount, sender=issuer)
+        share_token.setTransferApprovalRequired(True, sender=issuer)
 
         # register personal information (to_address)
-        personal_info.register(issuer, "encrypted_message", {"from": user2})
+        personal_info.register(issuer, "encrypted_message", sender=user2)
 
         # apply for transfer
         share_token.applyForTransfer(
             user2,
             transfer_amount,
             "test_data",
-            {"from": user1},  # from user1 to user2
+            sender=user1,  # from user1 to user2
         )
 
         # cancel transfer (from issuer)
-        tx = share_token.cancelTransfer(0, "test_data", {"from": issuer})
+        tx = share_token.cancelTransfer(0, "test_data", sender=issuer)
 
         # assertion
         assert share_token.balances(issuer) == deploy_args[3] - transfer_amount
         assert share_token.balances(user1) == transfer_amount
         assert share_token.pendingTransfer(user1) == 0
-        assert share_token.applicationsForTransfer(0) == (
+        assert transfer_application(share_token, 0) == (
             user1,
             user2,
             transfer_amount,
             False,
         )
 
-        assert tx.events["CancelTransfer"]["index"] == 0
-        assert tx.events["CancelTransfer"]["from"] == user1
-        assert tx.events["CancelTransfer"]["to"] == user2
-        assert tx.events["CancelTransfer"]["data"] == "test_data"
+        event = event_args(tx, share_token.CancelTransfer)
+        assert event["index"] == 0
+        assert event["from"] == user1
+        assert event["to"] == user2
+        assert event["data"] == "test_data"
 
     #######################################
     # Error
@@ -3165,32 +3032,32 @@ class TestCancelTransfer:
         # issue token
         share_token, deploy_args = issue_transferable_share_token(
             issuer=issuer,
-            exchange_address=brownie.ZERO_ADDRESS,
+            exchange_address=ZERO_ADDRESS,
             personal_info_address=personal_info.address,
         )
-        share_token.transferFrom(issuer, user1, transfer_amount, {"from": issuer})
-        share_token.setTransferApprovalRequired(True, {"from": issuer})
+        share_token.transferFrom(issuer, user1, transfer_amount, sender=issuer)
+        share_token.setTransferApprovalRequired(True, sender=issuer)
 
         # register personal information (to_address)
-        personal_info.register(issuer, "encrypted_message", {"from": user2})
+        personal_info.register(issuer, "encrypted_message", sender=user2)
 
         # apply for transfer
         share_token.applyForTransfer(
             user2,
             transfer_amount,
             "test_data",
-            {"from": user1},  # from user1 to user2
+            sender=user1,  # from user1 to user2
         )
 
         # cancel transfer (from issuer)
-        with brownie.reverts(revert_msg="110801"):
-            share_token.cancelTransfer(0, "test_data", {"from": user2})
+        with reverts("110801"):
+            share_token.cancelTransfer(0, "test_data", sender=user2)
 
         # assertion
         assert share_token.balances(issuer) == deploy_args[3] - transfer_amount
         assert share_token.balances(user1) == 0
         assert share_token.pendingTransfer(user1) == transfer_amount
-        assert share_token.applicationsForTransfer(0) == (
+        assert transfer_application(share_token, 0) == (
             user1,
             user2,
             transfer_amount,
@@ -3208,35 +3075,35 @@ class TestCancelTransfer:
         # issue token
         share_token, deploy_args = issue_transferable_share_token(
             issuer=issuer,
-            exchange_address=brownie.ZERO_ADDRESS,
+            exchange_address=ZERO_ADDRESS,
             personal_info_address=personal_info.address,
         )
-        share_token.transferFrom(issuer, user1, transfer_amount, {"from": issuer})
-        share_token.setTransferApprovalRequired(True, {"from": issuer})
+        share_token.transferFrom(issuer, user1, transfer_amount, sender=issuer)
+        share_token.setTransferApprovalRequired(True, sender=issuer)
 
         # register personal information (to_address)
-        personal_info.register(issuer, "encrypted_message", {"from": user2})
+        personal_info.register(issuer, "encrypted_message", sender=user2)
 
         # apply for transfer
         share_token.applyForTransfer(
             user2,
             transfer_amount,
             "test_data",
-            {"from": user1},  # from user1 to user2
+            sender=user1,  # from user1 to user2
         )
 
         # cancel transfer (1)
-        share_token.cancelTransfer(0, "test_data", {"from": user1})
+        share_token.cancelTransfer(0, "test_data", sender=user1)
 
         # cancel transfer (2)
-        with brownie.reverts(revert_msg="110802"):
-            share_token.cancelTransfer(0, "test_data", {"from": user1})
+        with reverts("110802"):
+            share_token.cancelTransfer(0, "test_data", sender=user1)
 
         # assertion
         assert share_token.balances(issuer) == deploy_args[3] - transfer_amount
         assert share_token.balances(user1) == transfer_amount
         assert share_token.pendingTransfer(user1) == 0
-        assert share_token.applicationsForTransfer(0) == (
+        assert transfer_application(share_token, 0) == (
             user1,
             user2,
             transfer_amount,
@@ -3259,44 +3126,46 @@ class TestApproveTransfer:
         # issue token
         share_token, deploy_args = issue_transferable_share_token(
             issuer=issuer,
-            exchange_address=brownie.ZERO_ADDRESS,
+            exchange_address=ZERO_ADDRESS,
             personal_info_address=personal_info.address,
         )
-        share_token.setTransferApprovalRequired(True, {"from": issuer})
+        share_token.setTransferApprovalRequired(True, sender=issuer)
 
         # register personal information (to_address)
-        personal_info.register(issuer, "encrypted_message", {"from": user1})
+        personal_info.register(issuer, "encrypted_message", sender=user1)
 
         # apply for transfer
         share_token.applyForTransfer(
             user1,
             transfer_amount,
             "test_data",
-            {"from": issuer},  # from issuer to user1
+            sender=issuer,  # from issuer to user1
         )
 
         # approve transfer
-        tx = share_token.approveTransfer(0, "test_data", {"from": issuer})
+        tx = share_token.approveTransfer(0, "test_data", sender=issuer)
 
         # assertion
         assert share_token.balances(issuer) == deploy_args[3] - transfer_amount
         assert share_token.balances(user1) == transfer_amount
         assert share_token.pendingTransfer(issuer) == 0
-        assert share_token.applicationsForTransfer(0) == (
+        assert transfer_application(share_token, 0) == (
             issuer,
             user1,
             transfer_amount,
             False,
         )
 
-        assert tx.events["ApproveTransfer"]["index"] == 0
-        assert tx.events["ApproveTransfer"]["from"] == issuer
-        assert tx.events["ApproveTransfer"]["to"] == user1
-        assert tx.events["ApproveTransfer"]["data"] == "test_data"
+        approve_event = event_args(tx, share_token.ApproveTransfer)
+        assert approve_event["index"] == 0
+        assert approve_event["from"] == issuer
+        assert approve_event["to"] == user1
+        assert approve_event["data"] == "test_data"
 
-        assert tx.events["Transfer"]["from"] == issuer
-        assert tx.events["Transfer"]["to"] == user1
-        assert tx.events["Transfer"]["value"] == transfer_amount
+        transfer_event = event_args(tx, share_token.Transfer)
+        assert transfer_event["from"] == issuer
+        assert transfer_event["to"] == user1
+        assert transfer_event["value"] == transfer_amount
 
     #######################################
     # Error
@@ -3312,31 +3181,31 @@ class TestApproveTransfer:
         # issue token
         share_token, deploy_args = issue_transferable_share_token(
             issuer=issuer,
-            exchange_address=brownie.ZERO_ADDRESS,
+            exchange_address=ZERO_ADDRESS,
             personal_info_address=personal_info.address,
         )
-        share_token.setTransferApprovalRequired(True, {"from": issuer})
+        share_token.setTransferApprovalRequired(True, sender=issuer)
 
         # register personal information (to_address)
-        personal_info.register(issuer, "encrypted_message", {"from": user1})
+        personal_info.register(issuer, "encrypted_message", sender=user1)
 
         # apply for transfer
         share_token.applyForTransfer(
             user1,
             transfer_amount,
             "test_data",
-            {"from": issuer},  # from issuer to user1
+            sender=issuer,  # from issuer to user1
         )
 
         # approve transfer
-        with brownie.reverts(revert_msg="500001"):
-            share_token.approveTransfer(0, "test_data", {"from": user1})
+        with reverts("500001"):
+            share_token.approveTransfer(0, "test_data", sender=user1)
 
         # assertion
         assert share_token.balances(issuer) == deploy_args[3] - transfer_amount
         assert share_token.balances(user1) == 0
         assert share_token.pendingTransfer(issuer) == transfer_amount
-        assert share_token.applicationsForTransfer(0) == (
+        assert transfer_application(share_token, 0) == (
             issuer,
             user1,
             transfer_amount,
@@ -3353,32 +3222,32 @@ class TestApproveTransfer:
         # issue token
         share_token, deploy_args = issue_transferable_share_token(
             issuer=issuer,
-            exchange_address=brownie.ZERO_ADDRESS,
+            exchange_address=ZERO_ADDRESS,
             personal_info_address=personal_info.address,
         )
-        share_token.setTransferApprovalRequired(True, {"from": issuer})
+        share_token.setTransferApprovalRequired(True, sender=issuer)
 
         # register personal information (to_address)
-        personal_info.register(issuer, "encrypted_message", {"from": user1})
+        personal_info.register(issuer, "encrypted_message", sender=user1)
 
         # apply for transfer
         share_token.applyForTransfer(
             user1,
             transfer_amount,
             "test_data",
-            {"from": issuer},  # from issuer to user1
+            sender=issuer,  # from issuer to user1
         )
 
         # approve transfer
-        share_token.setTransferable(False, {"from": issuer})
-        with brownie.reverts(revert_msg="110901"):
-            share_token.approveTransfer(0, "test_data", {"from": issuer})
+        share_token.setTransferable(False, sender=issuer)
+        with reverts("110901"):
+            share_token.approveTransfer(0, "test_data", sender=issuer)
 
         # assertion
         assert share_token.balances(issuer) == deploy_args[3] - transfer_amount
         assert share_token.balances(user1) == 0
         assert share_token.pendingTransfer(issuer) == transfer_amount
-        assert share_token.applicationsForTransfer(0) == (
+        assert transfer_application(share_token, 0) == (
             issuer,
             user1,
             transfer_amount,
@@ -3395,34 +3264,34 @@ class TestApproveTransfer:
         # issue token
         share_token, deploy_args = issue_transferable_share_token(
             issuer=issuer,
-            exchange_address=brownie.ZERO_ADDRESS,
+            exchange_address=ZERO_ADDRESS,
             personal_info_address=personal_info.address,
         )
-        share_token.setTransferApprovalRequired(True, {"from": issuer})
+        share_token.setTransferApprovalRequired(True, sender=issuer)
 
         # register personal information (to_address)
-        personal_info.register(issuer, "encrypted_message", {"from": user1})
+        personal_info.register(issuer, "encrypted_message", sender=user1)
 
         # apply for transfer
         share_token.applyForTransfer(
             user1,
             transfer_amount,
             "test_data",
-            {"from": issuer},  # from issuer to user1
+            sender=issuer,  # from issuer to user1
         )
 
         # approve transfer (1)
-        share_token.approveTransfer(0, "test_data", {"from": issuer})
+        share_token.approveTransfer(0, "test_data", sender=issuer)
 
         # approve transfer (2)
-        with brownie.reverts(revert_msg="110902"):
-            share_token.approveTransfer(0, "test_data", {"from": issuer})
+        with reverts("110902"):
+            share_token.approveTransfer(0, "test_data", sender=issuer)
 
         # assertion
         assert share_token.balances(issuer) == deploy_args[3] - transfer_amount
         assert share_token.balances(user1) == transfer_amount
         assert share_token.pendingTransfer(issuer) == 0
-        assert share_token.applicationsForTransfer(0) == (
+        assert transfer_application(share_token, 0) == (
             issuer,
             user1,
             transfer_amount,
@@ -3444,8 +3313,8 @@ class TestSetTransferApprovalRequired:
         # issue token
         share_token, deploy_args = issue_transferable_share_token(
             issuer=issuer,
-            exchange_address=brownie.ZERO_ADDRESS,
-            personal_info_address=brownie.ZERO_ADDRESS,
+            exchange_address=ZERO_ADDRESS,
+            personal_info_address=ZERO_ADDRESS,
         )
 
         # assertion
@@ -3458,16 +3327,17 @@ class TestSetTransferApprovalRequired:
         # issue token
         share_token, deploy_args = issue_transferable_share_token(
             issuer=issuer,
-            exchange_address=brownie.ZERO_ADDRESS,
-            personal_info_address=brownie.ZERO_ADDRESS,
+            exchange_address=ZERO_ADDRESS,
+            personal_info_address=ZERO_ADDRESS,
         )
 
         # update
-        tx = share_token.setTransferApprovalRequired(True, {"from": issuer})
+        tx = share_token.setTransferApprovalRequired(True, sender=issuer)
 
         # assertion
         assert share_token.transferApprovalRequired() == True
-        assert tx.events["ChangeTransferApprovalRequired"]["required"] == True
+        event = event_args(tx, share_token.ChangeTransferApprovalRequired)
+        assert event["required"] == True
 
     #######################################
     # Error
@@ -3481,13 +3351,13 @@ class TestSetTransferApprovalRequired:
         # issue token
         share_token, deploy_args = issue_transferable_share_token(
             issuer=issuer,
-            exchange_address=brownie.ZERO_ADDRESS,
+            exchange_address=ZERO_ADDRESS,
             personal_info_address=personal_info.address,
         )
 
         # set required to True
-        with brownie.reverts(revert_msg="500001"):
-            share_token.setTransferApprovalRequired(True, {"from": users["user1"]})
+        with reverts("500001"):
+            share_token.setTransferApprovalRequired(True, sender=users["user1"])
 
         # assertion
         assert share_token.transferApprovalRequired() == False
@@ -3508,7 +3378,7 @@ class TestCancel:
         share_token = issuer.deploy(IbetShare, *deploy_args)
 
         # cancel
-        share_token.changeToCanceled({"from": issuer})
+        share_token.changeToCanceled(sender=issuer)
 
         # assertion
         is_canceled = share_token.isCanceled()
@@ -3528,8 +3398,8 @@ class TestCancel:
         share_token = issuer.deploy(IbetShare, *deploy_args)
 
         # cancel
-        with brownie.reverts(revert_msg="500001"):
-            share_token.changeToCanceled({"from": users["user1"]})
+        with reverts("500001"):
+            share_token.changeToCanceled(sender=users["user1"])
 
         # assertion
         is_canceled = share_token.isCanceled()
@@ -3551,7 +3421,7 @@ class TestSetStatus:
         share_token = issuer.deploy(IbetShare, *deploy_args)
 
         # update
-        share_token.setStatus(False, {"from": issuer})
+        share_token.setStatus(False, sender=issuer)
 
         # assertion
         assert share_token.status() is False
@@ -3570,5 +3440,5 @@ class TestSetStatus:
         share_token = issuer.deploy(IbetShare, *deploy_args)
 
         # change exchange contract
-        with brownie.reverts(revert_msg="500001"):
-            share_token.setStatus(False, {"from": users["user1"]})
+        with reverts("500001"):
+            share_token.setStatus(False, sender=users["user1"])

@@ -12,7 +12,7 @@ limitations under the License.
 SPDX-License-Identifier: Apache-2.0
 """
 
-import brownie
+from ape_utils import event_args, reverts
 
 
 class TestRecordLog:
@@ -34,13 +34,14 @@ class TestRecordLog:
 
         # Record Log
         tx = freeze_log.recordLog(
-            test_message, test_freezing_grace_block_count, {"from": user}
+            test_message, test_freezing_grace_block_count, sender=user
         )
 
         # Assertion
-        assert tx.events["Recorded"]["recorder"] == user
+        event = event_args(tx, freeze_log.Recorded)
+        assert event["recorder"] == user
 
-        log = freeze_log.getLog(user.address, 0, {"from": user})
+        log = freeze_log.getLog(user.address, 0, sender=user)
         assert log == (test_block, test_freezing_grace_block_count, test_message)
 
     # Normal_2
@@ -58,12 +59,13 @@ class TestRecordLog:
 
         # Record Log
         tx = freeze_log.recordLog(
-            test_message, test_freezing_grace_block_count, {"from": user1}
+            test_message, test_freezing_grace_block_count, sender=user1
         )
 
         # Assertion
-        assert tx.events["Recorded"]["recorder"] == user1.address
-        log = freeze_log.getLog(user1.address, 0, {"from": user1})
+        event = event_args(tx, freeze_log.Recorded)
+        assert event["recorder"] == user1.address
+        log = freeze_log.getLog(user1.address, 0, sender=user1)
         assert log == (test_block, test_freezing_grace_block_count, test_message)
 
         # Deploy contract
@@ -74,12 +76,13 @@ class TestRecordLog:
 
         # Record Log
         tx = freeze_log.recordLog(
-            test_message, test_freezing_grace_block_count, {"from": user2}
+            test_message, test_freezing_grace_block_count, sender=user2
         )
 
         # Assertion
-        assert tx.events["Recorded"]["recorder"] == user2.address
-        log = freeze_log.getLog(user2.address, 0, {"from": user2})
+        event = event_args(tx, freeze_log.Recorded)
+        assert event["recorder"] == user2.address
+        log = freeze_log.getLog(user2.address, 0, sender=user2)
         assert log == (test_block, test_freezing_grace_block_count, test_message)
 
 
@@ -101,14 +104,14 @@ class TestLastLogIndex:
 
         # Record Log
         freeze_log.recordLog(
-            test_message, test_freezing_grace_block_count, {"from": user1}
+            test_message, test_freezing_grace_block_count, sender=user1
         )
 
         # get last_log_index of user1
-        user1_last_log_index = freeze_log.lastLogIndex(user1, {"from": user2})
+        user1_last_log_index = freeze_log.lastLogIndex(user1, sender=user2)
         assert user1_last_log_index == 1
         # get last_log_index of user2
-        user2_last_log_index = freeze_log.lastLogIndex(user2, {"from": user2})
+        user2_last_log_index = freeze_log.lastLogIndex(user2, sender=user2)
         assert user2_last_log_index == 0
 
 
@@ -131,22 +134,24 @@ class TestUpdateLog:
 
         # Record Log
         tx = freeze_log.recordLog(
-            test_message, test_freezing_grace_block_count, {"from": user}
+            test_message, test_freezing_grace_block_count, sender=user
         )
         # Assertion
-        assert tx.events["Recorded"]["recorder"] == user
+        event = event_args(tx, freeze_log.Recorded)
+        assert event["recorder"] == user
 
-        user_last_log_index = freeze_log.lastLogIndex(user, {"from": user})
+        user_last_log_index = freeze_log.lastLogIndex(user, sender=user)
 
         tx = freeze_log.updateLog(
-            user_last_log_index - 1, test_message[::-1], {"from": user}
+            user_last_log_index - 1, test_message[::-1], sender=user
         )
 
         # Assertion
-        assert tx.events["Updated"]["recorder"] == user
-        assert tx.events["Updated"]["index"] == user_last_log_index - 1
+        event = event_args(tx, freeze_log.Updated)
+        assert event["recorder"] == user
+        assert event["index"] == user_last_log_index - 1
 
-        log = freeze_log.getLog(user.address, user_last_log_index - 1, {"from": user})
+        log = freeze_log.getLog(user.address, user_last_log_index - 1, sender=user)
         assert log[0] == test_block
         assert log[1] == test_freezing_grace_block_count
         assert log[2] == test_message[::-1]
@@ -166,9 +171,9 @@ class TestUpdateLog:
 
         test_idx = 10
         test_message = "test1 message"
-        with brownie.reverts(revert_msg="620001"):
-            freeze_log.updateLog(test_idx, test_message, {"from": user1})
-        log = freeze_log.getLog(user1.address, 0, {"from": user1})
+        with reverts("620001"):
+            freeze_log.updateLog(test_idx, test_message, sender=user1)
+        log = freeze_log.getLog(user1.address, 0, sender=user1)
         assert log == (0, 0, "")
 
     # Error_2
@@ -186,12 +191,13 @@ class TestUpdateLog:
 
         # Write Log
         tx1 = freeze_log.recordLog(
-            test1_message, test1_freezing_grace_block_count, {"from": user1}
+            test1_message, test1_freezing_grace_block_count, sender=user1
         )
-        log = freeze_log.getLog(user1.address, 0, {"from": user1})
+        log = freeze_log.getLog(user1.address, 0, sender=user1)
 
         # Assertion
-        assert tx1.events["Recorded"]["recorder"] == user1.address
+        event = event_args(tx1, freeze_log.Recorded)
+        assert event["recorder"] == user1.address
         assert log[0] == test1_block
         assert log[1] == test1_freezing_grace_block_count
         assert log[2] == test1_message
@@ -199,15 +205,15 @@ class TestUpdateLog:
         # Add logs to freeze first log.
         for i in range(test1_freezing_grace_block_count):
             tx1 = freeze_log.recordLog(
-                test1_message, test1_freezing_grace_block_count, {"from": user1}
+                test1_message, test1_freezing_grace_block_count, sender=user1
             )
 
         # Trying to update a frozen log.
-        with brownie.reverts(revert_msg="620001"):
+        with reverts("620001"):
             test1_message_update = "test1 message updated"
-            freeze_log.updateLog(0, test1_message_update, {"from": user1})
+            freeze_log.updateLog(0, test1_message_update, sender=user1)
 
-        log = freeze_log.getLog(user1.address, 0, {"from": user1})
+        log = freeze_log.getLog(user1.address, 0, sender=user1)
         assert log[0] == test1_block
         assert log[1] == test1_freezing_grace_block_count
         assert log[2] == test1_message
@@ -232,17 +238,16 @@ class TestGetLog:
 
         # Write Log
         tx = freeze_log.recordLog(
-            test1_message, test1_freezing_grace_block_count, {"from": user1}
+            test1_message, test1_freezing_grace_block_count, sender=user1
         )
 
         # Assertion
-        assert tx.events["Recorded"]["recorder"] == user1.address
+        event = event_args(tx, freeze_log.Recorded)
+        assert event["recorder"] == user1.address
 
         user1_last_log_index = freeze_log.lastLogIndex(user1.address)
 
-        log = freeze_log.getLog(
-            user1.address, user1_last_log_index - 1, {"from": user1}
-        )
+        log = freeze_log.getLog(user1.address, user1_last_log_index - 1, sender=user1)
         assert log[0] == test1_block
         assert log[1] == test1_freezing_grace_block_count
         assert log[2] == test1_message

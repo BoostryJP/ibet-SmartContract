@@ -17,9 +17,9 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-pragma solidity ^0.8.23;
+pragma solidity ^0.8.34;
 
-import "OpenZeppelin/openzeppelin-contracts@4.9.3/contracts/utils/math/SafeMath.sol";
+import "@openzeppelin/contracts/utils/math/SafeMath.sol";
 import "./ExchangeStorage.sol";
 import "../access/Ownable.sol";
 import "../utils/Errors.sol";

@@ -5,7 +5,7 @@
 # ibet Smart Contract
 
 <p>
-  <img alt="Version" src="https://img.shields.io/badge/version-26.3-blue.svg?cacheSeconds=2592000" />
+  <img alt="Version" src="https://img.shields.io/badge/version-26.6-blue.svg?cacheSeconds=2592000" />
   <img alt="License: Apache--2.0" src="https://img.shields.io/badge/License-Apache--2.0-yellow.svg" />
 </p>
 
@@ -19,152 +19,94 @@ English | [日本語](README_JA.md)
 
 ## Dependencies
 - [Python3](https://www.python.org/downloads/)
-  - Version 3.13
-- [Node.js](https://nodejs.org/en/download/)
-  - Version 24
+  - Version 3.14
+- [uv](https://docs.astral.sh/uv/)
+  - We use uv to manage the Python environment and run Ape commands.
 - [Solidity](https://docs.soliditylang.org/)
-  - We are using Solidity to implement our smart contracts. 
-  - Currently, we are using v0.8.23.
-- [eth-brownie](https://github.com/eth-brownie/brownie)
-  - We are using the eth-brownie framework for developing and testing our contracts.
-- [GoQuorum](https://github.com/ConsenSys/quorum)
-  - We support the official GoQuorum node of [ibet-Network](https://github.com/BoostryJP/ibet-Network).
-  - We use [hardhat network](https://hardhat.org/hardhat-network/) for local development and unit testing, and we use the latest version.
+  - We are using Solidity to implement our smart contracts.
+  - Currently, we are using v0.8.34.
+- [Ape](https://apeworx.io/)
+  - We use Ape as the primary framework for compiling and testing contracts.
+- [Foundry Anvil](https://www.getfoundry.sh/anvil)
+  - We use Anvil for local development and unit testing.
 - [OpenZeppelin](https://openzeppelin.com/contracts/)
   - Our project is partly dependent on OpenZeppelin.
-  - We use openzeppelin-contracts v4.9.
+  - We use openzeppelin-contracts v4.9.3.
+- [Node.js](https://nodejs.org/en/download/)
+  - Version 24
   
 ## Overview
 
 ### Interface: `/interfaces`
 
-- `IbetStandardTokenInterface`: Standard token interface for ibet-SmartContract
-- `IbetExchangeInterface`: Standard interface for exchange contracts in ibet-SmartContract.
+- `IbetStandardTokenInterface`: Standard interface for ibet token contracts
+- `IbetExchangeInterface`: Standard interface for exchange contracts
 
-### Contract: `/contracts`
+### Contracts: `/contracts`
 
-- `access`: Determines which users can perform each action in the system.
-- `exchange`: Implementations of the various exchanges.
-- `ledger`: A data storage system that manages the data required as additional information in the ledger.
-- `payment`: A set of functions required to build an off-chain payment system.
-- `token`: Implementation of the various token formats: ERC20, ERC721, Bonds, Shares, etc.
-- `utils`: A set of other utility functions.
+- **access**: Ownership and access control primitives (e.g., `Ownable`)
+- **exchange**: Decentralized exchange and escrow contracts, including DVP (`IbetExchange`, `IbetEscrow`, `IbetSecurityTokenDVP`, etc.)
+- **ledger**: Personal information registry for associating off-chain data with on-chain accounts (`PersonalInfo`)
+- **payment**: Payment gateway and DvP agent contracts for atomic settlement between tokens and off-chain payments (`PaymentGateway`)
+- **token**: Various token standards and implementations:
+  - ibet original tokens (Bond, Share, Membership, Coupon)
+  - ERC20 and ERC721 compatible tokens
+  - Token registry contract (`TokenList`)
+- **utils**: Utility contracts for messaging, contract wallet, etc. (`E2EMessaging`, `SnapMessaging`, `P256Wallet`, etc.)
 
 ## Install
 
-Install eth-brownie as a python package.
+Install Python, Node.js, and development dependencies.
+Make sure `uv` and Foundry are available in your environment before running the setup commands.
 
 ```bash
 $ make install
 ```
 
-Install openzeppelin-contracts.
+Install Solidity package dependencies managed by Ape.
 
 ```bash
-$ brownie pm install OpenZeppelin/openzeppelin-contracts@4.9.3
-```
-
-Install hardhat as a Node.js package.
-
-```bash
-$ npm install
+$ make setup
 ```
 
 ## Compile Contracts
-Use eth-brownie to compile contracts.
+Compile contracts with Ape.
 
 ```bash
-$ brownie compile
+$ make compile
 ```
 
-## Deploy Contracts
-
-### Setting environment variables
-
-You can switch the EOA used for deploying the contract by setting an environment variable.
-
-#### 1. GoQuorum (Geth)
-
-This is the case when you store and use your private key in GoQuorum(Geth).
-
-- `ETH_ACCOUNT_PASSWORD` - The passphrase you have set for the Geth keystore file.
-
-#### 2. Local keystore file
-
-This is the case when you use a local keystore file.
-
-- `ETH_KEYSTORE_PATH` - Path of the directory where the keystore is stored.
-- `ETH_ACCOUNT_PASSWORD` - The passphrase you have set for the keystore file.
-
-#### 3. Raw private key
-
-This is the case when you use a raw private key.
-
-- `ETH_PRIVATE_KEY` - Raw private key
-- `ETH_ACCOUNT_PASSWORD` - Passphrase for encrypting the private key.
-
-#### 4. AWS Secrets Manager
-
-This is the case of storing and using a private key in keystore file format in [AWS Secrets Manager](https://docs.aws.amazon.com/secretsmanager/latest/userguide/intro.html).
-
-- `AWS_REGION_NAME` - AWS Region (default: ap-northeast-1)
-- `AWS_SECRETS_ID` - Secret's ARN
-- `ETH_ACCOUNT_PASSWORD` - The passphrase you have set for the keystore file.
-
-### How to deploy contracts
-To deploy, execute the following command.
+You can also run the underlying command directly.
 
 ```bash
-$ ./scripts/deploy_shared_contract.sh {--payment_gateway 0xabcd...} {contract_name}
+$ uv run ape compile
 ```
-
-You can deploy the following contract as `contract_name`.
-
-- E2EMessaging 
-- SnapMessaging
-- TokenList
-- PersonalInfo
-- PaymentGateway
-- IbetExchange (* need --payment_gateway option)
-- IbetEscrow
-- IbetSecurityTokenEscrow
-- FreezeLog
-
-All other contracts are not supported for deployment by script. 
-You will need to deploy them in a different way.
-
 
 ## Developing Smart Contracts
 
-### Network(hardhat) settings
-Network settings are defined in the `hardhat.config.js` file.
+### Local setup
 
-- chainId: 2017
-- gasPrice: 0
-- blockGasLimit: 800000000
-- hardfork: "berlin"
-
-When developing in a local environment, start and use the `hardhat-network` container defined in `docker-compose.yml`. 
-By default, the RPC service starts on port 8545.
-
-### Brownie settings
-
-Importing network settings to Brownie.
-
-```bash
-$ brownie networks import data/networks.yml
-```
+The default local test network is `ethereum:local:foundry`.
+The Ape configuration is defined in `ape-config.yaml`, and pytest uses the same network by default.
 
 ### Running the tests
 
-You can run the tests with:
+Run the full test suite with:
+
 ```bash
-$ brownie test
+$ make test
 ```
 
-Alternatively, you can use pytest and run it as follows.
+You can also run the underlying Ape command directly.
+
 ```bash
-$ pytest tests/
+$ uv run ape test --network ethereum:local:foundry tests/
+```
+
+If you need a narrower run during development, pass pytest targets through `ARG`.
+
+```bash
+$ make test ARG="tests/token/test_IbetERC20.py"
 ```
 
 ## Branching model
