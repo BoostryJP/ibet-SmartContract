@@ -16,7 +16,7 @@ description = "SmartContracts that provides token standards, decentralized excha
 [dependency-groups]
 dev = [
     "pre-commit>=4.6.0,<5.0.0",
-    "ruff<1.0.0,>=0.5.4",
+    "ruff>=0.15.20,<1.0.0",
 ]
 
 [tool.pytest.ini_options]
