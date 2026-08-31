@@ -486,7 +486,7 @@ wheels = [
 
 [[package]]
 name = "eth-ape"
-version = "0.8.50"
+version = "0.8.51"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "asttokens" },
@@ -525,9 +525,9 @@ dependencies = [
     { name = "watchdog" },
     { name = "web3", extra = ["tester"] },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/e7/aa/5069cdcaea18e9c7b001c607a61390d6589ef6b01f4b4e57365cab7970b7/eth_ape-0.8.50.tar.gz", hash = "sha256:51cec53c60c48367a77e50e250b6244e73e599159364bddf1474a8dcc6e1814c", size = 732234, upload-time = "2026-05-08T14:15:30.338Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/d3/29/16ed09f699fefef79b60c9125ac7348014f44a0c534e5ab5401975da8721/eth_ape-0.8.51.tar.gz", hash = "sha256:d664197313382a67a9d976fd6b3ef1b81c0198cdb7b53b4bc48de5659eb8dad4", size = 744798, upload-time = "2026-08-22T12:26:06.539Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/9a/b6/e9bc74ea1626395d7a7889c19789cd74911029e054ce9c1350264473baf3/eth_ape-0.8.50-py3-none-any.whl", hash = "sha256:0738915231e64358b2a577199a2c532ac81e789f192bf962f128ffaeda5b149a", size = 425675, upload-time = "2026-05-08T14:15:28.395Z" },
+    { url = "https://files.pythonhosted.org/packages/3c/12/2df0741a108101369b641d989b903feec51cd2663e528982059df54bbab9/eth_ape-0.8.51-py3-none-any.whl", hash = "sha256:2e8f508b0aaa37a3696ef195d1595f99409201c132c22feafaefb7ac7f4b1f05", size = 429531, upload-time = "2026-08-22T12:26:04.519Z" },
 ]
 
 [[package]]
