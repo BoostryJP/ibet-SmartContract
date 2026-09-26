@@ -1,6 +1,6 @@
 [project]
 name = "ibet-SmartContract"
-version = "26.6"
+version = "26.9"
 authors = [
     {name = "BOOSTRY Co., Ltd.", email = "dev@boostry.co.jp"},
 ]
@@ -15,8 +15,8 @@ description = "SmartContracts that provides token standards, decentralized excha
 
 [dependency-groups]
 dev = [
-    "pre-commit>=4.6.0,<5.0.0",
-    "ruff<1.0.0,>=0.5.4",
+    "pre-commit>=4.6.1,<5.0.0",
+    "ruff>=0.16.1,<1.0.0",
 ]
 
 [tool.pytest.ini_options]
